@@ -1,6 +1,0 @@
-target/
-temp_cmd.txt
-temp_head.txt
-*.log
-.vscode/
-nb-configuration.xml
