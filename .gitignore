@@ -1,8 +1,0 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-*.class
-*.log
-.DS_Store
-.vscode/
-nbproject/private/
