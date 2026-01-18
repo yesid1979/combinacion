@@ -8,10 +8,10 @@
               maxTotal="20"
               maxIdle="10"
               maxWaitMillis="-1"
-              username="postgres"
-              password="postgres"
+              username="adminjuridica"
+              password="Produccion2023*"
               driverClassName="org.postgresql.Driver"
-              url="jdbc:postgresql://172.18.9.13:5432/combinacion"
+              url="jdbc:postgresql://10.30.80.53:5432/combinacion"
               factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
               validationQuery="SELECT 1"
               testOnBorrow="true"/>
