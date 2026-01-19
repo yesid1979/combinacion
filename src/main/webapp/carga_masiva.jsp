@@ -16,7 +16,7 @@
 
         <jsp:include page="inc/navbar.jsp" />
 
-        <div class="container mt-5">
+        <div class="container mt-4 mb-5">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <h2 class="mb-4 fw-bold">
