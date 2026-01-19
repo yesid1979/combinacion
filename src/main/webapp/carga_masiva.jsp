@@ -32,7 +32,7 @@
 
                         <div class="row g-3 mt-2">
                             <!-- Ordenadores -->
-                            <div class="col-md-4 border-end">
+                            <div class="col-md-3 border-end">
                                 <h6 class="fw-bold text-primary">
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
@@ -43,24 +43,33 @@
                             </div>
 
                             <!-- Contratistas -->
-                            <div class="col-md-4 border-end">
+                            <div class="col-md-3 border-end">
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
                                 <small class="d-block">• Cédula, Nombre, Correo</small>
-                                <small class="d-block">• Formación (Descripción y Título)</small>
-                                <small class="d-block">• Tarjeta Prof., Experiencia</small>
-                                <small class="d-block">• Fecha Nacim., Edad</small>
+                                <small class="d-block">• Formación, Tarjeta Prof.</small>
+                                <small class="d-block">• Experiencia, Nacimiento</small>
                             </div>
 
                             <!-- Supervisores -->
-                            <div class="col-md-4">
+                            <div class="col-md-3 border-end">
                                 <h6 class="fw-bold text-info">
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
                                 <small class="d-block">• Nombre del Supervisor</small>
                                 <small class="d-block">• Cédula del Supervisor</small>
                                 <small class="d-block">• Cargo del Supervisor</small>
+                            </div>
+                            
+                            <!-- Estructuradores -->
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-warning">
+                                    <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
+                                </h6>
+                                <small class="d-block">• Profesional Jurídico y Cargo</small>
+                                <small class="d-block">• Profesional Técnico y Cargo</small>
+                                <small class="d-block">• Profesional Financiero y Cargo</small>
                             </div>
                         </div>
                         <hr>
