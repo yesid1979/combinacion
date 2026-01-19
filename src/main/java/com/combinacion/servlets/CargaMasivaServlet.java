@@ -49,6 +49,7 @@ public class CargaMasivaServlet extends HttpServlet {
         int duplicadosOrdenadores = 0;
         int duplicadosContratistas = 0;
         int duplicadosSupervisores = 0;
+        int estructuradoresCount = 0;
         int errorCount = 0;
         StringBuilder log = new StringBuilder();
 
@@ -171,8 +172,15 @@ public class CargaMasivaServlet extends HttpServlet {
                             duplicadosSupervisores++;
                         }
 
+                        // Intentar procesar como Estructurador
+                        int resultEstructurador = processEstructurador(row, map);
+                        if (resultEstructurador == 1) {
+                            estructuradoresCount++;
+                        }
+
                         // Si no se procesó ninguno, contar como error
-                        if (resultOrdenador == 0 && resultContratista == 0 && resultSupervisor == 0) {
+                        if (resultOrdenador == 0 && resultContratista == 0 && resultSupervisor == 0
+                                && resultEstructurador == 0) {
                             errorCount++;
                         }
 
@@ -212,6 +220,12 @@ public class CargaMasivaServlet extends HttpServlet {
                     if (msg.length() > 0)
                         msg.append(" | ");
                     msg.append("⚪ Supervisores duplicados: ").append(duplicadosSupervisores);
+                }
+
+                if (estructuradoresCount > 0) {
+                    if (msg.length() > 0)
+                        msg.append("<br>");
+                    msg.append("✅ Estructuradores: ").append(estructuradoresCount);
                 }
                 if (errorCount > 0) {
                     if (msg.length() > 0)
@@ -437,14 +451,6 @@ public class CargaMasivaServlet extends HttpServlet {
             ordenador.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
             ordenador.setActaPosesion(get(row, map, "acta_posesion"));
 
-            // Estructuradores
-            ordenador.setJuridicoNombre(get(row, map, "juridico_nombre"));
-            ordenador.setJuridicoCargo(get(row, map, "juridico_cargo"));
-            ordenador.setTecnicoNombre(get(row, map, "tecnico_nombre"));
-            ordenador.setTecnicoCargo(get(row, map, "tecnico_cargo"));
-            ordenador.setFinancieroNombre(get(row, map, "financiero_nombre"));
-            ordenador.setFinancieroCargo(get(row, map, "financiero_cargo"));
-
             boolean insertado = ordenadorDAO.insertar(ordenador);
             if (insertado && !cedula.isEmpty()) {
                 cedulasExistentes.add(cedula); // Actualizar caché para siguientes filas
@@ -604,6 +610,39 @@ public class CargaMasivaServlet extends HttpServlet {
             }
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    /**
+     * Procesa un estructurador
+     * 
+     * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
+     */
+    private int processEstructurador(String[] row, Map<String, Integer> map) {
+        try {
+            String jurNombre = get(row, map, "juridico_nombre");
+            String tecNombre = get(row, map, "tecnico_nombre");
+            String finNombre = get(row, map, "financiero_nombre");
+
+            // Si no hay ninguno de los nombres, asumimos que no es fila de estructuradores
+            if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
+                return 0;
+            }
+
+            Estructurador e = new Estructurador();
+            e.setJuridicoNombre(jurNombre);
+            e.setJuridicoCargo(get(row, map, "juridico_cargo"));
+            e.setTecnicoNombre(tecNombre);
+            e.setTecnicoCargo(get(row, map, "tecnico_cargo"));
+            e.setFinancieroNombre(finNombre);
+            e.setFinancieroCargo(get(row, map, "financiero_cargo"));
+
+            boolean insertado = estructuradorDAO.insertar(e);
+            return insertado ? 1 : 0;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return 0;
         }
     }
 }

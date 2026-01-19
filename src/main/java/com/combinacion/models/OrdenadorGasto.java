@@ -10,14 +10,6 @@ public class OrdenadorGasto {
     private String decretoNombramiento;
     private String actaPosesion;
 
-    // Structurers
-    private String juridicoNombre;
-    private String juridicoCargo;
-    private String tecnicoNombre;
-    private String tecnicoCargo;
-    private String financieroNombre;
-    private String financieroCargo;
-
     public OrdenadorGasto() {
     }
 
@@ -83,53 +75,5 @@ public class OrdenadorGasto {
 
     public void setActaPosesion(String actaPosesion) {
         this.actaPosesion = actaPosesion;
-    }
-
-    public String getJuridicoNombre() {
-        return juridicoNombre;
-    }
-
-    public void setJuridicoNombre(String juridicoNombre) {
-        this.juridicoNombre = juridicoNombre;
-    }
-
-    public String getJuridicoCargo() {
-        return juridicoCargo;
-    }
-
-    public void setJuridicoCargo(String juridicoCargo) {
-        this.juridicoCargo = juridicoCargo;
-    }
-
-    public String getTecnicoNombre() {
-        return tecnicoNombre;
-    }
-
-    public void setTecnicoNombre(String tecnicoNombre) {
-        this.tecnicoNombre = tecnicoNombre;
-    }
-
-    public String getTecnicoCargo() {
-        return tecnicoCargo;
-    }
-
-    public void setTecnicoCargo(String tecnicoCargo) {
-        this.tecnicoCargo = tecnicoCargo;
-    }
-
-    public String getFinancieroNombre() {
-        return financieroNombre;
-    }
-
-    public void setFinancieroNombre(String financieroNombre) {
-        this.financieroNombre = financieroNombre;
-    }
-
-    public String getFinancieroCargo() {
-        return financieroCargo;
-    }
-
-    public void setFinancieroCargo(String financieroCargo) {
-        this.financieroCargo = financieroCargo;
     }
 }
