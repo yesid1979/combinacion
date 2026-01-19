@@ -173,7 +173,7 @@ public class CargaMasivaServlet extends HttpServlet {
                         }
 
                         // Intentar procesar como Estructurador
-                        int resultEstructurador = processEstructurador(row, map);
+                        int resultEstructurador = processEstructurador(row, map, log);
                         if (resultEstructurador == 1) {
                             estructuradoresCount++;
                         }
@@ -322,28 +322,18 @@ public class CargaMasivaServlet extends HttpServlet {
 
             // ===== ESTRUCTURADORES =====
             // ===== ESTRUCTURADORES =====
-            // "Profesional jurídico estructurador del EP"
-            else if (h.contains("juridico") && h.contains("profesional") && !h.contains("cargo")) {
+            else if (h.contains("juridico") && !h.contains("cargo")) {
                 map.put("juridico_nombre", i);
-            }
-            // "Cargo Profesional Jurídico estructurador EP"
-            else if (h.contains("juridico") && h.contains("cargo")) {
+            } else if (h.contains("juridico") && h.contains("cargo")) {
                 map.put("juridico_cargo", i);
-            }
-            // "Profesional técnico estructurador del EP"
-            else if (h.contains("tecnico") && h.contains("profesional") && !h.contains("cargo")) {
+            } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
+                // !apoyo para evitar confusión con otros roles si los hubiera
                 map.put("tecnico_nombre", i);
-            }
-            // "Cargo Profesional Técnico estructurador EP"
-            else if (h.contains("tecnico") && h.contains("cargo")) {
+            } else if (h.contains("tecnico") && h.contains("cargo")) {
                 map.put("tecnico_cargo", i);
-            }
-            // "Profesional financiero estructurador del EP"
-            else if (h.contains("financiero") && h.contains("profesional") && !h.contains("cargo")) {
+            } else if (h.contains("financiero") && !h.contains("cargo")) {
                 map.put("financiero_nombre", i);
-            }
-            // "Cargo Profesional Financiero estructurador EP"
-            else if (h.contains("financiero") && h.contains("cargo")) {
+            } else if (h.contains("financiero") && h.contains("cargo")) {
                 map.put("financiero_cargo", i);
             }
 
@@ -630,7 +620,7 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private int processEstructurador(String[] row, Map<String, Integer> map) {
+    private int processEstructurador(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
             String jurNombre = get(row, map, "juridico_nombre");
             String tecNombre = get(row, map, "tecnico_nombre");
@@ -640,6 +630,11 @@ public class CargaMasivaServlet extends HttpServlet {
             if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
                 return 0;
             }
+
+            // Debug log for structurers
+            log.append("  > Estructurador encontrado: Jur=").append(jurNombre)
+                    .append(", Tec=").append(tecNombre)
+                    .append(", Fin=").append(finNombre).append("\n");
 
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
