@@ -321,15 +321,18 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             // ===== ESTRUCTURADORES =====
-            else if (h.contains("juridico") && h.contains("nombre")) {
+            // ===== ESTRUCTURADORES =====
+            else if (h.contains("juridico") && !h.contains("cargo")) {
                 map.put("juridico_nombre", i);
             } else if (h.contains("juridico") && h.contains("cargo")) {
                 map.put("juridico_cargo", i);
-            } else if (h.contains("tecnico") && h.contains("nombre")) {
+            } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
+                // !apoyo para evitar confusión con otros roles si los hubiera, aunque !cargo es
+                // el principal
                 map.put("tecnico_nombre", i);
             } else if (h.contains("tecnico") && h.contains("cargo")) {
                 map.put("tecnico_cargo", i);
-            } else if (h.contains("financiero") && h.contains("nombre")) {
+            } else if (h.contains("financiero") && !h.contains("cargo")) {
                 map.put("financiero_nombre", i);
             } else if (h.contains("financiero") && h.contains("cargo")) {
                 map.put("financiero_cargo", i);
