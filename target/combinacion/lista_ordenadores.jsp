@@ -34,7 +34,7 @@
                         <table id="ordenadoresTable" class="table table-striped" style="width:100%">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Nombre</th>
+                                    <th>Nombres y apellidos</th>
                                     <th>Cargo</th>
                                     <th>Organismo</th>
                                     <th>Acciones</th>

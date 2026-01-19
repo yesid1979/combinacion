@@ -35,10 +35,10 @@
                         <table id="contratistasTable" class="table table-striped" style="width:100%">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Cédula</th>
-                                    <th>Nombre</th>
+                                    <th>No. de cédula</th>
+                                    <th>Nombres y Apellidos</th>
                                     <th>Correo</th>
-                                    <th>Teléfono</th>
+                                    <th>No. de teléfono</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>

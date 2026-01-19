@@ -35,8 +35,8 @@
                         <table id="supervisoresTable" class="table table-striped" style="width:100%">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Cédula</th>
-                                    <th>Nombre</th>
+                                    <th>No. de cédula</th>
+                                    <th>Nombre y apellidos</th>
                                     <th>Cargo</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
