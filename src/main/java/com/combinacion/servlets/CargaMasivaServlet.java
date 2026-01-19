@@ -322,19 +322,28 @@ public class CargaMasivaServlet extends HttpServlet {
 
             // ===== ESTRUCTURADORES =====
             // ===== ESTRUCTURADORES =====
-            else if (h.contains("juridico") && !h.contains("cargo")) {
+            // "Profesional jurídico estructurador del EP"
+            else if (h.contains("juridico") && h.contains("profesional") && !h.contains("cargo")) {
                 map.put("juridico_nombre", i);
-            } else if (h.contains("juridico") && h.contains("cargo")) {
+            }
+            // "Cargo Profesional Jurídico estructurador EP"
+            else if (h.contains("juridico") && h.contains("cargo")) {
                 map.put("juridico_cargo", i);
-            } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
-                // !apoyo para evitar confusión con otros roles si los hubiera, aunque !cargo es
-                // el principal
+            }
+            // "Profesional técnico estructurador del EP"
+            else if (h.contains("tecnico") && h.contains("profesional") && !h.contains("cargo")) {
                 map.put("tecnico_nombre", i);
-            } else if (h.contains("tecnico") && h.contains("cargo")) {
+            }
+            // "Cargo Profesional Técnico estructurador EP"
+            else if (h.contains("tecnico") && h.contains("cargo")) {
                 map.put("tecnico_cargo", i);
-            } else if (h.contains("financiero") && !h.contains("cargo")) {
+            }
+            // "Profesional financiero estructurador del EP"
+            else if (h.contains("financiero") && h.contains("profesional") && !h.contains("cargo")) {
                 map.put("financiero_nombre", i);
-            } else if (h.contains("financiero") && h.contains("cargo")) {
+            }
+            // "Cargo Profesional Financiero estructurador EP"
+            else if (h.contains("financiero") && h.contains("cargo")) {
                 map.put("financiero_cargo", i);
             }
 
