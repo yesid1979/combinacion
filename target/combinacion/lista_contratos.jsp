@@ -22,7 +22,7 @@
                 <link href="assets/css/styles.css" rel="stylesheet">
             </head>
 
-            <body class="bg-light">
+            <body class="bg-light d-flex flex-column min-vh-100">
 
                 <jsp:include page="inc/navbar.jsp" />
 
@@ -33,10 +33,10 @@
                             Nuevo Contrato</a>
                     </div>
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <!-- Removed table-responsive class to prevent double scrollbar -->
-                            <table id="contratosTable" class="table table-striped table-hover" style="width:100%">
+                            <table id="contratosTable" class="table table-striped" style="width:100%">
                                 <thead class="table-dark">
                                     <tr>
                                         <th># Contrato</th>
@@ -56,6 +56,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Footer -->
+                <jsp:include page="inc/footer.jsp" />
 
                 <!-- jQuery and Bootstrap JS -->
                 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

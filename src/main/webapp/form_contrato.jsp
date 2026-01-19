@@ -21,7 +21,7 @@
         </style>
     </head>
 
-    <body class="bg-light">
+    <body class="bg-light d-flex flex-column min-vh-100">
 
         <jsp:include page="inc/navbar.jsp" />
 
@@ -309,6 +309,9 @@
                     });
                 });
             </script>
+
+            <!-- Footer -->
+            <jsp:include page="inc/footer.jsp" />
     </body>
 
     </html>
