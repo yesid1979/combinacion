@@ -21,7 +21,7 @@
                 <div class="card-body p-4">
                     <h2 class="mb-4 fw-bold">
                         <i class="bi bi-upload text-primary me-2"></i>
-                        Carga Masiva - Gestión Integral
+                        Carga masiva - gestión integral
                     </h2>
 
                     <div class="alert alert-info border-0 shadow-sm">
