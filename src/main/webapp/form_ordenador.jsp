@@ -27,7 +27,7 @@
                         <h2 class="mb-4 fw-bold">
                             <c:choose>
                                 <c:when test="${ordenador != null}">Editar Ordenador del Gasto</c:when>
-                                <c:otherwise>Registrar Nuevo Ordenador del Gasto</c:otherwise>
+                                <c:otherwise>Registrar nuevo ordenador del gasto</c:otherwise>
                             </c:choose>
                         </h2>
                         <form action="ordenadores" method="POST">
@@ -83,11 +83,9 @@
 
                             <div class="mt-4 text-end">
                                 <a href="ordenadores" class="btn btn-secondary me-2" style="width: 140px;"><i
-                                        class="bi bi-x-circle me-2"></i>
-                                    Cerrar</a>
+                                        class="bi bi-x-circle me-2"></i> Cerrar</a>
                                 <button type="submit" class="btn btn-primary" style="width: 140px;"><i
-                                        class="bi bi-save me-2"></i>
-                                    Guardar</button>
+                                        class="bi bi-save me-2"></i> Guardar</button>
                             </div>
                         </form>
                     </div>

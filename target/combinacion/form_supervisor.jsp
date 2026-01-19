@@ -61,10 +61,10 @@
                             </div>
 
                             <div class="mt-4 text-end">
-                                <a href="supervisores" class="btn btn-secondary me-2">Cancelar</a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save me-1"></i> Guardar
-                                </button>
+                                <a href="supervisores" class="btn btn-secondary me-2" style="width: 140px;"><i
+                                        class="bi bi-x-circle me-2"></i> Cerrar</a>
+                                <button type="submit" class="btn btn-primary" style="width: 140px;"><i
+                                        class="bi bi-save me-2"></i> Guardar</button>
                             </div>
                         </form>
                     </div>

@@ -91,8 +91,7 @@
                                 <a href="contratistas" class="btn btn-secondary me-2" style="width: 140px;"><i
                                         class="bi bi-x-circle me-2"></i> Cerrar</a>
                                 <button type="submit" class="btn btn-primary" style="width: 140px;"><i
-                                        class="bi bi-save me-2"></i>
-                                    Guardar</button>
+                                        class="bi bi-save me-2"></i> Guardar</button>
                             </div>
                         </form>
                     </div>
