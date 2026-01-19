@@ -100,4 +100,94 @@ public class ContratoDAO {
         }
         return lista;
     }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM contratos";
+        try (Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next())
+                return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countFiltered(String search) {
+        String sql = "SELECT COUNT(*) FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
+        if (search != null && !search.isEmpty()) {
+            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ?)";
+        }
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+                ps.setString(3, like);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Contrato> findWithPagination(int start, int length, String search, int orderCol, String orderDir) {
+        List<Contrato> lista = new ArrayList<>();
+        String sql = "SELECT c.*, ct.nombre as contratista_nombre FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
+
+        if (search != null && !search.isEmpty()) {
+            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ?)";
+        }
+
+        // Mapping DataTables column index to DB column name for sorting
+        String[] cols = { "c.numero_contrato", "ct.nombre", "c.objeto", "c.fecha_inicio", "c.fecha_terminacion",
+                "c.valor_total_numeros", "c.estado" };
+        String sortCol = (orderCol >= 0 && orderCol < cols.length) ? cols[orderCol] : "c.numero_contrato";
+
+        // Validation of orderDir
+        if (!"asc".equalsIgnoreCase(orderDir) && !"desc".equalsIgnoreCase(orderDir)) {
+            orderDir = "desc";
+        }
+
+        sql += " ORDER BY " + sortCol + " " + orderDir;
+        sql += " LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int index = 1;
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search + "%";
+                ps.setString(index++, like);
+                ps.setString(index++, like);
+                ps.setString(index++, like);
+            }
+            ps.setInt(index++, length);
+            ps.setInt(index++, start);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contrato c = new Contrato();
+                    c.setId(rs.getInt("id"));
+                    c.setNumeroContrato(rs.getString("numero_contrato"));
+                    c.setObjeto(rs.getString("objeto"));
+                    c.setEstado(rs.getString("estado"));
+                    c.setFechaInicio(rs.getDate("fecha_inicio"));
+                    c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
+                    c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
+                    c.setContratistaNombre(rs.getString("contratista_nombre"));
+                    lista.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
 }

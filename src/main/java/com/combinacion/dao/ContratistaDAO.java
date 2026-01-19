@@ -88,7 +88,20 @@ public class ContratistaDAO {
                     Contratista c = new Contratista();
                     c.setId(rs.getInt("id"));
                     c.setCedula(rs.getString("cedula"));
+                    c.setDv(rs.getString("dv"));
                     c.setNombre(rs.getString("nombre"));
+                    c.setTelefono(rs.getString("telefono"));
+                    c.setCorreo(rs.getString("correo"));
+                    c.setDireccion(rs.getString("direccion"));
+                    c.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    c.setEdad(rs.getInt("edad"));
+                    c.setFormacionTitulo(rs.getString("formacion_titulo"));
+                    c.setDescripcionFormacion(rs.getString("descripcion_formacion"));
+                    c.setTarjetaProfesional(rs.getString("tarjeta_profesional"));
+                    c.setDescripcionTarjeta(rs.getString("descripcion_tarjeta"));
+                    c.setExperiencia(rs.getString("experiencia"));
+                    c.setDescripcionExperiencia(rs.getString("descripcion_experiencia"));
+                    c.setRestricciones(rs.getString("restricciones"));
                     return c;
                 }
             }
@@ -108,7 +121,20 @@ public class ContratistaDAO {
                     Contratista c = new Contratista();
                     c.setId(rs.getInt("id"));
                     c.setCedula(rs.getString("cedula"));
+                    c.setDv(rs.getString("dv"));
                     c.setNombre(rs.getString("nombre"));
+                    c.setTelefono(rs.getString("telefono"));
+                    c.setCorreo(rs.getString("correo"));
+                    c.setDireccion(rs.getString("direccion"));
+                    c.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    c.setEdad(rs.getInt("edad"));
+                    c.setFormacionTitulo(rs.getString("formacion_titulo"));
+                    c.setDescripcionFormacion(rs.getString("descripcion_formacion"));
+                    c.setTarjetaProfesional(rs.getString("tarjeta_profesional"));
+                    c.setDescripcionTarjeta(rs.getString("descripcion_tarjeta"));
+                    c.setExperiencia(rs.getString("experiencia"));
+                    c.setDescripcionExperiencia(rs.getString("descripcion_experiencia"));
+                    c.setRestricciones(rs.getString("restricciones"));
                     return c;
                 }
             }
@@ -116,5 +142,138 @@ public class ContratistaDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM contratistas";
+        try (Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next())
+                return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countFiltered(String search) {
+        String sql = "SELECT COUNT(*) FROM contratistas WHERE 1=1 ";
+        if (search != null && !search.isEmpty()) {
+            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR correo LIKE ?)";
+        }
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+                ps.setString(3, like);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Contratista> findWithPagination(int start, int length, String search, int orderCol, String orderDir) {
+        List<Contratista> lista = new ArrayList<>();
+        String sql = "SELECT * FROM contratistas WHERE 1=1 ";
+
+        if (search != null && !search.isEmpty()) {
+            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR correo LIKE ?)";
+        }
+
+        String[] cols = { "cedula", "nombre", "correo", "telefono", "direccion" }; // Adjust based on table columns
+        String sortCol = (orderCol >= 0 && orderCol < cols.length) ? cols[orderCol] : "nombre";
+
+        if (!"asc".equalsIgnoreCase(orderDir) && !"desc".equalsIgnoreCase(orderDir)) {
+            orderDir = "asc";
+        }
+
+        sql += " ORDER BY " + sortCol + " " + orderDir;
+        sql += " LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int index = 1;
+            if (search != null && !search.isEmpty()) {
+                String like = "%" + search + "%";
+                ps.setString(index++, like);
+                ps.setString(index++, like);
+                ps.setString(index++, like);
+            }
+            ps.setInt(index++, length);
+            ps.setInt(index++, start);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contratista c = new Contratista();
+                    c.setId(rs.getInt("id"));
+                    c.setCedula(rs.getString("cedula"));
+                    c.setNombre(rs.getString("nombre"));
+                    c.setCorreo(rs.getString("correo"));
+                    c.setTelefono(rs.getString("telefono"));
+                    c.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    lista.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+    public boolean actualizar(Contratista c) {
+        String sql = "UPDATE contratistas SET cedula=?, dv=?, nombre=?, telefono=?, correo=?, direccion=?, fecha_nacimiento=?, edad=? WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getCedula());
+            ps.setString(2, c.getDv());
+            ps.setString(3, c.getNombre());
+            ps.setString(4, c.getTelefono());
+            ps.setString(5, c.getCorreo());
+            ps.setString(6, c.getDireccion());
+            ps.setDate(7, c.getFechaNacimiento());
+            ps.setInt(8, c.getEdad());
+            ps.setInt(9, c.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean eliminar(int id) {
+        String sql = "DELETE FROM contratistas WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public java.util.Set<String> obtenerTodasLasCedulas() {
+        java.util.Set<String> cedulas = new java.util.HashSet<>();
+        String sql = "SELECT cedula FROM contratistas WHERE cedula IS NOT NULL";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                cedulas.add(rs.getString("cedula"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return cedulas;
     }
 }

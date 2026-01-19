@@ -31,6 +31,9 @@ public class ContratoServlet extends HttpServlet {
         }
 
         switch (action) {
+            case "data":
+                listContratosData(request, response);
+                break;
             case "new":
                 showNewForm(request, response);
                 break;
@@ -41,12 +44,64 @@ public class ContratoServlet extends HttpServlet {
         }
     }
 
+    private void listContratosData(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // DataTables parameters
+        String draw = request.getParameter("draw");
+        int start = ParseUtils.parseInt(request.getParameter("start"));
+        int length = ParseUtils.parseInt(request.getParameter("length"));
+        String searchValue = request.getParameter("search[value]");
+        int orderColumn = ParseUtils.parseInt(request.getParameter("order[0][column]"));
+        String orderDir = request.getParameter("order[0][dir]");
+
+        int total = contratoDAO.countAll();
+        int filtered = contratoDAO.countFiltered(searchValue);
+        List<Contrato> contratos = contratoDAO.findWithPagination(start, length, searchValue, orderColumn, orderDir);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
+        json.append("\"recordsTotal\": ").append(total).append(",");
+        json.append("\"recordsFiltered\": ").append(filtered).append(",");
+        json.append("\"data\": [");
+
+        for (int i = 0; i < contratos.size(); i++) {
+            Contrato c = contratos.get(i);
+            json.append("[");
+            json.append("\"").append(escapeJson(c.getNumeroContrato())).append("\",");
+            json.append("\"").append(escapeJson(c.getContratistaNombre())).append("\",");
+            json.append("\"").append(escapeJson(c.getObjeto())).append("\",");
+            json.append("\"").append(c.getFechaInicio() != null ? c.getFechaInicio().toString() : "").append("\",");
+            json.append("\"").append(c.getFechaTerminacion() != null ? c.getFechaTerminacion().toString() : "")
+                    .append("\",");
+            json.append("\"").append(c.getValorTotalNumeros()).append("\",");
+            json.append("\"").append(escapeJson(c.getEstado())).append("\",");
+            json.append("\"").append(c.getId()).append("\""); // For actions
+            json.append("]");
+            if (i < contratos.size() - 1)
+                json.append(",");
+        }
+
+        json.append("]}");
+        response.getWriter().write(json.toString());
+    }
+
+    private String escapeJson(String s) {
+        if (s == null)
+            return "";
+        return s.replace("\"", "\\\"").replace("\\", "\\\\").replace("\n", " ").replace("\r", " ");
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
             insertContrato(request, response);
+        } else if ("data".equals(action)) { // Handle DataTables AJAX request via POST
+            listContratosData(request, response);
         } else {
             listContratos(request, response);
         }
@@ -54,6 +109,13 @@ public class ContratoServlet extends HttpServlet {
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Cargar listas para los selects
+        List<Supervisor> listaSupervisores = supervisorDAO.listarTodos();
+        List<OrdenadorGasto> listaOrdenadores = ordenadorDAO.listarTodos();
+
+        request.setAttribute("listaSupervisores", listaSupervisores);
+        request.setAttribute("listaOrdenadores", listaOrdenadores);
+
         request.getRequestDispatcher("form_contrato.jsp").forward(request, response);
     }
 
@@ -90,27 +152,11 @@ public class ContratoServlet extends HttpServlet {
                 }
             }
 
-            // Supervisor
-            Supervisor supervisor = new Supervisor();
-            supervisor.setCedula(request.getParameter("supervisor_cedula"));
-            supervisor.setNombre(request.getParameter("supervisor_nombre"));
-            supervisor.setCargo(request.getParameter("supervisor_cargo"));
-            if (!supervisorDAO.insertar(supervisor)) {
-                Supervisor existingSup = supervisorDAO.obtenerPorCedula(supervisor.getCedula());
-                if (existingSup != null) {
-                    supervisor.setId(existingSup.getId());
-                }
-            }
+            // Supervisor (Selected directly by ID)
+            int supervisorId = ParseUtils.parseInt(request.getParameter("id_supervisor"));
 
-            // Ordenador
-            OrdenadorGasto ordenador = new OrdenadorGasto();
-            ordenador.setNombreOrdenador(request.getParameter("ordenador_nombre"));
-            if (!ordenadorDAO.insertar(ordenador)) {
-                OrdenadorGasto existingOrd = ordenadorDAO.obtenerPorNombre(ordenador.getNombreOrdenador());
-                if (existingOrd != null) {
-                    ordenador.setId(existingOrd.getId());
-                }
-            }
+            // Ordenador (Selected directly by ID)
+            int ordenadorId = ParseUtils.parseInt(request.getParameter("id_ordenador"));
 
             // Presupuesto
             PresupuestoDetalle presupuesto = new PresupuestoDetalle();
@@ -139,8 +185,8 @@ public class ContratoServlet extends HttpServlet {
 
             // Foreign Keys
             contrato.setContratistaId(contratista.getId());
-            contrato.setSupervisorId(supervisor.getId());
-            contrato.setOrdenadorId(ordenador.getId());
+            contrato.setSupervisorId(supervisorId);
+            contrato.setOrdenadorId(ordenadorId);
             contrato.setPresupuestoId(presupuesto.getId());
             contrato.setEstructuradorId(estructurador.getId());
 

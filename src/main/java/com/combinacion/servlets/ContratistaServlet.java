@@ -24,11 +24,20 @@ public class ContratistaServlet extends HttpServlet {
             action = "list";
 
         switch (action) {
+            case "search":
+                searchByCedula(request, response);
+                break;
+            case "data":
+                listContratistasData(request, response);
+                break;
             case "new":
                 showNewForm(request, response);
                 break;
             case "edit":
-                // showEditForm(request, response); // Implement later
+                showEditForm(request, response);
+                break;
+            case "delete":
+                deleteContratista(request, response);
                 break;
             case "list":
             default:
@@ -37,12 +46,91 @@ public class ContratistaServlet extends HttpServlet {
         }
     }
 
+    private void listContratistasData(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String draw = request.getParameter("draw");
+        int start = ParseUtils.parseInt(request.getParameter("start"));
+        int length = ParseUtils.parseInt(request.getParameter("length"));
+        String searchValue = request.getParameter("search[value]");
+        int orderColumn = ParseUtils.parseInt(request.getParameter("order[0][column]"));
+        String orderDir = request.getParameter("order[0][dir]");
+
+        int total = contratistaDAO.countAll();
+        int filtered = contratistaDAO.countFiltered(searchValue);
+        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, orderColumn, orderDir);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
+        json.append("\"recordsTotal\": ").append(total).append(",");
+        json.append("\"recordsFiltered\": ").append(filtered).append(",");
+        json.append("\"data\": [");
+
+        for (int i = 0; i < list.size(); i++) {
+            Contratista c = list.get(i);
+            json.append("[");
+            json.append("\"").append(escapeJson(c.getCedula())).append("\",");
+            json.append("\"").append(escapeJson(c.getNombre())).append("\",");
+            json.append("\"").append(escapeJson(c.getCorreo())).append("\",");
+            json.append("\"").append(escapeJson(c.getTelefono())).append("\",");
+            json.append("\"").append(c.getId()).append("\"");
+            json.append("]");
+            if (i < list.size() - 1)
+                json.append(",");
+        }
+        json.append("]}");
+        response.getWriter().write(json.toString());
+    }
+
+    private void searchByCedula(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String cedula = request.getParameter("cedula");
+        Contratista c = contratistaDAO.obtenerPorCedula(cedula);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        if (c != null) {
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"found\": true,");
+            json.append("\"cedula\": \"").append(escapeJson(c.getCedula())).append("\",");
+            json.append("\"dv\": \"").append(escapeJson(c.getDv())).append("\",");
+            json.append("\"nombre\": \"").append(escapeJson(c.getNombre())).append("\",");
+            json.append("\"telefono\": \"").append(escapeJson(c.getTelefono())).append("\",");
+            json.append("\"correo\": \"").append(escapeJson(c.getCorreo())).append("\",");
+            json.append("\"direccion\": \"").append(escapeJson(c.getDireccion())).append("\",");
+            json.append("\"fecha_nacimiento\": \"")
+                    .append(c.getFechaNacimiento() != null ? c.getFechaNacimiento().toString() : "").append("\",");
+            json.append("\"edad\": ").append(c.getEdad());
+            json.append("}");
+            response.getWriter().write(json.toString());
+        } else {
+            response.getWriter().write("{\"found\": false}");
+        }
+    }
+
+    private String escapeJson(String s) {
+        if (s == null)
+            return "";
+        return s.replace("\"", "\\\"").replace("\\", "\\\\");
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
             insertContratista(request, response);
+        } else if ("update".equals(action)) {
+            updateContratista(request, response);
+        } else if ("data".equals(action)) {
+            listContratistasData(request, response);
+        } else if ("search".equals(action)) {
+            searchByCedula(request, response);
         } else {
             listContratistas(request, response);
         }
@@ -76,7 +164,7 @@ public class ContratistaServlet extends HttpServlet {
 
             if (contratistaDAO.insertar(c)) {
                 // Success
-                response.sendRedirect("contratistas?action=list");
+                response.sendRedirect("contratistas?status=created");
             } else {
                 request.setAttribute("error", "Error al guardar. Verifique si la cédula ya existe.");
                 request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
@@ -85,6 +173,64 @@ public class ContratistaServlet extends HttpServlet {
             e.printStackTrace();
             request.setAttribute("error", "Error interno: " + e.getMessage());
             request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+        }
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Contratista existing = contratistaDAO.obtenerPorId(id);
+            if (existing != null) {
+                request.setAttribute("contratista", existing);
+                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+            } else {
+                response.sendRedirect("contratistas?action=list");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("contratistas?action=list");
+        }
+    }
+
+    private void updateContratista(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Contratista c = new Contratista();
+            c.setId(id);
+            c.setCedula(request.getParameter("cedula"));
+            c.setDv(request.getParameter("dv"));
+            c.setNombre(request.getParameter("nombre"));
+            c.setTelefono(request.getParameter("telefono"));
+            c.setCorreo(request.getParameter("correo"));
+            c.setDireccion(request.getParameter("direccion"));
+            c.setFechaNacimiento(ParseUtils.parseDate(request.getParameter("fecha_nacimiento")));
+            c.setEdad(ParseUtils.parseInt(request.getParameter("edad")));
+
+            if (contratistaDAO.actualizar(c)) {
+                response.sendRedirect("contratistas?status=updated");
+            } else {
+                request.setAttribute("error", "Error al actualizar el contratista.");
+                request.setAttribute("contratista", c);
+                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error interno: " + e.getMessage());
+            request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+        }
+    }
+
+    private void deleteContratista(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            contratistaDAO.eliminar(id);
+            response.sendRedirect("contratistas?status=deleted");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("contratistas?status=error");
         }
     }
 }

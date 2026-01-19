@@ -37,9 +37,22 @@
 
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container my-5">
+            <div class="container mt-4 mb-5">
                 <h2 class="mb-4 text-center fw-bold text-primary">Panel de Administración</h2>
                 <div class="row g-4">
+
+                    <!-- Carga Masiva -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='carga_masiva.jsp'">
+                            <div class="card-body text-center">
+                                <div class="icon-box bg-secondary bg-opacity-10 text-secondary mx-auto">
+                                    <i class="bi bi-cloud-upload fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Carga masiva</h5>
+                                <p class="card-text text-muted small">Importar datos desde CSV/Excel.</p>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Contratos -->
                     <div class="col-md-6 col-lg-3">
@@ -87,7 +100,7 @@
                                 <div class="icon-box bg-danger bg-opacity-10 text-danger mx-auto">
                                     <i class="bi bi-wallet2 fs-2"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">Ordenadores Gasto</h5>
+                                <h5 class="card-title fw-bold">Ordenadores gasto</h5>
                                 <p class="card-text text-muted small">Gestión de ordenadores del gasto.</p>
                             </div>
                         </div>
@@ -106,15 +119,14 @@
                         </div>
                     </div>
 
+
+
                 </div>
             </div>
 
             <!-- Footer if you want -->
-            <footer class="mt-auto py-3 bg-white text-center text-muted border-top">
-                <div class="container">
-                    <small>&copy; 2026 Gestión de Contratos estatales</small>
-                </div>
-            </footer>
+            <!-- Footer -->
+            <jsp:include page="inc/footer.jsp" />
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         </body>
