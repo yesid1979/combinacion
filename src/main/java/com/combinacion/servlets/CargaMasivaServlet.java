@@ -3,9 +3,11 @@ package com.combinacion.servlets;
 import com.combinacion.dao.SupervisorDAO;
 import com.combinacion.dao.OrdenadorGastoDAO;
 import com.combinacion.dao.ContratistaDAO;
+import com.combinacion.dao.EstructuradorDAO;
 import com.combinacion.models.OrdenadorGasto;
 import com.combinacion.models.Contratista;
 import com.combinacion.models.Supervisor;
+import com.combinacion.models.Estructurador;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,6 +37,7 @@ public class CargaMasivaServlet extends HttpServlet {
     private OrdenadorGastoDAO ordenadorDAO = new OrdenadorGastoDAO();
     private ContratistaDAO contratistaDAO = new ContratistaDAO();
     private SupervisorDAO supervisorDAO = new SupervisorDAO();
+    private EstructuradorDAO estructuradorDAO = new EstructuradorDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
