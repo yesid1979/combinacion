@@ -8,6 +8,7 @@ import java.util.List;
 
 public class EstructuradorDAO {
 
+    // Insercion de estructurador
     public boolean insertar(Estructurador e) {
         String sql = "INSERT INTO estructuradores (juridico_nombre, juridico_cargo, tecnico_nombre, tecnico_cargo, financiero_nombre, financiero_cargo) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

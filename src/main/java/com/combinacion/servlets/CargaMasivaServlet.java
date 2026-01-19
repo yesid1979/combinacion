@@ -645,6 +645,7 @@ public class CargaMasivaServlet extends HttpServlet {
                     .append(", Tec=").append(tecNombre)
                     .append(", Fin=").append(finNombre).append("\n");
 
+            // Crear objeto Estructurador
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
             e.setJuridicoCargo(get(row, map, "juridico_cargo"));

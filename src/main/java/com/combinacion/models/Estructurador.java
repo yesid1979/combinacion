@@ -10,6 +10,7 @@ public class Estructurador {
     private String financieroCargo;
 
     public Estructurador() {
+        // Constructor vacio
     }
 
     public int getId() {
