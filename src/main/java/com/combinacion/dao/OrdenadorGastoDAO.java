@@ -9,7 +9,7 @@ import java.util.List;
 public class OrdenadorGastoDAO {
 
     public boolean insertar(OrdenadorGasto o) {
-        String sql = "INSERT INTO ordenadores_gasto (organismo, direccion_organismo, nombre_ordenador, cedula_ordenador, cargo_ordenador, decreto_nombramiento, acta_posesion) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ordenadores_gasto (organismo, direccion_organismo, nombre_ordenador, cedula_ordenador, cargo_ordenador, decreto_nombramiento, acta_posesion, juridico_nombre, juridico_cargo, tecnico_nombre, tecnico_cargo, financiero_nombre, financiero_cargo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -20,6 +20,12 @@ public class OrdenadorGastoDAO {
             ps.setString(5, o.getCargoOrdenador());
             ps.setString(6, o.getDecretoNombramiento());
             ps.setString(7, o.getActaPosesion());
+            ps.setString(8, o.getJuridicoNombre());
+            ps.setString(9, o.getJuridicoCargo());
+            ps.setString(10, o.getTecnicoNombre());
+            ps.setString(11, o.getTecnicoCargo());
+            ps.setString(12, o.getFinancieroNombre());
+            ps.setString(13, o.getFinancieroCargo());
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -53,6 +59,12 @@ public class OrdenadorGastoDAO {
                 o.setCargoOrdenador(rs.getString("cargo_ordenador"));
                 o.setDecretoNombramiento(rs.getString("decreto_nombramiento"));
                 o.setActaPosesion(rs.getString("acta_posesion"));
+                o.setJuridicoNombre(rs.getString("juridico_nombre"));
+                o.setJuridicoCargo(rs.getString("juridico_cargo"));
+                o.setTecnicoNombre(rs.getString("tecnico_nombre"));
+                o.setTecnicoCargo(rs.getString("tecnico_cargo"));
+                o.setFinancieroNombre(rs.getString("financiero_nombre"));
+                o.setFinancieroCargo(rs.getString("financiero_cargo"));
                 lista.add(o);
             }
         } catch (SQLException e) {
@@ -183,6 +195,12 @@ public class OrdenadorGastoDAO {
                     o.setCargoOrdenador(rs.getString("cargo_ordenador"));
                     o.setDecretoNombramiento(rs.getString("decreto_nombramiento"));
                     o.setActaPosesion(rs.getString("acta_posesion"));
+                    o.setJuridicoNombre(rs.getString("juridico_nombre"));
+                    o.setJuridicoCargo(rs.getString("juridico_cargo"));
+                    o.setTecnicoNombre(rs.getString("tecnico_nombre"));
+                    o.setTecnicoCargo(rs.getString("tecnico_cargo"));
+                    o.setFinancieroNombre(rs.getString("financiero_nombre"));
+                    o.setFinancieroCargo(rs.getString("financiero_cargo"));
                     return o;
                 }
             }
@@ -193,7 +211,7 @@ public class OrdenadorGastoDAO {
     }
 
     public boolean actualizar(OrdenadorGasto o) {
-        String sql = "UPDATE ordenadores_gasto SET organismo=?, direccion_organismo=?, nombre_ordenador=?, cedula_ordenador=?, cargo_ordenador=?, decreto_nombramiento=?, acta_posesion=? WHERE id=?";
+        String sql = "UPDATE ordenadores_gasto SET organismo=?, direccion_organismo=?, nombre_ordenador=?, cedula_ordenador=?, cargo_ordenador=?, decreto_nombramiento=?, acta_posesion=?, juridico_nombre=?, juridico_cargo=?, tecnico_nombre=?, tecnico_cargo=?, financiero_nombre=?, financiero_cargo=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, o.getOrganismo());
@@ -203,7 +221,13 @@ public class OrdenadorGastoDAO {
             ps.setString(5, o.getCargoOrdenador());
             ps.setString(6, o.getDecretoNombramiento());
             ps.setString(7, o.getActaPosesion());
-            ps.setInt(8, o.getId());
+            ps.setString(8, o.getJuridicoNombre());
+            ps.setString(9, o.getJuridicoCargo());
+            ps.setString(10, o.getTecnicoNombre());
+            ps.setString(11, o.getTecnicoCargo());
+            ps.setString(12, o.getFinancieroNombre());
+            ps.setString(13, o.getFinancieroCargo());
+            ps.setInt(14, o.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

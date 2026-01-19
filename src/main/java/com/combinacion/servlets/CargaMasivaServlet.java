@@ -101,6 +101,14 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "decreto_nombramiento", "Decreto de nombramiento");
                 logMapping(log, map, "acta_posesion", "Acta de posesión");
 
+                log.append("ESTRUCTURADORES:\n");
+                logMapping(log, map, "juridico_nombre", "Jurídico Nombre");
+                logMapping(log, map, "juridico_cargo", "Jurídico Cargo");
+                logMapping(log, map, "tecnico_nombre", "Técnico Nombre");
+                logMapping(log, map, "tecnico_cargo", "Técnico Cargo");
+                logMapping(log, map, "financiero_nombre", "Financiero Nombre");
+                logMapping(log, map, "financiero_cargo", "Financiero Cargo");
+
                 // Log del mapeo de CONTRATISTAS
                 log.append("\nCONTRATISTAS:\n");
                 logMapping(log, map, "contratista_nombre", "Nombre");
@@ -298,6 +306,21 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("acta_posesion", i);
             }
 
+            // ===== ESTRUCTURADORES =====
+            else if (h.contains("juridico") && h.contains("nombre")) {
+                map.put("juridico_nombre", i);
+            } else if (h.contains("juridico") && h.contains("cargo")) {
+                map.put("juridico_cargo", i);
+            } else if (h.contains("tecnico") && h.contains("nombre")) {
+                map.put("tecnico_nombre", i);
+            } else if (h.contains("tecnico") && h.contains("cargo")) {
+                map.put("tecnico_cargo", i);
+            } else if (h.contains("financiero") && h.contains("nombre")) {
+                map.put("financiero_nombre", i);
+            } else if (h.contains("financiero") && h.contains("cargo")) {
+                map.put("financiero_cargo", i);
+            }
+
             // ===== CONTRATISTAS =====
             else if (h.contains("nombre") && h.contains("contratista")) {
                 map.put("contratista_nombre", i);
@@ -413,6 +436,14 @@ public class CargaMasivaServlet extends HttpServlet {
             ordenador.setCargoOrdenador(get(row, map, "cargo_ordenador"));
             ordenador.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
             ordenador.setActaPosesion(get(row, map, "acta_posesion"));
+
+            // Estructuradores
+            ordenador.setJuridicoNombre(get(row, map, "juridico_nombre"));
+            ordenador.setJuridicoCargo(get(row, map, "juridico_cargo"));
+            ordenador.setTecnicoNombre(get(row, map, "tecnico_nombre"));
+            ordenador.setTecnicoCargo(get(row, map, "tecnico_cargo"));
+            ordenador.setFinancieroNombre(get(row, map, "financiero_nombre"));
+            ordenador.setFinancieroCargo(get(row, map, "financiero_cargo"));
 
             boolean insertado = ordenadorDAO.insertar(ordenador);
             if (insertado && !cedula.isEmpty()) {
