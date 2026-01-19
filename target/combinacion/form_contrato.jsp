@@ -239,79 +239,82 @@
                     </form>
                 </div>
             </div>
+        </div>
+        </div>
+        </div>
 
-            <!-- jQuery and Bootstrap JS -->
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            <script>
-                $(document).ready(function () {
-                    // Initialize Bootstrap Tabs manually to ensure they work
-                    var triggerTabList = [].slice.call(document.querySelectorAll('#myTab button'))
-                    triggerTabList.forEach(function (triggerEl) {
-                        var tabTrigger = new bootstrap.Tab(triggerEl)
-                        triggerEl.addEventListener('click', function (event) {
-                            event.preventDefault()
-                            tabTrigger.show()
-                        })
+        <!-- jQuery and Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Initialize Bootstrap Tabs manually to ensure they work
+                var triggerTabList = [].slice.call(document.querySelectorAll('#myTab button'))
+                triggerTabList.forEach(function (triggerEl) {
+                    var tabTrigger = new bootstrap.Tab(triggerEl)
+                    triggerEl.addEventListener('click', function (event) {
+                        event.preventDefault()
+                        tabTrigger.show()
                     })
+                })
 
-                    // Auto-calcular Edad
-                    $('input[name="contratista_fecha_nac"]').on('change', function () {
-                        var fechaNac = new Date($(this).val());
-                        var hoy = new Date();
-                        if (!isNaN(fechaNac.getTime())) {
-                            var edad = hoy.getFullYear() - fechaNac.getFullYear();
-                            var m = hoy.getMonth() - fechaNac.getMonth();
-                            if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
-                                edad--;
-                            }
-                            $('input[name="contratista_edad"]').val(edad);
+                // Auto-calcular Edad
+                $('input[name="contratista_fecha_nac"]').on('change', function () {
+                    var fechaNac = new Date($(this).val());
+                    var hoy = new Date();
+                    if (!isNaN(fechaNac.getTime())) {
+                        var edad = hoy.getFullYear() - fechaNac.getFullYear();
+                        var m = hoy.getMonth() - fechaNac.getMonth();
+                        if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+                            edad--;
                         }
-                    });
-
-                    // AJAX: Buscar Contratista por Cédula
-                    $('input[name="contratista_cedula"]').on('blur', function () {
-                        var cedula = $(this).val();
-                        console.log("Blur event detected. Cedula: " + cedula);
-
-                        if (cedula && cedula.length > 4) {
-                            console.log("Starting AJAX request...");
-                            $.ajax({
-                                url: '${pageContext.request.contextPath}/contratistas',
-                                type: 'GET',
-                                cache: false,
-                                data: { action: 'search', cedula: cedula, _: new Date().getTime() },
-                                dataType: 'json',
-                                success: function (data) {
-                                    console.log("AJAX success. Data: ", data);
-                                    if (data.found) {
-                                        $('input[name="contratista_dv"]').val(data.dv);
-                                        $('input[name="contratista_nombre"]').val(data.nombre);
-                                        $('input[name="contratista_telefono"]').val(data.telefono);
-                                        $('input[name="contratista_correo"]').val(data.correo);
-                                        $('input[name="contratista_direccion"]').val(data.direccion);
-                                        $('input[name="contratista_fecha_nac"]').val(data.fecha_nacimiento);
-                                        $('input[name="contratista_edad"]').val(data.edad);
-                                        $('input[name="contratista_fecha_nac"]').trigger('change');
-                                        $('input[name="contratista_cedula"]').addClass('is-valid').removeClass('is-invalid');
-                                    } else {
-                                        console.log("Contratista not found.");
-                                        $('input[name="contratista_cedula"]').addClass('is-invalid').removeClass('is-valid');
-                                        alert("El contratista con cédula " + cedula + " no existe en la base de datos.");
-                                    }
-                                },
-                                error: function (xhr, status, error) {
-                                    console.error("AJAX Error: " + status + " - " + error);
-                                    alert("Error de comunicación con el servidor. Verifique la consola (F12). Detalle: " + error);
-                                }
-                            });
-                        }
-                    });
+                        $('input[name="contratista_edad"]').val(edad);
+                    }
                 });
-            </script>
 
-            <!-- Footer -->
-            <jsp:include page="inc/footer.jsp" />
+                // AJAX: Buscar Contratista por Cédula
+                $('input[name="contratista_cedula"]').on('blur', function () {
+                    var cedula = $(this).val();
+                    console.log("Blur event detected. Cedula: " + cedula);
+
+                    if (cedula && cedula.length > 4) {
+                        console.log("Starting AJAX request...");
+                        $.ajax({
+                            url: '${pageContext.request.contextPath}/contratistas',
+                            type: 'GET',
+                            cache: false,
+                            data: { action: 'search', cedula: cedula, _: new Date().getTime() },
+                            dataType: 'json',
+                            success: function (data) {
+                                console.log("AJAX success. Data: ", data);
+                                if (data.found) {
+                                    $('input[name="contratista_dv"]').val(data.dv);
+                                    $('input[name="contratista_nombre"]').val(data.nombre);
+                                    $('input[name="contratista_telefono"]').val(data.telefono);
+                                    $('input[name="contratista_correo"]').val(data.correo);
+                                    $('input[name="contratista_direccion"]').val(data.direccion);
+                                    $('input[name="contratista_fecha_nac"]').val(data.fecha_nacimiento);
+                                    $('input[name="contratista_edad"]').val(data.edad);
+                                    $('input[name="contratista_fecha_nac"]').trigger('change');
+                                    $('input[name="contratista_cedula"]').addClass('is-valid').removeClass('is-invalid');
+                                } else {
+                                    console.log("Contratista not found.");
+                                    $('input[name="contratista_cedula"]').addClass('is-invalid').removeClass('is-valid');
+                                    alert("El contratista con cédula " + cedula + " no existe en la base de datos.");
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("AJAX Error: " + status + " - " + error);
+                                alert("Error de comunicación con el servidor. Verifique la consola (F12). Detalle: " + error);
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+
+        <!-- Footer -->
+        <jsp:include page="inc/footer.jsp" />
     </body>
 
     </html>
