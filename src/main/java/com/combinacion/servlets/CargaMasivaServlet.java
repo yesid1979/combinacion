@@ -325,18 +325,24 @@ public class CargaMasivaServlet extends HttpServlet {
 
             // ===== ESTRUCTURADORES =====
             // ===== ESTRUCTURADORES =====
+            // ===== ESTRUCTURADORES =====
             else if (h.contains("juridico") && !h.contains("cargo")) {
+                System.out.println("DEBUG: Mapeado juridico_nombre -> Col " + i);
                 map.put("juridico_nombre", i);
             } else if (h.contains("juridico") && h.contains("cargo")) {
+                System.out.println("DEBUG: Mapeado juridico_cargo -> Col " + i);
                 map.put("juridico_cargo", i);
             } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
-                // !apoyo para evitar confusión con otros roles si los hubiera
+                System.out.println("DEBUG: Mapeado tecnico_nombre -> Col " + i);
                 map.put("tecnico_nombre", i);
             } else if (h.contains("tecnico") && h.contains("cargo")) {
+                System.out.println("DEBUG: Mapeado tecnico_cargo -> Col " + i);
                 map.put("tecnico_cargo", i);
             } else if (h.contains("financiero") && !h.contains("cargo")) {
+                System.out.println("DEBUG: Mapeado financiero_nombre -> Col " + i);
                 map.put("financiero_nombre", i);
             } else if (h.contains("financiero") && h.contains("cargo")) {
+                System.out.println("DEBUG: Mapeado financiero_cargo -> Col " + i);
                 map.put("financiero_cargo", i);
             }
 
@@ -648,6 +654,7 @@ public class CargaMasivaServlet extends HttpServlet {
             e.setFinancieroCargo(get(row, map, "financiero_cargo"));
 
             boolean insertado = estructuradorDAO.insertar(e);
+            log.append("    > Resultado insercion BD: ").append(insertado ? "Exitoso" : "Fallido").append("\n");
             return insertado ? 1 : 0;
 
         } catch (Exception ex) {
