@@ -85,12 +85,12 @@
                                 { "data": 0 }, // Numero
                                 { "data": 1 }, // Contratista (Nombre)
                                 { "data": 2 }, // Objeto
-                                { "data": 3 }, // Fecha Inicio
-                                { "data": 4 }, // Fecha Fin
                                 {
-                                    "data": 5, // Valor
+                                    "data": 3, // Valor Total
                                     "render": $.fn.dataTable.render.number(',', '.', 2, '$ ')
                                 },
+                                { "data": 4 }, // Fecha Inicio
+                                { "data": 5 }, // Fecha Fin
                                 {
                                     "data": 6, // Estado
                                     "render": function (data, type, row) {

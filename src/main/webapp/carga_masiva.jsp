@@ -32,7 +32,7 @@
 
                         <div class="row g-3 mt-2">
                             <!-- Ordenadores -->
-                            <div class="col-md-3 border-end">
+                            <div class="col-md-4 border-end">
                                 <h6 class="fw-bold text-primary">
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
@@ -43,7 +43,7 @@
                             </div>
 
                             <!-- Contratistas -->
-                            <div class="col-md-3 border-end">
+                            <div class="col-md-4 border-end">
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
@@ -53,7 +53,7 @@
                             </div>
 
                             <!-- Supervisores -->
-                            <div class="col-md-3 border-end">
+                            <div class="col-md-4">
                                 <h6 class="fw-bold text-info">
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
@@ -63,7 +63,7 @@
                             </div>
 
                             <!-- Estructuradores -->
-                            <div class="col-md-3 border-end">
+                            <div class="col-md-4 border-end mt-3">
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
@@ -73,13 +73,23 @@
                             </div>
 
                             <!-- Presupuesto -->
-                            <div class="col-md-3">
+                            <div class="col-md-4 border-end mt-3">
                                 <h6 class="fw-bold text-danger">
                                     <i class="bi bi-cash-coin me-1"></i>Presupuesto:
                                 </h6>
                                 <small class="d-block">• CDP (Número, Fecha, Valor)</small>
                                 <small class="d-block">• RP (Número, Fecha)</small>
                                 <small class="d-block">• Ficha EBI, Rubro</small>
+                            </div>
+
+                            <!-- Contratos -->
+                            <div class="col-md-4 mt-3">
+                                <h6 class="fw-bold text-dark">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Contratos:
+                                </h6>
+                                <small class="d-block">• No. Contrato, Objeto</small>
+                                <small class="d-block">• Valores, Fechas (Inicio/Term.)</small>
+                                <small class="d-block">• Dependencia, Proceso</small>
                             </div>
                         </div>
                         <hr>

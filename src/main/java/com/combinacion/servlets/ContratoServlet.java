@@ -37,6 +37,9 @@ public class ContratoServlet extends HttpServlet {
             case "new":
                 showNewForm(request, response);
                 break;
+            case "edit":
+                showEditForm(request, response);
+                break;
             case "list":
             default:
                 listContratos(request, response);
@@ -45,53 +48,62 @@ public class ContratoServlet extends HttpServlet {
     }
 
     private void listContratosData(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // DataTables parameters
-        String draw = request.getParameter("draw");
-        int start = ParseUtils.parseInt(request.getParameter("start"));
-        int length = ParseUtils.parseInt(request.getParameter("length"));
-        String searchValue = request.getParameter("search[value]");
-        int orderColumn = ParseUtils.parseInt(request.getParameter("order[0][column]"));
-        String orderDir = request.getParameter("order[0][dir]");
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            // DataTables parameters
+            String draw = request.getParameter("draw");
+            int start = ParseUtils.parseInt(request.getParameter("start"));
+            int length = ParseUtils.parseInt(request.getParameter("length"));
+            String searchValue = request.getParameter("search[value]");
+            int orderColumn = ParseUtils.parseInt(request.getParameter("order[0][column]"));
+            String orderDir = request.getParameter("order[0][dir]");
 
-        int total = contratoDAO.countAll();
-        int filtered = contratoDAO.countFiltered(searchValue);
-        List<Contrato> contratos = contratoDAO.findWithPagination(start, length, searchValue, orderColumn, orderDir);
+            int total = contratoDAO.countAll();
+            int filtered = contratoDAO.countFiltered(searchValue);
+            List<Contrato> contratos = contratoDAO.findWithPagination(start, length, searchValue, orderColumn,
+                    orderDir);
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
+            json.append("\"recordsTotal\": ").append(total).append(",");
+            json.append("\"recordsFiltered\": ").append(filtered).append(",");
+            json.append("\"data\": [");
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
-        json.append("\"recordsTotal\": ").append(total).append(",");
-        json.append("\"recordsFiltered\": ").append(filtered).append(",");
-        json.append("\"data\": [");
+            for (int i = 0; i < contratos.size(); i++) {
+                Contrato c = contratos.get(i);
+                json.append("[");
+                json.append("\"").append(escapeJson(c.getNumeroContrato())).append("\",");
+                json.append("\"").append(escapeJson(c.getContratistaNombre())).append("\",");
+                json.append("\"").append(escapeJson(c.getObjeto())).append("\",");
+                json.append("\"").append(c.getValorTotalNumeros() != null ? c.getValorTotalNumeros() : "0")
+                        .append("\",");
+                json.append("\"").append(c.getFechaInicio() != null ? c.getFechaInicio().toString() : "").append("\",");
+                json.append("\"").append(c.getFechaTerminacion() != null ? c.getFechaTerminacion().toString() : "")
+                        .append("\",");
+                json.append("\"").append(escapeJson(c.getEstado())).append("\",");
+                json.append("\"").append(c.getId()).append("\""); // For actions
+                json.append("]");
+                if (i < contratos.size() - 1)
+                    json.append(",");
+            }
 
-        for (int i = 0; i < contratos.size(); i++) {
-            Contrato c = contratos.get(i);
-            json.append("[");
-            json.append("\"").append(escapeJson(c.getNumeroContrato())).append("\",");
-            json.append("\"").append(escapeJson(c.getContratistaNombre())).append("\",");
-            json.append("\"").append(escapeJson(c.getObjeto())).append("\",");
-            json.append("\"").append(c.getFechaInicio() != null ? c.getFechaInicio().toString() : "").append("\",");
-            json.append("\"").append(c.getFechaTerminacion() != null ? c.getFechaTerminacion().toString() : "")
-                    .append("\",");
-            json.append("\"").append(c.getValorTotalNumeros()).append("\",");
-            json.append("\"").append(escapeJson(c.getEstado())).append("\",");
-            json.append("\"").append(c.getId()).append("\""); // For actions
-            json.append("]");
-            if (i < contratos.size() - 1)
-                json.append(",");
+            json.append("]}");
+            response.getWriter().write(json.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().write("{\"error\": \"Error generando JSON: " + escapeJson(e.getMessage()) + "\"}");
         }
-
-        json.append("]}");
-        response.getWriter().write(json.toString());
     }
 
     private String escapeJson(String s) {
         if (s == null)
             return "";
-        return s.replace("\"", "\\\"").replace("\\", "\\\\").replace("\n", " ").replace("\r", " ");
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\t", " ");
     }
 
     @Override
@@ -100,6 +112,8 @@ public class ContratoServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
             insertContrato(request, response);
+        } else if ("update".equals(action)) {
+            updateContrato(request, response);
         } else if ("data".equals(action)) { // Handle DataTables AJAX request via POST
             listContratosData(request, response);
         } else {
@@ -199,6 +213,76 @@ public class ContratoServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error inesperado: " + e.getMessage());
+            listContratos(request, response);
+        }
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = ParseUtils.parseInt(request.getParameter("id"));
+            Contrato contrato = contratoDAO.obtenerPorId(id);
+            if (contrato == null) {
+                request.setAttribute("error", "Contrato no encontrado.");
+                listContratos(request, response);
+                return;
+            }
+            request.setAttribute("contrato", contrato);
+            request.setAttribute("action", "update");
+
+            List<Supervisor> listaSupervisores = supervisorDAO.listarTodos();
+            List<OrdenadorGasto> listaOrdenadores = ordenadorDAO.listarTodos();
+            request.setAttribute("listaSupervisores", listaSupervisores);
+            request.setAttribute("listaOrdenadores", listaOrdenadores);
+
+            request.getRequestDispatcher("form_contrato.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar el contrato: " + e.getMessage());
+            listContratos(request, response);
+        }
+    }
+
+    private void updateContrato(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        try {
+            int id = ParseUtils.parseInt(request.getParameter("id"));
+            Contrato contrato = contratoDAO.obtenerPorId(id); // Load existing to update
+            if (contrato == null) {
+                throw new Exception("Contrato a actualizar no existe.");
+            }
+
+            // Update simple fields
+            contrato.setNumeroContrato(request.getParameter("numero_contrato"));
+            contrato.setObjeto(request.getParameter("objeto"));
+            contrato.setValorTotalNumeros(ParseUtils.parseBigDecimal(request.getParameter("valor_total")));
+            contrato.setValorTotalLetras(request.getParameter("valor_total_letras"));
+            contrato.setValorCuotaNumero(ParseUtils.parseBigDecimal(request.getParameter("valor_cuota_numero")));
+            contrato.setValorCuotaLetras(request.getParameter("valor_cuota_letras"));
+            contrato.setValorMediaCuotaLetras(request.getParameter("valor_media_cuota_letras"));
+            contrato.setValorMediaCuotaNumero(
+                    ParseUtils.parseBigDecimal(request.getParameter("valor_media_cuota_numero")));
+
+            contrato.setFechaInicio(ParseUtils.parseDate(request.getParameter("fecha_inicio")));
+            contrato.setFechaTerminacion(ParseUtils.parseDate(request.getParameter("fecha_terminacion")));
+
+            int supervisorId = ParseUtils.parseInt(request.getParameter("id_supervisor"));
+            int ordenadorId = ParseUtils.parseInt(request.getParameter("id_ordenador"));
+
+            if (supervisorId > 0)
+                contrato.setSupervisorId(supervisorId);
+            if (ordenadorId > 0)
+                contrato.setOrdenadorId(ordenadorId);
+
+            if (contratoDAO.actualizar(contrato)) {
+                response.sendRedirect("contratos?action=list");
+            } else {
+                request.setAttribute("error", "Error al actualizar el contrato.");
+                listContratos(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error inesperado al actualizar: " + e.getMessage());
             listContratos(request, response);
         }
     }

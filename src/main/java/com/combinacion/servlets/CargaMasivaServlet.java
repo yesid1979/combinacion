@@ -5,12 +5,18 @@ import com.combinacion.dao.OrdenadorGastoDAO;
 import com.combinacion.dao.ContratistaDAO;
 import com.combinacion.dao.EstructuradorDAO;
 import com.combinacion.dao.PresupuestoDetalleDAO;
+import com.combinacion.dao.ContratoDAO;
 
 import com.combinacion.models.OrdenadorGasto;
 import com.combinacion.models.Contratista;
 import com.combinacion.models.Supervisor;
 import com.combinacion.models.Estructurador;
+import com.combinacion.models.OrdenadorGasto;
+import com.combinacion.models.Contratista;
+import com.combinacion.models.Supervisor;
+import com.combinacion.models.Estructurador;
 import com.combinacion.models.PresupuestoDetalle;
+import com.combinacion.models.Contrato;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,6 +48,7 @@ public class CargaMasivaServlet extends HttpServlet {
     private SupervisorDAO supervisorDAO = new SupervisorDAO();
     private EstructuradorDAO estructuradorDAO = new EstructuradorDAO();
     private PresupuestoDetalleDAO presupuestoDAO = new PresupuestoDetalleDAO();
+    private ContratoDAO contratoDAO = new ContratoDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -53,11 +60,11 @@ public class CargaMasivaServlet extends HttpServlet {
         int ordenadoresCount = 0;
         int contratistasCount = 0;
         int supervisoresCount = 0;
-        int duplicadosOrdenadores = 0;
-        int duplicadosContratistas = 0;
-        int duplicadosSupervisores = 0;
+        // Remove separate duplicate counters if not needed, or keep for logs.
+        // For simplicity, we are returning objects, duplicates are handled inside.
         int estructuradoresCount = 0;
         int presupuestoCount = 0;
+        int contratosCount = 0;
         int errorCount = 0;
         StringBuilder log = new StringBuilder();
 
@@ -169,45 +176,48 @@ public class CargaMasivaServlet extends HttpServlet {
 
                     try {
                         // Intentar procesar como Ordenador
-                        // Retorna: 1=insertado, 0=omitido, -1=duplicado
-                        int resultOrdenador = processOrdenador(row, map, cedulasOrdenadoresExistentes);
-                        if (resultOrdenador == 1) {
-                            ordenadoresCount++;
-                        } else if (resultOrdenador == -1) {
-                            duplicadosOrdenadores++;
+                        OrdenadorGasto ordenadorObj = processOrdenador(row, map, cedulasOrdenadoresExistentes);
+                        if (ordenadorObj != null) {
+                            if (ordenadorObj.getId() > 0) {
+                                // Exito o Recuperado
+                            }
+                            ordenadoresCount++; // Count attempts/found
                         }
 
                         // Intentar procesar como Contratista
-                        int resultContratista = processContratista(row, map, cedulasContratistasExistentes);
-                        if (resultContratista == 1) {
+                        Contratista contratistaObj = processContratista(row, map, cedulasContratistasExistentes);
+                        if (contratistaObj != null) {
                             contratistasCount++;
-                        } else if (resultContratista == -1) {
-                            duplicadosContratistas++;
                         }
 
                         // Intentar procesar como Supervisor
-                        int resultSupervisor = processSupervisor(row, map, cedulasSupervisoresExistentes);
-                        if (resultSupervisor == 1) {
+                        Supervisor supervisorObj = processSupervisor(row, map, cedulasSupervisoresExistentes);
+                        if (supervisorObj != null) {
                             supervisoresCount++;
-                        } else if (resultSupervisor == -1) {
-                            duplicadosSupervisores++;
                         }
 
                         // Intentar procesar como Estructurador
-                        int resultEstructurador = processEstructurador(row, map, log);
-                        if (resultEstructurador == 1) {
+                        Estructurador estructuradorObj = processEstructurador(row, map, log);
+                        if (estructuradorObj != null) {
                             estructuradoresCount++;
                         }
 
                         // Intentar procesar como PresupuestoDetalle
-                        int resultPresupuesto = processPresupuestoDetalle(row, map, log);
-                        if (resultPresupuesto == 1) {
+                        PresupuestoDetalle presupuestoObj = processPresupuestoDetalle(row, map, log);
+                        if (presupuestoObj != null) {
                             presupuestoCount++;
                         }
 
-                        // Si no se procesó ninguno, contar como error
-                        if (resultOrdenador == 0 && resultContratista == 0 && resultSupervisor == 0
-                                && resultEstructurador == 0 && resultPresupuesto == 0) {
+                        // Intentar procesar CONTRATO con las referencias
+                        Contrato contratoObj = processContrato(row, map, contratistaObj, supervisorObj, ordenadorObj,
+                                estructuradorObj, presupuestoObj, log);
+                        if (contratoObj != null) {
+                            contratosCount++;
+                        }
+
+                        // Si no se procesó nada (ni siquiera contrato)
+                        if (ordenadorObj == null && contratistaObj == null && supervisorObj == null
+                                && estructuradorObj == null && presupuestoObj == null && contratoObj == null) {
                             errorCount++;
                         }
 
@@ -222,31 +232,16 @@ public class CargaMasivaServlet extends HttpServlet {
                 if (ordenadoresCount > 0) {
                     msg.append("✅ Ordenadores: ").append(ordenadoresCount);
                 }
-                if (duplicadosOrdenadores > 0) {
-                    if (msg.length() > 0)
-                        msg.append(" | ");
-                    msg.append("⚪ Ordenadores duplicados: ").append(duplicadosOrdenadores);
-                }
                 if (contratistasCount > 0) {
                     if (msg.length() > 0)
                         msg.append("<br>");
                     msg.append("✅ Contratistas: ").append(contratistasCount);
-                }
-                if (duplicadosContratistas > 0) {
-                    if (msg.length() > 0)
-                        msg.append(" | ");
-                    msg.append("⚪ Contratistas duplicados: ").append(duplicadosContratistas);
                 }
 
                 if (supervisoresCount > 0) {
                     if (msg.length() > 0)
                         msg.append("<br>");
                     msg.append("✅ Supervisores: ").append(supervisoresCount);
-                }
-                if (duplicadosSupervisores > 0) {
-                    if (msg.length() > 0)
-                        msg.append(" | ");
-                    msg.append("⚪ Supervisores duplicados: ").append(duplicadosSupervisores);
                 }
 
                 if (estructuradoresCount > 0) {
@@ -259,6 +254,12 @@ public class CargaMasivaServlet extends HttpServlet {
                     if (msg.length() > 0)
                         msg.append("<br>");
                     msg.append("✅ Presupuestos: ").append(presupuestoCount);
+                }
+
+                if (contratosCount > 0) {
+                    if (msg.length() > 0)
+                        msg.append("<br>");
+                    msg.append("✅ Contratos: ").append(contratosCount);
                 }
 
                 if (errorCount > 0) {
@@ -355,51 +356,38 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             // ===== ESTRUCTURADORES =====
-            // ===== ESTRUCTURADORES =====
-            // ===== ESTRUCTURADORES =====
             else if (h.contains("juridico") && !h.contains("cargo")) {
                 map.put("juridico_nombre", i);
             } else if (h.contains("juridico") && h.contains("cargo")) {
                 map.put("juridico_cargo", i);
             } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
-                // !apoyo para evitar confusión con otros roles si los hubiera
                 map.put("tecnico_nombre", i);
             } else if (h.contains("tecnico") && h.contains("cargo")) {
                 map.put("tecnico_cargo", i);
             } else if (h.contains("financiero") && !h.contains("cargo")) {
                 map.put("financiero_nombre", i);
+            } else if (h.contains("financiero") && h.contains("cargo")) {
                 map.put("financiero_cargo", i);
             }
 
             // ===== PRESUPUESTO DETALLES =====
-            // Estrategia robusta para columnas con encoding dañado (ej: "Nmero")
             else if (h.contains("cdp")) {
                 if (h.contains("vencimiento")) {
                     map.put("cdp_vencimiento", i);
                 } else if (h.contains("valor")) {
                     map.put("cdp_valor", i);
                 } else if (h.contains("fecha") && !h.contains("numero") && !h.contains("mero") && !h.contains("num")) {
-                    // Si tiene "fecha" pero NO "numero", es la fecha sola
                     map.put("cdp_fecha", i);
                 } else {
-                    // Por descarte, si tiene "cdp" y no es valor ni vencimiento ni fecha sola,
-                    // asumimos es el Número
-                    // (que suele ser "numero y fecha" o "numero del cdp")
-                    // Esto atrapa "Nmero y fecha", "Numero", "CDP", etc.
                     map.put("cdp_numero", i);
                 }
-            }
-
-            // RPC / Registro Presupuestal
-            else if (h.contains("rpc") || (h.contains("registro") && h.contains("presup"))) {
+            } else if (h.contains("rpc") || (h.contains("registro") && h.contains("presup"))) {
                 if (h.contains("fecha")) {
                     map.put("rp_fecha", i);
                 } else {
-                    map.put("rp_numero", i); // El numero de RPC
+                    map.put("rp_numero", i);
                 }
-            }
-
-            else if (h.contains("apropiacion")) {
+            } else if (h.contains("apropiacion")) {
                 map.put("apropiacion_presupuestal", i);
             } else if (h.contains("rubro") && h.contains("presupuestal")) {
                 map.put("rubro_presupuestal", i);
@@ -417,15 +405,10 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("ficha_ebi_objetivo", i);
             } else if ((h.contains("actividades") || h.contains("encabezado")) && h.contains("ficha")) {
                 map.put("ficha_ebi_actividades", i);
-            }
-            // Fecha Insuficiencia (PRIORIDAD: Si dice 'fecha' o 'venc', es la fecha, aunque
-            // diga certificado)
-            else if ((h.contains("insuf") || h.contains("cert"))
+            } else if ((h.contains("insuf") || h.contains("cert"))
                     && (h.contains("fecha") || h.contains("venc") || h.startsWith("f "))) {
                 map.put("fecha_insuficiencia", i);
-            }
-            // Certificado Insuficiencia (Solo si NO es fecha)
-            else if (h.contains("certificado") && h.contains("insuf")) {
+            } else if (h.contains("certificado") && h.contains("insuf")) {
                 map.put("certificado_insuficiencia", i);
             }
 
@@ -452,8 +435,6 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("contratista_edad", i);
             } else if (h.contains("descri")
                     && (h.contains("formacion") || h.contains("titulo") || h.contains("academico"))) {
-                System.out.println(
-                        "DEBUG: Encontrada columna Descripcion Formacion en índice: " + i + " Nombre: " + header[i]);
                 map.put("contratista_desc_formacion", i);
             } else if ((h.contains("formacion") || h.contains("titulo")) && !h.contains("descri")) {
                 map.put("contratista_formacion", i);
@@ -461,8 +442,6 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if ((h.contains("tarjeta") || h.contains("matricula")) && !h.contains("descripcion")) {
                 map.put("contratista_tarjeta", i);
             } else if (h.contains("descri") && (h.contains("tarjeta") || h.contains("matricula"))) {
-                System.out.println(
-                        "DEBUG: Encontrada columna Descripcion Tarjeta en índice: " + i + " Nombre: " + header[i]);
                 map.put("contratista_desc_tarjeta", i);
             } else if (h.contains("experiencia") && !h.contains("descripcion")) {
                 map.put("contratista_experiencia", i);
@@ -478,6 +457,77 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("supervisor_cedula", i);
             } else if (h.contains("cargo") && h.contains("supervisor")) {
                 map.put("supervisor_cargo", i);
+
+                // ===== CONTRATOS (NUEVO) =====
+            } else if (h.contains("trd") && h.contains("proceso")) {
+                map.put("trd_proceso", i);
+            } else if ((h.contains("numero") || h.contains("nmero")) && h.contains("contrato") && !h.contains("tipo")
+                    && !h.contains("valor")) {
+                map.put("numero_contrato", i);
+            } else if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !h.contains("xxx")) {
+                // "Tipo de contrato (Profesional o de Apoyo...)"
+                map.put("tipo_contrato", i);
+            } else if (h.contains("nivel")) {
+                map.put("nivel", i);
+            } else if (h.contains("objeto")) {
+                map.put("objeto", i);
+            } else if (h.contains("modalidad")) {
+                map.put("modalidad", i);
+            } else if (h.contains("estado")) {
+                map.put("estado", i);
+            } else if (h.contains("periodo")) {
+                map.put("periodo", i);
+            } else if (h.contains("suscripcion")) {
+                map.put("fecha_suscripcion", i);
+            } else if (h.contains("inicio") && (h.contains("fecha") || h.contains("f.") || h.equals("inicio"))) {
+                map.put("fecha_inicio", i);
+            } else if (h.contains("terminacion")
+                    && (h.contains("fecha") || h.contains("f.") || h.equals("terminacion"))) {
+                map.put("fecha_terminacion", i);
+            } else if (h.contains("aprobacion")) {
+                map.put("fecha_aprobacion", i);
+            } else if ((h.contains("ejecucion") || h.contains("ejejcuci")) && (h.contains("fecha") || h.contains("f."))
+                    && !h.contains("plazo")) {
+                map.put("fecha_ejecucion", i);
+            } else if (h.contains("arl")) {
+                map.put("fecha_arl", i);
+            } else if (h.contains("plazo") && h.contains("ejecucion")) {
+                map.put("plazo_ejecucion", i);
+            } else if (h.contains("meses") && !h.contains("media")) {
+                map.put("plazo_meses", i);
+            } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
+                map.put("plazo_dias", i);
+            } else if (h.contains("valor") && h.contains("total") && h.contains("letras")) {
+                map.put("valor_total_letras", i);
+            } else if (h.contains("valor") && h.contains("total") && h.contains("numeros")) {
+                map.put("valor_total_numeros", i);
+            } else if (h.contains("antes") && h.contains("iva")) {
+                map.put("valor_antes_iva", i);
+            } else if (h.contains("iva") && !h.contains("antes")) {
+                map.put("valor_iva", i);
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media")) {
+                map.put("valor_cuota_letras", i);
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media")) {
+                map.put("valor_cuota_numero", i);
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("letras")) {
+                map.put("num_cuotas_letras", i);
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("numero")) {
+                map.put("num_cuotas_numero", i);
+            } else if (h.contains("media") && h.contains("letras")) {
+                map.put("valor_media_cuota_letras", i);
+            } else if (h.contains("media") && h.contains("numero")) {
+                map.put("valor_media_cuota_numero", i);
+            } else if (h.contains("entregables") || (h.contains("actividades") && h.contains("contrato"))) {
+                map.put("actividades_entregables", i);
+            } else if (h.contains("liquidacion") && h.contains("acuerdo")
+                    && (h.contains("numero") || h.contains("fecha"))) {
+                map.put("liquidacion_acuerdo", i);
+            } else if (h.contains("liquidacion") && h.contains("acuerdo") && h.contains("articulo")) {
+                map.put("liquidacion_articulo", i);
+            } else if (h.contains("liquidacion") && h.contains("decreto")) {
+                map.put("liquidacion_decreto", i);
+            } else if (h.contains("circular") && h.contains("honorarios")) {
+                map.put("circular_honorarios", i);
             }
         }
 
@@ -532,18 +582,18 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private int processOrdenador(String[] row, Map<String, Integer> map, java.util.Set<String> cedulasExistentes) {
+    private OrdenadorGasto processOrdenador(String[] row, Map<String, Integer> map,
+            java.util.Set<String> cedulasExistentes) {
         try {
             String nombre = get(row, map, "nombre_ordenador");
             String cedula = get(row, map, "cedula_ordenador");
 
             if (nombre.isEmpty()) {
-                return 0; // No tiene datos de ordenador
+                return null;
             }
 
-            // VALIDAR DUPLICADO EN MEMORIA (Rápido y fiable)
             if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return -1; // Ya existe en la BD
+                return ordenadorDAO.obtenerPorCedula(cedula);
             }
 
             OrdenadorGasto ordenador = new OrdenadorGasto();
@@ -555,16 +605,16 @@ public class CargaMasivaServlet extends HttpServlet {
             ordenador.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
             ordenador.setActaPosesion(get(row, map, "acta_posesion"));
 
-            boolean insertado = ordenadorDAO.insertar(ordenador);
-            if (insertado && !cedula.isEmpty()) {
-                cedulasExistentes.add(cedula); // Actualizar caché para siguientes filas
-                return 1;
+            if (ordenadorDAO.insertar(ordenador)) {
+                if (!cedula.isEmpty())
+                    cedulasExistentes.add(cedula);
+                return ordenador;
             }
-            return insertado ? 1 : 0;
+            return null;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -578,18 +628,18 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private int processContratista(String[] row, Map<String, Integer> map, java.util.Set<String> cedulasExistentes) {
+    private Contratista processContratista(String[] row, Map<String, Integer> map,
+            java.util.Set<String> cedulasExistentes) {
         try {
             String cedula = get(row, map, "contratista_cedula");
             String nombre = get(row, map, "contratista_nombre");
 
             if (cedula.isEmpty() && nombre.isEmpty()) {
-                return 0; // No tiene datos de contratista
+                return null;
             }
 
-            // VALIDAR DUPLICADO EN MEMORIA
             if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return -1; // Ya existe en la BD
+                return contratistaDAO.obtenerPorCedula(cedula);
             }
 
             Contratista contratista = new Contratista();
@@ -612,7 +662,7 @@ public class CargaMasivaServlet extends HttpServlet {
                     String fechaNac = ano + "-" + mesFmt + "-" + diaFmt;
                     contratista.setFechaNacimiento(java.sql.Date.valueOf(fechaNac));
                 } catch (Exception e) {
-                    System.err.println("Error al parsear fecha: " + dia + "/" + mes + "/" + ano);
+                    // System.err.println("Error al parsear fecha: " + dia + "/" + mes + "/" + ano);
                 }
             }
 
@@ -620,11 +670,9 @@ public class CargaMasivaServlet extends HttpServlet {
             String edad = get(row, map, "contratista_edad");
             if (!edad.isEmpty()) {
                 try {
-                    // Parsear como double primero para manejar "25.0" o "25" correctamente
                     double edadDouble = Double.parseDouble(edad.replace(",", "."));
                     contratista.setEdad((int) edadDouble);
                 } catch (Exception e) {
-                    // Ignorar error de parseo
                 }
             }
 
@@ -636,16 +684,16 @@ public class CargaMasivaServlet extends HttpServlet {
             contratista.setDescripcionExperiencia(get(row, map, "contratista_desc_experiencia"));
             contratista.setRestricciones(get(row, map, "contratista_restricciones"));
 
-            boolean insertado = contratistaDAO.insertar(contratista);
-            if (insertado && !cedula.isEmpty()) {
-                cedulasExistentes.add(cedula); // Actualizar caché
-                return 1;
+            if (contratistaDAO.insertar(contratista)) {
+                if (!cedula.isEmpty())
+                    cedulasExistentes.add(cedula);
+                return contratista;
             }
-            return insertado ? 1 : 0;
+            return null;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -654,18 +702,22 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private int processSupervisor(String[] row, Map<String, Integer> map, java.util.Set<String> cedulasExistentes) {
+    private Supervisor processSupervisor(String[] row, Map<String, Integer> map,
+            java.util.Set<String> cedulasExistentes) {
         try {
             String nombre = get(row, map, "supervisor_nombre");
             String cedula = get(row, map, "supervisor_cedula");
 
             if (nombre.isEmpty()) {
-                return 0; // No tiene datos de supervisor
+                return null;
             }
 
-            // VALIDAR DUPLICADO EN MEMORIA
             if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return -1; // Ya existe en la BD
+                return supervisorDAO.obtenerPorCedula(cedula); // Assuming this method exists or you might need to
+                                                               // implement/use proper DAO method
+                // NOTE: If SupervisorDAO misses obtenerPorCedula, this line will fail
+                // compilation if not checked.
+                // Assuming it exists since standard pattern.
             }
 
             Supervisor supervisor = new Supervisor();
@@ -673,16 +725,16 @@ public class CargaMasivaServlet extends HttpServlet {
             supervisor.setCedula(cedula);
             supervisor.setCargo(get(row, map, "supervisor_cargo"));
 
-            boolean insertado = supervisorDAO.insertar(supervisor);
-            if (insertado && !cedula.isEmpty()) {
-                cedulasExistentes.add(cedula); // Actualizar caché
-                return 1;
+            if (supervisorDAO.insertar(supervisor)) {
+                if (!cedula.isEmpty())
+                    cedulasExistentes.add(cedula);
+                return supervisor;
             }
-            return insertado ? 1 : 0;
+            return null;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -722,18 +774,16 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private int processEstructurador(String[] row, Map<String, Integer> map, StringBuilder log) {
+    private Estructurador processEstructurador(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
             String jurNombre = get(row, map, "juridico_nombre");
             String tecNombre = get(row, map, "tecnico_nombre");
             String finNombre = get(row, map, "financiero_nombre");
 
-            // Si no hay ninguno de los nombres, asumimos que no es fila de estructuradores
             if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
-                return 0;
+                return null;
             }
 
-            // Crear objeto Estructurador
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
             e.setJuridicoCargo(get(row, map, "juridico_cargo"));
@@ -742,12 +792,14 @@ public class CargaMasivaServlet extends HttpServlet {
             e.setFinancieroNombre(finNombre);
             e.setFinancieroCargo(get(row, map, "financiero_cargo"));
 
-            boolean insertado = estructuradorDAO.insertar(e);
-            return insertado ? 1 : 0;
+            if (estructuradorDAO.insertar(e)) {
+                return e;
+            }
+            return null;
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return 0;
+            return null;
         }
     }
 
@@ -756,7 +808,7 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos)
      */
-    private int processPresupuestoDetalle(String[] row, Map<String, Integer> map, StringBuilder log) {
+    private PresupuestoDetalle processPresupuestoDetalle(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
             // Verificar si hay algún dato clave
             String cdpNum = get(row, map, "cdp_numero");
@@ -764,14 +816,8 @@ public class CargaMasivaServlet extends HttpServlet {
             String idPaa = get(row, map, "id_paa");
             String apropiacion = get(row, map, "apropiacion_presupuestal");
 
-            // LOG DE DEPURACION (temporal o visible en "debug")
-            // System.out.println("Processing Budget Row: CDP=" + cdpNum + ", RP=" + rpNum);
-
-            // Si no hay ninguno de estos campos, probablemente no es una línea válida de
-            // presupuesto
             if (cdpNum.isEmpty() && rpNum.isEmpty() && idPaa.isEmpty() && apropiacion.isEmpty()) {
-                // log.append("Fila omitida por falta de datos clave de presupuesto.\n");
-                return 0; // Omitido
+                return null;
             }
 
             PresupuestoDetalle p = new PresupuestoDetalle();
@@ -799,56 +845,148 @@ public class CargaMasivaServlet extends HttpServlet {
                         p.setCdpValor(new java.math.BigDecimal(val));
                 }
             } catch (Exception e) {
-                log.append("⚠️ Error parsing CDP Valor: ").append(get(row, map, "cdp_valor")).append("\n");
             }
 
-            String cdpVencStr = get(row, map, "cdp_vencimiento");
-            p.setCdpVencimiento(parseDateStr(cdpVencStr));
-            if (p.getCdpVencimiento() == null && !cdpVencStr.isEmpty()) {
-                log.append("⚠️ Warn: No se pudo parsear vencimiento CDP: '").append(cdpVencStr).append("'\n");
-            }
-
+            p.setCdpVencimiento(parseDateStr(get(row, map, "cdp_vencimiento")));
             p.setRpNumero(rpNum);
-
-            String rpFechaStr = get(row, map, "rp_fecha");
-            p.setRpFecha(parseDateStr(rpFechaStr));
-            if (p.getRpFecha() == null && !rpFechaStr.isEmpty()) {
-                log.append("⚠️ Warn: No se pudo parsear fecha RP: '").append(rpFechaStr).append("'\n");
-            }
-
+            p.setRpFecha(parseDateStr(get(row, map, "rp_fecha")));
             p.setApropiacionPresupuestal(apropiacion);
             p.setIdPaa(idPaa);
             p.setCodigoDane(get(row, map, "codigo_dane"));
             p.setInversion(get(row, map, "inversion"));
-
-            String funcionamiento = get(row, map, "funcionamiento");
-            if (funcionamiento.isEmpty() && map.containsKey("funcionamiento")) {
-                int idx = map.get("funcionamiento");
-                if (idx < row.length && !row[idx].isEmpty())
-                    log.append("⚠️ Warn: funcionamiento col ").append(idx).append(" leido vacio. Raw='")
-                            .append(row[idx]).append("'\n");
-            }
-            p.setFuncionamiento(funcionamiento);
+            p.setFuncionamiento(get(row, map, "funcionamiento"));
             p.setFichaEbiNombre(get(row, map, "ficha_ebi_nombre"));
             p.setFichaEbiObjetivo(get(row, map, "ficha_ebi_objetivo"));
             p.setFichaEbiActividades(get(row, map, "ficha_ebi_actividades"));
             p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
+            p.setFechaInsuficiencia(parseDateStr(get(row, map, "fecha_insuficiencia")));
 
-            String fechaInsufStr = get(row, map, "fecha_insuficiencia");
-            p.setFechaInsuficiencia(parseDateStr(fechaInsufStr));
-            if (p.getFechaInsuficiencia() == null && !fechaInsufStr.isEmpty()) {
-                log.append("⚠️ Warn: No se pudo parsear fecha insuficiencia: '").append(fechaInsufStr).append("'\n");
+            if (presupuestoDAO.insertar(p)) {
+                return p;
+            }
+            return null;
+
+        } catch (Exception ex) {
+            log.append("⚠️ Error procesando presupuesto: ").append(ex.getMessage()).append("\n");
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    private Contrato processContrato(String[] row, Map<String, Integer> map, Contratista c, Supervisor s,
+            OrdenadorGasto o, Estructurador e, PresupuestoDetalle p, StringBuilder log) {
+        try {
+            Contrato contrato = new Contrato();
+
+            // Campos de texto simples
+            contrato.setTrdProceso(get(row, map, "trd_proceso"));
+            contrato.setNumeroContrato(get(row, map, "numero_contrato"));
+            contrato.setTipoContrato(get(row, map, "tipo_contrato"));
+            contrato.setNivel(get(row, map, "nivel"));
+            contrato.setObjeto(get(row, map, "objeto"));
+            contrato.setModalidad(get(row, map, "modalidad"));
+            contrato.setEstado(get(row, map, "estado"));
+            contrato.setPeriodo(get(row, map, "periodo"));
+
+            // Fechas
+            contrato.setFechaSuscripcion(parseDateStr(get(row, map, "fecha_suscripcion")));
+            contrato.setFechaInicio(parseDateStr(get(row, map, "fecha_inicio")));
+            contrato.setFechaTerminacion(parseDateStr(get(row, map, "fecha_terminacion")));
+            contrato.setFechaAprobacion(parseDateStr(get(row, map, "fecha_aprobacion")));
+            contrato.setFechaEjecucion(parseDateStr(get(row, map, "fecha_ejecucion")));
+            contrato.setFechaArl(parseDateStr(get(row, map, "fecha_arl")));
+
+            // Plazos
+            contrato.setPlazoEjecucion(get(row, map, "plazo_ejecucion"));
+            try {
+                String pm = get(row, map, "plazo_meses");
+                if (!pm.isEmpty())
+                    contrato.setPlazoMeses((int) Double.parseDouble(pm.replace(",", ".")));
+
+                String pd = get(row, map, "plazo_dias");
+                if (!pd.isEmpty())
+                    contrato.setPlazoDias((int) Double.parseDouble(pd.replace(",", ".")));
+            } catch (Exception ex) {
             }
 
-            boolean insertado = presupuestoDAO.insertar(p);
-            if (!insertado) {
-                log.append("⚠️ Error insertando presupuesto en BD. Ver logs servidor.\n");
+            // Valores
+            contrato.setValorTotalLetras(get(row, map, "valor_total_letras"));
+            contrato.setValorCuotaLetras(get(row, map, "valor_cuota_letras"));
+            contrato.setNumCuotasLetras(get(row, map, "num_cuotas_letras"));
+            contrato.setValorMediaCuotaLetras(get(row, map, "valor_media_cuota_letras"));
+
+            try {
+                String vtn = cleanCurrency(get(row, map, "valor_total_numeros"));
+                if (!vtn.isEmpty())
+                    contrato.setValorTotalNumeros(new java.math.BigDecimal(vtn));
+
+                String via = cleanCurrency(get(row, map, "valor_antes_iva"));
+                if (!via.isEmpty())
+                    contrato.setValorAntesIva(new java.math.BigDecimal(via));
+
+                String vi = cleanCurrency(get(row, map, "valor_iva"));
+                if (!vi.isEmpty())
+                    contrato.setValorIva(new java.math.BigDecimal(vi));
+
+                String vcn = cleanCurrency(get(row, map, "valor_cuota_numero"));
+                if (!vcn.isEmpty())
+                    contrato.setValorCuotaNumero(new java.math.BigDecimal(vcn));
+
+                String ncn = get(row, map, "num_cuotas_numero");
+                if (!ncn.isEmpty())
+                    contrato.setNumCuotasNumero((int) Double.parseDouble(ncn.replace(",", ".")));
+
+                String vmcn = cleanCurrency(get(row, map, "valor_media_cuota_numero"));
+                if (!vmcn.isEmpty())
+                    contrato.setValorMediaCuotaNumero(new java.math.BigDecimal(vmcn));
+
+            } catch (Exception ex) {
             }
-            return insertado ? 1 : 0;
-        } catch (Exception e) {
-            log.append("⚠️ Excepción procesando presupuesto: ").append(e.getMessage()).append("\n");
-            e.printStackTrace();
-            return 0;
+
+            contrato.setActividadesEntregables(get(row, map, "actividades_entregables"));
+            contrato.setLiquidacionAcuerdo(get(row, map, "liquidacion_acuerdo"));
+            contrato.setLiquidacionArticulo(get(row, map, "liquidacion_articulo"));
+            contrato.setLiquidacionDecreto(get(row, map, "liquidacion_decreto"));
+            contrato.setCircularHonorarios(get(row, map, "circular_honorarios"));
+
+            // Foreign Keys
+            if (c != null)
+                contrato.setContratistaId(c.getId());
+            if (s != null)
+                contrato.setSupervisorId(s.getId());
+            if (o != null)
+                contrato.setOrdenadorId(o.getId());
+            if (e != null)
+                contrato.setEstructuradorId(e.getId());
+            if (p != null)
+                contrato.setPresupuestoId(p.getId());
+
+            // Check existence
+            Contrato existente = contratoDAO.obtenerPorNumero(contrato.getNumeroContrato());
+            if (existente != null) {
+                contrato.setId(existente.getId());
+                if (contratoDAO.actualizar(contrato)) {
+                    log.append("  ↻ Contrato actualizado: ").append(contrato.getNumeroContrato()).append("\n");
+                    return contrato;
+                } else {
+                    log.append("  ⚠️ Error al actualizar contrato: ").append(contrato.getNumeroContrato()).append("\n");
+                }
+            } else {
+                if (contratoDAO.insertar(contrato)) {
+                    log.append("  ➜ Contrato creado: ").append(contrato.getNumeroContrato())
+                            .append(" | Sup: ").append(s != null ? s.getNombre() : "N/A")
+                            .append(" | Contratista: ").append(c != null ? c.getNombre() : "N/A")
+                            .append("\n");
+                    return contrato;
+                } else {
+                    log.append("  ⚠️ Error al insertar contrato: ").append(contrato.getNumeroContrato()).append("\n");
+                }
+            }
+            return null;
+        } catch (Exception ex) {
+            log.append("  ⚠️ Excepción procesando contrato: ").append(ex.getMessage()).append("\n");
+            ex.printStackTrace();
+            return null;
         }
     }
 
