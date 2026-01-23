@@ -61,15 +61,25 @@
                                 <small class="d-block">• Cédula del Supervisor</small>
                                 <small class="d-block">• Cargo del Supervisor</small>
                             </div>
-                            
+
                             <!-- Estructuradores -->
-                            <div class="col-md-3">
+                            <div class="col-md-3 border-end">
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
                                 <small class="d-block">• Profesional Jurídico y Cargo</small>
                                 <small class="d-block">• Profesional Técnico y Cargo</small>
                                 <small class="d-block">• Profesional Financiero y Cargo</small>
+                            </div>
+
+                            <!-- Presupuesto -->
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-danger">
+                                    <i class="bi bi-cash-coin me-1"></i>Presupuesto:
+                                </h6>
+                                <small class="d-block">• CDP (Número, Fecha, Valor)</small>
+                                <small class="d-block">• RP (Número, Fecha)</small>
+                                <small class="d-block">• Ficha EBI, Rubro</small>
                             </div>
                         </div>
                         <hr>
