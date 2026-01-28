@@ -59,4 +59,28 @@ public class EstructuradorDAO {
         }
         return lista;
     }
+
+    public Estructurador obtenerPorId(int id) {
+        String sql = "SELECT * FROM estructuradores WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Estructurador e = new Estructurador();
+                    e.setId(rs.getInt("id"));
+                    e.setJuridicoNombre(rs.getString("juridico_nombre"));
+                    e.setJuridicoCargo(rs.getString("juridico_cargo"));
+                    e.setTecnicoNombre(rs.getString("tecnico_nombre"));
+                    e.setTecnicoCargo(rs.getString("tecnico_cargo"));
+                    e.setFinancieroNombre(rs.getString("financiero_nombre"));
+                    e.setFinancieroCargo(rs.getString("financiero_cargo"));
+                    return e;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 }

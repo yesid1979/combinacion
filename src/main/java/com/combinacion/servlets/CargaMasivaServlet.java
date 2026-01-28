@@ -85,8 +85,8 @@ public class CargaMasivaServlet extends HttpServlet {
                         allRows = readSheetData(workbook.getSheetAt(0));
                     }
                 } else {
-                    // CSV
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "UTF-8"))) {
+                    // CSV - try ISO-8859-1 first as it's common for Excel CSVs on Windows
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "ISO-8859-1"))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
                             if (line.trim().isEmpty())
@@ -157,6 +157,46 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "contratista_experiencia", "Experiencia");
                 logMapping(log, map, "contratista_desc_experiencia", "Descripción experiencia");
                 logMapping(log, map, "contratista_restricciones", "Restricciones");
+
+                // Log del mapeo de SUPERVISORES
+                log.append("\nSUPERVISORES:\n");
+                logMapping(log, map, "supervisor_nombre", "Nombre Supervisor");
+                logMapping(log, map, "supervisor_cedula", "Cédula Supervisor");
+                logMapping(log, map, "supervisor_cargo", "Cargo Supervisor");
+
+                // Log del mapeo de CONTRATOS (NUEVO)
+                log.append("\nCONTRATOS:\n");
+                logMapping(log, map, "trd_proceso", "TRD Proceso");
+                logMapping(log, map, "numero_contrato", "Número Contrato");
+                logMapping(log, map, "tipo_contrato", "Tipo Contrato");
+                logMapping(log, map, "nivel", "Nivel");
+                logMapping(log, map, "objeto", "Objeto");
+                logMapping(log, map, "modalidad", "Modalidad");
+                logMapping(log, map, "estado", "Estado");
+                logMapping(log, map, "periodo", "Periodo");
+                logMapping(log, map, "fecha_suscripcion", "Fecha Suscripción");
+                logMapping(log, map, "fecha_inicio", "Fecha Inicio");
+                logMapping(log, map, "fecha_terminacion", "Fecha Terminación (Plazo Ejecución)");
+                logMapping(log, map, "fecha_aprobacion", "Fecha Aprobación");
+                logMapping(log, map, "fecha_ejecucion", "Fecha Ejecución");
+                logMapping(log, map, "fecha_arl", "Fecha ARL");
+                logMapping(log, map, "plazo_meses", "Plazo Meses");
+                logMapping(log, map, "plazo_dias", "Plazo Días");
+                logMapping(log, map, "valor_total_letras", "Valor Total (Letras)");
+                logMapping(log, map, "valor_total_numeros", "Valor Total (Números)");
+                logMapping(log, map, "valor_antes_iva", "Valor Antes IVA");
+                logMapping(log, map, "valor_iva", "Valor IVA");
+                logMapping(log, map, "valor_cuota_letras", "Valor Cuota (Letras)");
+                logMapping(log, map, "valor_cuota_numero", "Valor Cuota (Número)");
+                logMapping(log, map, "num_cuotas_letras", "Num Cuotas (Letras)");
+                logMapping(log, map, "num_cuotas_numero", "Num Cuotas (Número)");
+                logMapping(log, map, "valor_media_cuota_letras", "Media Cuota (Letras)");
+                logMapping(log, map, "valor_media_cuota_numero", "Media Cuota (Número)");
+                logMapping(log, map, "actividades_entregables", "Actividades/Entregables");
+                logMapping(log, map, "liquidacion_acuerdo", "Liquidación Acuerdo");
+                logMapping(log, map, "liquidacion_articulo", "Liquidación Artículo");
+                logMapping(log, map, "liquidacion_decreto", "Liquidación Decreto");
+                logMapping(log, map, "circular_honorarios", "Circular Honorarios");
 
                 log.append("\n═════════════════════════════════════════\n\n");
                 System.out.println(log.toString());
@@ -481,18 +521,39 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("fecha_suscripcion", i);
             } else if (h.contains("inicio") && (h.contains("fecha") || h.contains("f.") || h.equals("inicio"))) {
                 map.put("fecha_inicio", i);
-            } else if (h.contains("terminacion")
-                    && (h.contains("fecha") || h.contains("f.") || h.equals("terminacion"))) {
+
+                // === CAMBIO SOLICITADO: 'Plazo de ejecución' del Excel corresponde a
+                // 'fecha_terminacion' en BD ===
+                // Originalmente buscabamos 'terminacion', ahora incluimos 'plazo' + 'ejecucion'
+                // para este campo
+            } else if ((h.contains("terminacion")
+                    && (h.contains("fecha") || h.contains("f.") || h.equals("terminacion")))
+                    || (h.contains("plazo") && (h.contains("ejecucion") || h.contains("ejecuci")))) {
+
+                // Prioridad 1: Mapear a fecha_terminacion (para cálculo/conversión de fecha)
                 map.put("fecha_terminacion", i);
-            } else if (h.contains("aprobacion")) {
+
+                // Prioridad 2: Si es especificamente "Plazo de ejecución", mapear TAMBIEN a
+                // plazo_ejecucion
+                // para guardar el texto original en base de datos.
+                if (h.contains("plazo") && (h.contains("ejecucion") || h.contains("ejecuci"))) {
+                    map.put("plazo_ejecucion", i);
+                }
+
+            } else if (h.contains("aprobacion") || h.contains("aprobaci")) {
                 map.put("fecha_aprobacion", i);
-            } else if ((h.contains("ejecucion") || h.contains("ejejcuci")) && (h.contains("fecha") || h.contains("f."))
-                    && !h.contains("plazo")) {
+            } else if ((h.contains("ejecucion") || h.contains("ejejcuci") || h.contains("ejecuci"))
+                    && (h.contains("fecha") || h.contains("f.") || h.contains("feche"))
+                    && !h.contains("plazo")) { // Mantener !plazo aqui para evitar conflicto si hubiera otra col
                 map.put("fecha_ejecucion", i);
             } else if (h.contains("arl")) {
                 map.put("fecha_arl", i);
-            } else if (h.contains("plazo") && h.contains("ejecucion")) {
-                map.put("plazo_ejecucion", i);
+
+                // 'Plazo de ejecución' ya fue asignado a fecha_terminacion arriba, removemos el
+                // mapping a plazo_ejecucion
+                // para evitar reescritura o conflicto. Si existiera otra columna especifica
+                // para texto de plazo, se agregaría aquí.
+
             } else if (h.contains("meses") && !h.contains("media")) {
                 map.put("plazo_meses", i);
             } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
@@ -519,13 +580,25 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("valor_media_cuota_numero", i);
             } else if (h.contains("entregables") || (h.contains("actividades") && h.contains("contrato"))) {
                 map.put("actividades_entregables", i);
-            } else if (h.contains("liquidacion") && h.contains("acuerdo")
-                    && (h.contains("numero") || h.contains("fecha"))) {
+                // SWAP MAPPING AS REQUESTED BY USER
+                // 1. "Número del Artículo..." -> liquidacion_acuerdo
+            } else if (h.contains("liquidaci") && h.contains("acuerdo")
+                    && (h.contains("articulo") || h.contains("artculo"))) {
                 map.put("liquidacion_acuerdo", i);
-            } else if (h.contains("liquidacion") && h.contains("acuerdo") && h.contains("articulo")) {
+
+                // 2. "Número y fecha del Acuerdo..." -> liquidacion_articulo (SOLICITADO
+                // EXPLICITAMENTE)
+            } else if (h.contains("liquidaci") && h.contains("acuerdo")
+                    && (h.contains("numero") || h.contains("fecha") || h.contains("nmero"))) {
                 map.put("liquidacion_articulo", i);
-            } else if (h.contains("liquidacion") && h.contains("decreto")) {
+            } else if (h.contains("liquidaci") && h.contains("decreto")) {
                 map.put("liquidacion_decreto", i);
+            } else if (h.contains("estructurador") && (h.contains("juridico") || h.contains("jurdico"))) {
+                map.put("estructurador_juridico", i);
+            } else if (h.contains("estructurador") && (h.contains("tecnico") || h.contains("tcnico"))) {
+                map.put("estructurador_tecnico", i);
+            } else if (h.contains("estructurador") && h.contains("financiero")) {
+                map.put("estructurador_financiero", i);
             } else if (h.contains("circular") && h.contains("honorarios")) {
                 map.put("circular_honorarios", i);
             }
@@ -776,9 +849,9 @@ public class CargaMasivaServlet extends HttpServlet {
      */
     private Estructurador processEstructurador(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
-            String jurNombre = get(row, map, "juridico_nombre");
-            String tecNombre = get(row, map, "tecnico_nombre");
-            String finNombre = get(row, map, "financiero_nombre");
+            String jurNombre = get(row, map, "estructurador_juridico");
+            String tecNombre = get(row, map, "estructurador_tecnico");
+            String finNombre = get(row, map, "estructurador_financiero");
 
             if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
                 return null;
@@ -786,11 +859,11 @@ public class CargaMasivaServlet extends HttpServlet {
 
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
-            e.setJuridicoCargo(get(row, map, "juridico_cargo"));
+            e.setJuridicoCargo("");
             e.setTecnicoNombre(tecNombre);
-            e.setTecnicoCargo(get(row, map, "tecnico_cargo"));
+            e.setTecnicoCargo("");
             e.setFinancieroNombre(finNombre);
-            e.setFinancieroCargo(get(row, map, "financiero_cargo"));
+            e.setFinancieroCargo("");
 
             if (estructuradorDAO.insertar(e)) {
                 return e;
@@ -896,8 +969,27 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setFechaEjecucion(parseDateStr(get(row, map, "fecha_ejecucion")));
             contrato.setFechaArl(parseDateStr(get(row, map, "fecha_arl")));
 
-            // Plazos
-            contrato.setPlazoEjecucion(get(row, map, "plazo_ejecucion"));
+            // Plazos y Fecha Terminacion desde Plazo
+            // 1. Guardar texto original
+            String rawPlazo = get(row, map, "plazo_ejecucion");
+            contrato.setPlazoEjecucion(rawPlazo);
+
+            // 2. Convertir texto a Fecha Terminacion (si no se leyó de otra columna
+            // 'fecha_terminacion' explicita)
+            // Si el mapa apuntaba la misma columna para ambas, get(...,
+            // "fecha_terminacion") ya traería el valor.
+            // Pero haremos un log explicito para depuracion.
+            if (contrato.getFechaTerminacion() == null && !rawPlazo.isEmpty()) {
+                java.sql.Date fTerminacion = parseDateStr(rawPlazo);
+                if (fTerminacion != null) {
+                    contrato.setFechaTerminacion(fTerminacion);
+                } else {
+                    log.append("  ⚠️ No se pudo convertir 'Plazo de ejecución' a Fecha: '").append(rawPlazo)
+                            .append("'\n");
+                }
+            }
+
+            // Intentar leer columnas explicitas si existen
             try {
                 String pm = get(row, map, "plazo_meses");
                 if (!pm.isEmpty())
@@ -907,6 +999,33 @@ public class CargaMasivaServlet extends HttpServlet {
                 if (!pd.isEmpty())
                     contrato.setPlazoDias((int) Double.parseDouble(pd.replace(",", ".")));
             } catch (Exception ex) {
+            }
+
+            // CALCULO AUTOMATICO SI FALTAN DATOS Y TENEMOS FECHAS
+            // "La fecha de terminacion se calcua de acuerdo al plazo de ejecuacion pero en
+            // dd/mm/yyyy"
+            // "las columnas plazo_meses y plazo_dias se calcula de acuerdo al plazo de
+            // ejecuacion"
+            // User feedback: "No fecha de inicio queda vacio y si plazo de ejecucion viene
+            // vacio que no calcule nada"
+
+            // CALCULO DE PLAZO MESES Y DIAS BASADO SOLO EN FECHA TERMINACION (PLAZO
+            // EJECUCION)
+            // User feedback: "el calculo solo lo debe hacer sobre plazo de ejecucion"
+            // Interpretacion: Extraer Mes y Dia de la fecha de terminación.
+            if (contrato.getFechaTerminacion() != null) {
+                try {
+                    java.time.LocalDate fin = contrato.getFechaTerminacion().toLocalDate();
+
+                    // Asumimos que "calculo sobre plazo" significa extraer componentes o
+                    // calcular desde inicio de año implicito dada la naturaleza presupuestal anual.
+                    contrato.setPlazoMeses(fin.getMonthValue());
+                    contrato.setPlazoDias(fin.getDayOfMonth());
+
+                } catch (Exception exDate) {
+                    log.append("  ⚠️ Error extrayendo componentes fecha terminacion: ").append(exDate.getMessage())
+                            .append("\n");
+                }
             }
 
             // Valores
@@ -1096,6 +1215,50 @@ public class CargaMasivaServlet extends HttpServlet {
 
             } catch (Exception ex) {
                 // Ignore
+            }
+
+            // 6. Estrategia Robusta: Extraccion de digitos y mes por nombre
+            // Ej: "Treinta (30) de junio del dos mil veintiseis (2026)"
+            try {
+                String lowerD = d.toLowerCase().replace("didciembre", "diciembre");
+                String[] months = { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+                        "septiembre", "octubre", "noviembre", "diciembre" };
+                int foundMonth = -1;
+
+                for (int m = 0; m < months.length; m++) {
+                    if (lowerD.contains(months[m])) {
+                        foundMonth = m + 1;
+                        break;
+                    }
+                }
+
+                if (foundMonth > 0) {
+                    // Extraer todos los numeros del texto
+                    java.util.regex.Pattern p = java.util.regex.Pattern.compile("(\\d+)");
+                    java.util.regex.Matcher m = p.matcher(lowerD);
+                    int day = -1;
+                    int year = -1;
+
+                    while (m.find()) {
+                        try {
+                            int val = Integer.parseInt(m.group(1)); // "30" o "2026"
+                            // Heuristica simple:
+                            // Si es <= 31 y no tenemos dia aun -> tomar como dia
+                            // Si es > 1900 -> tomar como año
+                            if (val >= 1 && val <= 31 && day == -1) {
+                                day = val;
+                            } else if (val >= 1900 && val <= 2100) {
+                                year = val;
+                            }
+                        } catch (Exception eNum) {
+                        }
+                    }
+
+                    if (day != -1 && year != -1) {
+                        return java.sql.Date.valueOf(java.time.LocalDate.of(year, foundMonth, day));
+                    }
+                }
+            } catch (Exception eAuth) {
             }
         }
         return null;

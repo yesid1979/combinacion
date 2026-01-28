@@ -108,8 +108,8 @@
                                     "orderable": false,
                                     "render": function (data, type, row) {
                                         return '<div class="btn-group" role="group">' +
-                                            '<a href="#" class="btn btn-sm btn-info text-white" title="Ver Detalle"><i class="bi bi-eye"></i></a>' +
-                                            '<a href="#" class="btn btn-sm btn-warning text-dark" title="Editar"><i class="bi bi-pencil-square"></i></a>' +
+                                            '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-info text-white" title="Ver Detalle"><i class="bi bi-eye"></i></a>' +
+                                            '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-warning text-dark" title="Editar"><i class="bi bi-pencil-square"></i></a>' +
                                             '</div>';
                                     }
                                 }

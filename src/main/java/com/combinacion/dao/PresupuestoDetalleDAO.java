@@ -78,4 +78,38 @@ public class PresupuestoDetalleDAO {
         }
         return lista;
     }
+
+    public PresupuestoDetalle obtenerPorId(int id) {
+        String sql = "SELECT * FROM presupuesto_detalles WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    PresupuestoDetalle p = new PresupuestoDetalle();
+                    p.setId(rs.getInt("id"));
+                    p.setCdpNumero(rs.getString("cdp_numero"));
+                    p.setCdpFecha(rs.getDate("cdp_fecha"));
+                    p.setCdpValor(rs.getBigDecimal("cdp_valor"));
+                    p.setCdpVencimiento(rs.getDate("cdp_vencimiento"));
+                    p.setRpNumero(rs.getString("rp_numero"));
+                    p.setRpFecha(rs.getDate("rp_fecha"));
+                    p.setApropiacionPresupuestal(rs.getString("apropiacion_presupuestal"));
+                    p.setIdPaa(rs.getString("id_paa"));
+                    p.setCodigoDane(rs.getString("codigo_dane"));
+                    p.setInversion(rs.getString("inversion"));
+                    p.setFuncionamiento(rs.getString("funcionamiento"));
+                    p.setFichaEbiNombre(rs.getString("ficha_ebi_nombre"));
+                    p.setFichaEbiObjetivo(rs.getString("ficha_ebi_objetivo"));
+                    p.setFichaEbiActividades(rs.getString("ficha_ebi_actividades"));
+                    p.setCertificadoInsuficiencia(rs.getString("certificado_insuficiencia"));
+                    p.setFechaInsuficiencia(rs.getDate("fecha_insuficiencia"));
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -37,6 +37,7 @@ public class ContratoServlet extends HttpServlet {
             case "new":
                 showNewForm(request, response);
                 break;
+            case "view":
             case "edit":
                 showEditForm(request, response);
                 break;
@@ -175,11 +176,14 @@ public class ContratoServlet extends HttpServlet {
             // Presupuesto
             PresupuestoDetalle presupuesto = new PresupuestoDetalle();
             presupuesto.setCdpNumero(request.getParameter("presupuesto_cdp"));
+            presupuesto.setRpNumero(request.getParameter("presupuesto_rpc"));
             presupuestoDAO.insertar(presupuesto);
 
             // Estructurador
             Estructurador estructurador = new Estructurador();
             estructurador.setJuridicoNombre(request.getParameter("estructurador_juridico"));
+            estructurador.setTecnicoNombre(request.getParameter("estructurador_tecnico"));
+            estructurador.setFinancieroNombre(request.getParameter("estructurador_financiero"));
             estructuradorDAO.insertar(estructurador);
 
             // 2. Create Contrato
@@ -227,8 +231,47 @@ public class ContratoServlet extends HttpServlet {
                 listContratos(request, response);
                 return;
             }
+            // Hidratar objetos relacionados
+            // Hidratar objetos relacionados con chequeo de nulos para evitar errores en JSP
+            if (contrato.getContratistaId() > 0) {
+                contrato.setContratista(contratistaDAO.obtenerPorId(contrato.getContratistaId()));
+            }
+            if (contrato.getContratista() == null)
+                contrato.setContratista(new Contratista());
+
+            if (contrato.getPresupuestoId() > 0) {
+                contrato.setPresupuestoDetalle(presupuestoDAO.obtenerPorId(contrato.getPresupuestoId()));
+            }
+            if (contrato.getPresupuestoDetalle() == null)
+                contrato.setPresupuestoDetalle(new PresupuestoDetalle());
+
+            if (contrato.getEstructuradorId() > 0) {
+                contrato.setEstructurador(estructuradorDAO.obtenerPorId(contrato.getEstructuradorId()));
+            }
+            if (contrato.getEstructurador() == null)
+                contrato.setEstructurador(new Estructurador());
+
+            if (contrato.getSupervisorId() > 0) {
+                contrato.setSupervisor(supervisorDAO.obtenerPorId(contrato.getSupervisorId()));
+            }
+            if (contrato.getSupervisor() == null)
+                contrato.setSupervisor(new Supervisor());
+
+            if (contrato.getOrdenadorId() > 0) {
+                contrato.setOrdenadorGasto(ordenadorDAO.obtenerPorId(contrato.getOrdenadorId()));
+            }
+            if (contrato.getOrdenadorGasto() == null)
+                contrato.setOrdenadorGasto(new OrdenadorGasto());
+
             request.setAttribute("contrato", contrato);
-            request.setAttribute("action", "update");
+
+            String actionParam = request.getParameter("action");
+            if ("view".equals(actionParam)) {
+                request.setAttribute("action", "view");
+                request.setAttribute("readonly", true);
+            } else {
+                request.setAttribute("action", "update");
+            }
 
             List<Supervisor> listaSupervisores = supervisorDAO.listarTodos();
             List<OrdenadorGasto> listaOrdenadores = ordenadorDAO.listarTodos();
