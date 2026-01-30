@@ -112,4 +112,34 @@ public class PresupuestoDetalleDAO {
         }
         return null;
     }
+
+    public boolean actualizar(PresupuestoDetalle p) {
+        String sql = "UPDATE presupuesto_detalles SET cdp_numero=?, cdp_fecha=?, cdp_valor=?, cdp_vencimiento=?, rp_numero=?, rp_fecha=?, apropiacion_presupuestal=?, id_paa=?, codigo_dane=?, inversion=?, funcionamiento=?, ficha_ebi_nombre=?, ficha_ebi_objetivo=?, ficha_ebi_actividades=?, certificado_insuficiencia=?, fecha_insuficiencia=? WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, p.getCdpNumero());
+            ps.setDate(2, p.getCdpFecha());
+            ps.setBigDecimal(3, p.getCdpValor());
+            ps.setDate(4, p.getCdpVencimiento());
+            ps.setString(5, p.getRpNumero());
+            ps.setDate(6, p.getRpFecha());
+            ps.setString(7, p.getApropiacionPresupuestal());
+            ps.setString(8, p.getIdPaa());
+            ps.setString(9, p.getCodigoDane());
+            ps.setString(10, p.getInversion());
+            ps.setString(11, p.getFuncionamiento());
+            ps.setString(12, p.getFichaEbiNombre());
+            ps.setString(13, p.getFichaEbiObjetivo());
+            ps.setString(14, p.getFichaEbiActividades());
+            ps.setString(15, p.getCertificadoInsuficiencia());
+            ps.setDate(16, p.getFechaInsuficiencia());
+            ps.setInt(17, p.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

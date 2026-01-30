@@ -55,11 +55,26 @@ public class ContratoDAO {
             ps.setString(30, c.getLiquidacionArticulo());
             ps.setString(31, c.getLiquidacionDecreto());
             ps.setString(32, c.getCircularHonorarios());
-            ps.setInt(33, c.getContratistaId());
-            ps.setInt(34, c.getSupervisorId());
-            ps.setInt(35, c.getOrdenadorId());
-            ps.setInt(36, c.getPresupuestoId());
-            ps.setInt(37, c.getEstructuradorId());
+            if (c.getContratistaId() > 0)
+                ps.setInt(33, c.getContratistaId());
+            else
+                ps.setNull(33, java.sql.Types.INTEGER);
+            if (c.getSupervisorId() > 0)
+                ps.setInt(34, c.getSupervisorId());
+            else
+                ps.setNull(34, java.sql.Types.INTEGER);
+            if (c.getOrdenadorId() > 0)
+                ps.setInt(35, c.getOrdenadorId());
+            else
+                ps.setNull(35, java.sql.Types.INTEGER);
+            if (c.getPresupuestoId() > 0)
+                ps.setInt(36, c.getPresupuestoId());
+            else
+                ps.setNull(36, java.sql.Types.INTEGER);
+            if (c.getEstructuradorId() > 0)
+                ps.setInt(37, c.getEstructuradorId());
+            else
+                ps.setNull(37, java.sql.Types.INTEGER);
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -257,11 +272,26 @@ public class ContratoDAO {
             ps.setString(29, c.getLiquidacionArticulo());
             ps.setString(30, c.getLiquidacionDecreto());
             ps.setString(31, c.getCircularHonorarios());
-            ps.setInt(32, c.getContratistaId());
-            ps.setInt(33, c.getSupervisorId());
-            ps.setInt(34, c.getOrdenadorId());
-            ps.setInt(35, c.getPresupuestoId());
-            ps.setInt(36, c.getEstructuradorId());
+            if (c.getContratistaId() > 0)
+                ps.setInt(32, c.getContratistaId());
+            else
+                ps.setNull(32, java.sql.Types.INTEGER);
+            if (c.getSupervisorId() > 0)
+                ps.setInt(33, c.getSupervisorId());
+            else
+                ps.setNull(33, java.sql.Types.INTEGER);
+            if (c.getOrdenadorId() > 0)
+                ps.setInt(34, c.getOrdenadorId());
+            else
+                ps.setNull(34, java.sql.Types.INTEGER);
+            if (c.getPresupuestoId() > 0)
+                ps.setInt(35, c.getPresupuestoId());
+            else
+                ps.setNull(35, java.sql.Types.INTEGER);
+            if (c.getEstructuradorId() > 0)
+                ps.setInt(36, c.getEstructuradorId());
+            else
+                ps.setNull(36, java.sql.Types.INTEGER);
             ps.setInt(37, c.getId());
 
             return ps.executeUpdate() > 0;

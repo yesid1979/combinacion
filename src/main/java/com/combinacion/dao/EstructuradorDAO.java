@@ -83,4 +83,24 @@ public class EstructuradorDAO {
         }
         return null;
     }
+
+    public boolean actualizar(Estructurador e) {
+        String sql = "UPDATE estructuradores SET juridico_nombre=?, juridico_cargo=?, tecnico_nombre=?, tecnico_cargo=?, financiero_nombre=?, financiero_cargo=? WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, e.getJuridicoNombre());
+            ps.setString(2, e.getJuridicoCargo());
+            ps.setString(3, e.getTecnicoNombre());
+            ps.setString(4, e.getTecnicoCargo());
+            ps.setString(5, e.getFinancieroNombre());
+            ps.setString(6, e.getFinancieroCargo());
+            ps.setInt(7, e.getId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
 }

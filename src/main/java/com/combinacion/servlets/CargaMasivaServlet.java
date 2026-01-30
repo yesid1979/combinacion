@@ -81,8 +81,8 @@ public class CargaMasivaServlet extends HttpServlet {
                         allRows = readSheetData(workbook.getSheetAt(0));
                     }
                 } else {
-                    // CSV - try ISO-8859-1 first as it's common for Excel CSVs on Windows
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "ISO-8859-1"))) {
+                    // CSV - changing to UTF-8 to fix encoding issues
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "UTF-8"))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
                             if (line.trim().isEmpty())
@@ -97,9 +97,60 @@ public class CargaMasivaServlet extends HttpServlet {
                     throw new Exception("El archivo está vacío.");
                 }
 
-                // 2. MAP COLUMNS BASED ON HEADER (First Row)
-                String[] header = allRows.get(0);
+                // 2. DETECT HEADER (VERTICAL MERGING STRATEGY)
+                // Combine text from the first 5 rows to handle split headers (e.g., Row 1:
+                // "Estructuradores", Row 2: "Juridico")
+                // This creates a "Virtual Header" that contains all keywords found in the top
+                // rows for each column.
+
+                int maxCols = 0;
+                int rowsToScan = Math.min(5, allRows.size());
+
+                // Find max columns
+                for (int i = 0; i < rowsToScan; i++) {
+                    if (allRows.get(i).length > maxCols)
+                        maxCols = allRows.get(i).length;
+                }
+
+                String[] header = new String[maxCols];
+                for (int c = 0; c < maxCols; c++) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int r = 0; r < rowsToScan; r++) {
+                        String[] row = allRows.get(r);
+                        if (c < row.length && row[c] != null && !row[c].trim().isEmpty()) {
+                            sb.append(row[c].trim()).append(" ");
+                        }
+                    }
+                    header[c] = sb.toString().trim();
+                }
+
+                log.append("═══ DEBUG: ENCABEZADO VIRTUAL (Combinación ").append(rowsToScan).append(" filas) ═══\n");
+                for (int k = 0; k < header.length; k++) {
+                    if (!header[k].isEmpty()) {
+                        log.append("[").append(k).append("] ").append(header[k]).append(" | Norm: ")
+                                .append(normalizeText(header[k])).append("\n");
+                    }
+                }
+                log.append("═══════════════════════════════════════════════════\n\n");
+
                 Map<String, Integer> map = mapHeaders(header);
+
+                // NOTE: We do not skip rows based on index here because we merged multiple
+                // rows.
+                // We will rely on the processing logic to ignore rows that don't look like data
+                // (e.g. they look like headers).
+                // Or we can start processing at 'rowsToScan' if we are confident.
+                // Let's set 'bestHeaderRowIndex' to rowsToScan - 1 so the loop starts after it?
+                // The loop uses 'bestHeaderRowIndex + 1'.
+                int bestHeaderRowIndex = rowsToScan - 1;
+                // Caution: if the file has ONLY 1 header row, we might skip 4 data rows if
+                // rowsToScan=5.
+                // WE MUST BE CAREFUL.
+                // Heuristic: If row 2 has data that parses as date/number in known columns?
+                // SAFEST: Set bestHeaderRowIndex = 0. We will iterate from 1.
+                // Header rows (merged) will probably fail parsing and be skipped as invalid
+                // data.
+                bestHeaderRowIndex = 0;
 
                 log.append("═══ CARGA MASIVA - ORDENADORES, CONTRATISTAS Y PRESUPUESTO ═══\n\n");
                 log.append("Total columnas detectadas: ").append(map.size()).append("\n\n");
@@ -115,12 +166,12 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "acta_posesion", "Acta de posesión");
 
                 log.append("ESTRUCTURADORES:\n");
-                logMapping(log, map, "juridico_nombre", "Jurídico Nombre");
-                logMapping(log, map, "juridico_cargo", "Jurídico Cargo");
-                logMapping(log, map, "tecnico_nombre", "Técnico Nombre");
-                logMapping(log, map, "tecnico_cargo", "Técnico Cargo");
-                logMapping(log, map, "financiero_nombre", "Financiero Nombre");
-                logMapping(log, map, "financiero_cargo", "Financiero Cargo");
+                logMapping(log, map, "estructurador_juridico", "Jurídico Nombre");
+                logMapping(log, map, "estructurador_juridico_cargo", "Jurídico Cargo"); // Added check
+                logMapping(log, map, "estructurador_tecnico", "Técnico Nombre");
+                logMapping(log, map, "estructurador_tecnico_cargo", "Técnico Cargo"); // Added check
+                logMapping(log, map, "estructurador_financiero", "Financiero Nombre");
+                logMapping(log, map, "estructurador_financiero_cargo", "Financiero Cargo"); // Added check
 
                 log.append("PRESUPUESTO:\n");
                 logMapping(log, map, "cdp_numero", "CDP Número");
@@ -203,7 +254,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 java.util.Set<String> cedulasSupervisoresExistentes = supervisorDAO.obtenerTodasLasCedulas();
 
                 // 4. PROCESS DATA ROWS
-                for (int i = 1; i < allRows.size(); i++) {
+                for (int i = bestHeaderRowIndex + 1; i < allRows.size(); i++) {
                     String[] row = allRows.get(i);
 
                     // Skip completely empty rows
@@ -385,25 +436,58 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("cedula_ordenador", i);
             } else if (h.contains("cargo") && h.contains("ordenador")) {
                 map.put("cargo_ordenador", i);
-            } else if (h.contains("decreto") && h.contains("nombramiento")) {
-                map.put("decreto_nombramiento", i);
-            } else if (h.contains("acta") && h.contains("posesion")) {
-                map.put("acta_posesion", i);
             }
 
             // ===== ESTRUCTURADORES =====
-            else if (h.contains("juridico") && !h.contains("cargo")) {
-                map.put("juridico_nombre", i);
+
+            // JURÍDICO
+            if (h.contains("juridico") && h.contains("estructurador") && !h.contains("tecnico")) {
+                if (h.contains("cargo")) {
+                    map.put("estructurador_juridico_cargo", i);
+                } else {
+                    map.put("estructurador_juridico", i);
+                }
+                continue; // Found match, next header
+            }
+
+            // TÉCNICO
+            if (h.contains("tecnico") && h.contains("estructurador")) {
+                if (h.contains("cargo")) {
+                    map.put("estructurador_tecnico_cargo", i);
+                } else {
+                    map.put("estructurador_tecnico", i);
+                }
+                continue;
+            }
+
+            // FINANCIERO
+            if (h.contains("financiero") && h.contains("estructurador")) {
+                if (h.contains("cargo")) {
+                    map.put("estructurador_financiero_cargo", i);
+                } else {
+                    map.put("estructurador_financiero", i);
+                }
+                continue;
+            }
+
+            // (Duplicate logic removed. The block above handles these cases robustly)
+
+            // Fallbacks mas genericos (SOLO SI NO SE HA ENCONTRADO)
+            else if (h.contains("juridico") && !h.contains("cargo") && !h.contains("contratista")
+                    && !map.containsKey("estructurador_juridico")) {
+                map.put("estructurador_juridico", i);
             } else if (h.contains("juridico") && h.contains("cargo")) {
-                map.put("juridico_cargo", i);
-            } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")) {
-                map.put("tecnico_nombre", i);
+                // map.put("juridico_cargo", i);
+            } else if (h.contains("tecnico") && !h.contains("cargo") && !h.contains("apoyo")
+                    && !h.contains("contratista") && !map.containsKey("estructurador_tecnico")) {
+                map.put("estructurador_tecnico", i);
             } else if (h.contains("tecnico") && h.contains("cargo")) {
-                map.put("tecnico_cargo", i);
-            } else if (h.contains("financiero") && !h.contains("cargo")) {
-                map.put("financiero_nombre", i);
+                // map.put("tecnico_cargo", i);
+            } else if (h.contains("financiero") && !h.contains("cargo") && !h.contains("contratista")
+                    && !map.containsKey("estructurador_financiero")) {
+                map.put("estructurador_financiero", i);
             } else if (h.contains("financiero") && h.contains("cargo")) {
-                map.put("financiero_cargo", i);
+                // map.put("financiero_cargo", i); // Legacy/Not used?
             }
 
             // ===== PRESUPUESTO DETALLES =====
@@ -589,11 +673,42 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("liquidacion_articulo", i);
             } else if (h.contains("liquidaci") && h.contains("decreto")) {
                 map.put("liquidacion_decreto", i);
-            } else if (h.contains("estructurador") && (h.contains("juridico") || h.contains("jurdico"))) {
-                map.put("estructurador_juridico", i);
-            } else if (h.contains("estructurador") && (h.contains("tecnico") || h.contains("tcnico"))) {
+                // (Duplicate logic removed)
+            } else if (h.contains("tecnico") && h.contains("nombre") && !h.contains("contratista")) {
                 map.put("estructurador_tecnico", i);
-            } else if (h.contains("estructurador") && h.contains("financiero")) {
+            } else if (h.contains("financiero") && h.contains("nombre") && !h.contains("contratista")) {
+                map.put("estructurador_financiero", i);
+
+                // SUPER FALLBACK: Single words (common in some matrices)
+                // Only if not already mapped (put works as replace, so order matters. These are
+                // strictly 'else if' of above)
+                // But since we are in an else-if chain, we are good.
+            } else if (h.equals("juridico") || h.equals("jurdico")) {
+                map.put("estructurador_juridico", i);
+            } else if (h.equals("tecnico") || h.equals("tcnico")) {
+                map.put("estructurador_tecnico", i);
+            } else if (h.equals("financiero")) {
+                map.put("estructurador_financiero", i);
+
+                // ULTRA FALLBACK: loose "contains" for when headers are verbose like
+                // "Componente Juridico/Técnico"
+                // Ensure we don't pick up Supervisor/Contratista columns if they happen to use
+                // these words (unlikely but possible)
+            } else if (h.contains("juridico") && !h.contains("contratista") && !h.contains("supervisor")) {
+                // Use putIfAbsent logic essentially (though simple put overwrites, usually we
+                // encounter columns left-to-right)
+                // If we already found a "better" match (e.g. Estructurador Juridico), we might
+                // overwrite it?
+                // No, usually strict columns come first or exist uniquely.
+                // But wait, if we have "Juridico" (matched by equals) and "Componente Juridico"
+                // (matched by contains).
+                // They are distinct columns. We want the one that is truly the structurer.
+                // Usually there is only one.
+                map.put("estructurador_juridico", i);
+            } else if (h.contains("tecnico") && !h.contains("contratista") && !h.contains("supervisor")
+                    && !h.contains("tecnologo")) { // Exclude 'tecnologo' (degree)
+                map.put("estructurador_tecnico", i);
+            } else if (h.contains("financiero") && !h.contains("contratista") && !h.contains("supervisor")) {
                 map.put("estructurador_financiero", i);
             } else if (h.contains("circular") && h.contains("honorarios")) {
                 map.put("circular_honorarios", i);
@@ -601,6 +716,7 @@ public class CargaMasivaServlet extends HttpServlet {
         }
 
         return map;
+
     }
 
     private String normalizeText(String text) {
@@ -853,16 +969,34 @@ public class CargaMasivaServlet extends HttpServlet {
                 return null;
             }
 
+            String jurCargo = get(row, map, "estructurador_juridico_cargo");
+            String tecCargo = get(row, map, "estructurador_tecnico_cargo");
+            String finCargo = get(row, map, "estructurador_financiero_cargo");
+
+            // DEBUG LOGGING
+            System.out.println("Processing Estructuradores for Row...");
+            System.out.println("Jur: " + jurNombre + " | Cargo: " + jurCargo);
+            System.out.println("Tec: " + tecNombre + " | Cargo: " + tecCargo);
+            System.out.println("Fin: " + finNombre + " | Cargo: " + finCargo);
+
+            if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
+                System.out.println("All structurer names empty. Skipping.");
+                return null;
+            }
+
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
-            e.setJuridicoCargo("");
+            e.setJuridicoCargo(jurCargo);
             e.setTecnicoNombre(tecNombre);
-            e.setTecnicoCargo("");
+            e.setTecnicoCargo(tecCargo);
             e.setFinancieroNombre(finNombre);
-            e.setFinancieroCargo("");
+            e.setFinancieroCargo(finCargo);
 
             if (estructuradorDAO.insertar(e)) {
+                System.out.println("Estructurador Inserted! ID: " + e.getId());
                 return e;
+            } else {
+                System.out.println("Estructurador Insert FAILED.");
             }
             return null;
 
@@ -924,11 +1058,18 @@ public class CargaMasivaServlet extends HttpServlet {
             p.setCodigoDane(get(row, map, "codigo_dane"));
             p.setInversion(get(row, map, "inversion"));
             p.setFuncionamiento(get(row, map, "funcionamiento"));
-            p.setFichaEbiNombre(get(row, map, "ficha_ebi_nombre"));
-            p.setFichaEbiObjetivo(get(row, map, "ficha_ebi_objetivo"));
-            p.setFichaEbiActividades(get(row, map, "ficha_ebi_actividades"));
+            p.setFichaEbiNombre(truncate(get(row, map, "ficha_ebi_nombre"), 255));
+            p.setFichaEbiObjetivo(truncate(get(row, map, "ficha_ebi_objetivo"), 255));
+            p.setFichaEbiActividades(truncate(get(row, map, "ficha_ebi_actividades"), 255));
+
             p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
             p.setFechaInsuficiencia(parseDateStr(get(row, map, "fecha_insuficiencia")));
+
+            // DEBUG LOGGING FOR PRESUPUESTO
+            System.out.println("Processing Presupuesto for Row...");
+            System.out.println("Ficha Name (Truncated): " + p.getFichaEbiNombre());
+            System.out.println("Ficha Obj: " + p.getFichaEbiObjetivo());
+            System.out.println("Ficha Act: " + p.getFichaEbiActividades());
 
             if (presupuestoDAO.insertar(p)) {
                 return p;
@@ -1080,6 +1221,26 @@ public class CargaMasivaServlet extends HttpServlet {
             Contrato existente = contratoDAO.obtenerPorNumero(contrato.getNumeroContrato());
             if (existente != null) {
                 contrato.setId(existente.getId());
+
+                // PRESERVE EXISTING RELATIONSHIPS IF NEW ONES ARE EMPTY (ID=0)
+                // This solves the issue where re-uploading with partial data wipes out existing
+                // links.
+                if (contrato.getEstructuradorId() == 0 && existente.getEstructuradorId() > 0) {
+                    contrato.setEstructuradorId(existente.getEstructuradorId());
+                }
+                if (contrato.getContratistaId() == 0 && existente.getContratistaId() > 0) {
+                    contrato.setContratistaId(existente.getContratistaId());
+                }
+                if (contrato.getSupervisorId() == 0 && existente.getSupervisorId() > 0) {
+                    contrato.setSupervisorId(existente.getSupervisorId());
+                }
+                if (contrato.getOrdenadorId() == 0 && existente.getOrdenadorId() > 0) {
+                    contrato.setOrdenadorId(existente.getOrdenadorId());
+                }
+                if (contrato.getPresupuestoId() == 0 && existente.getPresupuestoId() > 0) {
+                    contrato.setPresupuestoId(existente.getPresupuestoId());
+                }
+
                 if (contratoDAO.actualizar(contrato)) {
                     log.append("  ↻ Contrato actualizado: ").append(contrato.getNumeroContrato()).append("\n");
                     return contrato;
@@ -1291,5 +1452,14 @@ public class CargaMasivaServlet extends HttpServlet {
         }
 
         return clean;
+    }
+
+    private String truncate(String val, int max) {
+        if (val == null)
+            return "";
+        if (val.length() > max) {
+            return val.substring(0, max);
+        }
+        return val;
     }
 }

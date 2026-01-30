@@ -25,6 +25,7 @@ public class ContratoServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -110,6 +111,7 @@ public class ContratoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
             insertContrato(request, response);
@@ -209,6 +211,7 @@ public class ContratoServlet extends HttpServlet {
             contrato.setEstructuradorId(estructurador.getId());
 
             if (contratoDAO.insertar(contrato)) {
+                request.getSession().setAttribute("successMessage", "El contrato ha sido creado correctamente.");
                 response.sendRedirect("contratos?action=list");
             } else {
                 request.setAttribute("error", "Error al guardar el contrato. Verifique los datos.");
@@ -295,7 +298,88 @@ public class ContratoServlet extends HttpServlet {
                 throw new Exception("Contrato a actualizar no existe.");
             }
 
-            // Update simple fields
+            // 1. Update Contratista
+            if (contrato.getContratistaId() > 0) {
+                Contratista contratista = contratistaDAO.obtenerPorId(contrato.getContratistaId());
+                if (contratista != null) {
+                    // Update fields present in form
+                    contratista.setCedula(request.getParameter("contratista_cedula"));
+                    contratista.setDv(request.getParameter("contratista_dv"));
+                    contratista.setNombre(request.getParameter("contratista_nombre"));
+                    contratista.setTelefono(request.getParameter("contratista_telefono"));
+                    contratista.setCorreo(request.getParameter("contratista_correo"));
+                    contratista.setDireccion(request.getParameter("contratista_direccion"));
+                    contratista.setFechaNacimiento(ParseUtils.parseDate(request.getParameter("contratista_fecha_nac")));
+                    contratista.setEdad(ParseUtils.parseInt(request.getParameter("contratista_edad")));
+                    contratistaDAO.actualizar(contratista);
+                }
+            }
+
+            // 2. Update or Create Presupuesto (Only fields in form)
+            String cdp = request.getParameter("presupuesto_cdp");
+            String rpc = request.getParameter("presupuesto_rpc");
+
+            if (contrato.getPresupuestoId() > 0) {
+                PresupuestoDetalle presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
+                if (presupuesto != null) {
+                    presupuesto.setCdpNumero(cdp);
+                    presupuesto.setRpNumero(rpc);
+                    presupuestoDAO.actualizar(presupuesto);
+                }
+            } else if ((cdp != null && !cdp.trim().isEmpty()) || (rpc != null && !rpc.trim().isEmpty())) {
+                // Create new Presupuesto if it doesn't exist but has data
+                PresupuestoDetalle novPresupuesto = new PresupuestoDetalle();
+                novPresupuesto.setCdpNumero(cdp);
+                novPresupuesto.setRpNumero(rpc);
+                // Set other non-null required fields to safe defaults or empty if needed
+                novPresupuesto.setApropiacionPresupuestal("");
+                novPresupuesto.setIdPaa("");
+                novPresupuesto.setCodigoDane("");
+                novPresupuesto.setInversion("");
+                novPresupuesto.setFuncionamiento("");
+                novPresupuesto.setFichaEbiNombre("");
+                novPresupuesto.setFichaEbiObjetivo("");
+                novPresupuesto.setFichaEbiActividades("");
+                novPresupuesto.setCertificadoInsuficiencia("");
+                // Dates can remain null if table allows or handle accordingly
+
+                if (presupuestoDAO.insertar(novPresupuesto)) {
+                    contrato.setPresupuestoId(novPresupuesto.getId());
+                }
+            }
+
+            // 3. Update or Create Estructurador
+            String jur = request.getParameter("estructurador_juridico");
+            String tec = request.getParameter("estructurador_tecnico");
+            String fin = request.getParameter("estructurador_financiero");
+
+            if (contrato.getEstructuradorId() > 0) {
+                // Update existing
+                Estructurador estructurador = estructuradorDAO.obtenerPorId(contrato.getEstructuradorId());
+                if (estructurador != null) {
+                    estructurador.setJuridicoNombre(jur);
+                    estructurador.setTecnicoNombre(tec);
+                    estructurador.setFinancieroNombre(fin);
+                    estructuradorDAO.actualizar(estructurador);
+                }
+            } else if ((jur != null && !jur.trim().isEmpty()) || (tec != null && !tec.trim().isEmpty())
+                    || (fin != null && !fin.trim().isEmpty())) {
+                // Create new if doesn't exist but has data
+                Estructurador novEstructurador = new Estructurador();
+                novEstructurador.setJuridicoNombre(jur);
+                novEstructurador.setTecnicoNombre(tec);
+                novEstructurador.setFinancieroNombre(fin);
+                // Default empty for cargos as they are not in form
+                novEstructurador.setJuridicoCargo("");
+                novEstructurador.setTecnicoCargo("");
+                novEstructurador.setFinancieroCargo("");
+
+                if (estructuradorDAO.insertar(novEstructurador)) {
+                    contrato.setEstructuradorId(novEstructurador.getId());
+                }
+            }
+
+            // 4. Update Contrato fields
             contrato.setNumeroContrato(request.getParameter("numero_contrato"));
             contrato.setObjeto(request.getParameter("objeto"));
             contrato.setValorTotalNumeros(ParseUtils.parseBigDecimal(request.getParameter("valor_total")));
@@ -318,6 +402,7 @@ public class ContratoServlet extends HttpServlet {
                 contrato.setOrdenadorId(ordenadorId);
 
             if (contratoDAO.actualizar(contrato)) {
+                request.getSession().setAttribute("successMessage", "El contrato ha sido actualizado correctamente.");
                 response.sendRedirect("contratos?action=list");
             } else {
                 request.setAttribute("error", "Error al actualizar el contrato.");

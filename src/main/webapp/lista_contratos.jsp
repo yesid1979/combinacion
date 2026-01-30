@@ -70,9 +70,43 @@
                 <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
                 <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 
+                <!-- SweetAlert2 -->
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
                 <script>
                     $(document).ready(function () {
+                        // Check for session-based alerts (e.g. from Redirects)
+                        var successMsg = "${sessionScope.successMessage}";
+                        var errorMsg = "${sessionScope.errorMessage}";
+
+                        // Also check request scope for forwards
+                        if (!successMsg) successMsg = "${requestScope.successMessage}";
+                        if (!errorMsg) errorMsg = "${requestScope.errorMessage}";
+                        // Fallback for "error" attribute currently used in servlet
+                        if (!errorMsg) errorMsg = "${error}";
+
+                        // Clean up session attributes is done via c:remove at the end of body
+
+                        if (successMsg && successMsg.trim() !== "") {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: successMsg,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        }
+
+                        if (errorMsg && errorMsg.trim() !== "") {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: errorMsg
+                            });
+                        }
+
                         $('#contratosTable').DataTable({
+                            // ... existing config ...
                             "processing": true,
                             "serverSide": true,
                             "responsive": true,
@@ -141,6 +175,14 @@
                         });
                     });
                 </script>
+
+                <!-- Remove session messages to avoid showing them again on refresh -->
+                <c:if test="${not empty sessionScope.successMessage}">
+                    <c:remove var="successMessage" scope="session" />
+                </c:if>
+                <c:if test="${not empty sessionScope.errorMessage}">
+                    <c:remove var="errorMessage" scope="session" />
+                </c:if>
             </body>
 
             </html>
