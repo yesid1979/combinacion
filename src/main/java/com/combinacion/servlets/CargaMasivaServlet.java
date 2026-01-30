@@ -438,6 +438,16 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("cargo_ordenador", i);
             }
 
+            // --- FIXES SPECIFICOS SOLICITADOS ---
+            else if (h.contains("objeto") && (h.contains("contractual") || h.contains("contrato"))) {
+                map.put("objeto", i);
+            } else if (h.contains("actividades y si aplica entregables")
+                    || h.equals("actividades y si aplica entregables")) {
+                System.out.println(">>> STRICT MATCH ACTIVIDADES: '" + h + "' at index " + i);
+                map.put("actividades_entregables", i);
+            }
+            // ------------------------------------
+
             // ===== ESTRUCTURADORES =====
 
             // JURÍDICO
@@ -658,8 +668,11 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("valor_media_cuota_letras", i);
             } else if (h.contains("media") && h.contains("numero")) {
                 map.put("valor_media_cuota_numero", i);
-            } else if (h.contains("entregables") || (h.contains("actividades") && h.contains("contrato"))) {
+            } else if ((h.contains("entregables") || h.contains("actividades") || h.contains("obligaciones"))
+                    && !map.containsKey("actividades_entregables")) {
                 map.put("actividades_entregables", i);
+            } else if (h.contains("objeto") && !map.containsKey("objeto")) {
+                map.put("objeto", i);
                 // SWAP MAPPING AS REQUESTED BY USER
                 // 1. "Número del Artículo..." -> liquidacion_acuerdo
             } else if (h.contains("liquidaci") && h.contains("acuerdo")
@@ -984,6 +997,15 @@ public class CargaMasivaServlet extends HttpServlet {
                 return null;
             }
 
+            // 1. Verificar si ya existe el estructurador idéntico
+            Estructurador existente = estructuradorDAO.obtenerExistente(jurNombre, jurCargo, tecNombre, tecCargo,
+                    finNombre, finCargo);
+            if (existente != null) {
+                System.out.println("Estructurador Reutilizado! ID: " + existente.getId());
+                return existente;
+            }
+
+            // 2. Si no existe, crear uno nuevo
             Estructurador e = new Estructurador();
             e.setJuridicoNombre(jurNombre);
             e.setJuridicoCargo(jurCargo);
@@ -1014,6 +1036,7 @@ public class CargaMasivaServlet extends HttpServlet {
     private PresupuestoDetalle processPresupuestoDetalle(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
             // Verificar si hay algún dato clave
+            // Verificar si hay algún dato clave
             String cdpNum = get(row, map, "cdp_numero");
             String rpNum = get(row, map, "rp_numero");
             String idPaa = get(row, map, "id_paa");
@@ -1021,6 +1044,13 @@ public class CargaMasivaServlet extends HttpServlet {
 
             if (cdpNum.isEmpty() && rpNum.isEmpty() && idPaa.isEmpty() && apropiacion.isEmpty()) {
                 return null;
+            }
+
+            // 1. Verificar existencia
+            PresupuestoDetalle existente = presupuestoDAO.obtenerExistente(cdpNum, rpNum, apropiacion, idPaa);
+            if (existente != null) {
+                System.out.println("Presupuesto Reutilizado! ID: " + existente.getId());
+                return existente;
             }
 
             PresupuestoDetalle p = new PresupuestoDetalle();
@@ -1058,9 +1088,9 @@ public class CargaMasivaServlet extends HttpServlet {
             p.setCodigoDane(get(row, map, "codigo_dane"));
             p.setInversion(get(row, map, "inversion"));
             p.setFuncionamiento(get(row, map, "funcionamiento"));
-            p.setFichaEbiNombre(truncate(get(row, map, "ficha_ebi_nombre"), 255));
-            p.setFichaEbiObjetivo(truncate(get(row, map, "ficha_ebi_objetivo"), 255));
-            p.setFichaEbiActividades(truncate(get(row, map, "ficha_ebi_actividades"), 255));
+            p.setFichaEbiNombre(get(row, map, "ficha_ebi_nombre"));
+            p.setFichaEbiObjetivo(get(row, map, "ficha_ebi_objetivo"));
+            p.setFichaEbiActividades(get(row, map, "ficha_ebi_actividades"));
 
             p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
             p.setFechaInsuficiencia(parseDateStr(get(row, map, "fecha_insuficiencia")));

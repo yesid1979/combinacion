@@ -142,4 +142,30 @@ public class PresupuestoDetalleDAO {
             return false;
         }
     }
+
+    public PresupuestoDetalle obtenerExistente(String cdpNum, String rpNum, String apropiacion, String idPaa) {
+        // Busqueda por combinación única de claves de negocio
+        String sql = "SELECT * FROM presupuesto_detalles WHERE cdp_numero = ? AND rp_numero = ? AND apropiacion_presupuestal = ? AND id_paa = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, cdpNum != null ? cdpNum : "");
+            ps.setString(2, rpNum != null ? rpNum : "");
+            ps.setString(3, apropiacion != null ? apropiacion : "");
+            ps.setString(4, idPaa != null ? idPaa : "");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    PresupuestoDetalle p = new PresupuestoDetalle();
+                    p.setId(rs.getInt("id"));
+                    // Solo necesitamos el ID para relacionar, pero llenamos todo por si acaso
+                    p.setCdpNumero(rs.getString("cdp_numero"));
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

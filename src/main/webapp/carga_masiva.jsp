@@ -115,13 +115,14 @@
                         </div>
                     </form>
 
-                    <% if (request.getAttribute("debug") !=null) { %>
+                    <%-- <% if (request.getAttribute("debug") !=null) { %>
                         <div class="alert alert-secondary mt-4">
                             <h6 class="alert-heading"><i class="bi bi-terminal me-2"></i>Log de Procesamiento</h6>
                             <pre class="mb-0"
                                 style="white-space: pre-wrap; font-size: 0.85rem; font-family: 'Courier New', monospace;"><%= request.getAttribute("debug") %></pre>
                         </div>
                         <% } %>
+                            --%>
                 </div>
             </div>
         </div>
