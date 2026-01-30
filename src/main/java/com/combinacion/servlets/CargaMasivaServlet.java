@@ -441,9 +441,9 @@ public class CargaMasivaServlet extends HttpServlet {
             // --- FIXES SPECIFICOS SOLICITADOS ---
             else if (h.contains("objeto") && (h.contains("contractual") || h.contains("contrato"))) {
                 map.put("objeto", i);
-            } else if (h.contains("actividades y si aplica entregables")
-                    || h.equals("actividades y si aplica entregables")) {
-                System.out.println(">>> STRICT MATCH ACTIVIDADES: '" + h + "' at index " + i);
+            } else if ((h.contains("actividades") && h.contains("entregables"))
+                    || (h.contains("actividades") && h.contains("aplica"))) {
+                System.out.println(">>> MATCH ACTIVIDADES (ROBUST): '" + h + "' at index " + i);
                 map.put("actividades_entregables", i);
             }
             // ------------------------------------
@@ -736,8 +736,12 @@ public class CargaMasivaServlet extends HttpServlet {
         if (text == null)
             return "";
 
-        // 1. Minúsculas
-        String lower = text.toLowerCase().trim();
+        // 1. Reemplazar saltos de linea y tabs por espacios ANTES de limpiar
+        String lower = text.toLowerCase()
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\t", " ")
+                .trim();
 
         // 2. Reemplazos manuales comunes
         lower = lower
@@ -745,16 +749,14 @@ public class CargaMasivaServlet extends HttpServlet {
                 .replace("ñ", "n")
                 .replace("  ", " "); // Dobles espacios
 
-        // 3. Limpieza agresiva: dejar solo letras, números y espacios
-        // Esto convierte "Nmero" -> "nmero" o "n mero" dependiendo del caracter
+        // 3. Limpieza: dejar solo letras, números y espacios
         StringBuilder sb = new StringBuilder();
         for (char c : lower.toCharArray()) {
-            // Permitir letras, digitos y espacio
             if (Character.isLetterOrDigit(c) || c == ' ') {
                 sb.append(c);
             }
         }
-        return sb.toString();
+        return sb.toString().trim().replaceAll(" +", " "); // Normalizar espacios finales
     }
 
     private void logMapping(StringBuilder log, Map<String, Integer> map, String key, String label) {
