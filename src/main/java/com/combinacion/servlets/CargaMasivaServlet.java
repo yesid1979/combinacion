@@ -408,6 +408,19 @@ public class CargaMasivaServlet extends HttpServlet {
         return true;
     }
 
+    private String parseBooleanCheck(String val) {
+        if (val == null)
+            return "No";
+        val = val.trim();
+        if (val.equalsIgnoreCase("x"))
+            return "Si";
+        if (val.equalsIgnoreCase("si"))
+            return "Si";
+        if (val.isEmpty())
+            return "No";
+        return val;
+    }
+
     private Map<String, Integer> mapHeaders(String[] header, StringBuilder log) {
         Map<String, Integer> map = new HashMap<>();
 
@@ -559,9 +572,9 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("id_paa", i);
             } else if (h.contains("dane") && h.contains("cod")) {
                 map.put("codigo_dane", i);
-            } else if (h.contains("inversion")) {
+            } else if (h.contains("inversion") && h.contains("aplica")) {
                 map.put("inversion", i);
-            } else if (h.contains("funcionamiento")) {
+            } else if (h.contains("funcionamiento") && h.contains("aplica")) {
                 map.put("funcionamiento", i);
             } else if ((h.contains("nombre") || h.contains("ficha")) && h.contains("tebi")) {
                 map.put("ficha_ebi_nombre", i);
@@ -1072,7 +1085,6 @@ public class CargaMasivaServlet extends HttpServlet {
     private PresupuestoDetalle processPresupuestoDetalle(String[] row, Map<String, Integer> map, StringBuilder log) {
         try {
             // Verificar si hay algún dato clave
-            // Verificar si hay algún dato clave
             String cdpNum = get(row, map, "cdp_numero");
             String rpNum = get(row, map, "rp_numero");
             String idPaa = get(row, map, "id_paa");
@@ -1082,13 +1094,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 return null;
             }
 
-            // 1. Verificar existencia
-            PresupuestoDetalle existente = presupuestoDAO.obtenerExistente(cdpNum, rpNum, apropiacion, idPaa);
-            if (existente != null) {
-                System.out.println("Presupuesto Reutilizado! ID: " + existente.getId());
-                return existente;
-            }
-
+            // --- 1. POPULATE OBJECT FIRST (EXTRACT ALL DATA) ---
             PresupuestoDetalle p = new PresupuestoDetalle();
             p.setCdpNumero(cdpNum);
 
@@ -1097,7 +1103,8 @@ public class CargaMasivaServlet extends HttpServlet {
             if (p.getCdpFecha() == null && !cdpFechaStr.isEmpty()) {
                 log.append("⚠️ Warn: No se pudo parsear fecha CDP: '").append(cdpFechaStr).append("'\n");
             }
-            // LOG EXPLICITO SI LA COLUMNA NO SE LEE
+
+            // Log si no lee
             if (cdpFechaStr.isEmpty() && map.containsKey("cdp_fecha")) {
                 int idx = map.get("cdp_fecha");
                 if (idx < row.length && !row[idx].isEmpty())
@@ -1122,23 +1129,35 @@ public class CargaMasivaServlet extends HttpServlet {
             p.setApropiacionPresupuestal(apropiacion);
             p.setIdPaa(idPaa);
             p.setCodigoDane(get(row, map, "codigo_dane"));
-            p.setInversion(get(row, map, "inversion"));
-            p.setFuncionamiento(get(row, map, "funcionamiento"));
+            p.setInversion(parseBooleanCheck(get(row, map, "inversion")));
+            p.setFuncionamiento(parseBooleanCheck(get(row, map, "funcionamiento")));
             p.setFichaEbiNombre(get(row, map, "ficha_ebi_nombre"));
             p.setFichaEbiObjetivo(get(row, map, "ficha_ebi_objetivo"));
             p.setFichaEbiActividades(get(row, map, "ficha_ebi_actividades"));
-
             p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
             p.setFechaInsuficiencia(parseDateStr(get(row, map, "fecha_insuficiencia")));
 
-            // DEBUG LOGGING FOR PRESUPUESTO
-            System.out.println("Processing Presupuesto for Row...");
-            System.out.println("Ficha Name (Truncated): " + p.getFichaEbiNombre());
-            System.out.println("Ficha Obj: " + p.getFichaEbiObjetivo());
-            System.out.println("Ficha Act: " + p.getFichaEbiActividades());
+            // --- 2. CHECK EXISTENCE ---
+            PresupuestoDetalle existente = presupuestoDAO.obtenerExistente(cdpNum, rpNum, apropiacion, idPaa);
+            if (existente != null) {
+                System.out.println(
+                        "Presupuesto Reutilizado! ID: " + existente.getId() + " - ACTUALIZANDO DATOS COMPLETOS");
+                // Set the ID of existing record to the new populated object so we can run
+                // update
+                p.setId(existente.getId());
 
-            if (presupuestoDAO.insertar(p)) {
-                return p;
+                // Actualizar en base de datos
+                if (presupuestoDAO.actualizar(p)) {
+                    return p;
+                } else {
+                    log.append("❌ Error al actualizar presupuesto ID ").append(p.getId()).append("\n");
+                    return existente; // Fallback
+                }
+            } else {
+                // Insert New
+                if (presupuestoDAO.insertar(p)) {
+                    return p;
+                }
             }
             return null;
 

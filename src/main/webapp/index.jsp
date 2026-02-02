@@ -108,7 +108,7 @@
 
                     <!-- Presupuesto (Bonus) -->
                     <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='#'">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='presupuesto'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-info bg-opacity-10 text-info mx-auto">
                                     <i class="bi bi-graph-up fs-2"></i>
