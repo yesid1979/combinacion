@@ -100,7 +100,7 @@
                         </small>
                     </div>
 
-                    <form action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
+                    <form id="uploadForm" action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
                         <div class="mb-3">
                             <label for="fileUpload" class="form-label fw-bold">Seleccionar Archivo (Excel o CSV)</label>
                             <input class="form-control form-control-lg" type="file" id="fileUpload" name="file"
@@ -129,32 +129,54 @@
 
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-        <% if (request.getAttribute("message") != null) { %>
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Carga Exitosa!',
-                    html: '<%= request.getAttribute("message") %>',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#0d6efd'
-                });
+        <!-- Flash Message Handling -->
+        <% String msg=(String) session.getAttribute("message"); String err=(String) session.getAttribute("error");
+            if(msg !=null) session.removeAttribute("message"); if(err !=null) session.removeAttribute("error"); %>
+
+            <script>
+        <% if (msg != null) { %>
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Carga Exitosa!',
+                        html: '<%= msg %>',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#0d6efd'
+                    });
         <% } %>
 
-        <% if (request.getAttribute("error") != null) { %>
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error en la Carga',
-                    text: '<%= request.getAttribute("error") %>',
-                    confirmButtonColor: '#dc3545'
-                });
+        <% if (err != null) { %>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en la Carga',
+                        text: '<%= err %>',
+                        confirmButtonColor: '#dc3545'
+                    });
         <% } %>
 
-        </script>
+            </script>
 
-        <!-- Footer -->
-        <jsp:include page="inc/footer.jsp" />
+            <script>
+                    // Loading Overlay script
+                    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+                        // Optional: Validate file input is not empty before showing loader
+                        // But 'required' attribute on input handles that mostly.
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                        Swal.fire({
+                            title: 'Procesando solicitud',
+                            html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la página.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                    });
+            </script>
+
+            <!-- Footer -->
+            <jsp:include page="inc/footer.jsp" />
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
     </html>

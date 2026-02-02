@@ -133,7 +133,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 }
                 log.append("═══════════════════════════════════════════════════\n\n");
 
-                Map<String, Integer> map = mapHeaders(header);
+                Map<String, Integer> map = mapHeaders(header, log);
 
                 // NOTE: We do not skip rows based on index here because we merged multiple
                 // rows.
@@ -359,18 +359,18 @@ public class CargaMasivaServlet extends HttpServlet {
                     msg.append("⚠️ No se cargaron datos");
                 }
 
-                request.setAttribute("message", msg.toString());
-                request.setAttribute("debug", log.toString());
+                request.getSession().setAttribute("message", msg.toString());
+                request.getSession().setAttribute("debug", log.toString());
 
             } catch (Exception e) {
                 e.printStackTrace();
-                request.setAttribute("error", "❌ Error al procesar el archivo: " + e.getMessage());
+                request.getSession().setAttribute("error", "❌ Error al procesar el archivo: " + e.getMessage());
             }
         } else {
-            request.setAttribute("error", "❌ No se seleccionó ningún archivo.");
+            request.getSession().setAttribute("error", "❌ No se seleccionó ningún archivo.");
         }
 
-        request.getRequestDispatcher("carga_masiva.jsp").forward(request, response);
+        response.sendRedirect("carga_masiva.jsp");
     }
 
     private List<String[]> readSheetData(Sheet sheet) {
@@ -408,16 +408,21 @@ public class CargaMasivaServlet extends HttpServlet {
         return true;
     }
 
-    private Map<String, Integer> mapHeaders(String[] header) {
+    private Map<String, Integer> mapHeaders(String[] header, StringBuilder log) {
         Map<String, Integer> map = new HashMap<>();
 
         System.out.println("---------- HEADERS DEL EXCEL ----------");
+        log.append("--- ANALISIS DE ENCABEZADOS ---\n");
         for (int i = 0; i < header.length; i++) {
             if (header[i] != null && !header[i].isEmpty()) {
-                System.out.println("Col " + i + ": " + header[i] + " -> Normalizado: " + normalizeText(header[i]));
+                String norm = normalizeText(header[i]);
+                System.out.println("Col " + i + ": " + header[i] + " -> Normalizado: " + norm);
+                log.append("Col ").append(i).append(": '").append(header[i]).append("' -> Norm: '").append(norm)
+                        .append("'\n");
             }
         }
         System.out.println("---------------------------------------");
+        log.append("-------------------------------\n");
 
         for (int i = 0; i < header.length; i++) {
             if (header[i] == null)
@@ -425,10 +430,26 @@ public class CargaMasivaServlet extends HttpServlet {
 
             String h = normalizeText(header[i]);
 
+            // --- PRIORITY 1: ACTIVIDADES (To prevent false matches in other columns) ---
+            if ((h.contains("actividades") && h.contains("aplica") && h.contains("entregables"))
+                    || (h.contains("actividades") && !h.contains("ficha") && !h.contains("ebi")
+                            && !h.contains("cronograma") && !h.contains("observaciones") && !h.contains("obj")
+                            && !h.contains("fin"))) {
+
+                // Double check it is not Ficha EBI
+                if (!h.contains("ficha") && !h.contains("ebi")) {
+                    String msg = ">>> MATCH ACTIVIDADES (PRIORITY): '" + h + "' at index " + i;
+                    System.out.println(msg);
+                    log.append(msg).append("\n");
+                    map.put("actividades_entregables", i);
+                    continue;
+                }
+            }
+
             // ===== ORDENADORES DEL GASTO =====
             if (h.contains("organismo") && !h.contains("direccion")) {
                 map.put("organismo", i);
-            } else if (h.contains("direccion") && h.contains("organismo")) {
+            } else if (h.contains("direccion") && h.contains("organismo") && !h.contains("actividades")) {
                 map.put("direccion_organismo", i);
             } else if (h.contains("nombre") && h.contains("ordenador")) {
                 map.put("nombre_ordenador", i);
@@ -436,15 +457,28 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("cedula_ordenador", i);
             } else if (h.contains("cargo") && h.contains("ordenador")) {
                 map.put("cargo_ordenador", i);
+            } else if (h.contains("decreto") && h.contains("nombramiento")) {
+                map.put("decreto_nombramiento", i);
+            } else if (h.contains("acta") && h.contains("posesion")) {
+                map.put("acta_posesion", i);
             }
 
             // --- FIXES SPECIFICOS SOLICITADOS ---
-            else if (h.contains("objeto") && (h.contains("contractual") || h.contains("contrato"))) {
+            // (Moved Actividades to Priority 1 above)
+
+            if (h.contains("objeto") && (h.contains("contractual") || h.contains("contrato"))) {
                 map.put("objeto", i);
-            } else if ((h.contains("actividades") && h.contains("entregables"))
-                    || (h.contains("actividades") && h.contains("aplica"))) {
-                System.out.println(">>> MATCH ACTIVIDADES (ROBUST): '" + h + "' at index " + i);
-                map.put("actividades_entregables", i);
+            }
+
+            // LOGICA SIMPLIFICADA Y ROBUSTA PARA ACTIVIDADES (FALLBACK)
+            else if (h.contains("entregables") || h.contains("entregable")
+                    || (h.contains("obligaciones") && !h.contains("financiera") && !h.contains("tributaria"))) {
+                if (!map.containsKey("actividades_entregables")) {
+                    String msg = ">>> MATCH ACTIVIDADES (FINAL): '" + h + "' at index " + i;
+                    System.out.println(msg);
+                    log.append(msg).append("\n");
+                    map.put("actividades_entregables", i);
+                }
             }
             // ------------------------------------
 

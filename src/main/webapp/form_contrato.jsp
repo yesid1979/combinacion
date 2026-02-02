@@ -158,6 +158,10 @@
                                                 <input type="date" class="form-control" name="fecha_terminacion"
                                                     value="${contrato.fechaTerminacion}" ${readonly ? 'readonly' : '' }>
                                             </div>
+                                            <div class="col-md-12">
+                                                <label class="form-label">Actividades/Entregables</label>
+                                                <textarea class="form-control" name="actividades_entregables" rows="4" ${readonly ? 'readonly' : '' }>${contrato.actividadesEntregables}</textarea>
+                                            </div>
                                             <div class="col-md-3">
                                                 <label class="form-label">Valor Total</label>
                                                 <input type="number" step="0.01" class="form-control" name="valor_total"
