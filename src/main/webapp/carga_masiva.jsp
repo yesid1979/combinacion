@@ -132,8 +132,8 @@
         <% String msg=(String) session.getAttribute("message"); String err=(String) session.getAttribute("error");
             if(msg !=null) session.removeAttribute("message"); if(err !=null) session.removeAttribute("error"); %>
 
-            <script>
-        <% if (msg != null) { %>
+            <% if (msg !=null) { %>
+                <script>
                     Swal.fire({
                         icon: 'success',
                         title: '¡Carga Exitosa!',
@@ -141,41 +141,43 @@
                         confirmButtonText: 'Entendido',
                         confirmButtonColor: '#0d6efd'
                     });
-        <% } %>
+                </script>
+                <% } %>
 
-        <% if (err != null) { %>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en la Carga',
-                        text: '<%= err %>',
-                        confirmButtonColor: '#dc3545'
-                    });
-        <% } %>
+                    <% if (err !=null) { %>
+                        <script>
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error en la Carga',
+                                text: '<%= err %>',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        </script>
+                        <% } %>
 
-            </script>
+                            <script>
+                                // Loading Overlay script
+                                document.getElementById('uploadForm').addEventListener('submit', function (e) {
+                                    // Optional: Validate file input is not empty before showing loader
+                                    // But 'required' attribute on input handles that mostly.
 
-            <script>
-                    // Loading Overlay script
-                    document.getElementById('uploadForm').addEventListener('submit', function (e) {
-                        // Optional: Validate file input is not empty before showing loader
-                        // But 'required' attribute on input handles that mostly.
+                                    Swal.fire({
+                                        title: 'Procesando solicitud',
+                                        html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la página.',
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                        }
+                                    });
+                                });
+                            </script>
 
-                        Swal.fire({
-                            title: 'Procesando solicitud',
-                            html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la página.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-                    });
-            </script>
+                            <!-- Footer -->
+                            <jsp:include page="inc/footer.jsp" />
 
-            <!-- Footer -->
-            <jsp:include page="inc/footer.jsp" />
-
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                            <script
+                                src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
     </html>
