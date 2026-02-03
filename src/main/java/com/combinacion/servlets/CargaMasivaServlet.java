@@ -443,6 +443,31 @@ public class CargaMasivaServlet extends HttpServlet {
 
             String h = normalizeText(header[i]);
 
+            // --- STRICT EXACT MATCHES (PRIORIDAD MAXIMA SOLICITADA POR USUARIO) ---
+            // El usuario indica que las columnas se llaman exactamente "Objeto contractual"
+            // y "Actividades y, si aplica, entregables".
+            // Al normalizar, los signos de puntuación se eliminan, así que buscamos la
+            // cadena limpia.
+
+            if (h.startsWith("objeto") && h.contains("contractual")) {
+                String msg = ">>> MATCH EXACTO (SUPER PRIORITY): 'Objeto contractual' found at index " + i;
+                System.out.println(msg);
+                log.append(msg).append("\n");
+                map.put("objeto", i);
+                continue;
+            }
+
+            if (h.startsWith("actividades") && h.contains("aplica") && h.contains("entregables")) {
+                // "Actividades y, si aplica, entregables"
+                String msg = ">>> MATCH EXACTO (SUPER PRIORITY): 'Actividades y, si aplica, entregables' found at index "
+                        + i;
+                System.out.println(msg);
+                log.append(msg).append("\n");
+                map.put("actividades_entregables", i);
+                continue;
+            }
+            // ----------------------------------------------------------------------
+
             // --- PRIORITY 1: ACTIVIDADES (To prevent false matches in other columns) ---
             if ((h.contains("actividades") && h.contains("aplica") && h.contains("entregables"))
                     || (h.contains("actividades") && !h.contains("ficha") && !h.contains("ebi")
@@ -484,8 +509,9 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             // LOGICA SIMPLIFICADA Y ROBUSTA PARA ACTIVIDADES (FALLBACK)
-            else if (h.contains("entregables") || h.contains("entregable")
-                    || (h.contains("obligaciones") && !h.contains("financiera") && !h.contains("tributaria"))) {
+            else if ((h.contains("entregables") || h.contains("entregable")
+                    || (h.contains("obligaciones") && !h.contains("financiera") && !h.contains("tributaria")))
+                    && !h.contains("objeto")) { // EXPLICIT EXCLUSION OF OBJETO
                 if (!map.containsKey("actividades_entregables")) {
                     String msg = ">>> MATCH ACTIVIDADES (FINAL): '" + h + "' at index " + i;
                     System.out.println(msg);
@@ -716,7 +742,7 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if (h.contains("media") && h.contains("numero")) {
                 map.put("valor_media_cuota_numero", i);
             } else if ((h.contains("entregables") || h.contains("actividades") || h.contains("obligaciones"))
-                    && !map.containsKey("actividades_entregables")) {
+                    && !map.containsKey("actividades_entregables") && !h.contains("objeto")) {
                 map.put("actividades_entregables", i);
             } else if (h.contains("objeto") && !map.containsKey("objeto")) {
                 map.put("objeto", i);
