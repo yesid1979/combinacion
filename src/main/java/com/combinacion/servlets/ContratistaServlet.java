@@ -47,41 +47,62 @@ public class ContratistaServlet extends HttpServlet {
     }
 
     private void listContratistasData(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String draw = request.getParameter("draw");
-        int start = ParseUtils.parseInt(request.getParameter("start"));
-        int length = ParseUtils.parseInt(request.getParameter("length"));
-        String searchValue = request.getParameter("search[value]");
-        int orderColumn = ParseUtils.parseInt(request.getParameter("order[0][column]"));
-        String orderDir = request.getParameter("order[0][dir]");
+        try {
+            String drawParam = request.getParameter("draw");
+            String startParam = request.getParameter("start");
+            String lengthParam = request.getParameter("length");
 
-        int total = contratistaDAO.countAll();
-        int filtered = contratistaDAO.countFiltered(searchValue);
-        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, orderColumn, orderDir);
+            int draw = (drawParam != null) ? ParseUtils.parseInt(drawParam) : 1;
+            int start = (startParam != null) ? ParseUtils.parseInt(startParam) : 0;
+            int length = (lengthParam != null) ? ParseUtils.parseInt(lengthParam) : 10;
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+            String searchValue = request.getParameter("search[value]");
+            String orderColParam = request.getParameter("order[0][column]");
+            int orderColumn = (orderColParam != null) ? ParseUtils.parseInt(orderColParam) : 1;
+            String orderDir = request.getParameter("order[0][dir]");
+            if (orderDir == null)
+                orderDir = "asc";
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
-        json.append("\"recordsTotal\": ").append(total).append(",");
-        json.append("\"recordsFiltered\": ").append(filtered).append(",");
-        json.append("\"data\": [");
+            int total = contratistaDAO.countAll();
+            int filtered = contratistaDAO.countFiltered(searchValue);
+            List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, orderColumn,
+                    orderDir);
 
-        for (int i = 0; i < list.size(); i++) {
-            Contratista c = list.get(i);
-            json.append("[");
-            json.append("\"").append(escapeJson(c.getCedula())).append("\",");
-            json.append("\"").append(escapeJson(c.getNombre())).append("\",");
-            json.append("\"").append(escapeJson(c.getCorreo())).append("\",");
-            json.append("\"").append(escapeJson(c.getTelefono())).append("\",");
-            json.append("\"").append(c.getId()).append("\"");
-            json.append("]");
-            if (i < list.size() - 1)
-                json.append(",");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Cache-Control", "no-store");
+
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"draw\": ").append(draw).append(",");
+            json.append("\"recordsTotal\": ").append(total).append(",");
+            json.append("\"recordsFiltered\": ").append(filtered).append(",");
+            json.append("\"data\": [");
+
+            for (int i = 0; i < list.size(); i++) {
+                Contratista c = list.get(i);
+                json.append("[");
+                json.append("\"").append(escapeJson(c.getCedula() != null ? c.getCedula().trim() : "")).append("\",");
+                json.append("\"").append(escapeJson(c.getNombre() != null ? c.getNombre().trim() : "")).append("\",");
+                json.append("\"").append(escapeJson(c.getCorreo() != null ? c.getCorreo().trim() : "")).append("\",");
+                json.append("\"").append(escapeJson(c.getTelefono() != null ? c.getTelefono().trim() : ""))
+                        .append("\",");
+                json.append("\"").append(c.getId()).append("\"");
+                json.append("]");
+                if (i < list.size() - 1)
+                    json.append(",");
+            }
+            json.append("]}");
+
+            response.getWriter().write(json.toString());
+            response.getWriter().flush();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setContentType("application/json");
+            response.getWriter().write("{\"draw\":1,\"recordsTotal\":0,\"recordsFiltered\":0,\"data\":[],\"error\":\""
+                    + escapeJson(e.getMessage()) + "\"}");
         }
-        json.append("]}");
-        response.getWriter().write(json.toString());
     }
 
     private void searchByCedula(HttpServletRequest request, HttpServletResponse response)
@@ -115,7 +136,41 @@ public class ContratistaServlet extends HttpServlet {
     private String escapeJson(String s) {
         if (s == null)
             return "";
-        return s.replace("\"", "\\\"").replace("\\", "\\\\");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            switch (ch) {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                default:
+                    if (ch < ' ') {
+                        String t = "000" + Integer.toHexString(ch);
+                        sb.append("\\u").append(t.substring(t.length() - 4));
+                    } else {
+                        sb.append(ch);
+                    }
+            }
+        }
+        return sb.toString();
     }
 
     @Override

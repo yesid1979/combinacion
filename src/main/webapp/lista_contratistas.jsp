@@ -73,8 +73,13 @@
                         "responsive": true,
                         "autoWidth": false,
                         "ajax": {
-                            "url": "contratistas?action=data",
-                            "type": "POST"
+                            "url": "${pageContext.request.contextPath}/contratistas?action=data&t=" + new Date().getTime(),
+                            "type": "POST",
+                            "error": function (xhr, error, thrown) {
+                                console.error("Error AJAX Status:", xhr.status);
+                                console.error("Error AJAX Response:", xhr.responseText);
+                                Swal.fire('Error de Conexión', 'El servidor respondió con código ' + xhr.status + '. Revise la consola (F12).', 'error');
+                            }
                         },
                         "columns": [
                             { "data": 0 }, // Cedula
