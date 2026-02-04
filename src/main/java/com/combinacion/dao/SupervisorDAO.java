@@ -76,6 +76,32 @@ public class SupervisorDAO {
         return null;
     }
 
+    public Supervisor obtenerPorCedulaYNombre(String cedulaBase, String nombre) {
+        // Search for EXACT match of name within the scope of this cedula (including
+        // DUPs)
+        String sql = "SELECT * FROM supervisores WHERE (cedula = ? OR cedula LIKE ?) AND LOWER(nombre) = LOWER(?) LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cedulaBase);
+            ps.setString(2, cedulaBase + "-DUP-%");
+            ps.setString(3, nombre);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Supervisor s = new Supervisor();
+                    s.setId(rs.getInt("id"));
+                    s.setCedula(rs.getString("cedula"));
+                    s.setNombre(rs.getString("nombre"));
+                    s.setCargo(rs.getString("cargo"));
+                    return s;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public int countAll() {
         String sql = "SELECT COUNT(*) FROM supervisores";
         try (Connection conn = DBConnection.getConnection();

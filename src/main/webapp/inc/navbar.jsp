@@ -43,6 +43,12 @@
                                         class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link small fw-bold" style="color: #004884;"
+                            href="${pageContext.request.contextPath}/combinacion">
+                            <i class="bi bi-files me-1"></i>Combinación
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

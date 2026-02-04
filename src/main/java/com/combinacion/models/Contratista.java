@@ -150,4 +150,15 @@ public class Contratista {
     public void setRestricciones(String restricciones) {
         this.restricciones = restricciones;
     }
+
+    // Campo transitorio para mostrar el contrato asociado
+    private String numeroContrato;
+
+    public String getNumeroContrato() {
+        return numeroContrato;
+    }
+
+    public void setNumeroContrato(String numeroContrato) {
+        this.numeroContrato = numeroContrato;
+    }
 }

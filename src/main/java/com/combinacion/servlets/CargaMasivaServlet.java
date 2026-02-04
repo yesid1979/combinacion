@@ -278,7 +278,7 @@ public class CargaMasivaServlet extends HttpServlet {
                         }
 
                         // Intentar procesar como Supervisor
-                        Supervisor supervisorObj = processSupervisor(row, map, cedulasSupervisoresExistentes);
+                        Supervisor supervisorObj = processSupervisor(row, map, cedulasSupervisoresExistentes, log);
                         if (supervisorObj != null) {
                             supervisoresCount++;
                         }
@@ -656,8 +656,16 @@ public class CargaMasivaServlet extends HttpServlet {
                 // ===== SUPERVISORES =====
             } else if (h.contains("nombre") && h.contains("supervisor")) {
                 map.put("supervisor_nombre", i);
+            } else if (h.equals("supervisor") && !map.containsKey("supervisor_nombre")) {
+                map.put("supervisor_nombre", i);
+
+                // Fix: Add explicit check for "del supervisor" variations or just broad
+                // "cedula" within context?
+                // "Cédula del supervisor" -> normalized "cedula del supervisor"
             } else if (h.contains("cedula") && h.contains("supervisor")) {
                 map.put("supervisor_cedula", i);
+
+                // "Cargo del supervisor" -> normalized "cargo del supervisor"
             } else if (h.contains("cargo") && h.contains("supervisor")) {
                 map.put("supervisor_cargo", i);
 
@@ -976,31 +984,68 @@ public class CargaMasivaServlet extends HttpServlet {
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
     private Supervisor processSupervisor(String[] row, Map<String, Integer> map,
-            java.util.Set<String> cedulasExistentes) {
+            java.util.Set<String> cedulasExistentes, StringBuilder log) {
         try {
             String nombre = get(row, map, "supervisor_nombre");
             String cedula = get(row, map, "supervisor_cedula");
 
             if (nombre.isEmpty()) {
+                if (!cedula.isEmpty() || !get(row, map, "supervisor_cargo").isEmpty()) {
+                    log.append("  ⚠️ WARN SPV: Nombre vacio pero Cedula/Cargo existen. Ced='").append(cedula)
+                            .append("'\n");
+                }
                 return null;
             }
 
-            if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return supervisorDAO.obtenerPorCedula(cedula); // Assuming this method exists or you might need to
-                                                               // implement/use proper DAO method
-                // NOTE: If SupervisorDAO misses obtenerPorCedula, this line will fail
-                // compilation if not checked.
-                // Assuming it exists since standard pattern.
+            // 1. INTENTO DE MATCH PERFECTO: Cedula (o DUP) + Nombre
+            Supervisor exactMatch = supervisorDAO.obtenerPorCedulaYNombre(cedula, nombre);
+            if (exactMatch != null) {
+                // Ya existe este supervisor con esta cedula (sea original o dup). USARLO.
+                /*
+                 * if (log != null)
+                 * log.append("  ✓ SPV Match Exacto: Usando existente ID ").append(exactMatch.
+                 * getId()).append("\n");
+                 */
+                return exactMatch;
             }
 
+            // 2. Si no existe match exacto, revisamos si la CEDULA (base) ya esta usada por
+            // OTRO nombre
+            if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
+                // La cedula base ya la tiene alguien, y como no hicimos match exacto arriba,
+                // sabemos que es OTRO nombre.
+                // CONFLICTO -> Crear nuevo con sufijo.
+                if (log != null) {
+                    Supervisor owner = supervisorDAO.obtenerPorCedula(cedula);
+                    String ownerName = (owner != null) ? owner.getNombre() : "DESCONOCIDO";
+                    log.append("  ⚠️ CONFLICTO SPV: Cedula '").append(cedula).append("' ya existe para '")
+                            .append(ownerName)
+                            .append("'. Creando NUEVO registro para '").append(nombre).append("'\n");
+                }
+                cedula = cedula + "-DUP-" + System.nanoTime();
+            }
+
+            // 3. Crear Nuevo
             Supervisor supervisor = new Supervisor();
             supervisor.setNombre(nombre);
-            supervisor.setCedula(cedula);
+            supervisor.setCedula(cedula.isEmpty() ? "SIN_CEDULA_" + System.nanoTime() : cedula);
             supervisor.setCargo(get(row, map, "supervisor_cargo"));
 
             if (supervisorDAO.insertar(supervisor)) {
-                if (!cedula.isEmpty())
-                    cedulasExistentes.add(cedula);
+                if (log != null)
+                    log.append("  ➜ Supervisor Nuevo Creado: ID ").append(supervisor.getId()).append(" ('")
+                            .append(nombre).append("')\n");
+
+                // Agregamos la cedula base al set para futuras validaciones en este mismo loop
+                // (Si la cedula era nueva, se agrega. Si era DUP, agregamos la base para que el
+                // proximo sepa que hay conflicto)
+                if (!cedula.isEmpty()) {
+                    // Si es un DUP, la base es lo que importa.
+                    // Pero espera, cedula variable ya tiene el DUP.
+                    // Necesitamos la base.
+                    String base = cedula.contains("-DUP-") ? cedula.substring(0, cedula.indexOf("-DUP-")) : cedula;
+                    cedulasExistentes.add(base);
+                }
                 return supervisor;
             }
             return null;

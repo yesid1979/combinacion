@@ -63,10 +63,57 @@ public class ContratistaServlet extends HttpServlet {
             if (orderDir == null)
                 orderDir = "asc";
 
+            // Determine sort column name based on view source and index
+            String source = request.getParameter("source");
+            String sortCol = "nombre"; // Default
+
+            if ("combinacion".equals(source)) {
+                // Mapping for Combinacion View: Checkbox(0), Contrato(1), Cedula(2),
+                // Nombre(3)...
+                switch (orderColumn) {
+                    case 1:
+                        sortCol = "numero_contrato";
+                        break;
+                    case 2:
+                        sortCol = "cedula";
+                        break;
+                    case 3:
+                        sortCol = "nombre";
+                        break;
+                    case 4:
+                        sortCol = "correo";
+                        break;
+                    case 5:
+                        sortCol = "telefono";
+                        break;
+                    default:
+                        sortCol = "numero_contrato";
+                        break;
+                }
+            } else {
+                // Mapping for Standard List: Cedula(0), Nombre(1), Correo(2), Telefono(3)...
+                switch (orderColumn) {
+                    case 0:
+                        sortCol = "cedula";
+                        break;
+                    case 1:
+                        sortCol = "nombre";
+                        break;
+                    case 2:
+                        sortCol = "correo";
+                        break;
+                    case 3:
+                        sortCol = "telefono";
+                        break;
+                    default:
+                        sortCol = "nombre";
+                        break;
+                }
+            }
+
             int total = contratistaDAO.countAll();
             int filtered = contratistaDAO.countFiltered(searchValue);
-            List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, orderColumn,
-                    orderDir);
+            List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir);
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -82,22 +129,33 @@ public class ContratistaServlet extends HttpServlet {
             for (int i = 0; i < list.size(); i++) {
                 Contratista c = list.get(i);
                 json.append("[");
+                // Index 0: Cedula
                 json.append("\"").append(escapeJson(c.getCedula() != null ? c.getCedula().trim() : "")).append("\",");
+                // Index 1: Nombre
                 json.append("\"").append(escapeJson(c.getNombre() != null ? c.getNombre().trim() : "")).append("\",");
+                // Index 2: Correo
                 json.append("\"").append(escapeJson(c.getCorreo() != null ? c.getCorreo().trim() : "")).append("\",");
+                // Index 3: Telefono
                 json.append("\"").append(escapeJson(c.getTelefono() != null ? c.getTelefono().trim() : ""))
                         .append("\",");
-                json.append("\"").append(c.getId()).append("\"");
+                // Index 4: ID
+                json.append("\"").append(c.getId()).append("\",");
+                // Index 5: Contrato (Extra data for combinacion)
+                json.append("\"").append(escapeJson(c.getNumeroContrato() != null ? c.getNumeroContrato().trim() : ""))
+                        .append("\"");
                 json.append("]");
                 if (i < list.size() - 1)
                     json.append(",");
             }
+
             json.append("]}");
 
             response.getWriter().write(json.toString());
             response.getWriter().flush();
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             e.printStackTrace();
             response.setContentType("application/json");
             response.getWriter().write("{\"draw\":1,\"recordsTotal\":0,\"recordsFiltered\":0,\"data\":[],\"error\":\""

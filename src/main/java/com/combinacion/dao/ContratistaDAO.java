@@ -4,6 +4,7 @@ import com.combinacion.models.Contratista;
 import com.combinacion.util.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ContratistaDAO {
@@ -160,7 +161,10 @@ public class ContratistaDAO {
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM contratistas WHERE 1=1 ";
         if (search != null && !search.isEmpty()) {
-            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR correo LIKE ?)";
+            search = removeAccents(search).toLowerCase();
+            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
+                    + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
+                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?)";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -180,16 +184,30 @@ public class ContratistaDAO {
         return 0;
     }
 
-    public List<Contratista> findWithPagination(int start, int length, String search, int orderCol, String orderDir) {
+    public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir) {
         List<Contratista> lista = new ArrayList<>();
-        String sql = "SELECT * FROM contratistas WHERE 1=1 ";
+        // Fetch all needed columns plus latest contract number
+        String sql = "SELECT id, cedula, nombre, correo, telefono, direccion, fecha_nacimiento, " +
+                "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato "
+                +
+                "FROM contratistas WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
-            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR correo LIKE ?)";
+            // Normalizamos la busqueda en Java (quitamos tildes al input)
+            search = removeAccents(search).toLowerCase();
+
+            // En SQL usamos translate para quitar tildes a las columnas antes de comparar
+            // PostgreSQL specific: translate(LOWER(col), 'áéíóú', 'aeiou')
+            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
+                    + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
+                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?)";
         }
 
-        String[] cols = { "cedula", "nombre", "correo", "telefono", "direccion" }; // Adjust based on table columns
-        String sortCol = (orderCol >= 0 && orderCol < cols.length) ? cols[orderCol] : "nombre";
+        // Validate sortCol to prevent SQL injection
+        List<String> allowedCols = Arrays.asList("id", "cedula", "nombre", "correo", "telefono", "numero_contrato");
+        if (sortCol == null || !allowedCols.contains(sortCol)) {
+            sortCol = "nombre";
+        }
 
         if (!"asc".equalsIgnoreCase(orderDir) && !"desc".equalsIgnoreCase(orderDir)) {
             orderDir = "asc";
@@ -220,6 +238,7 @@ public class ContratistaDAO {
                     c.setCorreo(rs.getString("correo"));
                     c.setTelefono(rs.getString("telefono"));
                     c.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    c.setNumeroContrato(rs.getString("numero_contrato"));
                     lista.add(c);
                 }
             }
@@ -227,6 +246,13 @@ public class ContratistaDAO {
             e.printStackTrace();
         }
         return lista;
+    }
+
+    private String removeAccents(String input) {
+        if (input == null)
+            return null;
+        return java.text.Normalizer.normalize(input, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
     }
 
     public boolean actualizar(Contratista c) {

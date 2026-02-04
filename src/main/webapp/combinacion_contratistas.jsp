@@ -6,7 +6,7 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Lista de Contratistas - Gestión de Prestadores</title>
+            <title>Combinación de Correspondencia - Gestión de Prestadores</title>
             <!-- Bootstrap 5 CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <!-- Bootstrap Icons CSS -->
@@ -24,17 +24,25 @@
 
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Contratistas registrados</h2>
-                    <a href="contratistas?action=new" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>
-                        Nuevo contratista</a>
+                    <h2>Generación de documentos</h2>
+                    <button class="btn btn-success" onclick="descargarMasivo()">
+                        <i class="bi bi-file-zip me-2"></i>Descargar Seleccionados (ZIP)
+                    </button>
+                </div>
+
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>Seleccione los contratistas para generar sus documentos.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
                 <div class="card shadow-sm border-0">
                     <div class="card-body">
-                        <!-- Removed table-responsive -->
                         <table id="contratistasTable" class="table table-striped" style="width:100%">
                             <thead class="table-dark">
                                 <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="selectAll"
+                                            class="form-check-input"></th>
+                                    <th>No. Contrato</th>
                                     <th>No. de cédula</th>
                                     <th>Nombres y Apellidos</th>
                                     <th>Correo</th>
@@ -72,21 +80,29 @@
                         "serverSide": true,
                         "responsive": true,
                         "autoWidth": false,
-                        "order": [[1, 'asc']], // Order by Nombre (Col 1) asc by default
+                        "order": [[1, 'asc']], // Order by Contract No (Col 1) asc by default
                         "ajax": {
-                            "url": "${pageContext.request.contextPath}/contratistas?action=data&t=" + new Date().getTime(),
+                            "url": "${pageContext.request.contextPath}/contratistas?action=data&source=combinacion&t=" + new Date().getTime(),
                             "type": "POST",
                             "error": function (xhr, error, thrown) {
                                 console.error("Error AJAX Status:", xhr.status);
-                                console.error("Error AJAX Response:", xhr.responseText);
-                                Swal.fire('Error de Conexión', 'El servidor respondió con código ' + xhr.status + '. Revise la consola (F12).', 'error');
+                                Swal.fire('Error de Conexión', 'El servidor respondió con código ' + xhr.status, 'error');
                             }
                         },
                         "columns": [
-                            { "data": 0 }, // Cedula
-                            { "data": 1 }, // Nombre
-                            { "data": 2 }, // Correo
-                            { "data": 3 }, // Telefono
+                            {
+                                "data": 4, // ID (checkbox)
+                                "orderable": false,
+                                "className": "text-center",
+                                "render": function (data, type, row) {
+                                    return '<input type="checkbox" class="form-check-input row-select" value="' + data + '">';
+                                }
+                            },
+                            { "data": 5 }, // Contrato (Visible Col 1, Source Index 5)
+                            { "data": 0 }, // Cedula (Visible Col 2, Source Index 0)
+                            { "data": 1 }, // Nombre (Visible Col 3, Source Index 1)
+                            { "data": 2 }, // Correo (Visible Col 4, Source Index 2)
+                            { "data": 3 }, // Telefono (Visible Col 5, Source Index 3)
                             {
                                 "data": 4, // ID (Actions)
                                 "orderable": false,
@@ -94,12 +110,9 @@
                                 "render": function (data, type, row) {
                                     return `
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="contratistas?action=edit&id=` + data + `" class="btn btn-sm btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
+                                        <a href="combinacion?action=generate&id=` + data + `" class="btn btn-sm btn-primary" title="Descargar ZIP">
+                                            <i class="bi bi-download"></i>
                                         </a>
-                                        <button onclick="confirmarEliminar(` + data + `)" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
                                     </div>
                                     `;
                                 }
@@ -111,8 +124,6 @@
                             "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
                             "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
                             "infoFiltered": "(filtrado de _MAX_ entradas totales)",
-                            "infoPostFix": "",
-                            "thousands": ",",
                             "lengthMenu": "Mostrar _MENU_ entradas",
                             "loadingRecords": "Cargando...",
                             "processing": "Procesando...",
@@ -123,49 +134,30 @@
                                 "last": "Último",
                                 "next": "Siguiente",
                                 "previous": "Anterior"
-                            },
-                            "aria": {
-                                "sortAscending": ": activar para ordenar columna ascendente",
-                                "sortDescending": ": activar para ordenar columna descendente"
                             }
                         }
                     });
+
+                    // Handle "Select All"
+                    $('#selectAll').on('click', function () {
+                        var rows = $('#contratistasTable').DataTable().rows({ 'search': 'applied' }).nodes();
+                        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                    });
                 });
 
-                // Check for URL parameters for SweetAlert
-                const urlParams = new URLSearchParams(window.location.search);
-                const status = urlParams.get('status');
-
-                if (status === 'created') {
-                    Swal.fire('¡Creado!', 'El registro ha sido creado exitosamente.', 'success');
-                } else if (status === 'updated') {
-                    Swal.fire('¡Actualizado!', 'El registro ha sido actualizado correctamente.', 'success');
-                } else if (status === 'deleted') {
-                    Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
-                } else if (status === 'error') {
-                    Swal.fire('Error', 'Ha ocurrido un error al procesar la solicitud.', 'error');
-                }
-
-                // Clean URL
-                if (status) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-
-                function confirmarEliminar(id) {
-                    Swal.fire({
-                        title: '¿Estás seguro?',
-                        text: "Esta acción no se puede deshacer",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Sí, eliminar',
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = 'contratistas?action=delete&id=' + id;
-                        }
+                function descargarMasivo() {
+                    let selected = [];
+                    $('.row-select:checked').each(function () {
+                        selected.push($(this).val());
                     });
+
+                    if (selected.length === 0) {
+                        Swal.fire('Atención', 'Por favor seleccione al menos un contratista.', 'warning');
+                        return;
+                    }
+
+                    // Trigger extraction
+                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',');
                 }
             </script>
         </body>
