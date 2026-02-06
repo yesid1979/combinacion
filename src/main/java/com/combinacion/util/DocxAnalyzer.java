@@ -16,12 +16,12 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 public class DocxAnalyzer {
 
     public static void main(String[] args) {
-        String filePath = "doc/DESIGNACION_SUPERVISOR_CON APOYO.docx";
+        String filePath = "doc/PLANTILLAS_TODAS_DAGJP_INVERSION_2026.docx";
         File file = new File(filePath);
 
         if (!file.exists()) {
             file = new File(
-                    "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\doc\\DESIGNACION_SUPERVISOR_CON APOYO.docx");
+                    "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\doc\\PLANTILLAS_TODAS_DAGJP_INVERSION_2026.docx");
         }
 
         if (!file.exists()) {

@@ -414,4 +414,15 @@ public class Contrato {
     public void setContratistaNombre(String contratistaNombre) {
         this.contratistaNombre = contratistaNombre;
     }
+
+    // Campo para Apoyo a la Supervisión
+    private String apoyoSupervision;
+
+    public String getApoyoSupervision() {
+        return apoyoSupervision;
+    }
+
+    public void setApoyoSupervision(String apoyoSupervision) {
+        this.apoyoSupervision = apoyoSupervision;
+    }
 }

@@ -59,32 +59,71 @@ public class CombinacionServlet extends HttpServlet {
             throws IOException {
         try {
             int contratistaId = Integer.parseInt(request.getParameter("id"));
-            byte[] docBytes = generarBytesDocumento(contratistaId);
+            Contratista c = contratistaDAO.obtenerPorId(contratistaId);
+            String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
 
-            if (docBytes == null) {
+            // Load all data to check Inversion status
+            Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+            PresupuestoDetalle presupuesto = null;
+            if (contrato != null && contrato.getPresupuestoId() > 0) {
+                presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
+            }
+
+            // Generate Standard Docs
+            byte[] supervisorBytes = generarBytesDocumento(contratistaId, "supervisor");
+            byte[] estructuradoresBytes = generarBytesDocumento(contratistaId, "estructuradores");
+
+            // Check Inversion
+            boolean esInversion = (presupuesto != null && presupuesto.getInversion() != null
+                    && !presupuesto.getInversion().trim().isEmpty());
+
+            if (supervisorBytes == null && estructuradoresBytes == null && !esInversion) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                        "No se pudo generar el documento (datos faltantes)");
+                        "No se pudo generar ningún documento (datos faltantes o contratos no encontrados)");
                 return;
             }
 
-            Contratista c = contratistaDAO.obtenerPorId(contratistaId);
-
-            // Create ZIP Structure for Individual Download
+            // Create ZIP
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
 
             String folderName = normalizeFileName(
                     c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId);
-            String entryPath = folderName + "/Designacion_" + (c.getCedula() != null ? c.getCedula() : "Doc") + ".docx";
 
-            java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
-            zos.putNextEntry(entry);
-            zos.write(docBytes);
-            zos.closeEntry();
+            // Add Standard Docs
+            if (supervisorBytes != null) {
+                addToZip(zos, folderName, "Designacion_Supervisor_" + cedula + ".docx", supervisorBytes);
+            }
+            if (estructuradoresBytes != null) {
+                addToZip(zos, folderName, "Designacion_Estructuradores_" + cedula + ".docx", estructuradoresBytes);
+            }
+
+            // Add Inversion Docs
+            if (esInversion && contrato != null) {
+                Map<String, String> replacements = getFullReplacements(contratistaId);
+                if (replacements != null) {
+                    String[] invTemplates = {
+                            "INVERSION_1_ESTUDIOS_PREVIOS.docx",
+                            "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx",
+                            "INVERSION_3_CERTIFICADO_IDONEIDAD.docx",
+                            "INVERSION_4_COMPLEMENTO_CONTRATO.docx"
+                    };
+
+                    for (String tpl : invTemplates) {
+                        byte[] fileBytes = generateBytes(tpl, replacements);
+                        if (fileBytes != null) {
+                            addToZip(zos, folderName,
+                                    tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula + (".docx")),
+                                    fileBytes);
+                        }
+                    }
+                }
+            }
+
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
-            String zipFilename = "Documentos_" + (c.getCedula() != null ? c.getCedula() : "Doc") + ".zip";
+            String zipFilename = "Documentos_" + cedula + ".zip";
 
             response.setContentType("application/zip");
             response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFilename + "\"");
@@ -98,8 +137,18 @@ public class CombinacionServlet extends HttpServlet {
         }
     }
 
+    private void addToZip(java.util.zip.ZipOutputStream zos, String folder, String filename, byte[] data)
+            throws IOException {
+        String entryPath = folder + "/" + filename;
+        java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
+        zos.putNextEntry(entry);
+        zos.write(data);
+        zos.closeEntry();
+    }
+
     private void generarZipMasivo(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String idsParam = request.getParameter("ids"); // Expecting "1,2,3,4"
+        String idsParam = request.getParameter("ids");
+
         if (idsParam == null || idsParam.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No se seleccionaron contratistas");
             return;
@@ -117,20 +166,53 @@ public class CombinacionServlet extends HttpServlet {
                     if (c == null)
                         continue;
 
-                    byte[] docBytes = generarBytesDocumento(id);
-                    if (docBytes != null) {
-                        // Folder structure: NOMBRE_CONTRATISTA/Designacion.docx
-                        String folderName = normalizeFileName(
-                                c.getNombre() != null ? c.getNombre() : "Contratista_" + id);
-                        String entryPath = folderName + "/Designacion_" + c.getCedula() + ".docx";
+                    String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
+                    String folderName = normalizeFileName(c.getNombre() != null ? c.getNombre() : "Contratista_" + id);
 
-                        java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
-                        zos.putNextEntry(entry);
-                        zos.write(docBytes);
-                        zos.closeEntry();
+                    // Check Inversion
+                    Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
+                    PresupuestoDetalle presupuesto = null;
+                    if (contrato != null && contrato.getPresupuestoId() > 0) {
+                        presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
                     }
+                    boolean esInversion = (presupuesto != null && presupuesto.getInversion() != null
+                            && !presupuesto.getInversion().trim().isEmpty());
+
+                    // Standard Docs
+                    byte[] supervisorBytes = generarBytesDocumento(id, "supervisor");
+                    if (supervisorBytes != null) {
+                        addToZip(zos, folderName, "Designacion_Supervisor_" + cedula + ".docx", supervisorBytes);
+                    }
+
+                    byte[] estructuradoresBytes = generarBytesDocumento(id, "estructuradores");
+                    if (estructuradoresBytes != null) {
+                        addToZip(zos, folderName, "Designacion_Estructuradores_" + cedula + ".docx",
+                                estructuradoresBytes);
+                    }
+
+                    // Inversion Docs
+                    if (esInversion) {
+                        Map<String, String> replacements = getFullReplacements(id);
+                        if (replacements != null) {
+                            String[] invTemplates = {
+                                    "INVERSION_1_ESTUDIOS_PREVIOS.docx",
+                                    "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx",
+                                    "INVERSION_3_CERTIFICADO_IDONEIDAD.docx",
+                                    "INVERSION_4_COMPLEMENTO_CONTRATO.docx"
+                            };
+                            for (String tpl : invTemplates) {
+                                byte[] fileBytes = generateBytes(tpl, replacements);
+                                if (fileBytes != null) {
+                                    addToZip(zos, folderName,
+                                            tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula + (".docx")),
+                                            fileBytes);
+                                }
+                            }
+                        }
+                    }
+
                 } catch (Exception ex) {
-                    ex.printStackTrace(); // Log and continue with others
+                    ex.printStackTrace();
                 }
             }
             zos.close();
@@ -147,77 +229,78 @@ public class CombinacionServlet extends HttpServlet {
         }
     }
 
-    private byte[] generarBytesDocumento(int contratistaId) throws Exception {
-        // Fetch Data
+    // Inject DAO
+    private com.combinacion.dao.EstructuradorDAO estructuradorDAO = new com.combinacion.dao.EstructuradorDAO();
+
+    private Map<String, String> getFullReplacements(int contratistaId) throws Exception {
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
         if (contratista == null)
             return null;
-
         Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
         if (contrato == null)
             return null;
 
         PresupuestoDetalle presupuesto = null;
-        if (contrato.getPresupuestoId() > 0) {
+        if (contrato.getPresupuestoId() > 0)
             presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
-        }
 
         Supervisor supervisor = null;
-        if (contrato.getSupervisorId() > 0) {
+        if (contrato.getSupervisorId() > 0)
             supervisor = supervisorDAO.obtenerPorId(contrato.getSupervisorId());
-        }
 
         OrdenadorGasto ordenador = null;
-        if (contrato.getOrdenadorId() > 0) {
+        if (contrato.getOrdenadorId() > 0)
             ordenador = ordenadorDAO.obtenerPorId(contrato.getOrdenadorId());
-        }
 
-        // Prepare Replacements
+        com.combinacion.models.Estructurador estructurador = null;
+        if (contrato.getEstructuradorId() > 0)
+            estructurador = estructuradorDAO.obtenerPorId(contrato.getEstructuradorId());
+
+        return getCommonReplacements(contratista, contrato, presupuesto, supervisor, ordenador, estructurador);
+    }
+
+    private byte[] generateBytes(String templateName, Map<String, String> replacements) throws IOException {
+        File templateFile = new File("plantillas/" + templateName);
+        if (!templateFile.exists()) {
+            templateFile = new File(
+                    "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
+                            + templateName);
+        }
+        if (!templateFile.exists())
+            return null;
+
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (FileInputStream fis = new FileInputStream(templateFile)) {
+            TemplateGenerator.generate(fis, replacements, baos);
+        }
+        return baos.toByteArray();
+    }
+
+    private Map<String, String> getCommonReplacements(Contratista contratista, Contrato contrato,
+            PresupuestoDetalle presupuesto, Supervisor supervisor,
+            OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador) {
         Map<String, String> replacements = new HashMap<>();
         replacements.put("${NOMBRE_CONTRATISTA}",
                 contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
+        replacements.put("${CEDULA}", contratista.getCedula() != null ? contratista.getCedula() : "");
         replacements.put("${NUMERO_CONTRATO}",
                 contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "");
-        // Handle potential newlines in Objeto by replacing them or leaving as is (POI
-        // handles some basic text)
         replacements.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
-
-        // Mapping TRD Proceso or similar as the "Proceso/Contrato Alt" link found in
-        // the doc
+        replacements.put("${NUMERO_PROCESO}", contrato.getTrdProceso() != null ? contrato.getTrdProceso() : "");
         replacements.put("${NUMERO_PROCESO_O_CONTRATO_ALT}",
                 contrato.getTrdProceso() != null ? contrato.getTrdProceso()
                         : (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
 
-        if (presupuesto != null) {
-            replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
+        // Values
+        if (contrato.getValorTotalNumeros() != null)
+            replacements.put("${VALOR_TOTAL}", contrato.getValorTotalNumeros().toString()); // Format if needed
+        else
+            replacements.put("${VALOR_TOTAL}", "0");
 
-            if (presupuesto.getRpFecha() != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat("MMMM d 'de' yyyy", new Locale("es", "CO"));
-                replacements.put("${RPC_FECHA}", sdf.format(presupuesto.getRpFecha()));
-            } else {
-                replacements.put("${RPC_FECHA}", "");
-            }
-        } else {
-            replacements.put("${RPC_NUMERO}", "N/A");
-            replacements.put("${RPC_FECHA}", "N/A");
-        }
-
-        // Supervisor
-        if (supervisor != null) {
-            replacements.put("${NOMBRE_SUPERVISOR}",
-                    supervisor.getNombre() != null ? supervisor.getNombre().toUpperCase() : "");
-            replacements.put("${CARGO_SUPERVISOR}", supervisor.getCargo() != null ? supervisor.getCargo() : "");
-
-            String cedClean = supervisor.getCedula();
-            if (cedClean != null && cedClean.contains("-DUP-")) {
-                cedClean = cedClean.substring(0, cedClean.indexOf("-DUP-"));
-            }
-            replacements.put("${CEDULA_SUPERVISOR}", cedClean != null ? cedClean : "");
-        } else {
-            replacements.put("${NOMBRE_SUPERVISOR}", "SIN DESIGNAR");
-            replacements.put("${CARGO_SUPERVISOR}", "");
-            replacements.put("${CEDULA_SUPERVISOR}", "");
-        }
+        if (contrato.getValorCuotaNumero() != null)
+            replacements.put("${VALOR_MENSUAL}", contrato.getValorCuotaNumero().toString());
+        else
+            replacements.put("${VALOR_MENSUAL}", "0");
 
         // Ordenador
         if (ordenador != null) {
@@ -233,38 +316,95 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("${ORGANISMO_ORDENADOR}", "");
         }
 
-        // Fecha Documento (Same as RPC Date per user request)
-        SimpleDateFormat sdfDoc = new SimpleDateFormat("MMMM d 'de' yyyy", new Locale("es", "CO"));
-        if (presupuesto != null && presupuesto.getRpFecha() != null) {
-            String fechaRpc = sdfDoc.format(presupuesto.getRpFecha());
-            replacements.put("${FECHA_DOCUMENTO}", fechaRpc);
-            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaRpc); // Explicit for supervisor block
-            replacements.put("${FECHA_RPC_APOYO}", fechaRpc); // Explicit for apoyo block
+        // Estructurador
+        if (estructurador != null) {
+            replacements.put("${NOMBRE_ESTRUCTURADOR_JURIDICO}",
+                    estructurador.getJuridicoNombre() != null ? estructurador.getJuridicoNombre().toUpperCase() : "");
+            replacements.put("${CARGO_ESTRUCTURADOR_JURIDICO}",
+                    estructurador.getJuridicoCargo() != null ? estructurador.getJuridicoCargo() : "");
+            replacements.put("${NOMBRE_ESTRUCTURADOR_TECNICO}",
+                    estructurador.getTecnicoNombre() != null ? estructurador.getTecnicoNombre().toUpperCase() : "");
+            replacements.put("${CARGO_ESTRUCTURADOR_TECNICO}",
+                    estructurador.getTecnicoCargo() != null ? estructurador.getTecnicoCargo() : "");
+            replacements.put("${NOMBRE_ESTRUCTURADOR_FINANCIERO}",
+                    estructurador.getFinancieroNombre() != null ? estructurador.getFinancieroNombre().toUpperCase()
+                            : "");
+            replacements.put("${CARGO_ESTRUCTURADOR_FINANCIERO}",
+                    estructurador.getFinancieroCargo() != null ? estructurador.getFinancieroCargo() : "");
         } else {
-            String fechaHoy = sdfDoc.format(new java.util.Date());
-            replacements.put("${FECHA_DOCUMENTO}", fechaHoy);
-            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaHoy);
-            replacements.put("${FECHA_RPC_APOYO}", fechaHoy);
+            replacements.put("${NOMBRE_ESTRUCTURADOR_JURIDICO}", "SIN ASIGNAR");
+            replacements.put("${CARGO_ESTRUCTURADOR_JURIDICO}", "");
+            replacements.put("${NOMBRE_ESTRUCTURADOR_TECNICO}", "SIN ASIGNAR");
+            replacements.put("${CARGO_ESTRUCTURADOR_TECNICO}", "");
+            replacements.put("${NOMBRE_ESTRUCTURADOR_FINANCIERO}", "SIN ASIGNAR");
+            replacements.put("${CARGO_ESTRUCTURADOR_FINANCIERO}", "");
         }
 
-        // Load Template
-        File templateFile = new File("plantillas/DESIGNACION_SUPERVISOR_CON APOYO.docx");
-        if (!templateFile.exists()) {
-            // Fallback
-            templateFile = new File(
-                    "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\DESIGNACION_SUPERVISOR_CON APOYO.docx");
+        // Supervisor
+        if (presupuesto != null) {
+            replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
+            // Date logic
         }
 
-        if (!templateFile.exists()) {
+        // Standard Date Logic
+        SimpleDateFormat sdfDoc = new SimpleDateFormat("MMMM d 'de' yyyy", new Locale("es", "CO"));
+        java.util.Date fechaBase = (presupuesto != null && presupuesto.getRpFecha() != null) ? presupuesto.getRpFecha()
+                : new java.util.Date();
+        String fechaStr = sdfDoc.format(fechaBase);
+        replacements.put("${FECHA_DOCUMENTO}", fechaStr);
+        replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
+        replacements.put("${FECHA_RPC_APOYO}", fechaStr); // Assuming same date
+        replacements.put("${RPC_FECHA}", fechaStr);
+
+        SimpleDateFormat yearOnly = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
+        String fullDateLetters = sdfDoc.format(fechaBase) + " (" + yearOnly.format(fechaBase) + ")";
+        replacements.put("${FECHA_DOCUMENTO_LETRAS}", fullDateLetters);
+
+        if (supervisor != null) {
+            replacements.put("${NOMBRE_SUPERVISOR}",
+                    supervisor.getNombre() != null ? supervisor.getNombre().toUpperCase() : "");
+            replacements.put("${CARGO_SUPERVISOR}", supervisor.getCargo() != null ? supervisor.getCargo() : "");
+            String cedClean = supervisor.getCedula();
+            if (cedClean != null && cedClean.contains("-DUP-")) {
+                cedClean = cedClean.substring(0, cedClean.indexOf("-DUP-"));
+            }
+            replacements.put("${CEDULA_SUPERVISOR}", cedClean != null ? cedClean : "");
+        } else {
+            replacements.put("${NOMBRE_SUPERVISOR}", "SIN DESIGNAR");
+            replacements.put("${CARGO_SUPERVISOR}", "");
+            replacements.put("${CEDULA_SUPERVISOR}", "");
+        }
+
+        boolean conApoyo = contrato.getApoyoSupervision() != null && !contrato.getApoyoSupervision().trim().isEmpty();
+        if (conApoyo) {
+            replacements.put("${NOMBRE_APOYO}", contrato.getApoyoSupervision().toUpperCase());
+        } else {
+            replacements.put("${NOMBRE_APOYO}", "");
+        }
+
+        return replacements;
+    }
+
+    private byte[] generarBytesDocumento(int contratistaId, String docType) throws Exception {
+        Map<String, String> replacements = getFullReplacements(contratistaId);
+        if (replacements == null)
             return null;
+
+        Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
+        Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+
+        // Template Logic (Old logic mostly preserved in purpose, delegated to
+        // getCommonReplacements)
+        String templateName;
+        if ("estructuradores".equals(docType)) {
+            templateName = "DESIGNACION_RESPONSABLES_PARA_ESTRUCTURAR.docx";
+        } else {
+            boolean conApoyo = contrato.getApoyoSupervision() != null
+                    && !contrato.getApoyoSupervision().trim().isEmpty();
+            templateName = conApoyo ? "DESIGNACION_SUPERVISOR_CON APOYO.docx" : "DESIGNACION_SUPERVISOR_SIN_APOYO.docx";
         }
 
-        // Generate to ByteArray
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (FileInputStream fis = new FileInputStream(templateFile)) {
-            TemplateGenerator.generate(fis, replacements, baos);
-        }
-        return baos.toByteArray();
+        return generateBytes(templateName, replacements);
     }
 
     private String normalizeFileName(String input) {

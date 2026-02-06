@@ -17,8 +17,8 @@ public class ContratoDAO {
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -75,6 +75,7 @@ public class ContratoDAO {
                 ps.setInt(37, c.getEstructuradorId());
             else
                 ps.setNull(37, java.sql.Types.INTEGER);
+            ps.setString(38, c.getApoyoSupervision());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -104,6 +105,7 @@ public class ContratoDAO {
                 c.setFechaInicio(rs.getDate("fecha_inicio"));
                 c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
                 c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
+                c.setApoyoSupervision(rs.getString("apoyo_supervision"));
 
                 // Set the display field
                 c.setContratistaNombre(rs.getString("contratista_nombre"));
@@ -197,6 +199,7 @@ public class ContratoDAO {
                     c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
                     c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                     c.setContratistaNombre(rs.getString("contratista_nombre"));
+                    c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     lista.add(c);
                 }
             }
@@ -216,6 +219,8 @@ public class ContratoDAO {
                     Contrato c = new Contrato();
                     c.setId(rs.getInt("id"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+                    c.setObjeto(rs.getString("objeto"));
+                    c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     return c;
                 }
             }
@@ -235,7 +240,8 @@ public class ContratoDAO {
                 "num_cuotas_numero=?, valor_media_cuota_letras=?, valor_media_cuota_numero=?, actividades_entregables=?, "
                 +
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
-                "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=? " +
+                "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=? "
+                +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -292,7 +298,8 @@ public class ContratoDAO {
                 ps.setInt(36, c.getEstructuradorId());
             else
                 ps.setNull(36, java.sql.Types.INTEGER);
-            ps.setInt(37, c.getId());
+            ps.setString(37, c.getApoyoSupervision());
+            ps.setInt(38, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -347,6 +354,7 @@ public class ContratoDAO {
                     c.setOrdenadorId(rs.getInt("ordenador_id"));
                     c.setPresupuestoId(rs.getInt("presupuesto_id"));
                     c.setEstructuradorId(rs.getInt("estructurador_id"));
+                    c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     return c;
                 }
             }
@@ -402,6 +410,7 @@ public class ContratoDAO {
                     c.setOrdenadorId(rs.getInt("ordenador_id"));
                     c.setPresupuestoId(rs.getInt("presupuesto_id"));
                     c.setEstructuradorId(rs.getInt("estructurador_id"));
+                    c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     return c;
                 }
             }

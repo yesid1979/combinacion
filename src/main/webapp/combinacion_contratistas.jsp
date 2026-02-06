@@ -25,9 +25,11 @@
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
-                    <button class="btn btn-success" onclick="descargarMasivo()">
-                        <i class="bi bi-file-zip me-2"></i>Descargar Seleccionados (ZIP)
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="descargarMasivo()">
+                            <i class="bi bi-file-zip me-2"></i>Descargar (ZIP)
+                        </button>
+                    </div>
                 </div>
 
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -110,9 +112,9 @@
                                 "render": function (data, type, row) {
                                     return `
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="combinacion?action=generate&id=` + data + `" class="btn btn-sm btn-primary" title="Descargar ZIP">
+                                        <button class="btn btn-sm btn-primary" title="Descargar" onclick="descargarIndividual(` + data + `)">
                                             <i class="bi bi-download"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                     `;
                                 }
@@ -144,6 +146,10 @@
                         $('input[type="checkbox"]', rows).prop('checked', this.checked);
                     });
                 });
+
+                function descargarIndividual(id) {
+                    window.location.href = 'combinacion?action=generate&id=' + id;
+                }
 
                 function descargarMasivo() {
                     let selected = [];

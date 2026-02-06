@@ -1,131 +1,590 @@
-=== ANALISIS DE CONTENIDO: DESIGNACION_SUPERVISOR_CON APOYO.docx ===
+=== ANALISIS DE CONTENIDO: PLANTILLAS_TODAS_DAGJP_INVERSION_2026.docx ===
 
 --- HEADER DEFAULT ---
 
 
-| GESTIÓN JURÍDICO ADMINISTRATIVAGESTIÓN CONTRACTUAL | MODELO INTEGRADO DE PLANEACIÓN Y GESTIÓN(MIPG)DESIGNACIÓN DE SUPERVISIÓN | MAJA01.04.03.P002.F001 |
-|  |  | VERSIÓN | 005 |
+|  | MODELO INTEGRADO DE PLANEACIÓN Y GESTIÓN(MIPG)ACTA DE INICIO | MAJA01.04.03.P001.F011 |
+|  |  | VERSIÓN | 002 |
 
 --- CUERPO DEL DOCUMENTO ---
-Santiago de Cali, enero 6 de 2026
+No. DE PROCESO: 4121.010.32.1.076-2026
 
-ANA CATALINA CASTRO LOZANO
-Director Departamento Administrativo
-Departamento Administrativo de Gestión Jurídica Pública
+NOMBRE DEL PROYECTO
 
-ASUNTO: Designación supervisor de contrato
+Ficha EBI No. BP-26005460 “Fortalecimiento del ciclo de defensa jurídica y de la política de mejora normativa del Distrito Especial de Santiago de Cali”
+BPIN: 2024760010018
+ORGANISMO SOLICITANTE Y SUPERVISOR DEL PROCESO
 
-Con el fin de dar cumplimiento a lo establecido en la normativa aplicable, de manera cordial le informo que ha sido designado para que realice funciones como supervisor del siguiente contrato:
+Organismo solicitante: Departamento Administrativo de Gestión Jurídica Pública
+Supervisor: CLAUDIA PATRICIA VARGAS OROZCO
+Cargo: Subdirectora de Defensa Judicial y Prevención del Daño Antijurídico
+ORIGEN DE LOS RECURSOS
 
 
-Así mismo, me permito recordar las siguientes funciones generales que como supervisor le corresponden, señaladas en el referido contrato. 
+INFORMACIÓN CERTIFICADO DE DISPONIBILIDAD PRESUPUESTAL
 
-Colaborar con el contratista para la correcta ejecución del objeto del contrato.
-Verificar que el contratista cumple las obligaciones previstas en el contrato.
-Determinar de acuerdo con los procesos y procedimientos, la oportunidad en que el contratista debe realizar las actividades contratadas.
-En caso de incumplimiento por parte del contratista de cualquiera de sus obligaciones contractuales, adelantar los trámites necesarios para la aplicación de sanciones contractuales a que haya lugar.
-En los eventos de adición, prórroga, cesión o cualquier modificación del contrato, solicitar el trámite respectivo con anticipación a la fecha del vencimiento del contrato para el caso de las adiciones o a la fecha en la cual pretende suscribir el documento para el caso de las modificaciones.
-Exigir al contratista junto con el informe de actividades, los soportes de pago correspondientes a los aportes a los sistemas de pensión, salud y ARL, de acuerdo con lo estipulado por las normas vigentes.
-Expedir mensualmente el/los Informe(s) de Supervisión que detalle el cumplimiento de las obligaciones a cargo del Contratista. En el evento en que se observe algún tipo de inconsistencia sobre los aportes de seguridad social, el supervisor deberá adelantar las acciones a que haya lugar, de conformidad con la normativa vigente.
-Suscribir con el ordenador del gasto y el contratista, las correspondientes actas contractuales a que hubiere lugar y remitirlas al área correspondiente.
-Informar oportunamente al ordenador del gasto sobre las novedades que se presentan durante la ejecución del contrato.
-Verificar de manera conjunta con el contratista, una vez se compruebe la respectiva afiliación a la Administración de Riesgos Laborales (ARL), aprobación de garantías cuando aplique, emisión del RPC y demás requisitos de legalización y ejecución del contrato, si el acta de inicio requiere ajustes.
+Número: 3500254255					
+Fecha de Expedición: 5 de enero de 2026
+Fecha de vencimiento: 31 de didciembre de 2026	
+Valor: $ 962010000			
+Compromiso que respalda: 4121/1.2.1.0.00/2.3.2.02.02.008/63020010002/BP260054601010103
+TIPO DE CONTRATACIÓN
 
-Adicionalmente, le son asignadas las siguientes funciones específicas (si aplica).
+Contrato de consultoría 					___
+Contrato de obra
+Contrato de interventoría					____
+Contrato interadministrativo 				____
+Contrato de suministro					____
+Contrato de compraventa 					____
+Contrato de prestación de servicios profesionales	_X ___
+Contrato de prestación de servicios de apoyo 		____
+Contrato de ciencia y tecnología
+Contrato impulso actividades de interés público 	____
+Convenio de asociación 					____
+Convenio de cooperación
+Convenio Interadministrativo 				____
+Seguros							____
+Otro								____	
 
-Realizar la vigilancia, seguimiento y control del contrato desde su inicio y hasta su finalización, incluyendo la etapa de liquidación (si aplica)
-Verificar que se hayan cumplido todos los requisitos para el perfeccionamiento y ejecución del contrato.
-Atender y responder oportunamente todos los requerimientos que realice EL CONTRATISTA dentro de la ejecución del contrato, para evitar la ocurrencia del silencio administrativo positivo. 
-Verificar que las peticiones del CONTRATISTA se encuentren sustentadas en debida forma. 
-Proyectar y tramitar la correspondencia que sea necesaria para la correcta ejecución del contrato. 
-Verificar que EL CONTRATISTA cumpla con el objeto del contrato dentro del término estipulado. 
-Verificar que en el desarrollo del contrato se cumplan las disposiciones legales y en particular las reglamentaciones relacionadas con la actividad contratada. 
-Informar acerca del incumplimiento de las obligaciones contractuales por parte del CONTRATISTA, con el fin de que se inicien las acciones legales correspondientes.
-Abstenerse de permitir la ejecución de un contrato, cuyo plazo haya vencido o que no haya sido firmado por el ordenador del Gasto y EL CONTRATISTA. 
-Rendir informes periódicos sobre el estado, avance y contabilidad de la ejecución del contrato. 
-Realizar los trámites para la expedición del certificado de disponibilidad presupuestal o vigencias futuras, para adicionar un contrato en valor. 
-Informar el recibo a satisfacción del objeto contratado, como requisito previo para efectuar el pago final a EL CONTRATISTA. 
-Elaborar los informes, evaluaciones y anexar, oportunamente, los documentos que permitan tener suficientes elementos de juicio para imponer requerimientos, multas, caducidad y demás actuaciones de orden sancionatorio.
+¿Cuál?	 ___________________________________	
 
-ACTIVIDADES FINANCIERAS:
+DESCRIPCIÓN DE LA NECESIDAD QUE SE PRETENDE SATISFACER CON LA CONTRATACIÓN
 
-Aprobar cada uno de los pagos a EL CONTRATISTA de acuerdo con Ia ejecución del contrato, para lo cual deberá expedir la respectiva certificación de cumplimiento de las obligaciones contractuales.
-Registrar cronológicamente los pagos y deducciones del contrato.
-Velar por la correcta ejecución presupuestal del contrato.
-Anterior al cierre de la vigencia fiscal de cada año, informar al área Financiera, el estado de ejecución del contrato para establecer las reservas presupuestales y de cuentas por pagar cuando a ello haya lugar.
+La Constitución Política de Colombia, en su artículo 2 establece: “(…) Son fines esenciales del estado: servir a la comunidad, promover la prosperidad general y garantizar la efectividad de los principios, derechos y deberes consagrados en la Constitución; facilitar la participación de todos en las decisiones que los afectan y en la vida económica, política, administrativa y cultural de la Nación; defender la independencia nacional, mantener la integridad territorial y asegurar la convivencia pacífica y la vigencia de un orden justo.(...)”.
 
-ACTIVIDADES ADMINISTRATIVAS
+Por su parte el artículo 209 de la misma Carta Política dispone que las autoridades administrativas deben coordinar sus actuaciones para el adecuado cumplimiento de los fines del Estado, y la función administrativa está al servicio de los intereses generales y se desarrolla con fundamento en los principios de igualdad, moralidad, eficacia, economía, celeridad, imparcialidad y publicidad. 
 
-Coordinar la prestación de los servicios.
-Definir políticas claras para el manejo del riesgo que conlleve la ejecución del contrato.
-Suscribir todas las actas que resulten durante la ejecución del contrato.
-Emitir concepto sobre las solicitudes de prórroga, adición, suspensión, modificación, etc., presentadas por EL CONTRATISTA.
-Atender y tramitar dentro de la órbita de su competencia, toda consulta que realice EL CONTRATISTA para la correcta ejecución del contrato.
-Organizar el archivo digital o físico de la supervisión del contrato que como mínimo deberá contener los siguientes documentos:
+Igualmente, el artículo 311 preceptúa: “(…) Artículo 311. Al municipio como entidad fundamental de la división político - administrativa Del Estado le corresponde prestar los servicios públicos que determine la ley, construir las obras que demanda el progreso local, ordenar el desarrollo de su territorio, promover la participación comunitaria, el mejoramiento social y cultural de sus habitantes y cumplir las demás funciones que le asigne la Constitución y las leyes. (…)” 
 
-Copia del contrato debidamente cumplido los requisitos de perfeccionamiento y ejecución.
-Copia de las actas de suspensión y reiniciación (si llegare a existir)
-Copia de los documentos de prórroga o modificación del contrato y del que autorice trabajos o actividades adicionales, cuando esta hayan sido autorizadas por el ordenador del gasto, previo informe del supervisor.
-Copia de las cuentas de cobro o facturas autorizadas, así como de cada uno de los pagos efectuados.
-Demás documentos relacionados con la ejecución del contrato.
+En este sentido, la Ley 136 de 1994 en su artículo 91, modificado por el artículo 29 de la Ley 1551 de 2012 contiene las funciones de los Alcaldes y contempla en su literal d), las relacionadas con la Administración Municipal, entre ellas la de "Dirigir la acción administrativa del municipio; asegurar el cumplimiento de las funciones y de la prestación de los servicios a su cargo”. 
 
-ACTIVIDADES TÉCNICAS 
+En atención con la normatividad mencionada anteriormente, el Municipio de Santiago de Cali, hoy, Distrito Especial, Deportivo, Cultural, Turístico, Empresarial y de Servicios de Santiago de Cali, está al servicio de los intereses generales de los habitantes del mismo y se desarrolla con fundamentos en los principios de igualdad, imparcialidad, buena fe, eficacia, eficiencia, economía, celeridad, responsabilidad, transparencia, publicidad, contradicción, polivalencia e interdisciplinariedad; y lo anterior, sin perjuicio de la aplicación de los demás principios generales y especiales que rigen la actividad de la Administración Pública y de los servidores públicos. 
 
-Verificar las entregas de los bienes o la prestación de los servicios contratados, de los cual se dejará constancia en los respectivos informes.
+Dando cumplimiento a lo establecido en el artículo 2.2.1.1.2.1.1 del Decreto 1082 de 2015, “Por medio del cual se expide el Decreto Único Reglamentario del Sector Administrativo de Planeación Nacional”, se procede consolidar en el presente documento  los estudios previos en el cual se determinan la oportunidad y la conveniencia de la celebración de un contrato de prestación de servicios profesionales y/o de apoyo a la gestión y se establecen las condiciones y especificaciones técnicas del contrato a suscribir. 
 
-Es importante recordar que como supervisor no tiene autorización para exonerar al contratista de ninguna de sus obligaciones o deberes que emanen del contrato suscrito, ni imponer obligaciones distintas a las estipuladas en el mismo. Por lo tanto, no podrá impartir instrucciones al contratista que impliquen modificaciones a los términos de este contrato.
+El artículo 3° de la Ley 80 de 1993 consagra que los servidores públicos tendrán en consideración que al celebrar contratos y con la ejecución de los mismos, las entidades buscan el cumplimiento de los fines estatales, la continua y eficiente prestación de los servicios públicos y la efectividad de los derechos e intereses de los administrados.
 
-Las órdenes o instrucciones que imparta como supervisor deberán realizarse por escrito a través de un medio de comunicación oficial.
+Mediante el Decreto Extraordinario No. 411.0.20.0516 del 28 de septiembre de 2016, se determinó la nueva estructura de la Administración Central del Municipio de Santiago de Cali, hoy, Distrito Especial Deportivo, Cultural, Turístico, Empresarial y de Servicios de Santiago de Cali, y así mismo se establecieron las funciones de cada una de sus dependencias, a fin de mejorar la capacidad administrativa y el uso eficiente de los recursos.  
 
-Con el fin de tener un mayor control sobre la ejecución del contrato se designa como apoyo a la supervisión a la contratista SINDY MARIEL MENA GRUESSO, Abogada quién brindará apoyo a la supervisión técnica del contrato.
+Respecto al Departamento Administrativo de Gestión Jurídica Pública, dicho Decreto en su artículo 51 señaló que tiene como propósito el siguiente: orientar la gerencia jurídica pública, blindar jurídicamente las decisiones del Gobierno Municipal, asesorar al Alcalde y a los organismos y entidades de la Administración Municipal en el ejercicio de sus competencias, y defender judicial y extrajudicialmente al ente territorial, en el marco de la juridicidad, la prevención del daño antijurídico y la promoción y defensa de los derechos de las personas.
 
-Como apoyo a la supervisión tiene las siguientes responsabilidades:
+El artículo 54 del Decreto ibidem establece como funciones del Departamento Administrativo de Gestión Jurídica Pública las siguientes:
 
-Brindar apoyo en la verificación del cumplimiento del objeto contractual y de las obligaciones contraídas por las partes.
-Brindar apoyo en la elaboración del informe de ejecución remitiéndose de manera oportuna a las instancias correspondientes.
-Brindar apoyo en la elaboración certificación del cumplimiento y/o recibo a satisfacción del objeto contractual, con el fin de proceder al pago correspondiente. del contrato, el cumplimiento por parte del contratista de sus obligaciones con los sistemas de salud y pensiones en los porcentajes de Ley.
-Informar oportunamente sobre cualquier irregularidad e incumplimiento que se presente en la ejecución del contrato.
-Brindar apoyo en la elaboración de la solicitud oportuna de las adiciones o modificaciones al contrato, cuando sea procedente.
-Atender en el desarrollo de las actividades de apoyo a la supervisión lo establecido en la Ley 1474 de 2011 y el manual de contratación de la Entidad.
-En caso de incumplimiento de las obligaciones antes citadas, se aplicarán las sanciones contempladas en la Ley 1474 de 2011 y en el Manual de Contratación del Municipio de Santiago de Cali.
+Adoptar el modelo de gerencia jurídica pública de la Administración Municipal. 
+Orientar la gerencia jurídica al interior de la administración central. 
+Asesorar al Alcalde, organismos de la administración central y entidades descentralizadas del orden municipal en el ejercicio de sus competencias constitucionales, legales y reglamentarias, en todos los asuntos jurídicos relacionados con el Municipio, que estas sometan voluntariamente a su estudio y consideración. 
+Asesorar a la administración central municipal en la unificación de la postura jurídica, a partir de la aplicación uniforme de las normas, la jurisprudencia y el precedente jurisprudencial. 
+Defender los intereses litigiosos de la entidad territorial ante los distintos estrados judiciales y administrativos, de conformidad con la delegación y poderes que para el efecto expida el Alcalde Municipal. 
+Proponer y/o estudiar esquemas y marcos normativos que procuren por la juridicidad, la prevención del daño antijurídico y la consecución de los fines de la organización estatal por parte de la Administración Municipal. 
+Gestionar el uso y la aplicación de los sistemas de información jurídica. 
+Orientar y difundir los criterios fundamentales de carácter jurídico al cuerpo de abogados de la Administración Municipal. 
+Sustanciar para decisión del Alcalde Municipal la segunda instancia de los procesos disciplinarios de su competencia, así como los recursos en sede administrativa, cuando procedan.
+Unificar, con carácter prevalente, la doctrina jurídica municipal cuando exista disparidad de criterios jurídicos entre sectores o al interior de un mismo sector, a solicitud del Alcalde y/o del nivel directivo. 
+Intervenir y proponer fórmulas de arreglo directo cuando surjan conflictos administrativos entre organismos y/o entidades descentralizadas del orden municipal. 
+Actuar como Abogado General del Municipio en defensa de los intereses litigiosos del mismo, conforme al marco de delegaciones o poderes, generales o especiales, que otorgue el Alcalde. 
+Formular controles de prevención del daño antijurídico al interior de la Administración Municipal, de conformidad con las recomendaciones que para el efecto profiera el Comité de Conciliación y Defensa Judicial. 
+Desarrollar las demás funciones y negocios que le sean asignados acordes con su competencia.
 
-Finalmente, se les informa que pueden solicitar al equipo estructurador copia de los documentos del proceso de contratación que considere necesarios para el adecuado ejercicio de sus funciones o acceder a los mismos a través de la página web www.colombiacompra.gov.co con el proceso No. 4121.010.32.1.001- 2026
+Por su parte, en cuanto a la Subdirección de Doctrina y Asuntos Normativos y la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico en los Artículos 55 y 56, dispuso:
+
+“Artículo 55. Funciones de la Subdirección de Doctrina y Asuntos Normativos. La Subdirección de Asuntos Normativos tendrá por funciones, las siguientes:
+
+Revisar, aprobar desde su dimensión legal los documentos y actos administrativos que deban ser sancionados o suscritos por el Alcalde Municipal, sin perjuicio de la aprobación técnico- jurídica, presupuestal que deban impartir los jefes de los organismos municipales. 
+Proyectar y/o expedir conjuntamente con el Director del Departamento Administrativo de Gestión Jurídica Pública los conceptos jurídicos y pronunciamientos que éste le asigne. 
+Realizar estudios, análisis jurisprudenciales e investigaciones jurídicas en temáticas de interés para el Municipio. 
+Apoyar al Director del Departamento de Gestión Jurídica Pública en el ejercicio de sus funciones y atribuciones legales. 
+Gestionar el uso y la aplicación de los sistemas de información doctrinario y normativo de la entidad territorial.
+Dirigir y orientar el desarrollo de las actividades que tengan por objetivo consolidar y fortalecer las competencias del cuerpo de abogados de la Administración Municipal. 
+Certificar la vigencia normativa sobre los decretos, resoluciones, directivas y circulares proferidos por el Alcaide Municipal, siempre que esta competencia no corresponda a otra autoridad.
+Elaborar y aprobar estudios jurídicos de interés municipal. 
+Impartir directrices que tengan por objeto prevenir el daño antijurídico con fundamento en las políticas y decisiones del Comité de Conciliación y Defensa Judicial.
+Sustanciar la segunda instancia que en materia disciplinaria deba conocer el Alcalde. 
+Desarrollar las demás funciones y negocios que le sean asignados acorde con su competencia.
+
+Artículo 56. Funciones de la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico. La Subdirección de Defensa Judicial y Prevención del Daño Anturídico tendrá por funciones, las siguientes:
+ 
+Ejercer la representación judicial y extrajudicial del Municipio de Santiago de Cali conforme a las asignaciones y/o delegaciones que para el efecto expida el Alcalde Municipal. 
+Preparar para firma del Alcalde o del Director del Departamento Administrativo de Gestión Jurídica Pública las intervenciones procesales o extra procesales que le sean requeridas. 
+Orientar la defensa judicial y proponer la implementación de políticas de prevención del daño antijurídico, en coordinación con el Director del Departamento Administrativo de Gestión Jurídica Pública y el Comité de Conciliación y Defensa Judicial. 
+Hacer el seguimiento y llevar el control de los procesos judiciales y extrajudiciales en los que sea parte el Municipio y coordinar en este aspecto a las entidades descentralizadas por servicios.
+Ejercer la secretaría técnica del Comité de Conciliación y Defensa Judicial del Municipio de Santiago de Cali. 
+Gestionar el uso y la aplicación del sistema de información de los procesos judiciales. 
+Proyectar y/o expedir conjuntamente con el Director del Departamento Administrativo de Gestión Jurídica los conceptos jurídicos y pronunciamientos que ésta le asigne. 
+Dirigir el desarrollo de las actividades que tengan por objetivo consolidar y fortalecer las competencias del cuerpo de abogados de la Administración Municipal, en materia de defensa judicial. 
+Elaborar y aprobar estudios jurídicos de interés municipal encaminados a fortalecer la efectiva defensa judicial del Municipio y la prevención del daño antijurídico. 
+Impartir directrices y circulares que tengan por objeto prevenir el daño antijurídico con fundamento en las políticas y decisiones del Comité de Conciliación y Defensa Judicial. 
+Coordinar los Comités de Conciliación y Defensa Judicial de las entidades descentralizadas del orden municipal, la defensa de sus intereses, cuando así se requiera. 
+Desarrollar las demás funciones y negocios que le sean asignados acorde con su competencia.”
+
+De otra parte, teniendo en cuenta que el ejercicio de dichas funciones está orientado al cumplimiento del instrumento legal que sirve de base y proveer los lineamientos estratégicos formulados para cada período de gobierno, vale la pena señalar que mediante Acuerdo No 0578 de 2024 el Concejo Municipal aprobó y adoptó el Plan de Desarrollo del Distrito Especial Deportivo, Cultural, Turístico, Empresarial y de Servicios de Santiago de Cali 2024-2027 “CALI CAPITAL PACÍFICA DE COLOMBIA”, a través del cual se pretende trazar la senda que enrutará a nuestro territorio hacia el desarrollo, el bienestar, la paz y la reconciliación. Nuestro Plan de Desarrollo Distrital 2024 -2027, traza tres propósitos claros: lograr la reconciliación de los caleños, hacer de nuestro territorio un lugar renovado y sostenible; y lograr la excelencia institucional a través de un gobierno enfocado en servir a sus ciudadanos y administrar los recursos de manera transparente.
+
+En dicho plan, se planteó el propósito 3 “CALI CON BUEN GOBIERNO”, con el cual se le apunta a recobrar la confianza ciudadana sobre la administración pública a través de acciones caracterizadas por su transparencia y la eficiencia en su gestión, con impacto sobre el territorio. 
+
+Cali con buen gobierno significa satisfacer las necesidades de nuestros ciudadanos a través de una gestión pública que busca alcanzar la excelencia institucional. Para lograr esto es necesario fortalecer la institucionalidad mediante la generación de capacidades en el talento humano. Esto implica dotar al personal de las herramientas, habilidades y conocimientos necesarios para cumplir eficazmente con sus responsabilidades y obligaciones. Al invertir en el desarrollo del capital humano, se mejora el desempeño y se promueve la transparencia, la eficiencia y la rendición de cuentas en todas las áreas de la gestión pública. Además, el fortalecimiento de las capacidades del talento humano facilita la adopción de mejores prácticas en la toma de decisiones, la gestión de recursos y la ejecución de políticas públicas.
+
+Se busca que este gobierno honre el servicio público a través de la provisión de una infraestructura física y tecnológica institucional digna y óptima al servicio a la ciudadanía, que proporcione un entorno laboral ideal a los servidores públicos para el ejercicio de sus funciones. La inversión en la modernización y mantenimiento de las instalaciones gubernamentales no solo mejora la eficiencia operativa, sino que también demuestran un compromiso tangible con la calidad del servicio público. La actualización de la infraestructura proporciona un entorno de trabajo más cómodo y funcional para los empleados del gobierno, lo que a su vez puede aumentar su satisfacción laboral. Además, al ofrecer espacios más apropiados para el desempeño de sus funciones, se facilita la prestación de servicios más eficientes y accesibles para la ciudadanía.
+
+Con el Reto Gestión Pública al servicio del ciudadano se busca garantizar que los servicios y recursos de la administración municipal estén orientados hacia el bienestar y la satisfacción de los caleños, con un enfoque de transparencia, participación ciudadana, eficiencia, eficacia, accesibilidad, innovación y tecnología; es decir que vamos a poner la gestión pública al servicio del ciudadano en cada acción que emprendamos. Creemos firmemente que solo a través de un gobierno transparente, eficiente y centrado en las necesidades de la comunidad podremos construir un futuro próspero y equitativo para todos.
+
+Así, el reto de "Gestión pública al servicio del ciudadano", se orienta hacia el mejoramiento de la relación de la administración pública local con la ciudadanía, y esto se logra a partir de un enfoque de gobernanza en el que la alcaldía lidera los procesos de construcción colectiva con los diferentes actores públicos, privados y de la sociedad civil.
+
+En el reto antes mencionado, se planteó el programa “FORTALECIMIENTO INSTITUCIONAL” a través del cual se pretende mejorar y fortalecer las capacidades de las instituciones, promover la transparencia y rendición de cuentas, fomentar la gobernabilidad democrática para contribuir con el desarrollo sostenible; estamos trabajando para ser entidades eficientes, transparentes y capaces de brindar servicios de calidad que respondan a las necesidades de la comunidad caleña. 
+
+Con el propósito de atender la meta antes descrita, el Departamento Administrativo de Gestión Jurídica Pública, en calidad de organismo ejecutor responsable, formuló e inscribió en el banco de proyectos del Distrito Especial, el proyecto denominado “Fortalecimiento del ciclo de defensa jurídica y de la política de mejora normativa del Distrito Especial de Santiago de Cali” cuyo objeto general es Establecer lineamientos que mejoren la eficiencia en la gestión del ciclo de defensa jurídica del Distrito Especial de Santiago de Cali. 
+
+El Departamento Administrativo de Gestión Jurídica Pública, requiere implementar la operatividad del ciclo de defensa jurídica, lo cual permite orientar las actividades en el marco del modelo de Gerencia Jurídica Pública para que este sea eficiente y eficaz logrando de manera sostenible una disminución del número de demandas en contra y/o el valor de las condenas a su cargo. Igualmente, aunado a un mejoramiento del desempeño en la etapa judicial y prejudicial, contando igualmente con una adecuada gestión del conocimiento y fortaleciendo los sistemas de información. 
+
+Para efectos de lo anterior, en la ficha EBI No. BP-26005460 del proyecto en mención, se planteó la ejecución de varias actividades, dentro de las cuales se encuentran: Realizar seguimiento y control de la actividad litigiosa; Apoyar la etapa de cumplimiento y pago de sentencias y acuerdos conciliatorios del Distrito de Santiago de Cali; Apoyar la gestión jurídica normativa, en acciones que encaminen a brindar seguridad jurídica; Adquirir suministros  de apoyo para la actividad jurídica y judicial; Realizar jornadas de gestión del conocimiento en el ciclo de defensa jurídica y actualización normativa; Diseñar metodología de aprendizaje, para la adquisición y reaprendizaje del conocimiento tácito y explícito; Realizar la identificación de normas de carácter general y abstracto, que puedan ser identificadas como depurables y aplicar los criterios para su depuración; Realizar la identificación de normas de carácter general y abstracto, que puedan ser identificadas como depurables y aplicar los criterios para su depuración; Apoyar la visualización del Modelo Predictivo de fallos judiciales en el sistema de información de procesos; Implementar solución tecnológica para el registro de tutelas en el sistema de información; Brindar soporte técnico, mantenimiento, desarrollo y actualización de los sistemas de información; Procesar y analizar los datos estadísticos de los sistemas de información; Adquirir equipos tecnológicos para los sistemas de información; Adquirir componentes tecnológicos o periféricos para equipos de cómputo; Adquirir licencias ofimáticas.
+
+Con el presente contrato, se planea cumplir con la actividad específica: Apoyar BP-26005460/1/01/01/03
+
+Así, en virtud de la misión y de las responsabilidades que le son propias al Departamento Administrativo de Gestión Jurídica Pública, desde el punto de vista misional como de gestión, resulta necesario contratar una persona bajo la modalidad de contratación directa por la causal de prestación de servicios para que realice las siguientes actividades: 1.Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la revisión de los documentos allegados por los solicitantes necesarios para el trámite de pago de sentencias, laudos arbitrales, conciliaciones y costas que deba realizar el Distrito Especial de Santiago de Cali, de conformidad con las competencias señaladas dentro de los procedimientos establecidos por la entidad y realizar los requerimientos a los solicitantes, cuando sea necesario, así como elaboración de los oficios correspondientes para que se efectué el pago . 2. Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la elaboración o revisión de los documentos necesarios para el trámite del pago de sentencias, laudos arbitrales, conciliaciones y costas a favor o en contra del Distrito Especial de Santiago de Cali., que se deban realizar de oficio conforme a lo establecido en las normas legales vigentes. 3. Brindar apoyo en la elaboración y diligenciamiento del informe en formato excel en el que se consigne mensualmente la información sobre los trámites de pagos de sentencias, laudos arbitrales, conciliaciones y costas judiciales que haya adelantado, conforme a las funciones y competencias del Departamento Administrativo de Gestión Jurídica Pública. 4. Proyectar los oficios que el Departamento Administrativo de Gestión Jurídica Pública mensualmente envie a la Secretaría de Educación, el Departamento Administrativo de Desarrollo e Innovación Institucional y el Departamento Administrativo de Hacienda con relación a los pagos de sentencias, laudos y conciliaciones a cargo del Distrito Especial de Santiago de Cali. 5. Las demás actividades que le asigne el supervisor del contrato y que se encuentren relacionadas con el objeto del mismo.
+
+Para el cumplimiento de las anteriores actividades es necesario contar con un prestador de servicios con el perfil y condiciones de experiencia que a continuación se describe, para que de manera armónica coadyuve al cumplimiento de los objetivos misionales y de Gestión del Departamento Administrativo de Gestión Jurídica Pública, y con el fin de permitir el desarrollo del proceso de direccionamiento estratégico, los procesos de mejora continua de la Administración Pública y el desarrollo de las funciones que por Ley le corresponden al Alcalde de Santiago de Cali.
+
+
+En este entendido y revisada la planta de personal de la Entidad, se ha podido establecer que no se cuenta con personal suficiente que atienda funciones o desarrolle actividades iguales o relacionadas con el asunto objeto de contratación y actividades antes descritas, como se acredita con la certificación que en tal sentido ha expedido el Subdirector de Gestión Estratégica del Talento Humano del Departamento Administrativo de Desarrollo e Innovación Institucional de la Alcaldía de Santiago de Cali, mediante oficio No. 202641370400000064 del 3 de enero de 2026.
+
+Mientras persista la necesidad del fortalecimiento de las funciones de este organismo de la Administración Central del Distrito Especial de Santiago de Cali, y en la planta de este no se cuente con el personal idóneo y con la experiencia necesaria para el cumplimiento de las actividades antes descritas, considerando que las mismas se orientan al apoyo del cumplimiento de las metas e indicadores del Plan de desarrollo, el Departamento Administrativo de Gestión Jurídica Pública con el fin de robustecer el apoyo a la ejecución de sus funciones y propósito, específicamente realizar el objeto contractual que se indica a continuación: Prestación de servicios profesionales como Abogado, brindando soporte en el Departamento Administrativo de Gestión Jurídica Pública especificamente en la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico en las actividades correspondientes a la revisión y trámite de pago de sentencias, laudos arbitrales, conciliaciones, costas y demás, que deba realizar el Distrito Especial de Santiago de Cali, en el marco del proyecto de inversión denominado "Fortalecimiento del Ciclo de Defensa Jurídica y de la Política de Mejora Normativa del Distrito Especial de Santiago de Cali BP-26005460"
+
+Como fundamento en el Artículo 171 del Estatuto Orgánico de Presupuesto se establece respecto de la capacidad de contratación y ordenación del gasto lo siguiente:
+
+“El Alcalde de Santiago de Cali tiene capacidad para celebrar conforme a las normas legales vigentes con cargo a las apropiaciones presupuestales de cada vigencia, todo tipo de contratos, generales y especiales, incluidos los comodatos, convenios interadministrativos, convenios de asociación, sustitución de activos, necesarios para Ia debida ejecución del Plan de Desarrollo, Plan de Ordenamiento Territorial, Plan Operativo Anual de inversiones y en general toda clase de obligación que demande Ia buena marcha de Ia Administración Municipal(…)”.
+
+Sobre las facultades en materia de contratación: 
+
+Mediante Decreto No. 4112.010.20.1025 del 10 de diciembre de 2025, se otorgó atribuciones en materia de contratación a los Secretarios de Despacho, Directores de Departamentos Administrativos y Directores de las Unidades Administrativas Especiales sin Personería jurídica del Distrito Especial, Deportivo, Cultural, turístico, Empresarial  y de Servicios de Santiago de Cali, en virtud de lo previsto en los artículos 24 y 28 del decreto No. 411.0.20.0516 de septiembre 28 de 2016, y el numeral 1.6 del artículo 2 del Decreto N° 4112.010.20.0025 de enero 12 de 2024, modificado por el Decreto No. 4112.010.20.0438 de junio 4 de 2024 y el Decreto No. 4112.010.20.0399 de junio 20 de 2025, en el marco del literal h) número 4 del Artículo 2 de la ley 1150 de 2007, reglamentada en la Subsección 4, Articulo 2.2.1.2.1.4.9 del decreto 1082 de 2015, para suscribir todos los actos y documentos precontractuales, contractuales y pos contractuales de los contratos de prestación de servicios profesionales y de apoyo a la gestión, cuya fuente de financiación sean gastos de Funcionamiento con las siguientes Posiciones Presupuestales del Anexo 2A – Gastos Entidades que hacen parte del Presupuesto General de las Entidades Territoriales del Catalogo Presupuestal para Entidades Territoriales - CCPET expedido por la Dirección General de Apoyo Fiscal del Ministerio de Hacienda y Crédito Público:
+
+
+En este mismo sentido, el artículo segundo del Decreto anteriormente citado otorga atribuciones a los mismos sujetos, en las mismas condiciones para suscribir todos los actos y documentos pre contractuales, contractuales y poscontractuales de los contratos de prestación de servicios profesionales y de apoyo a la gestión, cuya fuente de financiación sean gastos de inversión con las siguientes Posiciones Presupuestales - POSPRE:
+
+
+Vale la pena advertir que las atribuciones otorgadas por el señor Alcalde tienen una condición pro tempore, comoquiera que el decreto en mención señala que los contratos que se celebren en desarrollo de la delegación realizada tendrán plazo máximo hasta el treinta (30) de junio de 2026.
+
+Teniendo en cuenta que el objeto a contratar se encuentra sujeto a la necesidad del servicio del organismo, entendiéndose que su duración es por el tiempo limitado e indispensable para ejecutar las obligaciones contractuales, el futuro contratista estará sujeto a la coordinación de las actividades a desarrollar y a las orientaciones que sobre el particular le imparta el supervisor, conservando en todo caso plena autonomía para la ejecución eficiente del contrato. Sin que ello implique que exista subordinación, ni relación laboral o dependencia alguna frente al Distrito Especial de Santiago de Cali.
+
+Mediante Decreto No. 4112.010.20.1049 del 17 de diciembre de 2025, el Alcalde Distrital expidió el presupuesto General de Rentas y Recursos de Capital y apropiaciones presupuestales para gastos de Santiago de Cali para la vigencia comprendida entre el 01 de enero y 31 de diciembre del año 2026, el cual se liquidó a través del Decreto No. 4112.010.20.1069 de diciembre 23 de 2025.
+
+La presente contratación deberá regirse por el Decreto N° 411.0.20.0956 de diciembre 13 de 2023, mediante el cual se adoptó el Manual de Contratación de la Administración Central de Santiago de Cali y sus Anexos, así como las disposiciones que lo modifiquen, adicionen o complementen, siguiendo los parámetros previstos por Colombia Compra Eficiente en virtud de las facultades conferidas por el Decreto 1082 de 2015.
+CLASIFICACIÓN UNSPSC
+
+
+¿HACE PARTE DEL PLAN ANUAL DE ADQUISICIONES (PAA) Y ESTAN IDENTIFICADOS LOS BIENES Y/O SERVICIOS?
+
+
+				  ID en el PAA: ____18441______
+
+El Plan Anual de Adquisiciones de la Entidad no ha sido publicado, por no haberse vencido los términos legales establecidos en la Circular Externa Única de Colombia Compra Eficiente Versión 02 del 15 de julio de 2022, página 26 apartado 5.6 Publicación del Plan Anual de Adquisiciones: Las Entidades Estatales deben publicar el Plan Anual de Adquisiciones en el SECOP a más tardar el 31 de enero de cada año, identificando los bienes y servicios con el Clasificador de Bienes y Servicios de Naciones Unidas (UNSPSC).
+ESTUDIO DEL SECTOR
+
+Para el análisis económico del sector y la estimación del valor estimado del contrato, es necesario tener en cuenta los siguientes lineamientos:
+
+ANÁLISIS DEL MERCADO 
+
+El Salario Mínimo Legal Mensual es la percepción básica que establece la Ley. Esto sería lo que les corresponde a los trabajadores por la prestación de sus servicios laborales. Lo cual define la situación de los asalariados en cuanto a poder adquisitivo, frente a la inflación.
+
+Para el año 2026 el salario mínimo legal mensual aumentó un 23 % quedando en $1.750.905. antes del auxilio de transporte. 
+
+Tabla. Variaciones del Salario Mínimo Legal Vigente
+Fuente: Elaboración propia-Información tomada de Actualicece.com
+
+El Departamento Administrativo de Gestión Jurídica Pública identificó que el sector relativo al objeto del presente proceso de contratación está integrado por el conjunto de personas naturales y/o jurídicas que prestan sus servicios a las entidades del Estado. El mercado colombiano cuenta con una oferta amplia de personas naturales y/o jurídicas que prestan sus servicios en diferentes asuntos que apoyan el funcionamiento de las entidades públicas. El perfil del posible contratista se define por el conocimiento previo, la formación académica y la experiencia relacionada directamente con el objeto de la presente contratación.
+
+Para determinar el valor estimado del contrato de conformidad con las actividades encaminadas al cumplimiento del mismo, se ha tomado como base y referencia los valores promedios de contrataciones anteriores y especialmente la Circular 4135.010.22.2.1031.000837 del 21 de noviembre de 2025, por la cual se estableció la tabla de honorarios a aplicar en el año 2026 para los contratos de prestación de servicios profesionales y/o de apoyo a la gestión a celebrar con personas naturales y el Distrito Especial, la cual fue emitida por el Comité de Contratación del Distrito Especial.  Así mismo, se tuvo en cuenta, el plazo de ejecución, la idoneidad y la experiencia con la que debe contar el futuro contratista que se requiere para cubrir la necesidad actual del Ente Territorial.
+
+Para la expedición de esta circular mediante la cual se establece la tabla de perfiles y honorarios aplicable durante la vigencia 2026, el Comité de Contratación tuvo en cuenta varios factores, entre ellos, las tablas de honorarios de vigencias anteriores, los lineamientos y criterios para la elaboración del Anteproyecto de Presupuesto 2026, establecidos por el Departamento Administrativo de Hacienda, a través de la Circular N° 4131.020.22.2.1020.001498, emitida el 21 de mayo de 2025, en la cual se sugiere tener en cuenta el contexto económico y ciertas variables macroeconómicas para la proyección de ingresos y gastos y las necesidades de la Alcaldía del Distrito Especial de Santiago de Cali, para el cumplimiento de sus fines misionales, administrativos y el equilibrio del sistema presupuestal de la entidad.
+
+ANÁLISIS DE LA OFERTA 
+
+Ahora bien, una vez analizados los aspectos generales del mercado, el Departamento Administrativo de Gestión Jurídica Pública identificó que el sector relativo al objeto del presente proceso de contratación está integrado por el conjunto de personas naturales y/o jurídicas que prestan sus servicios a las entidades del Estado. El mercado colombiano cuenta con una oferta amplia de personas naturales y/o jurídicas que prestan sus servicios en diferentes ramas del conocimiento, entre ellas, ciencias sociales, administración de empresas y derecho, tecnologías de la información y la comunicación, ingeniería, etc, que apoyan el funcionamiento de las entidades públicas. El perfil del posible contratista se define por el conocimiento previo, la formación académica y la experiencia relacionada directamente con el objeto de la presente contratación.
+
+Los servicios profesionales y de apoyo a la gestión son un elemento esencial para el funcionamiento de las empresas y organizaciones, tanto de orden privado, como público. Durante años, estos servicios han sido un requerimiento primordial para el desarrollo de actividades fundamentales en el mejoramiento y crecimiento económico, organizacional y operativo de las organizaciones públicas y privadas.
+
+Por lo anterior, la administración en el proceso de planear, organizar, dirigir y controlar el uso de los recursos humanos y económicos y con el propósito de lograr los objetivos o metas de la entidad de manera eficiente y eficaz, requiere de los servicios administrativos que son todos aquellos que se llevan a cabo en las empresas y organizaciones, dentro de los que se encuentran los servicios profesionales y de apoyo a la gestión.
+
+A continuación, se adjunta la tabla de valores de la circular en mención:
+
+
+
+
+
+
+
+
+
+
+Es así, como el perfil del contratista deberá permitir identificar los productos ofrecidos y su calidad, el potencial existente en el mercado, la experiencia, y el cumplimiento de las especificaciones solicitadas por el Departamento Administrativo de Gestión Jurídica Pública, por lo que se solicitará la propuesta de los servicios requeridos, así mismo, se constatará que el contratista cumpla con los requerimientos hechos en el proceso contractual.
+
+El perfil del contratista, además de su idoneidad y experiencia en la prestación de servicios profesionales y/o de apoyo a la gestión en asuntos afines al objeto que se pretende contratar, debe brindar al Departamento Administrativo de Gestión Jurídica Pública, seguridad razonable de lograr el cumplimiento del contrato de manera eficiente, eficaz, con calidad y oportunidad en el suministro de los bienes y servicios.
+DESCRIPCIÓN DEL OBJETO, ALCANCE Y ELEMENTOS DEL CONTRATO A CELEBRAR
+
+OBJETO DEL CONTRATO
+
+Prestación de servicios profesionales como Abogado, brindando soporte en el Departamento Administrativo de Gestión Jurídica Pública especificamente en la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico en las actividades correspondientes a la revisión y trámite de pago de sentencias, laudos arbitrales, conciliaciones, costas y demás, que deba realizar el Distrito Especial de Santiago de Cali, en el marco del proyecto de inversión denominado "Fortalecimiento del Ciclo de Defensa Jurídica y de la Política de Mejora Normativa del Distrito Especial de Santiago de Cali BP-26005460"
+
+ALCANCE DEL OBJETO
+
+No Aplica 
+
+PLAZO DEL CONTRATO
+
+Desde el cumplimiento de los requisitos de perfeccionamiento y ejecución y hasta el Treinta (30) de junio del Dos mil veintiséis (2026).
+
+VALOR ESTIMADO DEL CONTRATO
+
+El valor estimado del contrato es la suma de Diecinueve millones doscientos veinte mil pesos m/cte ($19220000)
+
+FORMA DE PAGO
+
+El valor del contrato será cancelado en Cuatro (4) cuotas de Cuatro millones ochocientos cinco mil pesos m/cte ($4805000) cada una, previa certificación de cumplimiento a satisfacción expedida por el supervisor del contrato, una vez acreditado por el futuro contratista, que se encuentra al día en el pago de los aportes relativos al Sistema Integral de Seguridad Social. En todo caso el pago se hará previa disposición de giros de P.A.C.
+
+Los impuestos que hayan de causarse o pagarse para la celebración, ejecución y/o liquidación del contrato, corren por cuenta del contratista y no darán lugar a ningún pago adicional a los precios pactados.
+
+Con relación a las retenciones en la fuente a título de los diferentes impuestos nacionales, departamentales o municipales, la Administración procederá de conformidad con la normativa tributaria vigente dependiendo del objeto del contrato y la calidad del contribuyente, en caso de que no haya lugar a alguna de ellas, deberá indicarse la norma que lo excluye o le otorga la exención. 
+
+
+
+LUGAR DE EJECUCIÓN DEL CONTRATO
+
+El lugar de ejecución del contrato será el Distrito Especial de Santiago de Cali.
+
+OBLIGACIONES ESPECÍFICAS DEL CONTRATISTA
+
+Sin perjuicio de las demás obligaciones que se desprenden de la Constitución Política de Colombia, del Estatuto General de Contratación de la Administración Pública, de las particulares que correspondan a la naturaleza del contrato a celebrar, de aquellas contenidas en otros documentos del proceso y de las consignadas específicamente en el contenido del contrato, el contratista, entre otras, realizará las siguientes actividades:
+
+1.Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la revisión de los documentos allegados por los solicitantes necesarios para el trámite de pago de sentencias, laudos arbitrales, conciliaciones y costas que deba realizar el Distrito Especial de Santiago de Cali, de conformidad con las competencias señaladas dentro de los procedimientos establecidos por la entidad y realizar los requerimientos a los solicitantes, cuando sea necesario, así como elaboración de los oficios correspondientes para que se efectué el pago . 2. Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la elaboración o revisión de los documentos necesarios para el trámite del pago de sentencias, laudos arbitrales, conciliaciones y costas a favor o en contra del Distrito Especial de Santiago de Cali., que se deban realizar de oficio conforme a lo establecido en las normas legales vigentes. 3. Brindar apoyo en la elaboración y diligenciamiento del informe en formato excel en el que se consigne mensualmente la información sobre los trámites de pagos de sentencias, laudos arbitrales, conciliaciones y costas judiciales que haya adelantado, conforme a las funciones y competencias del Departamento Administrativo de Gestión Jurídica Pública. 4. Proyectar los oficios que el Departamento Administrativo de Gestión Jurídica Pública mensualmente envie a la Secretaría de Educación, el Departamento Administrativo de Desarrollo e Innovación Institucional y el Departamento Administrativo de Hacienda con relación a los pagos de sentencias, laudos y conciliaciones a cargo del Distrito Especial de Santiago de Cali. 5. Las demás actividades que le asigne el supervisor del contrato y que se encuentren relacionadas con el objeto del mismo.
+
+OBLIGACIONES GENERALES DEL CONTRATISTA 
+
+A) Utilizar todos sus conocimientos e idoneidad en la ejecución del presente contrato, comprometiéndose a tramitar y entregar los productos y actividades que hacen parte del presente contrato con calidad y oportunidad. B) Presentar los informes requeridos por el contratante para el seguimiento de las tareas encomendadas. Una vez finalice el objeto del contrato, el CONTRATISTA deberá entregar al supervisor, un informe detallado de las actividades realizadas durante su ejecución indicando los asuntos asignados, tramitados y pendientes por resolver, así como los archivos físicos y magnéticos que se hubieren generado durante la ejecución del mismo, los informes antes citados deben entregarse en una (1) copia de seguridad, que deberá reposar en las instalaciones del contratante. C) Manejar la documentación a su cargo de conformidad con la Ley 594 del 2000, Ley General de Archivo, las políticas operativas del Proceso Gestión Documental, las políticas del Sistema de Gestión Documental y demás plataformas institucionales. El CONTRATISTA debe entregar inventariada al contratante y/o al supervisor, las carpetas y documentación que tenga a su cargo en virtud del desarrollo del objeto del presente contrato, entrega que deberá hacerse de acuerdo con los procedimientos establecidos por el contratante. D) El CONTRATISTA se compromete a cumplir con las normas y procedimientos sobre el Sistema de Gestión de Seguridad Social y Salud en el trabajo de la Entidad. Si en el desarrollo del objeto contractual se realizan actividades de campo y/o visitas a obras, el CONTRATISTA, a sus expensas, deberá dotarse y acudir a estos lugares con los implementos de seguridad industrial mínimos requeridos, tales como casco, botas, gafas protectoras, etc. E) En el evento en que el CONTRATISTA al momento de suscribir el presente contrato no sea responsable del impuesto a las ventas y durante la vigencia del mismo adquiera la obligación de inscribirse como responsable del impuesto a la renta, se compromete a realizar cambio ante la DIAN dentro de los términos que otorga la ley y a reportar dicha situación al CONTRATANTE para lo cual aportará el RUT actualizado, lo anterior de conformidad con normativa vigente aplicable. F) El CONTRATISTA se compromete a mantener actualizados todos sus documentos en la Entidad, especialmente el RUT. G) Velar por el buen uso de los bienes entregados por el supervisor o el CONTRATANTE para realizar sus actividades. H) Reportar al CONTRATANTE el número de cuenta bancaria de ahorro o corriente, donde se le ha de consignar el pago derivado de la ejecución del presente contrato. I)  Conocer y aplicar las directrices, metodologías, políticas y procedimientos enmarcados dentro de los Sistemas de Gestión y Control Integrado adoptados por la Administración Central del Distrito de Santiago de Cali y, particularmente, los que se relacionan con el objeto del presente contrato. J) Cumplir con la política de seguridad de la información establecida por la Entidad, con el fin de garantizar la confidencialidad, integridad y disponibilidad de la información bajo su responsabilidad. K) Mantener actualizado el registro en los sistemas de información del contratante en tiempo real, cuando a ello hubiere lugar. L) Toda información o formatos generados por el CONTRATISTA son propiedad de la Alcaldía de Santiago de Cali. M) Cuando se requiera utilizar dispositivos y/o equipos tecnológicos personales o de la administración para el desarrollo del objeto contractual, el CONTRATISTA garantizará que el software y/o herramientas utilizadas e instaladas para la ejecución de sus obligaciones no vulneran ninguna normativa, contrato, derecho, interés, patentes, legalidad o propiedad de tercero, y que por el contrario todo lo utilizado esté debidamente licenciado. El CONTRATISTA debe abstenerse de instalar y/o utilizar software no licenciado o autorizado en los equipos del Distrito Especial de Santiago de Cali, así como de vulnerar los derechos de autor sobre software y/o cualquier tipo de creación protegida por el régimen de propiedad intelectual, so pena de incurrir en conductas constitutivas de delitos conforme a la normatividad legal correspondiente. N) Cumplir con las estrategias, políticas y actividades en materia de transparencia, integridad, prevención y detección de la corrupción y ante cualquier conocimiento de hechos que atente contra este principio, lo hará conocer al CONTRATANTE. O) Si el prestador del servicio contratado hace parte del equipo estructurador de los procesos de contratación del organismo o cumple actividades de apoyo a la supervisión, deberá aportar la constancia de aprobación de los cursos virtuales diseñados para fortalecer la gestión contractual por el Departamento Administrativo de Contratación Pública. P)  Divulgar y aplicar la política ambiental, de seguridad y salud ocupacional establecida por el CONTRATANTE, al ejecutar sus actividades o servicios sin crear riesgo para la salud, la seguridad o el ambiente. El (la) CONTRATISTA deberá tomar todas las medidas conducentes a evitar la contaminación ambiental, la prevención de riesgos durante la ejecución de sus operaciones o actividades y cumplirá con todas las leyes ambientales, de seguridad y salud ocupacional, aplicables. El (la) CONTRATISTA no dejará sustancias o materiales nocivos para la flora, fauna o salud humana, ni contaminará la atmósfera, el suelo o los cuerpos del agua. La violación de estas normas se considerará incumplimiento grave del contrato, y el CONTRATANTE podrá aplicar la cláusula penal o multas a que hubiere lugar, sin perjuicio de las demás acciones legales o sanciones que adelante la autoridad o ente competente de orden Distrital o Nacional. Q) El CONTRATISTA deberá coordinar con el supervisor la ejecución de las actividades contractuales, acatando sus instrucciones, con el fin de asegurar las condiciones necesarias para el desarrollo eficiente del objeto contractual.
+FUNDAMENTOS JURÍDICOS QUE SOPORTAN LA MODALIDAD DE SELECCIÓN
+
+La Ley 80 de 1993 en su artículo 32 numeral 3 define el contrato de prestación de servicios como aquellos que celebran las entidades estatales para desarrollar actividades relacionadas con la administración o funcionamiento de la entidad. Así, a través de esta tipología contractual, las Entidades Públicas podrán desarrollar actividades afines o inherentes al cumplimiento de los objetivos misionales de la misma, de manera que el particular que cuente con la idoneidad y experiencia pueda colaborar en la consecución de los fines del servicio público. 
+
+Por su parte, el literal h), numeral 4, artículo 2 de la Ley 1150 de 2007 y el Artículo 2.2.1.2.1.4.9. del Decreto 1082 de 2015, establecieron que la modalidad de selección para la contratación de servicios profesionales o de apoyo a la gestión es la contratación directa, sin que sea necesario que haya obtenido previamente varias ofertas. 
+
+El artículo 2.2.1.2.1.4.9. del Decreto 1082 de 2015 consagra lo siguiente:
+
+“Contratos de prestación de servicios profesionales y de apoyo a la gestión, o para la ejecución de trabajos artísticos que solo pueden encomendarse a determinadas personas naturales. Las Entidades Estatales pueden contratar bajo la modalidad de contratación directa la prestación de servicios profesionales y de apoyo a la gestión con la persona natural o jurídica que esté en capacidad de ejecutar el objeto del contrato, siempre y cuando la Entidad Estatal verifique la idoneidad o experiencia requerida y relacionada con el área de que se trate. En este caso, no es necesario que la Entidad Estatal haya obtenido previamente varias ofertas, de lo cual el ordenador del gasto debe dejar constancia escrita” (Subrayado fuera del texto)”.
+
+Por lo tanto, la contratación directa es un procedimiento reglado excepcionalmente y de aplicación e interpretación restrictiva, al cual pueden acudir las entidades públicas para celebrar contratos, en determinados eventos tipificados en la Ley.
+
+Sobre el particular, el Consejo de Estado, Sala de lo Contencioso Administrativo, Sección Tercera en sentencia de fecha 30 de noviembre de 2006, respecto a la naturaleza jurídica de los contratos de prestación de servicios manifestó:
+
+“La Ley 80 de 1993 establece en forma general, que el objeto del contrato de prestación de servicios consiste en el desarrollo de actividades relacionadas con la administración o funcionamiento de la entidad, contexto en el cual se pueden incluir actividades técnicas y no técnicas, profesionales o no, pues lo que determina esta clase de contratos es que las obligaciones se relacionen con la administración y/o funcionamiento de la entidad. Adicionalmente, es requisito legal para celebrar estos contratos, con personas naturales que la entidad no cuente con personal de planta para ejecutar la tarea o que se requieran conocimientos especializados”.
+
+Así mismo, dicha corporación, mediante sentencia de fecha diciembre 2 de 2013, radicado 11001-03-26-000-2011-00039-00 (41719) se pronuncia frente a los contratos de prestación de servicios profesionales, en los siguientes términos:
+
+“(…) En realidad se trata de contratos a través de los cuales, de una u otra manera, se fortalece la gestión administrativa y el funcionamiento de las entidades públicas, dando el soporte o el acompañamiento necesario y requerido para el cumplimiento de sus propósitos y finalidades cuando estas por sí solas, y a través de sus medios y mecanismos ordinarios, no los pueden satisfacer; o la complejidad de las actividades administrativas o del funcionamiento de la entidad pública son de características tan especiales, o de una complejidad tal, que reclaman conocimientos especializados que no se pueden obtener por los medios y mecanismos normales que la ley le concede a las entidades estatales. (…)”.
+
+Es de carácter imperativo señalar, que la presente contratación se realiza teniendo en cuenta que el organismo no cuenta con personal de planta suficiente para desarrollar las actividades contractuales a ejecutar.
+
+
+TIPO DE PROPUESTA TÉCNICA
+
+No Aplica. 
+
+JUSTIFICACIÓN DEL TIPO DE PROPUESTA TÉCNICA 
+
+No Aplica
+ESPECIFICACIONES TÉCNICAS DEL BIEN, OBRA O SERVICIO A CONTRATAR
+
+ESPECIFICACIONES TÉCNICAS DEL BIEN, OBRA O SERVICIO 
+
+No Aplica
+
+PERSONAL MÍNIMO REQUERIDO
+
+No Aplica
+REQUISITOS HABILITANTES Y SU JUSTIFICACIÓN
+
+No Aplica
+
+CAPACIDAD JURÍDICA 
+
+La contemplada en la modalidad de selección de contratación directa, la cual se fundamenta en el literal h, numeral 4, artículo 2 de la Ley 1150 de 2007 y el Artículo 2.2.1.2.1.4.9. del Decreto 1082 de 2015.
+
+EXPERIENCIA
+
+La experiencia del contratista es la que se encuentra establecida en la Circular N° 4135.010.22.2.1031.000837 de fecha 21 de noviembre del 2025, emitida mediante radicado No. 202541350100008374, por la cual se indica la tabla de honorarios para los contratos de prestación de servicios profesionales y de apoyo a la gestión de personas naturales en la Alcaldía Distrital de Santiago de Cali para la vigencia 2026.
+
+CAPACIDAD FINANCIERA
+
+No Aplica
+
+CAPACIDAD ORGANIZACIONAL
+
+No Aplica
+
+CAPACIDAD RESIDUAL (únicamente para licitaciones de obra pública)
+
+No Aplica
+REQUISITOS TÉCNICOS MÍNIMOS
+
+No Aplica
+CRITERIOS DE EVALUACIÓN Y SU JUSTIFICACIÓN
+
+No Aplica
+SOPORTE QUE PERMITE LA TIPIFICACIÓN, ESTIMACIÓN Y ASIGNACIÓN DE LOS RIESGOS PREVISIBLES QUE PUEDAN AFECTAR EL EQUILIBRIO ECONÓMICO DEL CONTRATO
+
+En cumplimiento del artículo 4 de la Ley 1150 de 2007 y en concordancia con lo establecido en el numeral 6 del artículo 2.2.1.1.2.1.1. del Decreto 1082 de 2015, se debe realizar un análisis del riesgo y la forma de mitigarlo. 
+
+Para lo anterior, se elaboró la matriz de riesgos que se anexa al presente estudio previo.  En esta matriz se tipifican, asignan y estiman los riesgos teniendo en cuenta el objeto y la cuantía del presente proceso de contratación directa.
+ANÁLISIS QUE SUSTENTAN LA EXIGENCIA DE LAS GARANTÍAS
+
+Excepción al Otorgamiento del Mecanismo de Cobertura del Riesgo
+
+El artículo 2.2.1.2.1.4.5. del Decreto 1082 de 2015 establece la no obligatoriedad de la exigencia de las garantías, establecidas en el Título III del mencionado Decreto, para la contratación directa.
+ESTUDIOS Y DISEÑOS
+
+
+MADURACIÓN DEL PROYECTO 
+
+No Aplica.
+SUPERVISIÓN E INTERVENTORÍA CONTRACTUAL
+
+El contrato a celebrar estará bajo la vigilancia y control en la ejecución, la cual será ejercida por el servidor público que para tal fin designe el Director del Departamento Administrativo de Gestión Jurídica Pública, las funciones del servidor público que ejercerá la vigilancia y control del contrato están determinadas en la Ley 1474 de 2011 y en el Manual de Contratación de Santiago de Cali, Anexo 3 Vigilancia Contractual.
+
+El contratista debe respetar, facilitar y acatar los requerimientos, observaciones y exigencias que efectué el supervisor de manera escrita.
+
+NORMATIVA DEL PROYECTO 
+
+No Aplica.
+ANÁLISIS Y APLICABILIDAD DE ACUERDOS Y TRATADOS INTERNACIONALES EN MATERIA DE CONTRATACIÓN PÚBLICA
+
+En cumplimiento del numeral 8º del artículo 2.2.1.1.2.1.1. del Decreto 1082 2015, el Departamento Administrativo de Contratación Pública procede a establecer si el presente proceso de contratación está cobijado por un Acuerdo Comercial.
+
+El numeral 5º del ítem 1.2.3. del Manual Explicativo de los capítulos de contratación pública de los acuerdos comerciales negociados por Colombia para entidades contratantes expedido por el Ministerio de Comercio, Industria y Turismo y el Departamento Nacional de Planeación que expresa:
+
+“Todos los contratos realizados mediante la modalidad de contratación directa estipuladas en la ley 1150 de 2007 no les aplican las obligaciones de los acuerdos internaciones y por lo tanto no se requiere establecer si están o no cubiertos por dichos acuerdos.”
+
+En consecuencia, a la presente modalidad de contratación no se aplicarán las normas especiales que rigen en materia de Acuerdos Internacionales y Tratados de Libre Comercio (TLC) en los cuales se encuentre vinculado el Estado colombiano.
+
+El presente documento se entiende fechado y firmado una vez sea aprobado a través del Sistema Electrónico para la Contratación Pública – SECOP II.
 
 Cordialmente,
 
+Responsables
 
-ANA CATALINA CASTRO LOZANO
-Director Departamento Administrativo
-Departamento Administrativo de Gestión Jurídica Pública
 
-Notificado:
+ESTEFANY PALACIOS CÓRDOBA
+Profesional Jurídico
+
 
 
 CLAUDIA PATRICIA VARGAS OROZCO
-Subdirector de Defensa Judicial y Prevención del Daño Antijurídico ( E )
-Fecha: 7 noviembre de 2026
+Profesional Técnico 
 
 
-SINDY MARIEL MENA GRUESSO
-Abogada, contratista
+MARÍA EUGENIA GONZÁLEZ ESPINOSA
+Profesional Financiero
+
+
+Proyectó: María Eugenia González Espinosa – Profesional Universitario
+
+
+
+
+
+
+
+Verificado por:
+
+
+Santiago de Cali, enero de 2026
+
+De conformidad con la verificación de requisitos realizada por  el profesional jurídico responsable para estructurar procesos contractuales de prestación de servicios profesionales y de apoyo a la gestión, documentada en el formato MAJA01.04.02.P007.F001 - Verificación de cumplimiento de requisitos para prestación de servicios, el Distrito Especial de Santiago de Cali – Departamento Administrativo de Gestión Jurídica Pública, certifica el cumplimiento de los requisitos de idoneidad y experiencia de NINA JHOANA SOTO BUSTAMANTE, identificado(a) con la cédula de ciudadanía No.1.130.648.239 para ejecutar el contrato de prestación de servicios cuyo objeto es: Prestación de servicios profesionales como Abogado, brindando soporte en el Departamento Administrativo de Gestión Jurídica Pública especificamente en la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico en las actividades correspondientes a la revisión y trámite de pago de sentencias, laudos arbitrales, conciliaciones, costas y demás, que deba realizar el Distrito Especial de Santiago de Cali, en el marco del proyecto de inversión denominado "Fortalecimiento del Ciclo de Defensa Jurídica y de la Política de Mejora Normativa del Distrito Especial de Santiago de Cali BP-26005460"
+
+La presente certificación se expide en cumplimiento de lo dispuesto en el artículo 2.2.1.2.1.4.9. del Decreto 1082 de 2015, o la norma que lo adicione o modifique, y con fundamento en el artículo 83 de la Constitución Política, el cual dispone que todas las actuaciones de los particulares y de las autoridades públicas deberán ceñirse a los postulados de la buena fe.
+
+El presente documento se entiende fechado y firmado una vez sea aprobado a través del Sistema Electrónico para la Contratación Pública – SECOP II.
+
+
+
+ANA CATALINA CASTRO LOZANO
+Director de Departamento Administrativo
 Departamento Administrativo de Gestión Jurídica Pública
-Fecha: 7 noviembre de 2026
 
-Elaboró: Jetsabel Mendez Iles – Contratista
-Revisó: Johana Fuquene  – Abogada Contratista
+
+Proyectó: María Eugenia González Espinosa – Profesional Universitario
+CONTRATO DE PRESTACIÓN DE SERVICIOS 
+PROFESIONALES
+
+CONTRATO No. 4121.010.26.1.076-2026
+	
+Nombre del contratista: NINA JHOANA SOTO BUSTAMANTE
+Documento de identificación: 1.130.648.239
+
+CLÁUSULAS COMPLEMENTARIAS
+
+CLÁUSULA PRIMERA. ALCANCE DEL OBJETO CONTRACTUAL Y OBLIGACIONES ESPECÍFICAS DEL CONTRATISTA: Además de los deberes señalados en la normativa vigente aplicable y de las actividades derivadas de la ley y de la naturaleza del presente contrato de prestación de servicios, el CONTRATISTA tiene las siguientes obligaciones específicas: 1.Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la revisión de los documentos allegados por los solicitantes necesarios para el trámite de pago de sentencias, laudos arbitrales, conciliaciones y costas que deba realizar el Distrito Especial de Santiago de Cali, de conformidad con las competencias señaladas dentro de los procedimientos establecidos por la entidad y realizar los requerimientos a los solicitantes, cuando sea necesario, así como elaboración de los oficios correspondientes para que se efectué el pago . 2. Brindar apoyo al Departamento Administrativo de Gestión Jurídica Pública en la elaboración o revisión de los documentos necesarios para el trámite del pago de sentencias, laudos arbitrales, conciliaciones y costas a favor o en contra del Distrito Especial de Santiago de Cali., que se deban realizar de oficio conforme a lo establecido en las normas legales vigentes. 3. Brindar apoyo en la elaboración y diligenciamiento del informe en formato excel en el que se consigne mensualmente la información sobre los trámites de pagos de sentencias, laudos arbitrales, conciliaciones y costas judiciales que haya adelantado, conforme a las funciones y competencias del Departamento Administrativo de Gestión Jurídica Pública. 4. Proyectar los oficios que el Departamento Administrativo de Gestión Jurídica Pública mensualmente envie a la Secretaría de Educación, el Departamento Administrativo de Desarrollo e Innovación Institucional y el Departamento Administrativo de Hacienda con relación a los pagos de sentencias, laudos y conciliaciones a cargo del Distrito Especial de Santiago de Cali. 5. Las demás actividades que le asigne el supervisor del contrato y que se encuentren relacionadas con el objeto del mismo.
+
+CLÁUSULA SEGUNDA.  VALOR Y FORMA DE PAGO: El valor del contrato será la suma de Diecinueve millones doscientos veinte mil pesos m/cte ($19220000). El Distrito Especial  de Santiago de Cali pagará el valor del contrato en Seis (6) cuotas de Cuatro millones ochocientos cinco mil pesos m/cte ($4805000) cada una, previa certificación de cumplimiento a satisfacción expedida por el supervisor del contrato. PARÁGRAFO I: Para la realización de los pagos, el CONTRATISTA deberá acreditar que se encuentra al día en el pago de aportes parafiscales relativos al sistema de seguridad social integral, así como los propios del Sena, ICBF y cajas de compensación familiar, cuando corresponda, conforme al normativa vigente aplicable. PARÁGRAFO II. En todo caso los pagos que se hagan durante la ejecución del presente contrato correspondiente a las obligaciones contractuales, se subordinan a la apropiación y disponibilidad presupuestal, ajustándose al Programa Anual mensualizado de Caja (PAC). PARÁGRAFO III: Para cumplir con las obligaciones fiscales que ordena la ley, el CONTRATANTE efectuará las retenciones que surjan del presente contrato, cuando a ello haya lugar, las cuales estarán a cargo del CONTRATISTA.
+
+CLÁUSULA TERCERA. OBLIGACIONES GENERALES DEL CONTRATISTA: En virtud del presente contrato el CONTRATISTA adquiere las siguientes obligaciones generales: A) Utilizar todos sus conocimientos e idoneidad en la ejecución del presente contrato, comprometiéndose a tramitar y entregar los productos y actividades que hacen parte del presente contrato con calidad y oportunidad. B) Presentar los informes requeridos por el contratante para el seguimiento de las tareas encomendadas. Una vez finalice el objeto del contrato, el CONTRATISTA deberá entregar al supervisor, un informe detallado de las actividades realizadas durante su ejecución indicando los asuntos asignados, tramitados y pendientes por resolver, así como los archivos físicos y magnéticos que se hubieren generado durante la ejecución del mismo, los informes antes citados deben entregarse en una (1) copia de seguridad, que deberá reposar en las instalaciones del contratante. C) Manejar la documentación a su cargo de conformidad con normativa vigente aplicable, Ley General de Archivo, las políticas operativas del Proceso Gestión Documental, las políticas del Sistema de Gestión Documental y demás plataformas institucionales. El CONTRATISTA debe entregar inventariada al contratante y/o al supervisor, las carpetas y documentación que tenga a su cargo en virtud del desarrollo del objeto del presente contrato, entrega que deberá hacerse de acuerdo con los procedimientos establecidos por el contratante. D) El CONTRATISTA se compromete a cumplir con las normas y procedimientos sobre el Sistema de Gestión de Seguridad Social y Salud en el trabajo de la Entidad. Si en el desarrollo del objeto contractual se realizan actividades de campo y/o visitas a obras, el CONTRATISTA, a sus expensas, deberá dotarse y acudir a estos lugares con los implementos de seguridad industrial mínimos requeridos, tales como casco, botas, gafas protectoras, etc. E) En el evento en que el CONTRATISTA al momento de suscribir el presente contrato no sea responsable del impuesto a las ventas y durante la vigencia del mismo adquiera la obligación de inscribirse como responsable del impuesto a la renta, se compromete a realizar cambio ante la DIAN dentro de los términos que otorga la ley y a reportar dicha situación al CONTRATANTE para lo cual aportará el RUT actualizado, lo anterior de conformidad con normativa vigente aplicable F) El CONTRATISTA se compromete a mantener actualizados todos sus documentos en la Entidad, especialmente el RUT. G) Velar por el buen uso de los bienes entregados por el supervisor o el CONTRATANTE para realizar sus actividades. H) Reportar al CONTRATANTE el número de cuenta bancaria de ahorro o corriente, donde se le ha de consignar el pago derivado de la ejecución del presente contrato. I)  Conocer y aplicar las directrices, metodologías, políticas y procedimientos enmarcados dentro de los Sistemas de Gestión y Control Integrado adoptados por la Administración Central del Distrito de Santiago de Cali y, particularmente, los que se relacionan con el objeto del presente contrato. J) Cumplir con la política de seguridad de la información establecida por la Entidad, con el fin de garantizar la confidencialidad, integridad y disponibilidad de la información bajo su responsabilidad. K) Mantener actualizado el registro en los sistemas de información del contratante en tiempo real, cuando a ello hubiere lugar. L) Toda información o formatos generados por el CONTRATISTA son propiedad de la Alcaldía de Santiago de Cali. M) Cuando se requiera utilizar dispositivos y/o equipos tecnológicos personales o de la administración para el desarrollo del objeto contractual, el CONTRATISTA garantizará que el software y/o herramientas utilizadas e instaladas para la ejecución de sus obligaciones no vulneran ninguna normativa, contrato, derecho, interés, patentes, legalidad o propiedad de tercero, y que por el contrario todo lo utilizado esté debidamente licenciado. El CONTRATISTA debe abstenerse de instalar y/o utilizar software no licenciado o autorizado en los equipos del Distrito Especial de Santiago de Cali, así como de vulnerar los derechos de autor sobre software y/o cualquier tipo de creación protegida por el régimen de propiedad intelectual, so pena de incurrir en conductas constitutivas de delitos conforme a la normatividad legal correspondiente. N) Cumplir con las estrategias, políticas y actividades en materia de transparencia, integridad, prevención y detección de la corrupción y ante cualquier conocimiento de hechos que atente contra este principio, lo hará conocer al CONTRATANTE. O) Si el prestador del servicio contratado desarrolla algunos de los siguientes roles: responsable del PAA, gestor de compras o hace parte del equipo estructurador, del equipo asesor evaluador de los procesos de contratación del organismo o cumple actividades de apoyo a la supervisión, deberá aportar la constancia de aprobación de los cursos virtuales diseñados para fortalecer la gestión contractual por el Departamento Administrativo de Contratación Pública. P)  Divulgar y aplicar la política ambiental, de seguridad y salud ocupacional establecida por el CONTRATANTE, al ejecutar sus actividades o servicios sin crear riesgo para la salud, la seguridad o el ambiente. El (la) CONTRATISTA deberá tomar todas las medidas conducentes a evitar la contaminación ambiental, la prevención de riesgos durante la ejecución de sus operaciones o actividades y cumplirá con todas las leyes ambientales, de seguridad y salud ocupacional, aplicables. El (la) CONTRATISTA no dejará sustancias o materiales nocivos para la flora, fauna o salud humana, ni contaminará la atmósfera, el suelo o los cuerpos del agua. La violación de estas normas se considerará incumplimiento grave del contrato, y el CONTRATANTE podrá aplicar la cláusula penal o multas a que hubiere lugar, sin perjuicio de las demás acciones legales o sanciones que adelante la autoridad o ente competente de orden Distrital o Nacional. Q) El CONTRATISTA deberá coordinar con el supervisor la ejecución de las actividades contractuales, acatando sus instrucciones, con el fin de asegurar las condiciones necesarias para el desarrollo eficiente del objeto contractual. R) No ejercer ninguna forma de violencia contra las mujeres y basada en género, actos de racismo o discriminación.
+
+CLÁUSULA CUARTA. OBLIGACIONES DEL CONTRATANTE: En virtud del presente contrato de prestación de servicios se obliga a: 1) Pagar al CONTRATISTA las sumas estipuladas en el contrato, en la oportunidad y formas allí establecidas. 2) Proporcionar la información y documentación requerida para la normal ejecución del objeto contractual. 3) Vigilar, supervisar y/o controlar la ejecución idónea y oportuna del objeto del contrato. 4) Todas aquellas inherentes para el cumplimiento del objeto contractual. 
+
+CLÁUSULA QUINTA.  EXCLUSIÓN DE LA RELACIÓN LABORAL, AUTONOMÍA Y RESPONSABILIDAD DEL CONTRATISTA. De conformidad con normativa vigente aplicable, en ningún caso el contrato de prestación de servicios generará subordinación, ni relación laboral y, por consiguiente, el CONTRATISTA no tiene derecho a reclamar al Distrito de Santiago de Cali ningún tipo de prestación social, de tal manera que la única retribución con motivo de este compromiso es el pago de los honorarios pactados. El CONTRATISTA actuará con total autonomía y responsabilidad en el cumplimiento de las obligaciones que adquiere por el presente contrato. El CONTRATISTA será responsable ante las autoridades competentes por los actos u omisiones en el ejercicio de las actividades que desarrolle en virtud del presente contrato, cuando con ellos cause perjuicio a la Administración o a terceros. Igualmente será responsable en los términos de normativa vigente aplicable.
+
+CLÁUSULA SEXTA.  AFILIACIÓN AL SISTEMA DE SEGURIDAD SOCIAL Y ARL. El CONTRATISTA se obliga a mantener al día el pago correspondiente a los sistemas de seguridad social en salud, pensiones y ARL de acuerdo con las bases de cotización establecidas en las normas vigentes. El CONTRATISTA antes de iniciar la ejecución contractual deberá informar al CONTRATANTE la EPS y la AFP a los cuales se encuentre afiliado. Igualmente, cuando el CONTRATISTA determine trasladarse de empresa promotora de salud (EPS) o de fondo de pensiones, deberá informar dicha situación al CONTRATANTE, con una antelación mínima de treinta (30) días a su ocurrencia. Al vencimiento del contrato, deberá adelantar los trámites correspondientes a los reportes de novedades a las entidades de salud y pensiones.
+
+CLÁUSULA SÉPTIMA. SUPERVISIÓN: El CONTRATANTE ejercerá la supervisión del contrato a través del funcionario que designe, quien tendrá a cargo las funciones señaladas en la normativa vigente aplicable y el documento técnico de supervisión de la Administración.
+
+CLÁUSULA OCTAVA. MODIFICACIONES AL CONTRATO: Cualquier modificación al contrato deberá hacerse directamente en la plataforma electrónica y las consideraciones que soporten la modificación podrán justificarse en los formatos previamente establecidos y publicarlos en el SECOP II.
+
+CLÁUSULA NOVENA. APLICACIÓN DE LAS CLÁUSULAS EXCEPCIONALES: EL CONTRATANTE podrá aplicar a este contrato de prestación de servicios las cláusulas de interpretación, modificación, terminación unilateral y caducidad de acuerdo con lo previsto en el artículo 14 y siguientes de la Ley 80 de 1993. 
+
+CLÁUSULA DÉCIMA. SANCIONES EN CASO DE INCUMPLIMIENTO: Las partes de mutuo acuerdo y, de conformidad con lo dispuesto en el Estatuto General de Contratación Pública, establecemos las siguientes sanciones contractuales: I. MULTAS: En virtud del deber de control y vigilancia sobre el contrato, el CONTRATANTE tendrá la facultad de imponer al CONTRATISTA las multas pactadas en el contrato con el fin de conminarlo al cumplimiento de sus obligaciones, en los términos que establece la normativa vigente aplicable. Para tales efectos, las partes acuerdan que en caso de incumplimiento de alguna de las obligaciones adquiridas por el CONTRATISTA o cumplidas deficientemente o por fuera del término estipulado para cada obligación, se causará una multa equivalente hasta el uno por mil (1/1000) del valor total del contrato por cada día calendario transcurrido a partir de la fecha prevista para el cumplimiento de dichas obligaciones. La imposición de la multa atenderá los criterios de razonabilidad, proporcionalidad y gravedad de la obligación incumplida. Si pasaren más de treinta (30) días calendario sin que el (la) CONTRATISTA haya cumplido la actividad obligacional en mora, el CONTRATANTE podrá declarar la caducidad del presente contrato ya que la mora por más de treinta (30) días se considera un incumplimiento grave. Contra dicha resolución procede el recurso de reposición de conformidad con la normativa vigente aplicable. II. CLAUSULA PENAL PECUNIARIA: En caso de declaratoria de incumplimiento el CONTRATISTA pagará al CONTRATANTE a título de Cláusula Penal Pecuniaria una suma equivalente al diez por ciento (10%) del valor total del Contrato de Prestación de Servicios. III. CADUCIDAD ADMINISTRATIVA: El CONTRATANTE podrá declarar la caducidad del contrato cuando se presenten hechos constitutivos de incumplimiento de las obligaciones a cargo del CONTRATISTA que afecten en forma grave y directa la ejecución del contrato y se evidencie que puede generar su paralización (normativa vigente aplicable), dará lugar a la declaratoria de caducidad del contrato el incumplimiento de la obligación de informar inmediatamente al CONTRATANTE , sobre la ocurrencia de peticiones o amenazas de quienes actúan por fuera de la Ley, con el objetivo de obligarlos a hacer u omitir algún acto o hecho y por las causales a que se refiere la  normativa vigente aplicable. Se entiende como incumplimiento grave la sistemática omisión en la respuesta o atención de las obligaciones a su cargo. En caso de producirse la declaratoria de caducidad, no habrá lugar a la indemnización para el CONTRATISTA quien se hará acreedor a las sanciones e inhabilidades establecidas en la normativa vigente aplicable.  La resolución de caducidad se notificará personalmente al CONTRATISTA o a su representante o apoderado conforme al Código de Procedimiento Administrativo y de lo Contencioso Administrativo (Ley 1437 de 2011). Contra la resolución de caducidad procede el recurso de reposición en los términos consagrados en la normativa vigente aplicable. PARÁGRAFO: Para la imposición de las sanciones contractuales descritas en esta cláusula se deberá seguir el procedimiento mínimo que garantice el debido proceso acorde a la normativa vigente aplicable.
+
+CLÁUSULA DÉCIMA PRIMERA. TERMINACIÓN DEL CONTRATO: En virtud del principio de la autonomía de la voluntad aplicable de acuerdo con la Ley 80 de 1993, el contrato se puede terminar por las siguientes causas: 1) Por mutuo acuerdo de las partes; 2) Cuando las condiciones contractuales o las circunstancias que dieron lugar al nacimiento del contrato desaparezcan o hayan variado sustancialmente de tal manera que su ejecución resulte imposible y/o inconveniente de conformidad con la justificación expedida por el CONTRATANTE; 3) Por decisión del CONTRATANTE en caso de incumplimiento del CONTRATISTA; 4) Por la inclusión del CONTRATISTA, algún miembro de su personal o de lo dispuesto para la ejecución del contrato, en listas nacionales o extranjeras conformadas por personas proscritas en razón de lavados de activos, captación ilegal de dineros, narcotráfico, terrorismo o cualquier actividad ilícita; 5) Por vencimiento del plazo contractual; y 6) Por las demás establecidas en la ley.
+
+Para la terminación anticipada del contrato por las causales previstas en los numerales 2), 3), 4) y 6) de esta cláusula, se seguirá el siguiente procedimiento, que no es excluyente con el procedimiento establecido en el artículo 86 de la Ley 1474 de 2011:
+
+EL CONTRATANTE comunicará al CONTRATISTA por escrito la ocurrencia de las situaciones que dan lugar a la terminación anticipada del contrato. En esta comunicación, y en aquellos casos que proceda, EL CONTRATANTE podrá otorgar un plazo adicional para permitir el cumplimiento de la obligación, de acuerdo con lo indicado en el siguiente literal.
+
+En la comunicación de notificación de la causal de terminación anticipada, EL CONTRATANTE podrá otorgar, en caso de resultar procedente, un plazo de hasta quince (15) días calendario, contados a partir del recibo de la notificación, para que EL CONTRATISTA dé cumplimiento a sus obligaciones. 
+
+En caso de optar por no conceder el plazo indicado en el literal anterior, o de otorgarlo y a su vencimiento el CONTRATISTA no subsane la situación que dé lugar a la terminación anticipada, el CONTRATISTA deberá presentar las justificaciones o pruebas que considere pertinentes para desvirtuar la causal de terminación invocada por EL CONTRATANTE, para ello, EL CONTRATANTE definirá el plazo para el pronunciamiento del CONTRATISTA, sin que pueda exceder de cinco (5) días hábiles.
+
+Dentro de los cinco (5) días hábiles siguientes al recibo de la respuesta emitida por EL CONTRATISTA, EL CONTRATANTE dará respuesta en uno de los siguientes sentidos:
+
+Terminar el contrato.
+No terminar el contrato, caso en el cual podrá continuar la ejecución del Contrato.
+
+La respuesta de EL CONTRATANTE, a que hace referencia el literal anterior, no constituye acto administrativo.
+
+En cualquier estado del procedimiento, previo a la adopción de la decisión, EL CONTRATANTE podrá convocar al CONTRATISTA para la formulación de un plan de acción con el fin de continuar la ejecución del contrato.
+
+CLÁUSULA DÉCIMA SEGUNDA. SUSPENSIÓN DEL CONTRATO: El plazo para la ejecución del contrato podrá suspenderse por acuerdo entre las partes o cuando ocurran hechos o circunstancias constitutivas de una situación de fuerza mayor o caso fortuito que impidan el cumplimiento de las obligaciones asumidas. Si la suspensión es de mutuo acuerdo, deberá suscribirse un acta por las partes en la que conste la razón por la cual suspenden la ejecución del contrato, la forma como se asumirán los costos que se generen con ocasión de la misma, las actividades que se desarrollarán tendientes a superar el motivo de suspensión. Mientras subsistan hechos constitutivos de una situación de fuerza mayor o caso fortuito, y estas impidan la ejecución total del contrato, el plazo para la ejecución del contrato se suspenderá de la siguiente manera: (i) por el término que dure la situación que configura la circunstancia de caso fortuito o fuerza mayor. (ii) Si los hechos constitutivos de una situación de fuerza mayor y caso fortuito no impiden la ejecución de la totalidad del contrato, sino sólo de manera parcial o de alguna o algunas de las obligaciones de este contrato, las partes convendrán si tales circunstancias suponen o no la suspensión de la totalidad del contrato, y en su caso, el tiempo y los términos de suspensión. La suspensión de la ejecución del contrato por fuerza mayor o caso fortuito se hará constar en actas suscritas por las partes, en las cuales se indiquen los hechos que la motivan. Una vez cesen las causas de la suspensión se dejará constancia de este hecho y de la reiniciación de los plazos contractuales a que haya lugar; en actas suscritas por las partes. De generarse costos al CONTRATISTA producto de la suspensión, el CONTRATANTE deberá reconocerlos a efecto de llevar al CONTRATISTA a punto de no pérdida, siempre y cuando esté plenamente demostrado. 
+
+CLÁUSULA DÉCIMA TERCERA. CESIÓN: El (la) CONTRATISTA no podrá ceder parcial ni totalmente sus obligaciones o derechos derivados del presente contrato de prestación de servicios sin la autorización previa y escrita del CONTRATANTE. La cesión se hará de conformidad con lo previsto en la normativa vigente aplicable. En todo caso, el CONTRATANTE verificará que la idoneidad y experiencia del (la) cesionario (a) sea igual o superior a la solicitada en los estudios previos que dieron origen al contrato.
+
+CLÁUSULA DÉCIMA CUARTA. CONFIDENCIALIDAD: El CONTRATISTA se compromete a guardar estricta confidencialidad y a dar cumplimiento a la Ley Estatutaria 1581 de 2012, respecto de toda la información y datos personales que conozca y se le entregue por cualquier medio durante el plazo de ejecución, y por ende éste no podrá realizar su publicación, divulgación y utilización para fines propios o de terceros no autorizados. Así mismo, respetará los acuerdos de confidencialidad suscritos por el CONTRATANTE con terceros para la celebración de negocios, preacuerdos o acuerdos por el mismo tiempo por el que el CONTRATANTE se compromete con los terceros a guardar la debida reserva. 
+
+CLÁUSULA DÉCIMA QUINTA. MANEJO DE DATOS PERSONALES: El CONTRATISTA autoriza de manera libre y voluntaria al CONTRATANTE a recopilar, utilizar, transferir, almacenar, consultar, procesar, y en general a dar tratamiento a la información personal que este ha suministrado al CONTRATANTE, de conformidad con lo dispuesto en la Ley 1581 de 2012, la cual se encuentra contenida en las bases de datos y archivos de propiedad del CONTRATANTE para los fines administrativos, contractuales, de publicidad y demás que sean necesarios, referentes a su nombre, documento de identidad, dirección, teléfono, correo electrónico. 
+
+CLÁUSULA DÉCIMA SEXTA. PUBLICACIÓN: El presente contrato es objeto de publicación en el Sistema Electrónico para la Contratación Pública – SECOP II, que administra la Agencia Nacional de Contratación Pública Colombia Compra Eficiente, de conformidad con lo dispuesto en la normativa vigente aplicable.
+
+CLÁUSULA DÉCIMA SÉPTIMA. MARCO REGULATORIO DEL CONTRATO ELECTRÓNICO. En desarrollo con el artículo 3 de la ley 1150 de 2007, la Ley 1712 de 2014, el Decreto 4170 de 2011, el Decreto 1082 de 2015 y el Decreto 1083 de 2015, Colombia Compra Eficiente administra el SECOP II, plataforma transaccional que permite a Compradores y Proveedores realizar el Proceso de Contratación en línea. Por ello, y de conformidad con lo dispuesto en la Ley 527 de 1999, la sustanciación de las actuaciones, la expedición de los actos administrativos, los documentos, contratos y en general los actos derivados de las etapas de la Gestión contractual, tendrán lugar a través de la plataforma del SECOP II. Todos los documentos del proceso publicados en la plataforma del SECOP II son integrales y complementarios entre sí.
+
+CLÁUSULA DÉCIMA OCTAVA. RÉGIMEN LEGAL Y JURISDICCIÓN: El presente contrato está sometido en un todo a la ley colombiana y se rige por las disposiciones de la normativa vigente aplicable, en lo que no esté regulado expresamente, se regirá por las normas civiles y comerciales. 
+
+CLÁUSULA DÉCIMA NOVENA. CONTROVERSIAS CONTRACTUALES: Las Partes buscarán solucionar en forma ágil, rápida y directa las diferencias y discrepancias surgidas de la actividad contractual. Para tal efecto, al surgir las diferencias acudirán al empleo de los mecanismos de solución de controversias contractuales previstos en el artículo 68 de la Ley 80 de 1993.  
+
+CLÁUSULA VIGÉSIMA. LIQUIDACIÓN. De conformidad con lo establecido en el Decreto 019 de 2012 el presente contrato no será objeto de liquidación, salvo en los casos en los que el mismo se termine anticipadamente, para lo cual se acudirá al procedimiento establecido en el Manual de Contratación del Distrito de Santiago de Cali, y en las normas legales vigentes.  
+
+El presente documento se entiende fechado y firmado una vez sea aprobado por ambas partes el contrato electrónico a través del Sistema Electrónico para la Contratación Pública – SECOP II.
+
+EL CONTRATANTE                                            EL CONTRATISTA
+
+
+ANA CATALINA CASTRO LOZANO	
+Director de Departamento Administrativo Departamento Administrativo de Gestión Jurídica Pública 	
+NINA JHOANA SOTO BUSTAMANTE
+C.C. N° 1.130.648.239
+						
+
+
+Proyectó: María Eugenia González Espinosa – Profesional Universitario
+
+
+
+
+
 
 
 
 --- TABLAS ---
 Tabla #1
-| Nombre del contratista | ESTEFANY PALACIOS CÓRDOBA |
-| Nº de contrato | 4121.010.26.1.001 - 2026 |
-| Objeto contractual | Prestación de Servicios Profesionales Especializados brindando soporte en los asuntos jurídicos del despacho del Departamento Administrativo de Gestión Jurídica Pública. |
-| Fecha de aprobación de póliza (si aplica) | N/A. |
-| Nº de Registro presupuestal de compromiso RPC | 4500395980 |
-| Fecha Registro presupuestal de compromiso RPC | enero 6 de 2026 |
+| Inversión | X |  | Funcionamiento |  |  |
+|  |  |  |  |  |  |
+| Otros |  |  | Cual |  |
+Tabla #2
+| Perfil | Experiencia |
+| Abogado (a) titulado (a) | Doce (12) meses de Experiencia Profesional |
+Tabla #3
+| Código Completo | Nombre de la Cuenta  | Clasificación  |
+| 2.1.2.02.02.008 | Servicios prestados a las empresas y servicios de producción | Funcionamiento |
+| 2.1.2.02.02.009 | Servicios para la comunidad, sociales y personales | Funcionamiento |
+Tabla #4
+| Código Completo | Nombre de la Cuenta  | Clasificación |
+| 2.1.2.02.02.005 | Servicios de la Construcción  | Inversión |
+| 2.1.2.02.02.008 | Servicios prestados a las empresas y servicios de producción | Inversión |
+| 2.1.2.02.02.009 | Servicios para la comunidad, sociales y personales | Inversión |
+Tabla #5
+| Código | Segmento | Familia | Clase | Producto |
+| 80111501 | 80000000 | 80110000 | 80111500 | 80111501 |
+|  | Servicios de gestión, servicios profesionales de empresa y servicios administrativos. | Servicios de recursos humanos. | Desarrollo de recursos humanos. | Perfeccionamiento de la función de gestión. |
+| 80111501 | 80000000 | 80110000 | 80111500 | 80111501 |
+Tabla #6
+| SÍ |   x |  | NO |  |
+Tabla #7
+|   | SALARIO MÍNIMO MENSUAL LEGAL |
+| VARIABLE | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+| SALARIO | $ 689.455  | $ 737.717  | $ 781.242  | $ 828.116  | $ 877.803  | $ 908.526  | $1.000.000  | $1.160.000  | $1.300.000  | $1.423.500  | $ 1.750.905  |
+| VARIACIÓN % | 7% | 7% | 5.9% | 6% | 6% | 3.5% | 10.07% | 16% | 12,7%  | 9,5%  | 23% |
+Tabla #8
+| TABLA DE HONORARIOS 2026[footnoteRef:1] [1:  CIRCULAR No. 4135.020.22.2.1020.000002 del 5 de enero de 2026, por medio de la cual se dió Alcance a la Circular No. 4135.010.22.2.1031.00837 del 21 de noviembre de 2025, mediante la cual se estableció la Tabla de Honorarios para la contratación de la prestación de servicios profesionales y/o de apoyo a la gestión a celebrar con Personas Naturales en la Alcaldía del Distrito Especial de Santiago de Cali para la Vigencia 2026.]  |
+| CATEGORÍA | NIVEL | FORMACIÓN ACADÉMICA | EXPERIENCIA | HONORARIOS AÑO 2026 |
+| PROFESIONAL CON POSTGRADO | 6 | Título profesional y título de postgrado | 108 meses de experiencia profesional relacionada | $12.368.000 |
+|  | 5 | Título profesional y título de postgrado | 90 meses de experiencia profesional relacionada | $ 10.374.000 |
+|  | 4 | Título profesional y título de postgrado | 72 meses de experiencia profesional | $8.378.000 |
+|  | 3 | Título profesional y título de postgrado | 54 meses de experiencia profesional | $7.826.000 |
+|  | 2 | Título profesional y título de postgrado | 36 meses de experiencia profesional | $7.036.000 |
+|  | 1 | Título profesional y título de postgrado | 24 meses de experiencia profesional | $	6.247.000 |
+| PROFESIONAL | 3 | Título profesional | 18 meses de experiencia profesional | $5.663.000 |
+|  | 2 | Título profesional  | 12 meses de experiencia profesional | $4.805.000 |
+|  | 1 | Título profesional  | No requerida | $3.947.000 |
+| TÉCNICO | 3 | Título de técnico (Profesional o laboral por competencias); ó tecnólogo; ó aprobación de 6 semestres de formación profesional  | 12 meses de experiencia laboral | $3.551.000 |
+|  | 2 | Título de técnico (Profesional o laboral por competencias); ó tecnólogo; ó aprobación de 6 semestres de formación profesional  | 6 meses de experiencia laboral | $3.255.000 |
+|  | 1 | Título de técnico (Profesional o laboral por competencias); ó tecnólogo; ó aprobación de 6 semestres de formación profesional  | No requerida | $2.905.000 |
+| ASISTENCIAL | 3 | Título de bachiller | 24 meses de experiencia laboral | $2.792.000 |
+|  | 2 | Título de bachiller | 6 meses de experiencia laboral                            o únicamente                            18 meses de experiencia laboral sin (sin título de bachiller) | $2.271.000 |
+|  | 1 | Alternativa de cuatro (4) años de educación básica secundaria.Equivalencia: 6 meses de experiencia laboral por aprobación de cuatro (4) años de básica secundaria, siempre y cuando se acredite la formación básica primaria | Con título de bachiller no requiere experiencia. Sin título de bachiller doce (12) meses de experiencia laboral | $ 2.109.000 |
+Tabla #9
+|  |  |
+| APROBADOS | ACTUALIZADOS |
+|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|  | SI |   | NO |  | No Aplica |  x |  |  | SI |  | NO |  | No Aplica |  x |  |
+|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+Tabla #10
+| El proyecto necesita (alguna o las dos) | Supervisión | x |  | Interventoría |  |
+Tabla #11
+| IDENTIFICACIÓN DEL CONTRATO A SUSCRIBIR |
+| Tipo: | PRESTACIÓN DE SERVICIOS PROFESIONALES |
+| Objeto: | Prestación de servicios profesionales como Abogado, brindando soporte en el Departamento Administrativo de Gestión Jurídica Pública especificamente en la Subdirección de Defensa Judicial y Prevención del Daño Antijurídico en las actividades correspondientes a la revisión y trámite de pago de sentencias, laudos arbitrales, conciliaciones, costas y demás, que deba realizar el Distrito Especial de Santiago de Cali, en el marco del proyecto de inversión denominado "Fortalecimiento del Ciclo de Defensa Jurídica y de la Política de Mejora Normativa del Distrito Especial de Santiago de Cali BP-26005460" |
+| Valor del contrato: | Diecinueve millones doscientos veinte mil pesos m/cte  ($19220000) |
+| Organismo: | Departamento Administrativo de Gestión Jurídica Pública |
+Tabla #12
+| REQUISITOS DE IDONEIDAD Y EXPERIENCIA EXIGIDOS |
+| Idoneidad  | Abogado (a) titulado (a) |
+| Experiencia | Doce (12) meses de Experiencia Profesional |
+Tabla #13
+| IDENTIFICACIÓN DEL PROVEEDOR |
+| Nombre: | NINA JHOANA SOTO BUSTAMANTE |
+| Identificación: | C.C. No. 1.130.648.239 |
+Tabla #14
+| VERIFICACIÓN DE CUMPLIMIENTO DE REQUISITOS |
+| REQUISITO | EVIDENCIA APORTADA | CUMPLE |
+| Idoneidad | Abogada de la Universidad Santiago de Cali, graduada el 20/noviembre/2012 |  |
+| Experiencia | Desde el 01/agosto/2013 al 25/enero/2019, 5 años, 5 meses y 24 dias, en Fortox Security Group. Total:5 años, 5 meses y 24 días. |  |
+Tabla #15
+| Cumple con la presentación de los documentos solicitados y con la idoneidad y experiencia requerida para la celebración del contrato. | SI |  x | NO |  |
+Tabla #16
+| Nombre: | ESTEFANY PALACIOS CÓRDOBA |
+| Cargo:  | Abogado contratista |
+| Organismo:  | DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA  |
+Tabla #17
+| Verificación del cumplimiento de los requisitos según la hoja de vida y las certificaciones aportadas por el candidato |
+| Requisito | Cumple | Observaciones |
+| CAPACIDAD JURÍDICA | ✓ | Se verificó que no cuenta con inhabilidades, incompatibilidades o conflictos de interés que le impidan contratar con el Estado. |
+| FORMACIÓN | ✓ | Abogada de la Universidad Santiago de Cali, graduada el 20/noviembre/2012 |
+| EXPERIENCIA | ✓ | Desde el 01/agosto/2013 al 25/enero/2019, 5 años, 5 meses y 24 dias, en Fortox Security Group. Total:5 años, 5 meses y 24 días. |
 
 --- FOOTER DEFAULT ---
 
-Este documento es propiedad de la Administración Central del Distrito de Santiago de Cali.  Prohibida su alteración o modificación por cualquier medio, sin previa autorización del Alcalde.
-Página 2 de 5
+
+
+Este documento es propiedad de la Administración Central del Distrito de Santiago de Cali. Prohibida su copia, alteración o modificación por cualquier medio, sin previa autorización del Alcalde.
+Página 1 de 

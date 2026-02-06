@@ -47,6 +47,12 @@ public class CargaMasivaServlet extends HttpServlet {
     private ContratoDAO contratoDAO = new ContratoDAO();
 
     @Override
+    public void init() throws ServletException {
+        super.init();
+        com.combinacion.util.DatabasePatcher.ensureSchema();
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
@@ -725,6 +731,10 @@ public class CargaMasivaServlet extends HttpServlet {
                 // para evitar reescritura o conflicto. Si existiera otra columna especifica
                 // para texto de plazo, se agregaría aquí.
 
+            } else if (h.contains("apoyo") && h.contains("supervision") && !h.contains("cargo")) {
+                // Nuevo campo: Apoyo a la Supervision
+                map.put("apoyo_supervision", i);
+
             } else if (h.contains("meses") && !h.contains("media")) {
                 map.put("plazo_meses", i);
             } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
@@ -1360,6 +1370,8 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setLiquidacionArticulo(get(row, map, "liquidacion_articulo"));
             contrato.setLiquidacionDecreto(get(row, map, "liquidacion_decreto"));
             contrato.setCircularHonorarios(get(row, map, "circular_honorarios"));
+            // Nuevo campo
+            contrato.setApoyoSupervision(get(row, map, "apoyo_supervision"));
 
             // Foreign Keys
             if (c != null)
