@@ -367,18 +367,19 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{VALOR_CUOTA_LETRAS}}", "");
         }
 
-        if (contrato.getNumeroCuotas() != null) {
-            replacements.put("{{NUMERO_CUOTAS}}", contrato.getNumeroCuotas().toString());
-        } else {
-            replacements.put("{{NUMERO_CUOTAS}}", "");
-        }
+        // Número de cuotas (usando plazo meses como aproximación si aplica)
+        replacements.put("{{NUMERO_CUOTAS}}",
+                contrato.getPlazoMeses() > 0 ? String.valueOf(contrato.getPlazoMeses()) : "PENDIENTE");
+        replacements.put("{{VALOR_CUOTA_LETRAS}}", "PENDIENTE CALCULO"); // Requiere lógica compleja de números a letras
+        replacements.put("{{VALOR_CUOTA}}", "PENDIENTE CALCULO");
 
-        // Fecha de finalización del contrato
-        SimpleDateFormat sdfContrato = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
-        if (contrato.getFechaFin() != null) {
-            replacements.put("{{FECHA_FIN_CONTRATO}}", sdfContrato.format(contrato.getFechaFin()));
+        // Fecha fin contrato
+        SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
+        if (contrato.getFechaTerminacion() != null) {
+            replacements.put("{{FECHA_FIN_CONTRATO}}",
+                    dateFormat.format(contrato.getFechaTerminacion()));
         } else {
-            replacements.put("{{FECHA_FIN_CONTRATO}}", "");
+            replacements.put("{{FECHA_FIN_CONTRATO}}", "FECHA PENDIENTE");
         }
 
         // ID del PAA (Plan Anual de Adquisiciones)

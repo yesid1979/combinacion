@@ -2,7 +2,7 @@
 REPORTE DE INSERCIÓN DE PLACEHOLDERS
 ================================================================================
 Archivo: doc/PLANTILLAS_TODAS_DAGJP_INVERSION_2026.docx
-Fecha: Mon Feb 09 16:06:05 COT 2026
+Fecha: Mon Feb 09 18:56:52 COT 2026
 
 
 --- PROCESANDO HEADERS ---
@@ -22,6 +22,7 @@ Fecha: Mon Feb 09 16:06:05 COT 2026
   ✓ Reemplazado: 'Fortalecimiento del ciclo de defensa jurídica y de la política de mejora normativa del Distrito Especial de Santiago de Cali' -> {{NOMBRE_PROYECTO}}
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'enero de 2026' -> {{MES_ANIO_ACTUAL}}
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
   ✓ Reemplazado: '18441' -> {{ID_PAA}}
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
@@ -30,20 +31,36 @@ Fecha: Mon Feb 09 16:06:05 COT 2026
   ✓ Reemplazado: 'Cuatro (4)' -> {{NUMERO_CUOTAS}}
   ✓ Reemplazado: 'Cuatro millones ochocientos cinco mil pesos m/cte ($4805000)' -> {{VALOR_CUOTA_LETRAS}}
   ✓ Reemplazado: 'CLAUDIA PATRICIA VARGAS OROZCO' -> {{NOMBRE_SUPERVISOR}}
+  ✓ Reemplazado: 'enero de 2026' -> {{MES_ANIO_ACTUAL}}
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'NINA JHOANA SOTO BUSTAMANTE' -> {{CONTRATISTA_NOMBRE}}
+  ✓ Reemplazado: '1.130.648.239' -> {{CONTRATISTA_CEDULA}}
+  ✓ Reemplazado: 'ANA CATALINA CASTRO LOZANO' -> {{NOMBRE_ORDENADOR_GASTO}}
+  ✓ Reemplazado: '4121.010.26.1.076-2026' -> {{NUMERO_PROCESO}}
+  ✓ Reemplazado: 'NINA JHOANA SOTO BUSTAMANTE' -> {{CONTRATISTA_NOMBRE}}
+  ✓ Reemplazado: '1.130.648.239' -> {{CONTRATISTA_CEDULA}}
   ✓ Reemplazado: 'Diecinueve millones doscientos veinte mil pesos m/cte ($19220000)' -> {{VALOR_CONTRATO_LETRAS}}
   ✓ Reemplazado: 'Cuatro millones ochocientos cinco mil pesos m/cte ($4805000)' -> {{VALOR_CUOTA_LETRAS}}
+  ✓ Reemplazado: 'ANA CATALINA CASTRO LOZANO' -> {{NOMBRE_ORDENADOR_GASTO}}
+  ✓ Reemplazado: 'NINA JHOANA SOTO BUSTAMANTE' -> {{CONTRATISTA_NOMBRE}}
+  ✓ Reemplazado: '1.130.648.239' -> {{CONTRATISTA_CEDULA}}
 
 --- PROCESANDO TABLAS ---
   ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
   ✓ Reemplazado: '$19220000' -> {{VALOR_CONTRATO}}
+  ✓ Reemplazado: 'NINA JHOANA SOTO BUSTAMANTE' -> {{CONTRATISTA_NOMBRE}}
+  ✓ Reemplazado: '1.130.648.239' -> {{CONTRATISTA_CEDULA}}
+  ✓ Reemplazado: 'Abogada de la Universidad Santiago de Cali, graduada el 20/noviembre/2012' -> {{PERFIL_FORMACION}}
+  ✓ Reemplazado: 'Desde el 01/agosto/2013 al 25/enero/2019, 5 años, 5 meses y 24 dias, en Fortox Security Group. Total:5 años, 5 meses y 24 días.' -> {{PERFIL_EXPERIENCIA}}
+  ✓ Reemplazado: 'Abogada de la Universidad Santiago de Cali, graduada el 20/noviembre/2012' -> {{PERFIL_FORMACION}}
+  ✓ Reemplazado: 'Desde el 01/agosto/2013 al 25/enero/2019, 5 años, 5 meses y 24 dias, en Fortox Security Group. Total:5 años, 5 meses y 24 días.' -> {{PERFIL_EXPERIENCIA}}
 
 --- PROCESANDO FOOTERS ---
 
 ================================================================================
 RESUMEN DE REEMPLAZOS
 ================================================================================
-{{NUMERO_PROCESO}}                                 : 1 veces
+{{NUMERO_PROCESO}}                                 : 2 veces
 {{CODIGO_PROYECTO}}                                : 7 veces
 {{NOMBRE_PROYECTO}}                                : 2 veces
 {{BPIN}}                                           : 1 veces
@@ -54,11 +71,17 @@ RESUMEN DE REEMPLAZOS
 {{FECHA_VENCIMIENTO_CDP}}                          : 1 veces
 {{VALOR_CDP}}                                      : 1 veces
 {{COMPROMISO_CDP}}                                 : 1 veces
+{{MES_ANIO_ACTUAL}}                                : 2 veces
 {{ID_PAA}}                                         : 1 veces
 {{FECHA_FIN_CONTRATO}}                             : 1 veces
 {{VALOR_CONTRATO_LETRAS}}                          : 2 veces
 {{NUMERO_CUOTAS}}                                  : 1 veces
 {{VALOR_CUOTA_LETRAS}}                             : 2 veces
+{{CONTRATISTA_NOMBRE}}                             : 4 veces
+{{CONTRATISTA_CEDULA}}                             : 4 veces
+{{NOMBRE_ORDENADOR_GASTO}}                         : 2 veces
 {{VALOR_CONTRATO}}                                 : 1 veces
+{{PERFIL_FORMACION}}                               : 2 veces
+{{PERFIL_EXPERIENCIA}}                             : 2 veces
 
-Total de reemplazos: 27
+Total de reemplazos: 44

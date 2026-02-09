@@ -32,6 +32,7 @@ public class PlaceholderMapper {
     static {
         // ===== INFORMACIÓN DEL PROCESO =====
         PLACEHOLDER_MAP.put("4121.010.32.1.076-2026", "{{NUMERO_PROCESO}}");
+        PLACEHOLDER_MAP.put("4121.010.26.1.076-2026", "{{NUMERO_PROCESO}}"); // Variante encontrada en plantilla 4
 
         // ===== INFORMACIÓN DEL SUPERVISOR =====
         PLACEHOLDER_MAP.put("CLAUDIA PATRICIA VARGAS OROZCO", "{{NOMBRE_SUPERVISOR}}");
@@ -61,9 +62,26 @@ public class PlaceholderMapper {
                 "{{NOMBRE_PROYECTO}}");
         PLACEHOLDER_MAP.put("2024760010018", "{{BPIN}}");
 
-        // ===== INFORMACIÓN DEL CONTRATISTA (estos estarán vacíos en la plantilla)
-        // =====
-        // Estos se agregarán como placeholders vacíos para ser llenados después
+        // ===== INFORMACIÓN DEL CONTRATISTA =====
+        PLACEHOLDER_MAP.put("NINA JHOANA SOTO BUSTAMANTE", "{{CONTRATISTA_NOMBRE}}");
+        PLACEHOLDER_MAP.put("1.130.648.239", "{{CONTRATISTA_CEDULA}}");
+
+        // ===== PERFIL Y EXPERIENCIA (CERTIFICADO) =====
+        PLACEHOLDER_MAP.put("Abogada de la Universidad Santiago de Cali, graduada el 20/noviembre/2012",
+                "{{PERFIL_FORMACION}}");
+        PLACEHOLDER_MAP.put(
+                "Desde el 01/agosto/2013 al 25/enero/2019, 5 años, 5 meses y 24 dias, en Fortox Security Group. Total:5 años, 5 meses y 24 días.",
+                "{{PERFIL_EXPERIENCIA}}");
+        // Variante con encoding windows-1252 por si acaso
+        PLACEHOLDER_MAP.put(
+                "Desde el 01/agosto/2013 al 25/enero/2019, 5 aos, 5 meses y 24 dias, en Fortox Security Group. Total:5 aos, 5 meses y 24 das.",
+                "{{PERFIL_EXPERIENCIA}}");
+
+        // ===== FIRMAS ADICIONALES =====
+        PLACEHOLDER_MAP.put("ANA CATALINA CASTRO LOZANO", "{{NOMBRE_ORDENADOR_GASTO}}");
+
+        // ===== FECHAS GENÉRICAS =====
+        PLACEHOLDER_MAP.put("enero de 2026", "{{MES_ANIO_ACTUAL}}");
 
         // ===== CLASIFICACIÓN UNSPSC =====
         PLACEHOLDER_MAP.put("18441", "{{ID_PAA}}");
