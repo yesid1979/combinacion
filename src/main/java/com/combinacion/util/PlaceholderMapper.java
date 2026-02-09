@@ -8,8 +8,21 @@ import java.util.*;
 import org.apache.poi.xwpf.usermodel.*;
 
 /**
- * Herramienta para agregar placeholders al documento original
- * Identifica campos que deben ser dinámicos y los reemplaza con {{PLACEHOLDER}}
+ * Herramienta para agregar placeholders a documentos DOCX.
+ * 
+ * Esta clase procesa documentos DOCX identificando valores hardcodeados y
+ * reemplazándolos con placeholders en formato {{NOMBRE_CAMPO}} para permitir
+ * la combinación de correspondencia automática.
+ * 
+ * Funcionalidades:
+ * - Mapeo de valores específicos a placeholders
+ * - Procesamiento de headers, footers, párrafos y tablas
+ * - Generación de reporte detallado de reemplazos
+ * - Preservación del formato original del documento
+ * 
+ * @author Yesid Piedrahita
+ * @version 1.0
+ * @since 2026-02-09
  */
 public class PlaceholderMapper {
 

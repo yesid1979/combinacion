@@ -8,6 +8,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.xwpf.usermodel.*;
 
+/**
+ * Analizador detallado de documentos DOCX.
+ * 
+ * Esta clase analiza documentos DOCX extrayendo información detallada sobre:
+ * - Headers y footers
+ * - Párrafos y su contenido
+ * - Tablas y celdas
+ * - Estilos y formato
+ * - Placeholders encontrados
+ * 
+ * Genera un reporte completo en formato texto con toda la información extraída.
+ * 
+ * @author Yesid Piedrahita
+ * @version 1.0
+ * @since 2026-02-09
+ */
 public class DetailedDocxAnalyzer {
 
     private static String repeat(String str, int count) {
