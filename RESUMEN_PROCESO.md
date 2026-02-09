@@ -57,18 +57,19 @@ Has elegido la **Opción C**: Agregar placeholders al documento original y luego
 
 ---
 
-### 2. División de Plantillas (Estrategia Manual Segura v2)
-- **Problema Detectado:** La división automática mediante Apache POI perdía el formato complejo de los encabezados (logos, tablas).
-- **Solución Implementada:** Se optó por una estrategia de "Copia Maestra".
-  - Se modificó `DocumentSplitter.java` para generar 4 copias idénticas del documento maestro (`INVERSION_1...`, `INVERSION_2...`, etc.).
-  - **Acción Manual Requerida:** El usuario debe abrir cada archivo generado y eliminar manualmente las secciones que no corresponden.
-  - **Beneficio:** Garantiza la fidelidad del 100% en el formato, logos y estilos originales.
+### 2. División de Plantillas (Estrategia "Borrado Quirúrgico" v3)
+- **Problema Detectado:** La división manual es tediosa y la automática simple pierde formato.
+- **Solución Implementada:** Se programó un algoritmo de "Borrado Quirúrgico Secuencial".
+  - Se detectan los saltos de sección en el documento original.
+  - Para cada plantilla, se preserva el bloque de su sección y se eliminan cuidadosamente las demás.
+  - **Resultado:** 4 archivos generados que deberían conservar headers y logos originales.
+  - **Nota:** Se detectaron 6 secciones en total; se usaron las primeras 4 para las plantillas.
 
 ### 3. Archivos Generados en `plantillas/`
-1. `INVERSION_1_ESTUDIOS_PREVIOS.docx` (Copia completa, requiere recorte manual)
-2. `INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx` (Copia completa, requiere recorte manual)
-3. `INVERSION_3_CERTIFICADO_IDONEIDAD.docx` (Copia completa, requiere recorte manual)
-4. `INVERSION_4_COMPLEMENTO_CONTRATO.docx` (Copia completa, requiere recorte manual) (33.8 KB)
+1. `INVERSION_1_ESTUDIOS_PREVIOS.docx` (Sección 1 conservada)
+2. `INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx` (Sección 2 conservada)
+3. `INVERSION_3_CERTIFICADO_IDONEIDAD.docx` (Sección 3 conservada)
+4. `INVERSION_4_COMPLEMENTO_CONTRATO.docx` (Sección 4 conservada) (33.8 KB)
 
 ---
 
