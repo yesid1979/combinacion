@@ -280,6 +280,8 @@ public class CombinacionServlet extends HttpServlet {
             PresupuestoDetalle presupuesto, Supervisor supervisor,
             OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador) {
         Map<String, String> replacements = new HashMap<>();
+
+        // ===== PLACEHOLDERS ANTIGUOS (formato ${}) para compatibilidad =====
         replacements.put("${NOMBRE_CONTRATISTA}",
                 contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
         replacements.put("${CEDULA}", contratista.getCedula() != null ? contratista.getCedula() : "");
@@ -291,9 +293,106 @@ public class CombinacionServlet extends HttpServlet {
                 contrato.getTrdProceso() != null ? contrato.getTrdProceso()
                         : (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
 
+        // ===== NUEVOS PLACEHOLDERS (formato {{}}) para plantillas de inversión =====
+
+        // Información del Proceso
+        replacements.put("{{NUMERO_PROCESO}}", contrato.getTrdProceso() != null ? contrato.getTrdProceso() : "");
+
+        // Información del Proyecto (desde presupuesto o contrato)
+        if (presupuesto != null) {
+            replacements.put("{{CODIGO_PROYECTO}}",
+                    presupuesto.getInversion() != null ? presupuesto.getInversion() : "");
+            replacements.put("{{BPIN}}", presupuesto.getBpin() != null ? presupuesto.getBpin() : "");
+        } else {
+            replacements.put("{{CODIGO_PROYECTO}}", "");
+            replacements.put("{{BPIN}}", "");
+        }
+        replacements.put("{{NOMBRE_PROYECTO}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
+
+        // Información del Supervisor
+        if (supervisor != null) {
+            replacements.put("{{NOMBRE_SUPERVISOR}}",
+                    supervisor.getNombre() != null ? supervisor.getNombre().toUpperCase() : "");
+            replacements.put("{{CARGO_SUPERVISOR}}", supervisor.getCargo() != null ? supervisor.getCargo() : "");
+        } else {
+            replacements.put("{{NOMBRE_SUPERVISOR}}", "SIN DESIGNAR");
+            replacements.put("{{CARGO_SUPERVISOR}}", "");
+        }
+
+        // Información Presupuestal (CDP)
+        if (presupuesto != null) {
+            replacements.put("{{NUMERO_CDP}}", presupuesto.getCdpNumero() != null ? presupuesto.getCdpNumero() : "");
+            replacements.put("{{VALOR_CDP}}",
+                    presupuesto.getCdpValor() != null ? "$ " + presupuesto.getCdpValor().toString() : "");
+            replacements.put("{{COMPROMISO_CDP}}",
+                    presupuesto.getCompromiso() != null ? presupuesto.getCompromiso() : "");
+
+            // Fechas del CDP
+            SimpleDateFormat sdfDoc = new SimpleDateFormat("d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+            if (presupuesto.getCdpFecha() != null) {
+                replacements.put("{{FECHA_EXPEDICION_CDP}}", sdfDoc.format(presupuesto.getCdpFecha()));
+            } else {
+                replacements.put("{{FECHA_EXPEDICION_CDP}}", "");
+            }
+
+            if (presupuesto.getCdpVencimiento() != null) {
+                replacements.put("{{FECHA_VENCIMIENTO_CDP}}", sdfDoc.format(presupuesto.getCdpVencimiento()));
+            } else {
+                replacements.put("{{FECHA_VENCIMIENTO_CDP}}", "");
+            }
+        } else {
+            replacements.put("{{NUMERO_CDP}}", "");
+            replacements.put("{{FECHA_EXPEDICION_CDP}}", "");
+            replacements.put("{{FECHA_VENCIMIENTO_CDP}}", "");
+            replacements.put("{{VALOR_CDP}}", "");
+            replacements.put("{{COMPROMISO_CDP}}", "");
+        }
+
+        // Información del Contrato
+        if (contrato.getValorTotalLetras() != null) {
+            replacements.put("{{VALOR_CONTRATO_LETRAS}}", contrato.getValorTotalLetras());
+        } else {
+            replacements.put("{{VALOR_CONTRATO_LETRAS}}", "");
+        }
+
+        if (contrato.getValorTotalNumeros() != null) {
+            replacements.put("{{VALOR_CONTRATO}}", "$" + contrato.getValorTotalNumeros().toString());
+        } else {
+            replacements.put("{{VALOR_CONTRATO}}", "");
+        }
+
+        if (contrato.getValorCuotaLetras() != null) {
+            replacements.put("{{VALOR_CUOTA_LETRAS}}", contrato.getValorCuotaLetras());
+        } else {
+            replacements.put("{{VALOR_CUOTA_LETRAS}}", "");
+        }
+
+        if (contrato.getNumeroCuotas() != null) {
+            replacements.put("{{NUMERO_CUOTAS}}", contrato.getNumeroCuotas().toString());
+        } else {
+            replacements.put("{{NUMERO_CUOTAS}}", "");
+        }
+
+        // Fecha de finalización del contrato
+        SimpleDateFormat sdfContrato = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
+        if (contrato.getFechaFin() != null) {
+            replacements.put("{{FECHA_FIN_CONTRATO}}", sdfContrato.format(contrato.getFechaFin()));
+        } else {
+            replacements.put("{{FECHA_FIN_CONTRATO}}", "");
+        }
+
+        // ID del PAA (Plan Anual de Adquisiciones)
+        if (presupuesto != null && presupuesto.getIdPaa() != null) {
+            replacements.put("{{ID_PAA}}", presupuesto.getIdPaa());
+        } else {
+            replacements.put("{{ID_PAA}}", "");
+        }
+
+        // ===== PLACEHOLDERS ANTIGUOS CONTINUACIÓN =====
+
         // Values
         if (contrato.getValorTotalNumeros() != null)
-            replacements.put("${VALOR_TOTAL}", contrato.getValorTotalNumeros().toString()); // Format if needed
+            replacements.put("${VALOR_TOTAL}", contrato.getValorTotalNumeros().toString());
         else
             replacements.put("${VALOR_TOTAL}", "0");
 
@@ -340,10 +439,9 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("${CARGO_ESTRUCTURADOR_FINANCIERO}", "");
         }
 
-        // Supervisor
+        // RPC
         if (presupuesto != null) {
             replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
-            // Date logic
         }
 
         // Standard Date Logic
@@ -353,7 +451,7 @@ public class CombinacionServlet extends HttpServlet {
         String fechaStr = sdfDoc.format(fechaBase);
         replacements.put("${FECHA_DOCUMENTO}", fechaStr);
         replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
-        replacements.put("${FECHA_RPC_APOYO}", fechaStr); // Assuming same date
+        replacements.put("${FECHA_RPC_APOYO}", fechaStr);
         replacements.put("${RPC_FECHA}", fechaStr);
 
         SimpleDateFormat yearOnly = new SimpleDateFormat("yyyy", new Locale("es", "CO"));

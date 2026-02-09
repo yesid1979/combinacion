@@ -1,0 +1,64 @@
+================================================================================
+REPORTE DE INSERCIÓN DE PLACEHOLDERS
+================================================================================
+Archivo: doc/PLANTILLAS_TODAS_DAGJP_INVERSION_2026.docx
+Fecha: Mon Feb 09 16:06:05 COT 2026
+
+
+--- PROCESANDO HEADERS ---
+
+--- PROCESANDO PÁRRAFOS DEL CUERPO ---
+  ✓ Reemplazado: '4121.010.32.1.076-2026' -> {{NUMERO_PROCESO}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'Fortalecimiento del ciclo de defensa jurídica y de la política de mejora normativa del Distrito Especial de Santiago de Cali' -> {{NOMBRE_PROYECTO}}
+  ✓ Reemplazado: '2024760010018' -> {{BPIN}}
+  ✓ Reemplazado: 'CLAUDIA PATRICIA VARGAS OROZCO' -> {{NOMBRE_SUPERVISOR}}
+  ✓ Reemplazado: 'Subdirectora de Defensa Judicial y Prevención del Daño Antijurídico' -> {{CARGO_SUPERVISOR}}
+  ✓ Reemplazado: '3500254255' -> {{NUMERO_CDP}}
+  ✓ Reemplazado: '5 de enero de 2026' -> {{FECHA_EXPEDICION_CDP}}
+  ✓ Reemplazado: '31 de didciembre de 2026' -> {{FECHA_VENCIMIENTO_CDP}}
+  ✓ Reemplazado: '$ 962010000' -> {{VALOR_CDP}}
+  ✓ Reemplazado: '4121/1.2.1.0.00/2.3.2.02.02.008/63020010002/BP260054601010103' -> {{COMPROMISO_CDP}}
+  ✓ Reemplazado: 'Fortalecimiento del ciclo de defensa jurídica y de la política de mejora normativa del Distrito Especial de Santiago de Cali' -> {{NOMBRE_PROYECTO}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: '18441' -> {{ID_PAA}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'Treinta (30) de junio del Dos mil veintiséis (2026)' -> {{FECHA_FIN_CONTRATO}}
+  ✓ Reemplazado: 'Diecinueve millones doscientos veinte mil pesos m/cte ($19220000)' -> {{VALOR_CONTRATO_LETRAS}}
+  ✓ Reemplazado: 'Cuatro (4)' -> {{NUMERO_CUOTAS}}
+  ✓ Reemplazado: 'Cuatro millones ochocientos cinco mil pesos m/cte ($4805000)' -> {{VALOR_CUOTA_LETRAS}}
+  ✓ Reemplazado: 'CLAUDIA PATRICIA VARGAS OROZCO' -> {{NOMBRE_SUPERVISOR}}
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: 'Diecinueve millones doscientos veinte mil pesos m/cte ($19220000)' -> {{VALOR_CONTRATO_LETRAS}}
+  ✓ Reemplazado: 'Cuatro millones ochocientos cinco mil pesos m/cte ($4805000)' -> {{VALOR_CUOTA_LETRAS}}
+
+--- PROCESANDO TABLAS ---
+  ✓ Reemplazado: 'BP-26005460' -> {{CODIGO_PROYECTO}}
+  ✓ Reemplazado: '$19220000' -> {{VALOR_CONTRATO}}
+
+--- PROCESANDO FOOTERS ---
+
+================================================================================
+RESUMEN DE REEMPLAZOS
+================================================================================
+{{NUMERO_PROCESO}}                                 : 1 veces
+{{CODIGO_PROYECTO}}                                : 7 veces
+{{NOMBRE_PROYECTO}}                                : 2 veces
+{{BPIN}}                                           : 1 veces
+{{NOMBRE_SUPERVISOR}}                              : 2 veces
+{{CARGO_SUPERVISOR}}                               : 1 veces
+{{NUMERO_CDP}}                                     : 1 veces
+{{FECHA_EXPEDICION_CDP}}                           : 1 veces
+{{FECHA_VENCIMIENTO_CDP}}                          : 1 veces
+{{VALOR_CDP}}                                      : 1 veces
+{{COMPROMISO_CDP}}                                 : 1 veces
+{{ID_PAA}}                                         : 1 veces
+{{FECHA_FIN_CONTRATO}}                             : 1 veces
+{{VALOR_CONTRATO_LETRAS}}                          : 2 veces
+{{NUMERO_CUOTAS}}                                  : 1 veces
+{{VALOR_CUOTA_LETRAS}}                             : 2 veces
+{{VALOR_CONTRATO}}                                 : 1 veces
+
+Total de reemplazos: 27

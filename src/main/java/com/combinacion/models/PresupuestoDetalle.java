@@ -21,6 +21,8 @@ public class PresupuestoDetalle {
     private String fichaEbiActividades;
     private String certificadoInsuficiencia;
     private Date fechaInsuficiencia;
+    private String bpin;
+    private String compromiso;
 
     public PresupuestoDetalle() {
     }
@@ -159,5 +161,21 @@ public class PresupuestoDetalle {
 
     public void setFechaInsuficiencia(Date fechaInsuficiencia) {
         this.fechaInsuficiencia = fechaInsuficiencia;
+    }
+
+    public String getBpin() {
+        return bpin;
+    }
+
+    public void setBpin(String bpin) {
+        this.bpin = bpin;
+    }
+
+    public String getCompromiso() {
+        return compromiso;
+    }
+
+    public void setCompromiso(String compromiso) {
+        this.compromiso = compromiso;
     }
 }
