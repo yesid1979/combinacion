@@ -431,6 +431,13 @@ public class CombinacionServlet extends HttpServlet {
                             : "");
             replacements.put("${CARGO_ESTRUCTURADOR_FINANCIERO}",
                     estructurador.getFinancieroCargo() != null ? estructurador.getFinancieroCargo() : "");
+
+            // Nuevos Placeholders {{}} para Estructuradores
+            replacements.put("{{NOMBRE_ESTRUCTURADOR_JURIDICO}}",
+                    estructurador.getJuridicoNombre() != null ? estructurador.getJuridicoNombre().toUpperCase() : "");
+            replacements.put("{{NOMBRE_ESTRUCTURADOR_FINANCIERO}}",
+                    estructurador.getFinancieroNombre() != null ? estructurador.getFinancieroNombre().toUpperCase()
+                            : "");
         } else {
             replacements.put("${NOMBRE_ESTRUCTURADOR_JURIDICO}", "SIN ASIGNAR");
             replacements.put("${CARGO_ESTRUCTURADOR_JURIDICO}", "");
@@ -438,6 +445,81 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("${CARGO_ESTRUCTURADOR_TECNICO}", "");
             replacements.put("${NOMBRE_ESTRUCTURADOR_FINANCIERO}", "SIN ASIGNAR");
             replacements.put("${CARGO_ESTRUCTURADOR_FINANCIERO}", "");
+
+            replacements.put("{{NOMBRE_ESTRUCTURADOR_JURIDICO}}", "SIN ASIGNAR");
+            replacements.put("{{NOMBRE_ESTRUCTURADOR_FINANCIERO}}", "SIN ASIGNAR");
+        }
+
+        // ===== NUEVOS CAMPOS SOLICITADOS (INVERSION) =====
+
+        // 1. Nivel / Perfil
+        replacements.put("{{NIVEL_CONTRATO}}", contrato.getNivel() != null ? contrato.getNivel().toUpperCase() : "");
+
+        // 2. Formación y Título (Contratista)
+        String formacion = contratista.getFormacionTitulo() != null ? contratista.getFormacionTitulo() : "";
+        String descFormacion = contratista.getDescripcionFormacion() != null ? contratista.getDescripcionFormacion()
+                : "";
+        // Combina si ambos existen, o usa el que exista
+        String perfilCompleto = "";
+        if (!formacion.isEmpty() && !descFormacion.isEmpty()) {
+            perfilCompleto = formacion + " - " + descFormacion;
+        } else {
+            perfilCompleto = formacion + descFormacion;
+        }
+        replacements.put("{{PERFIL_FORMACION}}", perfilCompleto);
+
+        // 2.1 Experiencia (Contratista) - Nuevo para INVERSION_2
+        String exp = contratista.getExperiencia() != null ? contratista.getExperiencia() : "";
+        String descExp = contratista.getDescripcionExperiencia() != null ? contratista.getDescripcionExperiencia() : "";
+        String expCompleta = "";
+        if (!exp.isEmpty() && !descExp.isEmpty()) {
+            expCompleta = exp + " - " + descExp;
+        } else {
+            expCompleta = exp + descExp;
+        }
+        replacements.put("{{PERFIL_EXPERIENCIA}}", expCompleta);
+
+        // 3. Objeto Contractual (Redundancia segura)
+        replacements.put("{{OBJETO_CONTRACTUAL}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
+
+        // 4. Actividades Contractuales
+        String actividades = contrato.getActividadesEntregables() != null ? contrato.getActividadesEntregables()
+                : "SIN ACTIVIDADES REGISTRADAS";
+        // Limpieza de llaves si vienen en la base de datos
+        actividades = actividades.replace("{{", "").replace("}}", "").trim();
+        replacements.put("{{ACTIVIDADES_CONTRACTUALES}}", actividades);
+
+        // 5. Actividades Ficha EBI (Presupuesto)
+        if (presupuesto != null) {
+            String actEbi = presupuesto.getFichaEbiActividades() != null ? presupuesto.getFichaEbiActividades() : "";
+            actEbi = actEbi.replace("{{", "").replace("}}", "").trim();
+            replacements.put("{{ACTIVIDADES_FICHA_EBI}}", actEbi);
+        } else {
+            replacements.put("{{ACTIVIDADES_FICHA_EBI}}", "");
+        }
+
+        // 6. Valores numéricos específicos
+        if (contrato.getValorCuotaNumero() != null) {
+            replacements.put("{{VALOR_CUOTA_NUMERO}}", "$" + contrato.getValorCuotaNumero().toString());
+        } else {
+            replacements.put("{{VALOR_CUOTA_NUMERO}}", "0");
+        }
+
+        // 7. Información del Contratista (para plantillas INVERSION_2, 3, 4)
+        replacements.put("{{CONTRATISTA_NOMBRE}}",
+                contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
+        replacements.put("{{CONTRATISTA_CEDULA}}",
+                contratista.getCedula() != null ? contratista.getCedula() : "");
+
+        // 8. Ordenador del Gasto (para plantillas INVERSION)
+        if (ordenador != null) {
+            replacements.put("{{NOMBRE_ORDENADOR_GASTO}}",
+                    ordenador.getNombreOrdenador() != null ? ordenador.getNombreOrdenador().toUpperCase() : "");
+            replacements.put("{{CARGO_ORDENADOR_GASTO}}",
+                    ordenador.getCargoOrdenador() != null ? ordenador.getCargoOrdenador() : "");
+        } else {
+            replacements.put("{{NOMBRE_ORDENADOR_GASTO}}", "SIN DESIGNAR");
+            replacements.put("{{CARGO_ORDENADOR_GASTO}}", "");
         }
 
         // RPC
