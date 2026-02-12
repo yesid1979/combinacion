@@ -119,6 +119,20 @@
                         </div>
                     </div>
 
+                    <!-- Combinación -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='combinacion'">
+                            <div class="card-body text-center">
+                                <div class="icon-box bg-purple bg-opacity-10 text-purple mx-auto"
+                                    style="background-color: rgba(139, 92, 246, 0.1) !important; color: #8b5cf6 !important;">
+                                    <i class="bi bi-file-earmark-word fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Combinación</h5>
+                                <p class="card-text text-muted small">Generación de documentos contractuales.</p>
+                            </div>
+                        </div>
+                    </div>
+
 
 
                 </div>

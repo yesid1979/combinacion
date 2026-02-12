@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -73,11 +75,26 @@ public class CombinacionServlet extends HttpServlet {
             byte[] supervisorBytes = generarBytesDocumento(contratistaId, "supervisor");
             byte[] estructuradoresBytes = generarBytesDocumento(contratistaId, "estructuradores");
 
-            // Check Inversion
-            boolean esInversion = (presupuesto != null && presupuesto.getInversion() != null
-                    && !presupuesto.getInversion().trim().isEmpty());
+            // Determinar tipo de contrato: Inversión o Funcionamiento
+            boolean esInversion = false;
+            boolean esFuncionamiento = false;
 
-            if (supervisorBytes == null && estructuradoresBytes == null && !esInversion) {
+            if (presupuesto != null) {
+                String inversionFlag = presupuesto.getInversion();
+                String funcionamientoFlag = presupuesto.getFuncionamiento();
+
+                // Verificar si es Inversión (columna inversion = "Si" o "Sí")
+                esInversion = (inversionFlag != null &&
+                        (inversionFlag.trim().equalsIgnoreCase("Si") ||
+                                inversionFlag.trim().equalsIgnoreCase("Sí")));
+
+                // Verificar si es Funcionamiento (columna funcionamiento = "Si" o "Sí")
+                esFuncionamiento = (funcionamientoFlag != null &&
+                        (funcionamientoFlag.trim().equalsIgnoreCase("Si") ||
+                                funcionamientoFlag.trim().equalsIgnoreCase("Sí")));
+            }
+
+            if (supervisorBytes == null && estructuradoresBytes == null && !esInversion && !esFuncionamiento) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND,
                         "No se pudo generar ningún documento (datos faltantes o contratos no encontrados)");
                 return;
@@ -118,6 +135,28 @@ public class CombinacionServlet extends HttpServlet {
                         }
                     }
                 }
+            }
+
+            // Add Funcionamiento Alert
+            if (!esInversion && esFuncionamiento && contrato != null) {
+                // Crear archivo de texto con alerta
+                String alertaTexto = "═══════════════════════════════════════════════════════════════\n" +
+                        "           DOCUMENTOS DE FUNCIONAMIENTO NO DISPONIBLES\n" +
+                        "═══════════════════════════════════════════════════════════════\n\n" +
+                        "Estimado usuario,\n\n" +
+                        "Los documentos para contratos de FUNCIONAMIENTO aún no están disponibles\n" +
+                        "en el sistema.\n\n" +
+                        "Información del contrato:\n" +
+                        "  • Contratista: " + c.getNombre() + "\n" +
+                        "  • Cédula: " + cedula + "\n" +
+                        "  • Tipo: FUNCIONAMIENTO\n\n" +
+                        "Por favor, contacte al administrador del sistema para más información.\n\n" +
+                        "Fecha de generación: "
+                        + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date()) + "\n" +
+                        "═══════════════════════════════════════════════════════════════\n";
+
+                addToZip(zos, folderName, "ALERTA_FUNCIONAMIENTO_NO_DISPONIBLE.txt",
+                        alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
 
             zos.close();
@@ -169,14 +208,30 @@ public class CombinacionServlet extends HttpServlet {
                     String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
                     String folderName = normalizeFileName(c.getNombre() != null ? c.getNombre() : "Contratista_" + id);
 
-                    // Check Inversion
+                    // Determinar tipo de contrato: Inversión o Funcionamiento
                     Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
                     PresupuestoDetalle presupuesto = null;
                     if (contrato != null && contrato.getPresupuestoId() > 0) {
                         presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
                     }
-                    boolean esInversion = (presupuesto != null && presupuesto.getInversion() != null
-                            && !presupuesto.getInversion().trim().isEmpty());
+
+                    boolean esInversion = false;
+                    boolean esFuncionamiento = false;
+
+                    if (presupuesto != null) {
+                        String inversionFlag = presupuesto.getInversion();
+                        String funcionamientoFlag = presupuesto.getFuncionamiento();
+
+                        // Verificar si es Inversión (columna inversion = "Si" o "Sí")
+                        esInversion = (inversionFlag != null &&
+                                (inversionFlag.trim().equalsIgnoreCase("Si") ||
+                                        inversionFlag.trim().equalsIgnoreCase("Sí")));
+
+                        // Verificar si es Funcionamiento (columna funcionamiento = "Si" o "Sí")
+                        esFuncionamiento = (funcionamientoFlag != null &&
+                                (funcionamientoFlag.trim().equalsIgnoreCase("Si") ||
+                                        funcionamientoFlag.trim().equalsIgnoreCase("Sí")));
+                    }
 
                     // Standard Docs
                     byte[] supervisorBytes = generarBytesDocumento(id, "supervisor");
@@ -209,6 +264,28 @@ public class CombinacionServlet extends HttpServlet {
                                 }
                             }
                         }
+                    }
+
+                    // Funcionamiento Alert
+                    if (!esInversion && esFuncionamiento && contrato != null) {
+                        String alertaTexto = "═══════════════════════════════════════════════════════════════\n" +
+                                "           DOCUMENTOS DE FUNCIONAMIENTO NO DISPONIBLES\n" +
+                                "═══════════════════════════════════════════════════════════════\n\n" +
+                                "Estimado usuario,\n\n" +
+                                "Los documentos para contratos de FUNCIONAMIENTO aún no están disponibles\n" +
+                                "en el sistema.\n\n" +
+                                "Información del contrato:\n" +
+                                "  • Contratista: " + c.getNombre() + "\n" +
+                                "  • Cédula: " + cedula + "\n" +
+                                "  • Tipo: FUNCIONAMIENTO\n\n" +
+                                "Por favor, contacte al administrador del sistema para más información.\n\n" +
+                                "Fecha de generación: "
+                                + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())
+                                + "\n" +
+                                "═══════════════════════════════════════════════════════════════\n";
+
+                        addToZip(zos, folderName, "ALERTA_FUNCIONAMIENTO_NO_DISPONIBLE.txt",
+                                alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     }
 
                 } catch (Exception ex) {
@@ -281,33 +358,63 @@ public class CombinacionServlet extends HttpServlet {
             OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador) {
         Map<String, String> replacements = new HashMap<>();
 
+        // Extraer año de fecha de terminación para agregarlo a números de contrato y
+        // proceso
+        String anioContrato = "";
+        if (contrato.getFechaTerminacion() != null) {
+            SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
+            anioContrato = yearFormat.format(contrato.getFechaTerminacion());
+        }
+
         // ===== PLACEHOLDERS ANTIGUOS (formato ${}) para compatibilidad =====
         replacements.put("${NOMBRE_CONTRATISTA}",
                 contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
         replacements.put("${CEDULA}", contratista.getCedula() != null ? contratista.getCedula() : "");
-        replacements.put("${NUMERO_CONTRATO}",
-                contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "");
+
+        // Número de contrato con año
+        String numeroContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
+        if (!numeroContrato.isEmpty() && !anioContrato.isEmpty()) {
+            numeroContrato = numeroContrato + "-" + anioContrato;
+        }
+        replacements.put("${NUMERO_CONTRATO}", numeroContrato);
+
         replacements.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
-        replacements.put("${NUMERO_PROCESO}", contrato.getTrdProceso() != null ? contrato.getTrdProceso() : "");
+
+        // TRD Proceso con año
+        String trdProceso = contrato.getTrdProceso() != null ? contrato.getTrdProceso() : "";
+        if (!trdProceso.isEmpty() && !anioContrato.isEmpty()) {
+            trdProceso = trdProceso + "-" + anioContrato;
+        }
+        replacements.put("${NUMERO_PROCESO}", trdProceso);
+
         replacements.put("${NUMERO_PROCESO_O_CONTRATO_ALT}",
-                contrato.getTrdProceso() != null ? contrato.getTrdProceso()
-                        : (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
+                !trdProceso.isEmpty() ? trdProceso : numeroContrato);
 
         // ===== NUEVOS PLACEHOLDERS (formato {{}}) para plantillas de inversión =====
 
-        // Información del Proceso
-        replacements.put("{{NUMERO_PROCESO}}", contrato.getTrdProceso() != null ? contrato.getTrdProceso() : "");
+        // Información del Proceso (con año)
+        replacements.put("{{NUMERO_PROCESO}}", trdProceso);
 
         // Información del Proyecto (desde presupuesto o contrato)
         if (presupuesto != null) {
             replacements.put("{{CODIGO_PROYECTO}}",
                     presupuesto.getInversion() != null ? presupuesto.getInversion() : "");
             replacements.put("{{BPIN}}", presupuesto.getBpin() != null ? presupuesto.getBpin() : "");
+
+            // Nombre del proyecto desde Ficha EBI
+            String nombreProyecto = presupuesto.getFichaEbiNombre() != null
+                    && !presupuesto.getFichaEbiNombre().trim().isEmpty()
+                            ? presupuesto.getFichaEbiNombre()
+                            : (contrato.getObjeto() != null ? contrato.getObjeto() : "");
+            replacements.put("{{NOMBRE_PROYECTO}}", nombreProyecto);
+            replacements.put("{{FICHA_EBI_NOMBRE}}",
+                    presupuesto.getFichaEbiNombre() != null ? presupuesto.getFichaEbiNombre() : "");
         } else {
             replacements.put("{{CODIGO_PROYECTO}}", "");
             replacements.put("{{BPIN}}", "");
+            replacements.put("{{NOMBRE_PROYECTO}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
+            replacements.put("{{FICHA_EBI_NOMBRE}}", "");
         }
-        replacements.put("{{NOMBRE_PROYECTO}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
 
         // Información del Supervisor
         if (supervisor != null) {
@@ -323,7 +430,7 @@ public class CombinacionServlet extends HttpServlet {
         if (presupuesto != null) {
             replacements.put("{{NUMERO_CDP}}", presupuesto.getCdpNumero() != null ? presupuesto.getCdpNumero() : "");
             replacements.put("{{VALOR_CDP}}",
-                    presupuesto.getCdpValor() != null ? "$ " + presupuesto.getCdpValor().toString() : "");
+                    presupuesto.getCdpValor() != null ? formatearMoneda(presupuesto.getCdpValor()) : "");
             replacements.put("{{COMPROMISO_CDP}}",
                     presupuesto.getCompromiso() != null ? presupuesto.getCompromiso() : "");
 
@@ -356,7 +463,7 @@ public class CombinacionServlet extends HttpServlet {
         }
 
         if (contrato.getValorTotalNumeros() != null) {
-            replacements.put("{{VALOR_CONTRATO}}", "$" + contrato.getValorTotalNumeros().toString());
+            replacements.put("{{VALOR_CONTRATO}}", formatearMoneda(contrato.getValorTotalNumeros()));
         } else {
             replacements.put("{{VALOR_CONTRATO}}", "");
         }
@@ -370,8 +477,6 @@ public class CombinacionServlet extends HttpServlet {
         // Número de cuotas (usando plazo meses como aproximación si aplica)
         replacements.put("{{NUMERO_CUOTAS}}",
                 contrato.getPlazoMeses() > 0 ? String.valueOf(contrato.getPlazoMeses()) : "PENDIENTE");
-        replacements.put("{{VALOR_CUOTA_LETRAS}}", "PENDIENTE CALCULO"); // Requiere lógica compleja de números a letras
-        replacements.put("{{VALOR_CUOTA}}", "PENDIENTE CALCULO");
 
         // Fecha fin contrato
         SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
@@ -393,12 +498,12 @@ public class CombinacionServlet extends HttpServlet {
 
         // Values
         if (contrato.getValorTotalNumeros() != null)
-            replacements.put("${VALOR_TOTAL}", contrato.getValorTotalNumeros().toString());
+            replacements.put("${VALOR_TOTAL}", formatearMoneda(contrato.getValorTotalNumeros()));
         else
             replacements.put("${VALOR_TOTAL}", "0");
 
         if (contrato.getValorCuotaNumero() != null)
-            replacements.put("${VALOR_MENSUAL}", contrato.getValorCuotaNumero().toString());
+            replacements.put("${VALOR_MENSUAL}", formatearMoneda(contrato.getValorCuotaNumero()));
         else
             replacements.put("${VALOR_MENSUAL}", "0");
 
@@ -454,6 +559,8 @@ public class CombinacionServlet extends HttpServlet {
 
         // 1. Nivel / Perfil
         replacements.put("{{NIVEL_CONTRATO}}", contrato.getNivel() != null ? contrato.getNivel().toUpperCase() : "");
+        // Marca visual "X" para campos de nivel (usado en formularios/checkboxes)
+        replacements.put("{{NIVEL_CONTRATO_MARCA}}", "X");
 
         // 2. Formación y Título (Contratista)
         String formacion = contratista.getFormacionTitulo() != null ? contratista.getFormacionTitulo() : "";
@@ -494,13 +601,18 @@ public class CombinacionServlet extends HttpServlet {
             String actEbi = presupuesto.getFichaEbiActividades() != null ? presupuesto.getFichaEbiActividades() : "";
             actEbi = actEbi.replace("{{", "").replace("}}", "").trim();
             replacements.put("{{ACTIVIDADES_FICHA_EBI}}", actEbi);
+
+            String objEbi = presupuesto.getFichaEbiObjetivo() != null ? presupuesto.getFichaEbiObjetivo() : "";
+            objEbi = objEbi.replace("{{", "").replace("}}", "").trim();
+            replacements.put("{{FICHA_EBI_OBJETIVO}}", objEbi);
         } else {
             replacements.put("{{ACTIVIDADES_FICHA_EBI}}", "");
+            replacements.put("{{FICHA_EBI_OBJETIVO}}", "");
         }
 
         // 6. Valores numéricos específicos
         if (contrato.getValorCuotaNumero() != null) {
-            replacements.put("{{VALOR_CUOTA_NUMERO}}", "$" + contrato.getValorCuotaNumero().toString());
+            replacements.put("{{VALOR_CUOTA_NUMERO}}", formatearMoneda(contrato.getValorCuotaNumero()));
         } else {
             replacements.put("{{VALOR_CUOTA_NUMERO}}", "0");
         }
@@ -538,7 +650,20 @@ public class CombinacionServlet extends HttpServlet {
         replacements.put("${RPC_FECHA}", fechaStr);
 
         SimpleDateFormat yearOnly = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
-        String fullDateLetters = sdfDoc.format(fechaBase) + " (" + yearOnly.format(fechaBase) + ")";
+
+        // Formato especial para FECHA_DOCUMENTO_LETRAS: "seis (06) días del mes de
+        // enero de (2026)"
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(fechaBase);
+        int dia = cal.get(java.util.Calendar.DAY_OF_MONTH);
+        String mes = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fechaBase);
+        String anio = yearOnly.format(fechaBase);
+
+        // Convertir día a letras
+        String diaLetras = convertirNumeroALetras(dia);
+        String diaNumeros = String.format("%02d", dia);
+
+        String fullDateLetters = diaLetras + " (" + diaNumeros + ") días del mes de " + mes + " de (" + anio + ")";
         replacements.put("${FECHA_DOCUMENTO_LETRAS}", fullDateLetters);
 
         if (supervisor != null) {
@@ -598,5 +723,57 @@ public class CombinacionServlet extends HttpServlet {
         // Keep only alphanumeric, spaces, dots, dashes
         normalized = normalized.replaceAll("[^a-zA-Z0-9 ._-]", "");
         return normalized.trim();
+    }
+
+    /**
+     * Formatea un número como moneda colombiana con separadores de miles.
+     * Ejemplo: 19220000 -> "$ 19.220.000"
+     * 
+     * @param valor El valor numérico a formatear
+     * @return String formateado con símbolo $ y separadores de miles
+     */
+    private String formatearMoneda(Number valor) {
+        if (valor == null) {
+            return "";
+        }
+
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("es", "CO"));
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+
+        DecimalFormat formatter = new DecimalFormat("$ #,##0", symbols);
+        return formatter.format(valor);
+    }
+
+    /**
+     * Convierte un número (1-31) a su representación en letras en español.
+     * Usado para formatear días del mes.
+     * 
+     * @param numero El día del mes (1-31)
+     * @return String con el número en letras
+     */
+    private String convertirNumeroALetras(int numero) {
+        String[] unidades = { "", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve" };
+        String[] decenas = { "", "diez", "veinte", "treinta" };
+        String[] especiales = { "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis",
+                "diecisiete", "dieciocho", "diecinueve" };
+        String[] veintitantos = { "veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro",
+                "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve" };
+
+        if (numero < 1 || numero > 31) {
+            return String.valueOf(numero);
+        }
+
+        if (numero < 10) {
+            return unidades[numero];
+        } else if (numero < 20) {
+            return especiales[numero - 10];
+        } else if (numero < 30) {
+            return veintitantos[numero - 20];
+        } else if (numero == 30) {
+            return "treinta";
+        } else {
+            return "treinta y " + unidades[numero - 30];
+        }
     }
 }
