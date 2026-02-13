@@ -639,8 +639,8 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
         }
 
-        // Standard Date Logic
-        SimpleDateFormat sdfDoc = new SimpleDateFormat("MMMM d 'de' yyyy", new Locale("es", "CO"));
+        // Standard Date Logic - Formato: "06 de enero de 2026"
+        SimpleDateFormat sdfDoc = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
         java.util.Date fechaBase = (presupuesto != null && presupuesto.getRpFecha() != null) ? presupuesto.getRpFecha()
                 : new java.util.Date();
         String fechaStr = sdfDoc.format(fechaBase);
