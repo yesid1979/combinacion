@@ -33,6 +33,7 @@ public class PlaceholderMapper {
         // ===== INFORMACIÓN DEL PROCESO =====
         PLACEHOLDER_MAP.put("4121.010.32.1.076-2026", "{{NUMERO_PROCESO}}");
         PLACEHOLDER_MAP.put("4121.010.26.1.076-2026", "{{NUMERO_PROCESO}}"); // Variante encontrada en plantilla 4
+        PLACEHOLDER_MAP.put("2026-000", "{{NUMERO_CONTRATO}}"); // Ejemplo de formato de contrato
 
         // ===== INFORMACIÓN DEL SUPERVISOR =====
         PLACEHOLDER_MAP.put("CLAUDIA PATRICIA VARGAS OROZCO", "{{NOMBRE_SUPERVISOR}}");

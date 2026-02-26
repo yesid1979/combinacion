@@ -85,6 +85,38 @@
                                     <label class="form-label">Edad</label>
                                     <input type="number" class="form-control" name="edad" value="${contratista.edad}">
                                 </div>
+                                
+                                <h5 class="mt-4 mb-2 border-bottom pb-2">Perfil y Experiencia</h5>
+                                <div class="col-md-6">
+                                    <label class="form-label">Título Formación</label>
+                                    <input type="text" class="form-control" name="formacion_titulo"
+                                        value="${contratista.formacionTitulo}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Descripción Formación</label>
+                                    <textarea class="form-control" name="descripcion_formacion" rows="3">${contratista.descripcionFormacion}</textarea>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Experiencia</label>
+                                    <input type="text" class="form-control" name="experiencia"
+                                        value="${contratista.experiencia}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Descripción Experiencia</label>
+                                    <textarea class="form-control" name="descripcion_experiencia" rows="3">${contratista.descripcionExperiencia}</textarea>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Tarjeta Profesional</label>
+                                    <input type="text" class="form-control" name="tarjeta_profesional"
+                                        value="${contratista.tarjetaProfesional}">
+                                </div>                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Restricciones</label>
+                                    <input type="text" class="form-control" name="restricciones"
+                                        value="${contratista.restricciones}">
+                                </div>
                             </div>
 
                             <div class="mt-4 text-end">

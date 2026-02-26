@@ -392,8 +392,9 @@ public class CombinacionServlet extends HttpServlet {
 
         // ===== NUEVOS PLACEHOLDERS (formato {{}}) para plantillas de inversión =====
 
-        // Información del Proceso (con año)
+        // Información del Proceso y Contrato (con año)
         replacements.put("{{NUMERO_PROCESO}}", trdProceso);
+        replacements.put("{{NUMERO_CONTRATO}}", numeroContrato);
 
         // Información del Proyecto (desde presupuesto o contrato)
         if (presupuesto != null) {
@@ -576,15 +577,8 @@ public class CombinacionServlet extends HttpServlet {
         replacements.put("{{PERFIL_FORMACION}}", perfilCompleto);
 
         // 2.1 Experiencia (Contratista) - Nuevo para INVERSION_2
-        String exp = contratista.getExperiencia() != null ? contratista.getExperiencia() : "";
         String descExp = contratista.getDescripcionExperiencia() != null ? contratista.getDescripcionExperiencia() : "";
-        String expCompleta = "";
-        if (!exp.isEmpty() && !descExp.isEmpty()) {
-            expCompleta = exp + " - " + descExp;
-        } else {
-            expCompleta = exp + descExp;
-        }
-        replacements.put("{{PERFIL_EXPERIENCIA}}", expCompleta);
+        replacements.put("{{PERFIL_EXPERIENCIA}}", descExp);
 
         // 3. Objeto Contractual (Redundancia segura)
         replacements.put("{{OBJETO_CONTRACTUAL}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");

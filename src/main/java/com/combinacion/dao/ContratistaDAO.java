@@ -256,7 +256,7 @@ public class ContratistaDAO {
     }
 
     public boolean actualizar(Contratista c) {
-        String sql = "UPDATE contratistas SET cedula=?, dv=?, nombre=?, telefono=?, correo=?, direccion=?, fecha_nacimiento=?, edad=? WHERE id=?";
+        String sql = "UPDATE contratistas SET cedula=?, dv=?, nombre=?, telefono=?, correo=?, direccion=?, fecha_nacimiento=?, edad=?, formacion_titulo=?, descripcion_formacion=?, tarjeta_profesional=?, descripcion_tarjeta=?, experiencia=?, descripcion_experiencia=?, restricciones=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, c.getCedula());
@@ -267,7 +267,14 @@ public class ContratistaDAO {
             ps.setString(6, c.getDireccion());
             ps.setDate(7, c.getFechaNacimiento());
             ps.setInt(8, c.getEdad());
-            ps.setInt(9, c.getId());
+            ps.setString(9, c.getFormacionTitulo());
+            ps.setString(10, c.getDescripcionFormacion());
+            ps.setString(11, c.getTarjetaProfesional());
+            ps.setString(12, c.getDescripcionTarjeta());
+            ps.setString(13, c.getExperiencia());
+            ps.setString(14, c.getDescripcionExperiencia());
+            ps.setString(15, c.getRestricciones());
+            ps.setInt(16, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

@@ -273,7 +273,13 @@ public class ContratistaServlet extends HttpServlet {
             c.setDireccion(request.getParameter("direccion"));
             c.setFechaNacimiento(ParseUtils.parseDate(request.getParameter("fecha_nacimiento")));
             c.setEdad(ParseUtils.parseInt(request.getParameter("edad")));
-            // Add other fields as needed based on form
+
+            c.setFormacionTitulo(request.getParameter("formacion_titulo"));
+            c.setDescripcionFormacion(request.getParameter("descripcion_formacion"));
+            c.setExperiencia(request.getParameter("experiencia"));
+            c.setDescripcionExperiencia(request.getParameter("descripcion_experiencia"));
+            c.setTarjetaProfesional(request.getParameter("tarjeta_profesional"));
+            c.setRestricciones(request.getParameter("restricciones"));
 
             if (contratistaDAO.insertar(c)) {
                 // Success
@@ -310,8 +316,11 @@ public class ContratistaServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Contratista c = new Contratista();
-            c.setId(id);
+            Contratista c = contratistaDAO.obtenerPorId(id);
+            if (c == null) {
+                response.sendRedirect("contratistas?action=list");
+                return;
+            }
             c.setCedula(request.getParameter("cedula"));
             c.setDv(request.getParameter("dv"));
             c.setNombre(request.getParameter("nombre"));
@@ -320,6 +329,30 @@ public class ContratistaServlet extends HttpServlet {
             c.setDireccion(request.getParameter("direccion"));
             c.setFechaNacimiento(ParseUtils.parseDate(request.getParameter("fecha_nacimiento")));
             c.setEdad(ParseUtils.parseInt(request.getParameter("edad")));
+
+            String formTit = request.getParameter("formacion_titulo");
+            if (formTit != null)
+                c.setFormacionTitulo(formTit);
+
+            String descForm = request.getParameter("descripcion_formacion");
+            if (descForm != null)
+                c.setDescripcionFormacion(descForm);
+
+            String exp = request.getParameter("experiencia");
+            if (exp != null)
+                c.setExperiencia(exp);
+
+            String descExp = request.getParameter("descripcion_experiencia");
+            if (descExp != null)
+                c.setDescripcionExperiencia(descExp);
+
+            String tarjProf = request.getParameter("tarjeta_profesional");
+            if (tarjProf != null)
+                c.setTarjetaProfesional(tarjProf);
+
+            String restr = request.getParameter("restricciones");
+            if (restr != null)
+                c.setRestricciones(restr);
 
             if (contratistaDAO.actualizar(c)) {
                 response.sendRedirect("contratistas?status=updated");
