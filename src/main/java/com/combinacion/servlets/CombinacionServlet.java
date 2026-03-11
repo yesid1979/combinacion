@@ -565,19 +565,16 @@ public class CombinacionServlet extends HttpServlet {
 
         // 2. Formación y Título (Contratista)
         String formacion = contratista.getFormacionTitulo() != null ? contratista.getFormacionTitulo() : "";
-        String descFormacion = contratista.getDescripcionFormacion() != null ? contratista.getDescripcionFormacion()
-                : "";
-        // Combina si ambos existen, o usa el que exista
-        String perfilCompleto = "";
-        if (!formacion.isEmpty() && !descFormacion.isEmpty()) {
-            perfilCompleto = formacion + " - " + descFormacion;
-        } else {
-            perfilCompleto = formacion + descFormacion;
-        }
-        replacements.put("{{PERFIL_FORMACION}}", perfilCompleto);
+        String descFormacion = contratista.getDescripcionFormacion() != null ? contratista.getDescripcionFormacion() : "";
+        
+        replacements.put("{{FORMACION}}", formacion);
+        replacements.put("{{PERFIL_FORMACION}}", descFormacion);
 
-        // 2.1 Experiencia (Contratista) - Nuevo para INVERSION_2
+        // 2.1 Experiencia (Contratista)
+        String expShort = contratista.getExperiencia() != null ? contratista.getExperiencia() : "";
         String descExp = contratista.getDescripcionExperiencia() != null ? contratista.getDescripcionExperiencia() : "";
+        
+        replacements.put("{{EXPERIENCIA}}", expShort);
         replacements.put("{{PERFIL_EXPERIENCIA}}", descExp);
 
         // 3. Objeto Contractual (Redundancia segura)

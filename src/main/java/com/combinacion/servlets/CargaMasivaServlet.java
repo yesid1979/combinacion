@@ -642,20 +642,25 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("contratista_ano_nac", i);
             } else if (h.contains("edad") && !h.contains("nombre")) {
                 map.put("contratista_edad", i);
-            } else if (h.contains("descri")
-                    && (h.contains("formacion") || h.contains("titulo") || h.contains("academico"))) {
+            } else if ((h.contains("descri") || h.contains("perfil") || h.contains("detalle"))
+                    && (h.contains("formacion") || h.contains("titulo") || h.contains("academico") || h.contains("educacion"))) {
                 map.put("contratista_desc_formacion", i);
-            } else if ((h.contains("formacion") || h.contains("titulo")) && !h.contains("descri")) {
+            } else if (h.contains("formacion") || h.contains("titulo") || h.contains("educacion")) {
                 map.put("contratista_formacion", i);
-
-            } else if ((h.contains("tarjeta") || h.contains("matricula")) && !h.contains("descripcion")) {
+                if (!map.containsKey("contratista_desc_formacion")) {
+                    map.put("contratista_desc_formacion", i);
+                }
+            } else if ((h.contains("tarjeta") || h.contains("matricula")) && !h.contains("descri")) {
                 map.put("contratista_tarjeta", i);
             } else if (h.contains("descri") && (h.contains("tarjeta") || h.contains("matricula"))) {
                 map.put("contratista_desc_tarjeta", i);
-            } else if (h.contains("experiencia") && !h.contains("descripcion")) {
-                map.put("contratista_experiencia", i);
-            } else if (h.contains("descripcion") && h.contains("experiencia")) {
+            } else if (h.contains("experiencia") && (h.contains("descri") || h.contains("perfil") || h.contains("detalle"))) {
                 map.put("contratista_desc_experiencia", i);
+            } else if (h.contains("experiencia")) {
+                map.put("contratista_experiencia", i);
+                if (!map.containsKey("contratista_desc_experiencia")) {
+                    map.put("contratista_desc_experiencia", i);
+                }
             } else if (h.contains("restricciones")) {
                 map.put("contratista_restricciones", i);
 
@@ -884,7 +889,17 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return ordenadorDAO.obtenerPorCedula(cedula);
+                OrdenadorGasto existing = ordenadorDAO.obtenerPorCedula(cedula);
+                if (existing != null) {
+                    existing.setOrganismo(get(row, map, "organismo"));
+                    existing.setDireccionOrganismo(get(row, map, "direccion_organismo"));
+                    existing.setNombreOrdenador(nombre);
+                    existing.setCargoOrdenador(get(row, map, "cargo_ordenador"));
+                    existing.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
+                    existing.setActaPosesion(get(row, map, "acta_posesion"));
+                    ordenadorDAO.actualizar(existing);
+                    return existing;
+                }
             }
 
             OrdenadorGasto ordenador = new OrdenadorGasto();
@@ -929,12 +944,24 @@ public class CargaMasivaServlet extends HttpServlet {
                 return null;
             }
 
+            Contratista contratista;
+            boolean exists = false;
             if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                return contratistaDAO.obtenerPorCedula(cedula);
+                contratista = contratistaDAO.obtenerPorCedula(cedula);
+                if (contratista != null) {
+                    exists = true;
+                } else {
+                    contratista = new Contratista();
+                }
+            } else {
+                contratista = new Contratista();
             }
 
-            Contratista contratista = new Contratista();
-            contratista.setCedula(cedula.isEmpty() ? "SIN_CEDULA_" + System.currentTimeMillis() : cedula);
+            if (!exists) {
+                contratista.setCedula(cedula.isEmpty() ? "SIN_CEDULA_" + System.currentTimeMillis() : cedula);
+            }
+            
+            // Siempre actualizar campos desde el Excel
             contratista.setDv(get(row, map, "contratista_dv"));
             contratista.setNombre(nombre.isEmpty() ? "Sin Nombre" : nombre);
             contratista.setTelefono(get(row, map, "contratista_telefono"));
@@ -975,10 +1002,16 @@ public class CargaMasivaServlet extends HttpServlet {
             contratista.setDescripcionExperiencia(get(row, map, "contratista_desc_experiencia"));
             contratista.setRestricciones(get(row, map, "contratista_restricciones"));
 
-            if (contratistaDAO.insertar(contratista)) {
-                if (!cedula.isEmpty())
-                    cedulasExistentes.add(cedula);
-                return contratista;
+            if (exists) {
+                if (contratistaDAO.actualizar(contratista)) {
+                    return contratista;
+                }
+            } else {
+                if (contratistaDAO.insertar(contratista)) {
+                    if (!cedula.isEmpty())
+                        cedulasExistentes.add(cedula);
+                    return contratista;
+                }
             }
             return null;
 
@@ -1010,12 +1043,9 @@ public class CargaMasivaServlet extends HttpServlet {
             // 1. INTENTO DE MATCH PERFECTO: Cedula (o DUP) + Nombre
             Supervisor exactMatch = supervisorDAO.obtenerPorCedulaYNombre(cedula, nombre);
             if (exactMatch != null) {
-                // Ya existe este supervisor con esta cedula (sea original o dup). USARLO.
-                /*
-                 * if (log != null)
-                 * log.append("  ✓ SPV Match Exacto: Usando existente ID ").append(exactMatch.
-                 * getId()).append("\n");
-                 */
+                // Actualizar campos si existen cambios
+                exactMatch.setCargo(get(row, map, "supervisor_cargo"));
+                supervisorDAO.actualizar(exactMatch);
                 return exactMatch;
             }
 
