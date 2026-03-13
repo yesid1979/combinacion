@@ -69,22 +69,8 @@
             <version>2.10.1</version>
         </dependency>
         
-        <!-- Xerces for XML Parsing -->
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.12.2</version>
-        </dependency>
-        <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>2.7.2</version>
-        </dependency>
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.4.01</version>
-        </dependency>
+        <!-- Xerces, Xalan and xml-apis removed to avoid conflict with POI 5.x and Tomcat -->
+        <!-- These are often already provided by the runtime or unnecessary for POI 5.2.3 -->
     </dependencies>
 
     <build>

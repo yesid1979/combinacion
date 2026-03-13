@@ -104,8 +104,11 @@ public class CombinacionServlet extends HttpServlet {
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
 
-            String folderName = normalizeFileName(
-                    c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId);
+            // Nombre de carpeta: 4121-014-NombreContratista
+            // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
+            String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
+            String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId;
+            String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
 
             // Add Standard Docs
             if (supervisorBytes != null) {
@@ -206,10 +209,16 @@ public class CombinacionServlet extends HttpServlet {
                         continue;
 
                     String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
-                    String folderName = normalizeFileName(c.getNombre() != null ? c.getNombre() : "Contratista_" + id);
 
                     // Determinar tipo de contrato: Inversión o Funcionamiento
                     Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
+
+                    // Nombre de carpeta: 4121-014-NombreContratista
+                    // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
+                    String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
+                    String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + id;
+                    String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
+
                     PresupuestoDetalle presupuesto = null;
                     if (contrato != null && contrato.getPresupuestoId() > 0) {
                         presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
@@ -563,12 +572,22 @@ public class CombinacionServlet extends HttpServlet {
         // Marca visual "X" para campos de nivel (usado en formularios/checkboxes)
         replacements.put("{{NIVEL_CONTRATO_MARCA}}", "X");
 
+        // Marcas para el tipo de contrato (Profesional / Apoyo)
+        String tipoC = contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "";
+        replacements.put("{{TIPO_CONTRATO}}", tipoC);
+        replacements.put("{{MARCA_PROFESIONAL}}", tipoC.contains("PROFESIONAL") ? "X" : "");
+        replacements.put("{{MARCA_APOYO}}", (tipoC.contains("APOYO") && tipoC.contains("GESTION")) ? "X" : "");
+
         // 2. Formación y Título (Contratista)
         String formacion = contratista.getFormacionTitulo() != null ? contratista.getFormacionTitulo() : "";
         String descFormacion = contratista.getDescripcionFormacion() != null ? contratista.getDescripcionFormacion() : "";
         
         replacements.put("{{FORMACION}}", formacion);
         replacements.put("{{PERFIL_FORMACION}}", descFormacion);
+        
+        // Idoneidad (Específicos para el formato de Verificacion de Cumplimiento)
+        replacements.put("{{IDONEIDAD_FORMACION}}", formacion);
+        replacements.put("{{IDONEIDAD_DESCRIPCION}}", descFormacion);
 
         // 2.1 Experiencia (Contratista)
         String expShort = contratista.getExperiencia() != null ? contratista.getExperiencia() : "";
@@ -576,6 +595,10 @@ public class CombinacionServlet extends HttpServlet {
         
         replacements.put("{{EXPERIENCIA}}", expShort);
         replacements.put("{{PERFIL_EXPERIENCIA}}", descExp);
+        
+        // Específicos para el formato de Verificacion de Cumplimiento
+        replacements.put("{{EXPERIENCIA_BASICA}}", expShort);
+        replacements.put("{{EXPERIENCIA_DESCRIPCION}}", descExp);
 
         // 3. Objeto Contractual (Redundancia segura)
         replacements.put("{{OBJETO_CONTRACTUAL}}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
@@ -702,6 +725,23 @@ public class CombinacionServlet extends HttpServlet {
         }
 
         return generateBytes(templateName, replacements);
+    }
+
+    /**
+     * Extrae el número consecutivo del número de contrato.
+     * Ejemplo: "4121.010.26.1.014" -> "014"
+     * Si no tiene puntos, devuelve el valor tal cual.
+     */
+    private String extraerConsecutivo(String numeroContrato) {
+        if (numeroContrato == null || numeroContrato.trim().isEmpty()) {
+            return "";
+        }
+        String nc = numeroContrato.trim();
+        int lastDot = nc.lastIndexOf('.');
+        if (lastDot >= 0 && lastDot < nc.length() - 1) {
+            return nc.substring(lastDot + 1); // ej: "014"
+        }
+        return nc; // Si no tiene punto, usar todo
     }
 
     private String normalizeFileName(String input) {

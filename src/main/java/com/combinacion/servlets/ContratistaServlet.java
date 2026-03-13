@@ -279,6 +279,7 @@ public class ContratistaServlet extends HttpServlet {
             c.setExperiencia(request.getParameter("experiencia"));
             c.setDescripcionExperiencia(request.getParameter("descripcion_experiencia"));
             c.setTarjetaProfesional(request.getParameter("tarjeta_profesional"));
+            c.setDescripcionTarjeta(request.getParameter("descripcion_tarjeta"));
             c.setRestricciones(request.getParameter("restricciones"));
 
             if (contratistaDAO.insertar(c)) {

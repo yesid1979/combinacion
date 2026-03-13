@@ -632,7 +632,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("contratista_telefono", i);
             } else if (h.contains("correo") || h.contains("electronico")) {
                 map.put("contratista_correo", i);
-            } else if (h.contains("direccion") && !h.contains("organismo")) {
+            } else if (h.contains("direccion") && !h.contains("organismo") && !h.startsWith("descri")) {
                 map.put("contratista_direccion", i);
             } else if (h.contains("dia") && h.contains("nacimiento")) {
                 map.put("contratista_dia_nac", i);
@@ -643,24 +643,18 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if (h.contains("edad") && !h.contains("nombre")) {
                 map.put("contratista_edad", i);
             } else if ((h.contains("descri") || h.contains("perfil") || h.contains("detalle"))
-                    && (h.contains("formacion") || h.contains("titulo") || h.contains("academico") || h.contains("educacion"))) {
+                    && (h.contains("formacion") || h.contains("titulo") || h.contains("academico") || h.contains("academica") || h.contains("educacion"))) {
                 map.put("contratista_desc_formacion", i);
-            } else if (h.contains("formacion") || h.contains("titulo") || h.contains("educacion")) {
+            } else if (h.contains("formacion") || h.contains("titulo") || h.contains("academico") || h.contains("academica") || h.contains("educacion")) {
                 map.put("contratista_formacion", i);
-                if (!map.containsKey("contratista_desc_formacion")) {
-                    map.put("contratista_desc_formacion", i);
-                }
             } else if ((h.contains("tarjeta") || h.contains("matricula")) && !h.contains("descri")) {
                 map.put("contratista_tarjeta", i);
             } else if (h.contains("descri") && (h.contains("tarjeta") || h.contains("matricula"))) {
                 map.put("contratista_desc_tarjeta", i);
-            } else if (h.contains("experiencia") && (h.contains("descri") || h.contains("perfil") || h.contains("detalle"))) {
+            } else if ((h.contains("descri") || h.contains("perfil") || h.contains("detalle")) && h.contains("experienci")) {
                 map.put("contratista_desc_experiencia", i);
-            } else if (h.contains("experiencia")) {
+            } else if (h.contains("experienci") && !h.contains("descri") && !h.contains("perfil") && !h.contains("detalle")) {
                 map.put("contratista_experiencia", i);
-                if (!map.containsKey("contratista_desc_experiencia")) {
-                    map.put("contratista_desc_experiencia", i);
-                }
             } else if (h.contains("restricciones")) {
                 map.put("contratista_restricciones", i);
 
@@ -686,9 +680,16 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if ((h.contains("numero") || h.contains("nmero")) && h.contains("contrato") && !h.contains("tipo")
                     && !h.contains("valor")) {
                 map.put("numero_contrato", i);
-            } else if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !h.contains("xxx")) {
-                // "Tipo de contrato (Profesional o de Apoyo...)"
+            } else if (h.contains("tipo") && h.contains("contrato") && h.contains("xxx")) {
+                // Prioridad máxima para el campo específico solicitado
                 map.put("tipo_contrato", i);
+            } else if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !map.containsKey("tipo_contrato")) {
+                // "Tipo de contrato (Profesional o de Apoyo...)" - Solo si no se encontró el de 'xxx'
+                map.put("tipo_contrato", i);
+            } else if (h.equals("profesional") || (h.contains("profesional") && !h.contains("tarjeta") && !h.contains("formacion") && !h.contains("perfil"))) {
+                map.put("tipo_contrato_profesional", i);
+            } else if (h.contains("apoyo") && h.contains("gestion")) {
+                map.put("tipo_contrato_apoyo", i);
             } else if (h.contains("nivel")) {
                 map.put("nivel", i);
             } else if (h.contains("objeto")) {
@@ -1287,7 +1288,17 @@ public class CargaMasivaServlet extends HttpServlet {
             // Campos de texto simples
             contrato.setTrdProceso(get(row, map, "trd_proceso"));
             contrato.setNumeroContrato(get(row, map, "numero_contrato"));
-            contrato.setTipoContrato(get(row, map, "tipo_contrato"));
+            
+            String tipoC = get(row, map, "tipo_contrato");
+            // Si la columna principal esta vacia, intentamos por columnas individuales (Checkboxes)
+            if (tipoC.isEmpty()) {
+                if (parseBooleanCheck(get(row, map, "tipo_contrato_profesional")).equals("Si")) {
+                    tipoC = "PROFESIONAL";
+                } else if (parseBooleanCheck(get(row, map, "tipo_contrato_apoyo")).equals("Si")) {
+                    tipoC = "APOYO A LA GESTION";
+                }
+            }
+            contrato.setTipoContrato(tipoC);
             contrato.setNivel(get(row, map, "nivel"));
             contrato.setObjeto(get(row, map, "objeto"));
             contrato.setModalidad(get(row, map, "modalidad"));
