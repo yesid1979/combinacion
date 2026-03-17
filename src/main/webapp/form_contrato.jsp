@@ -281,12 +281,22 @@
                                                     ? 'readonly' : '' }>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label">Financiero</label>
-                                                <input type="text" class="form-control" name="estructurador_financiero"
-                                                    value="${contrato.estructurador.financieroNombre}" ${readonly
-                                                    ? 'readonly' : '' }>
-                                            </div>
-                                        </div>
+                                                 <label class="form-label">Financiero</label>
+                                                 <input type="text" class="form-control" name="estructurador_financiero"
+                                                     value="${contrato.estructurador.financieroNombre}" ${readonly
+                                                     ? 'readonly' : '' }>
+                                             </div>
+                                             <div class="col-md-4">
+                                                 <label class="form-label">Fecha Idoneidad</label>
+                                                 <input type="date" class="form-control" name="fecha_idoneidad"
+                                                     value="${contrato.fechaIdoneidad}" ${readonly ? 'readonly' : '' }>
+                                             </div>
+                                             <div class="col-md-4">
+                                                 <label class="form-label">Fecha Estructurador</label>
+                                                 <input type="date" class="form-control" name="fecha_estructurador"
+                                                     value="${contrato.fechaEstructurador}" ${readonly ? 'readonly' : '' }>
+                                             </div>
+                                         </div>
 
                                         <div class="mt-4 text-end">
                                             <a href="contratos" class="btn btn-secondary me-2" style="width: 140px;"><i

@@ -250,6 +250,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "liquidacion_articulo", "Liquidación Artículo");
                 logMapping(log, map, "liquidacion_decreto", "Liquidación Decreto");
                 logMapping(log, map, "circular_honorarios", "Circular Honorarios");
+                logMapping(log, map, "fecha_idoneidad", "Fecha Idoneidad");
+                logMapping(log, map, "fecha_estructurador", "Fecha Estructurador");
 
                 log.append("\n═════════════════════════════════════════\n\n");
                 System.out.println(log.toString());
@@ -743,6 +745,10 @@ public class CargaMasivaServlet extends HttpServlet {
 
             } else if (h.contains("meses") && !h.contains("media")) {
                 map.put("plazo_meses", i);
+            } else if (h.contains("fecha") && h.contains("idoneidad")) {
+                map.put("fecha_idoneidad", i);
+            } else if ((h.contains("fecha") || h.contains("firm")) && h.contains("estructurador")) {
+                map.put("fecha_estructurador", i);
             } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
                 map.put("plazo_dias", i);
             } else if (h.contains("valor") && h.contains("total") && h.contains("letras")) {
@@ -1411,8 +1417,10 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setLiquidacionArticulo(get(row, map, "liquidacion_articulo"));
             contrato.setLiquidacionDecreto(get(row, map, "liquidacion_decreto"));
             contrato.setCircularHonorarios(get(row, map, "circular_honorarios"));
-            // Nuevo campo
             contrato.setApoyoSupervision(get(row, map, "apoyo_supervision"));
+
+            contrato.setFechaIdoneidad(parseDateStr(get(row, map, "fecha_idoneidad")));
+            contrato.setFechaEstructurador(parseDateStr(get(row, map, "fecha_estructurador")));
 
             // Foreign Keys
             if (c != null)

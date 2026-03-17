@@ -120,16 +120,11 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Inversion Docs
             if (esInversion && contrato != null) {
-                Map<String, String> replacements = getFullReplacements(contratistaId);
-                if (replacements != null) {
-                    String[] invTemplates = {
-                            "INVERSION_1_ESTUDIOS_PREVIOS.docx",
-                            "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx",
-                            "INVERSION_3_CERTIFICADO_IDONEIDAD.docx",
-                            "INVERSION_4_COMPLEMENTO_CONTRATO.docx"
-                    };
-
-                    for (String tpl : invTemplates) {
+                // Para documentos de inversion, el 3 (Idoneidad) usa fecha_idoneidad
+                for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                    String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
+                    Map<String, String> replacements = getFullReplacements(contratistaId, docContext);
+                    if (replacements != null) {
                         byte[] fileBytes = generateBytes(tpl, replacements);
                         if (fileBytes != null) {
                             addToZip(zos, folderName,
@@ -256,15 +251,10 @@ public class CombinacionServlet extends HttpServlet {
 
                     // Inversion Docs
                     if (esInversion) {
-                        Map<String, String> replacements = getFullReplacements(id);
-                        if (replacements != null) {
-                            String[] invTemplates = {
-                                    "INVERSION_1_ESTUDIOS_PREVIOS.docx",
-                                    "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx",
-                                    "INVERSION_3_CERTIFICADO_IDONEIDAD.docx",
-                                    "INVERSION_4_COMPLEMENTO_CONTRATO.docx"
-                            };
-                            for (String tpl : invTemplates) {
+                        for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                            String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
+                            Map<String, String> replacements = getFullReplacements(id, docContext);
+                            if (replacements != null) {
                                 byte[] fileBytes = generateBytes(tpl, replacements);
                                 if (fileBytes != null) {
                                     addToZip(zos, folderName,
@@ -318,7 +308,7 @@ public class CombinacionServlet extends HttpServlet {
     // Inject DAO
     private com.combinacion.dao.EstructuradorDAO estructuradorDAO = new com.combinacion.dao.EstructuradorDAO();
 
-    private Map<String, String> getFullReplacements(int contratistaId) throws Exception {
+    private Map<String, String> getFullReplacements(int contratistaId, String docType) throws Exception {
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
         if (contratista == null)
             return null;
@@ -342,7 +332,7 @@ public class CombinacionServlet extends HttpServlet {
         if (contrato.getEstructuradorId() > 0)
             estructurador = estructuradorDAO.obtenerPorId(contrato.getEstructuradorId());
 
-        return getCommonReplacements(contratista, contrato, presupuesto, supervisor, ordenador, estructurador);
+        return getCommonReplacements(contratista, contrato, presupuesto, supervisor, ordenador, estructurador, docType);
     }
 
     private byte[] generateBytes(String templateName, Map<String, String> replacements) throws IOException {
@@ -364,7 +354,7 @@ public class CombinacionServlet extends HttpServlet {
 
     private Map<String, String> getCommonReplacements(Contratista contratista, Contrato contrato,
             PresupuestoDetalle presupuesto, Supervisor supervisor,
-            OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador) {
+            OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador, String docType) {
         Map<String, String> replacements = new HashMap<>();
 
         // Extraer año de fecha de terminación para agregarlo a números de contrato y
@@ -648,6 +638,43 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{CARGO_ORDENADOR_GASTO}}", "");
         }
 
+        // Lógica de fechas base (Priorizar según el tipo de documento)
+        java.util.Date fechaBase = (presupuesto != null && presupuesto.getRpFecha() != null) ? presupuesto.getRpFecha()
+                : new java.util.Date();
+        
+        // Priorizar fecha_estructurador para ese documento
+        if ("estructuradores".equals(docType) && contrato.getFechaEstructurador() != null) {
+            fechaBase = contrato.getFechaEstructurador();
+        } 
+        // Priorizar fecha_idoneidad para el certificado
+        else if ("idoneidad".equals(docType) && contrato.getFechaIdoneidad() != null) {
+            fechaBase = contrato.getFechaIdoneidad();
+        }
+
+        // Mes y Año para idoneidad (Formato: "marzo de 2026")
+        SimpleDateFormat sdfMesAnio = new SimpleDateFormat("MMMM 'de' yyyy", new Locale("es", "CO"));
+        
+        // 9. Nuevos Campos de Fecha (Idoneidad y Estructurador)
+        if (contrato.getFechaIdoneidad() != null) {
+            String mesAnioIdoneidad = sdfMesAnio.format(contrato.getFechaIdoneidad());
+            replacements.put("{{FECHA_IDONEIDAD}}", mesAnioIdoneidad);
+            // Solo usar como MES_ANIO_ACTUAL en el contexto de idoneidad o si no hay RP
+            if ("idoneidad".equals(docType) || (presupuesto == null || presupuesto.getRpFecha() == null)) {
+                replacements.put("{{MES_ANIO_ACTUAL}}", mesAnioIdoneidad);
+            } else {
+                replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(fechaBase));
+            }
+        } else {
+            replacements.put("{{FECHA_IDONEIDAD}}", "");
+            replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(fechaBase));
+        }
+
+        if (contrato.getFechaEstructurador() != null) {
+            replacements.put("{{FECHA_ESTRUCTURADOR}}", dateFormat.format(contrato.getFechaEstructurador()));
+        } else {
+            replacements.put("{{FECHA_ESTRUCTURADOR}}", "");
+        }
+
         // RPC
         if (presupuesto != null) {
             replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
@@ -655,8 +682,6 @@ public class CombinacionServlet extends HttpServlet {
 
         // Standard Date Logic - Formato: "06 de enero de 2026"
         SimpleDateFormat sdfDoc = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
-        java.util.Date fechaBase = (presupuesto != null && presupuesto.getRpFecha() != null) ? presupuesto.getRpFecha()
-                : new java.util.Date();
         String fechaStr = sdfDoc.format(fechaBase);
         replacements.put("${FECHA_DOCUMENTO}", fechaStr);
         replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
@@ -706,7 +731,7 @@ public class CombinacionServlet extends HttpServlet {
     }
 
     private byte[] generarBytesDocumento(int contratistaId, String docType) throws Exception {
-        Map<String, String> replacements = getFullReplacements(contratistaId);
+        Map<String, String> replacements = getFullReplacements(contratistaId, docType);
         if (replacements == null)
             return null;
 

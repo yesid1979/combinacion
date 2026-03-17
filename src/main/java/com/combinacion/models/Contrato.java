@@ -22,6 +22,8 @@ public class Contrato {
     private String plazoEjecucion;
     private int plazoMeses;
     private int plazoDias;
+    private Date fechaIdoneidad;
+    private Date fechaEstructurador;
 
     private String valorTotalLetras;
     private BigDecimal valorTotalNumeros;
@@ -424,5 +426,21 @@ public class Contrato {
 
     public void setApoyoSupervision(String apoyoSupervision) {
         this.apoyoSupervision = apoyoSupervision;
+    }
+
+    public Date getFechaIdoneidad() {
+        return fechaIdoneidad;
+    }
+
+    public void setFechaIdoneidad(Date fechaIdoneidad) {
+        this.fechaIdoneidad = fechaIdoneidad;
+    }
+
+    public Date getFechaEstructurador() {
+        return fechaEstructurador;
+    }
+
+    public void setFechaEstructurador(Date fechaEstructurador) {
+        this.fechaEstructurador = fechaEstructurador;
     }
 }

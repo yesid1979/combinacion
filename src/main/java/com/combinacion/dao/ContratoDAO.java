@@ -17,8 +17,8 @@ public class ContratoDAO {
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id, apoyo_supervision) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -76,6 +76,8 @@ public class ContratoDAO {
             else
                 ps.setNull(37, java.sql.Types.INTEGER);
             ps.setString(38, c.getApoyoSupervision());
+            ps.setDate(39, c.getFechaIdoneidad());
+            ps.setDate(40, c.getFechaEstructurador());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -232,7 +234,7 @@ public class ContratoDAO {
 
     public boolean actualizar(Contrato c) {
         String sql = "UPDATE contratos SET " +
-                "trd_proceso=?, tipo_contrato=?, nivel=?, objeto=?, modalidad=?, estado=?, periodo=?, " +
+                "trd_proceso=?, tipo_contrato=?, nivel=?, objeto=?, modality=?, estado=?, periodo=?, " +
                 "fecha_suscripcion=?, fecha_inicio=?, fecha_terminacion=?, fecha_aprobacion=?, fecha_ejecucion=?, fecha_arl=?, "
                 +
                 "plazo_ejecucion=?, plazo_meses=?, plazo_dias=?, valor_total_letras=?, valor_total_numeros=?, " +
@@ -240,8 +242,8 @@ public class ContratoDAO {
                 "num_cuotas_numero=?, valor_media_cuota_letras=?, valor_media_cuota_numero=?, actividades_entregables=?, "
                 +
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
-                "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=? "
-                +
+                "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
+                "fecha_idoneidad=?, fecha_estructurador=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -299,7 +301,9 @@ public class ContratoDAO {
             else
                 ps.setNull(36, java.sql.Types.INTEGER);
             ps.setString(37, c.getApoyoSupervision());
-            ps.setInt(38, c.getId());
+            ps.setDate(38, c.getFechaIdoneidad());
+            ps.setDate(39, c.getFechaEstructurador());
+            ps.setInt(40, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -355,6 +359,8 @@ public class ContratoDAO {
                     c.setPresupuestoId(rs.getInt("presupuesto_id"));
                     c.setEstructuradorId(rs.getInt("estructurador_id"));
                     c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+                    c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
+                    c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
                     return c;
                 }
             }
@@ -411,6 +417,8 @@ public class ContratoDAO {
                     c.setPresupuestoId(rs.getInt("presupuesto_id"));
                     c.setEstructuradorId(rs.getInt("estructurador_id"));
                     c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+                    c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
+                    c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
                     return c;
                 }
             }

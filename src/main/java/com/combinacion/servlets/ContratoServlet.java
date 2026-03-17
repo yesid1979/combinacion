@@ -202,6 +202,8 @@ public class ContratoServlet extends HttpServlet {
 
             contrato.setFechaInicio(ParseUtils.parseDate(request.getParameter("fecha_inicio")));
             contrato.setFechaTerminacion(ParseUtils.parseDate(request.getParameter("fecha_terminacion")));
+            contrato.setFechaIdoneidad(ParseUtils.parseDate(request.getParameter("fecha_idoneidad")));
+            contrato.setFechaEstructurador(ParseUtils.parseDate(request.getParameter("fecha_estructurador")));
             contrato.setActividadesEntregables(request.getParameter("actividades_entregables"));
 
             // Foreign Keys
@@ -393,6 +395,8 @@ public class ContratoServlet extends HttpServlet {
 
             contrato.setFechaInicio(ParseUtils.parseDate(request.getParameter("fecha_inicio")));
             contrato.setFechaTerminacion(ParseUtils.parseDate(request.getParameter("fecha_terminacion")));
+            contrato.setFechaIdoneidad(ParseUtils.parseDate(request.getParameter("fecha_idoneidad")));
+            contrato.setFechaEstructurador(ParseUtils.parseDate(request.getParameter("fecha_estructurador")));
             contrato.setActividadesEntregables(request.getParameter("actividades_entregables"));
 
             int supervisorId = ParseUtils.parseInt(request.getParameter("id_supervisor"));
