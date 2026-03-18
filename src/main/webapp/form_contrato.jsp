@@ -199,6 +199,47 @@
                                                     value="${contrato.valorMediaCuotaLetras}" ${readonly ? 'readonly'
                                                     : '' }>
                                             </div>
+
+                                            <div class="section-title mt-4">Adición (Otrosí) y SECOP</div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">¿Tiene Adición?</label>
+                                                <select class="form-select" name="adicion_si_no" ${readonly ? 'disabled' : ''}>
+                                                    <option value="NO" ${contrato.adicionSiNo == 'NO' ? 'selected' : ''}>NO</option>
+                                                    <option value="SI" ${contrato.adicionSiNo == 'SI' ? 'selected' : ''}>SI</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <label class="form-label">
+                                                    Enlace SECOP
+                                                    <c:if test="${not empty contrato.enlaceSecop}">
+                                                        <a href="${contrato.enlaceSecop}" target="_blank" class="ms-2 badge bg-primary text-decoration-none" title="Ir al SECOP">
+                                                            <i class="bi bi-box-arrow-up-right"></i> Abrir
+                                                        </a>
+                                                    </c:if>
+                                                </label>
+                                                <input type="url" class="form-control" name="enlace_secop" value="${contrato.enlaceSecop}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cuotas (Adición)</label>
+                                                <input type="number" class="form-control" name="numero_cuotas_adicion" value="${contrato.numeroCuotasAdicion}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Valor Total Adición ($)</label>
+                                                <input type="number" step="0.01" class="form-control" name="valor_total_adicion" value="${contrato.valorTotalAdicion}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Total Adición (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_total_adicion_letras" value="${contrato.valorTotalAdicionLetras}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Total (Contrato + Adición) ($)</label>
+                                                <input type="number" step="0.01" class="form-control" name="valor_contrato_mas_adicion" value="${contrato.valorContratoMasAdicion}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <label class="form-label">Total (Contrato + Adición) (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_contrato_mas_adicion_letras" value="${contrato.valorContratoMasAdicionLetras}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+
                                         </div>
                                     </div>
 

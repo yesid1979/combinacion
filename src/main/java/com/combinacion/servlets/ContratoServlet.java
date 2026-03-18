@@ -71,6 +71,8 @@ public class ContratoServlet extends HttpServlet {
             json.append("\"recordsTotal\": ").append(total).append(",");
             json.append("\"recordsFiltered\": ").append(filtered).append(",");
             json.append("\"data\": [");
+            
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
 
             for (int i = 0; i < contratos.size(); i++) {
                 Contrato c = contratos.get(i);
@@ -80,8 +82,8 @@ public class ContratoServlet extends HttpServlet {
                 json.append("\"").append(escapeJson(c.getObjeto())).append("\",");
                 json.append("\"").append(c.getValorTotalNumeros() != null ? c.getValorTotalNumeros() : "0")
                         .append("\",");
-                json.append("\"").append(c.getFechaInicio() != null ? c.getFechaInicio().toString() : "").append("\",");
-                json.append("\"").append(c.getFechaTerminacion() != null ? c.getFechaTerminacion().toString() : "")
+                json.append("\"").append(c.getFechaInicio() != null ? sdf.format(c.getFechaInicio()) : "").append("\",");
+                json.append("\"").append(c.getFechaTerminacion() != null ? sdf.format(c.getFechaTerminacion()) : "")
                         .append("\",");
                 json.append("\"").append(escapeJson(c.getEstado())).append("\",");
                 json.append("\"").append(c.getId()).append("\""); // For actions
@@ -205,6 +207,15 @@ public class ContratoServlet extends HttpServlet {
             contrato.setFechaIdoneidad(ParseUtils.parseDate(request.getParameter("fecha_idoneidad")));
             contrato.setFechaEstructurador(ParseUtils.parseDate(request.getParameter("fecha_estructurador")));
             contrato.setActividadesEntregables(request.getParameter("actividades_entregables"));
+            
+            // Adicional (Otrosí)
+            contrato.setAdicionSiNo(request.getParameter("adicion_si_no"));
+            contrato.setNumeroCuotasAdicion(ParseUtils.parseInt(request.getParameter("numero_cuotas_adicion")));
+            contrato.setValorTotalAdicion(ParseUtils.parseBigDecimal(request.getParameter("valor_total_adicion")));
+            contrato.setValorTotalAdicionLetras(request.getParameter("valor_total_adicion_letras"));
+            contrato.setValorContratoMasAdicion(ParseUtils.parseBigDecimal(request.getParameter("valor_contrato_mas_adicion")));
+            contrato.setValorContratoMasAdicionLetras(request.getParameter("valor_contrato_mas_adicion_letras"));
+            contrato.setEnlaceSecop(request.getParameter("enlace_secop"));
 
             // Foreign Keys
             contrato.setContratistaId(contratista.getId());
@@ -398,6 +409,15 @@ public class ContratoServlet extends HttpServlet {
             contrato.setFechaIdoneidad(ParseUtils.parseDate(request.getParameter("fecha_idoneidad")));
             contrato.setFechaEstructurador(ParseUtils.parseDate(request.getParameter("fecha_estructurador")));
             contrato.setActividadesEntregables(request.getParameter("actividades_entregables"));
+
+            // Adicional (Otrosí)
+            contrato.setAdicionSiNo(request.getParameter("adicion_si_no"));
+            contrato.setNumeroCuotasAdicion(ParseUtils.parseInt(request.getParameter("numero_cuotas_adicion")));
+            contrato.setValorTotalAdicion(ParseUtils.parseBigDecimal(request.getParameter("valor_total_adicion")));
+            contrato.setValorTotalAdicionLetras(request.getParameter("valor_total_adicion_letras"));
+            contrato.setValorContratoMasAdicion(ParseUtils.parseBigDecimal(request.getParameter("valor_contrato_mas_adicion")));
+            contrato.setValorContratoMasAdicionLetras(request.getParameter("valor_contrato_mas_adicion_letras"));
+            contrato.setEnlaceSecop(request.getParameter("enlace_secop"));
 
             int supervisorId = ParseUtils.parseInt(request.getParameter("id_supervisor"));
             int ordenadorId = ParseUtils.parseInt(request.getParameter("id_ordenador"));

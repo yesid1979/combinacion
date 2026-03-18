@@ -29,14 +29,29 @@ public class Contrato {
     private BigDecimal valorTotalNumeros;
     private BigDecimal valorAntesIva;
     private BigDecimal valorIva;
+    private String valorAntesIvaLetras;
+    private String valorIvaLetras;
 
     private String valorCuotaLetras;
     private BigDecimal valorCuotaNumero;
+    private String valorCuotaAntesIvaLetras;
+    private BigDecimal valorCuotaAntesIva;
+    private String valorCuotaIvaLetras;
+    private BigDecimal valorCuotaIva;
     private String numCuotasLetras;
     private int numCuotasNumero;
 
     private String valorMediaCuotaLetras;
     private BigDecimal valorMediaCuotaNumero;
+    
+    // Nuevos campos Adición y SECOP
+    private String adicionSiNo;
+    private int numeroCuotasAdicion;
+    private String valorTotalAdicionLetras;
+    private BigDecimal valorTotalAdicion;
+    private String valorContratoMasAdicionLetras;
+    private BigDecimal valorContratoMasAdicion;
+    private String enlaceSecop;
 
     private String actividadesEntregables;
 
@@ -238,6 +253,22 @@ public class Contrato {
         this.valorIva = valorIva;
     }
 
+    public String getValorAntesIvaLetras() {
+        return valorAntesIvaLetras;
+    }
+
+    public void setValorAntesIvaLetras(String valorAntesIvaLetras) {
+        this.valorAntesIvaLetras = valorAntesIvaLetras;
+    }
+
+    public String getValorIvaLetras() {
+        return valorIvaLetras;
+    }
+
+    public void setValorIvaLetras(String valorIvaLetras) {
+        this.valorIvaLetras = valorIvaLetras;
+    }
+
     public String getValorCuotaLetras() {
         return valorCuotaLetras;
     }
@@ -252,6 +283,38 @@ public class Contrato {
 
     public void setValorCuotaNumero(BigDecimal valorCuotaNumero) {
         this.valorCuotaNumero = valorCuotaNumero;
+    }
+
+    public String getValorCuotaAntesIvaLetras() {
+        return valorCuotaAntesIvaLetras;
+    }
+
+    public void setValorCuotaAntesIvaLetras(String valorCuotaAntesIvaLetras) {
+        this.valorCuotaAntesIvaLetras = valorCuotaAntesIvaLetras;
+    }
+
+    public BigDecimal getValorCuotaAntesIva() {
+        return valorCuotaAntesIva;
+    }
+
+    public void setValorCuotaAntesIva(BigDecimal valorCuotaAntesIva) {
+        this.valorCuotaAntesIva = valorCuotaAntesIva;
+    }
+
+    public String getValorCuotaIvaLetras() {
+        return valorCuotaIvaLetras;
+    }
+
+    public void setValorCuotaIvaLetras(String valorCuotaIvaLetras) {
+        this.valorCuotaIvaLetras = valorCuotaIvaLetras;
+    }
+
+    public BigDecimal getValorCuotaIva() {
+        return valorCuotaIva;
+    }
+
+    public void setValorCuotaIva(BigDecimal valorCuotaIva) {
+        this.valorCuotaIva = valorCuotaIva;
     }
 
     public String getNumCuotasLetras() {
@@ -284,6 +347,62 @@ public class Contrato {
 
     public void setValorMediaCuotaNumero(BigDecimal valorMediaCuotaNumero) {
         this.valorMediaCuotaNumero = valorMediaCuotaNumero;
+    }
+
+    public String getAdicionSiNo() {
+        return adicionSiNo;
+    }
+
+    public void setAdicionSiNo(String adicionSiNo) {
+        this.adicionSiNo = adicionSiNo;
+    }
+
+    public int getNumeroCuotasAdicion() {
+        return numeroCuotasAdicion;
+    }
+
+    public void setNumeroCuotasAdicion(int numeroCuotasAdicion) {
+        this.numeroCuotasAdicion = numeroCuotasAdicion;
+    }
+
+    public String getValorTotalAdicionLetras() {
+        return valorTotalAdicionLetras;
+    }
+
+    public void setValorTotalAdicionLetras(String valorTotalAdicionLetras) {
+        this.valorTotalAdicionLetras = valorTotalAdicionLetras;
+    }
+
+    public BigDecimal getValorTotalAdicion() {
+        return valorTotalAdicion;
+    }
+
+    public void setValorTotalAdicion(BigDecimal valorTotalAdicion) {
+        this.valorTotalAdicion = valorTotalAdicion;
+    }
+
+    public String getValorContratoMasAdicionLetras() {
+        return valorContratoMasAdicionLetras;
+    }
+
+    public void setValorContratoMasAdicionLetras(String valorContratoMasAdicionLetras) {
+        this.valorContratoMasAdicionLetras = valorContratoMasAdicionLetras;
+    }
+
+    public BigDecimal getValorContratoMasAdicion() {
+        return valorContratoMasAdicion;
+    }
+
+    public void setValorContratoMasAdicion(BigDecimal valorContratoMasAdicion) {
+        this.valorContratoMasAdicion = valorContratoMasAdicion;
+    }
+
+    public String getEnlaceSecop() {
+        return enlaceSecop;
+    }
+
+    public void setEnlaceSecop(String enlaceSecop) {
+        this.enlaceSecop = enlaceSecop;
     }
 
     public String getActividadesEntregables() {

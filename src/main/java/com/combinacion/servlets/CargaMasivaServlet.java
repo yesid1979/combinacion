@@ -756,13 +756,33 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if (h.contains("valor") && h.contains("total") && h.contains("numeros")) {
                 map.put("valor_total_numeros", i);
             } else if (h.contains("antes") && h.contains("iva")) {
-                map.put("valor_antes_iva", i);
+                if (h.contains("letras")) {
+                    map.put("valor_antes_iva_letras", i);
+                } else {
+                    map.put("valor_antes_iva", i);
+                }
             } else if (h.contains("iva") && !h.contains("antes")) {
-                map.put("valor_iva", i);
-            } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media")) {
+                if (h.contains("letras")) {
+                    map.put("valor_iva_letras", i);
+                } else {
+                    map.put("valor_iva", i);
+                }
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media") && !h.contains("antes") && !h.contains("iva")) {
                 map.put("valor_cuota_letras", i);
-            } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media")) {
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media") && !h.contains("antes") && !h.contains("iva")) {
                 map.put("valor_cuota_numero", i);
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("antes") && h.contains("iva")) {
+                if (h.contains("letras")) {
+                    map.put("valor_cuota_antes_iva_letras", i);
+                } else {
+                    map.put("valor_cuota_antes_iva", i);
+                }
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("iva") && !h.contains("antes")) {
+                if (h.contains("letras")) {
+                    map.put("valor_cuota_iva_letras", i);
+                } else {
+                    map.put("valor_cuota_iva", i);
+                }
             } else if (h.contains("numero") && h.contains("cuotas") && h.contains("letras")) {
                 map.put("num_cuotas_letras", i);
             } else if (h.contains("numero") && h.contains("cuotas") && h.contains("numero")) {
@@ -771,6 +791,24 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("valor_media_cuota_letras", i);
             } else if (h.contains("media") && h.contains("numero")) {
                 map.put("valor_media_cuota_numero", i);
+            } else if (h.contains("adicion") && h.contains("si") && h.contains("no")) {
+                map.put("adicion_si_no", i);
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("adicion")) {
+                map.put("numero_cuotas_adicion", i);
+            } else if (h.contains("valor") && h.contains("total") && h.contains("contrato") && h.contains("mas") && h.contains("adicion")) {
+                if (h.contains("letras")) {
+                    map.put("valor_contrato_mas_adicion_letras", i);
+                } else {
+                    map.put("valor_contrato_mas_adicion", i);
+                }
+            } else if (h.contains("valor") && h.contains("total") && h.contains("adicion") && !h.contains("contrato")) {
+                if (h.contains("letras")) {
+                    map.put("valor_total_adicion_letras", i);
+                } else {
+                    map.put("valor_total_adicion", i);
+                }
+            } else if (h.contains("enlace") && h.contains("secop")) {
+                map.put("enlace_secop", i);
             } else if ((h.contains("entregables") || h.contains("actividades") || h.contains("obligaciones"))
                     && !map.containsKey("actividades_entregables") && !h.contains("objeto")) {
                 map.put("actividades_entregables", i);
@@ -1380,9 +1418,17 @@ public class CargaMasivaServlet extends HttpServlet {
 
             // Valores
             contrato.setValorTotalLetras(get(row, map, "valor_total_letras"));
+            contrato.setValorAntesIvaLetras(get(row, map, "valor_antes_iva_letras"));
+            contrato.setValorIvaLetras(get(row, map, "valor_iva_letras"));
             contrato.setValorCuotaLetras(get(row, map, "valor_cuota_letras"));
+            contrato.setValorCuotaAntesIvaLetras(get(row, map, "valor_cuota_antes_iva_letras"));
+            contrato.setValorCuotaIvaLetras(get(row, map, "valor_cuota_iva_letras"));
             contrato.setNumCuotasLetras(get(row, map, "num_cuotas_letras"));
             contrato.setValorMediaCuotaLetras(get(row, map, "valor_media_cuota_letras"));
+            contrato.setAdicionSiNo(parseBooleanCheck(get(row, map, "adicion_si_no")));
+            contrato.setValorTotalAdicionLetras(get(row, map, "valor_total_adicion_letras"));
+            contrato.setValorContratoMasAdicionLetras(get(row, map, "valor_contrato_mas_adicion_letras"));
+            contrato.setEnlaceSecop(get(row, map, "enlace_secop"));
 
             try {
                 String vtn = cleanCurrency(get(row, map, "valor_total_numeros"));
@@ -1400,6 +1446,14 @@ public class CargaMasivaServlet extends HttpServlet {
                 String vcn = cleanCurrency(get(row, map, "valor_cuota_numero"));
                 if (!vcn.isEmpty())
                     contrato.setValorCuotaNumero(new java.math.BigDecimal(vcn));
+                    
+                String vcai = cleanCurrency(get(row, map, "valor_cuota_antes_iva"));
+                if (!vcai.isEmpty())
+                    contrato.setValorCuotaAntesIva(new java.math.BigDecimal(vcai));
+                    
+                String vci = cleanCurrency(get(row, map, "valor_cuota_iva"));
+                if (!vci.isEmpty())
+                    contrato.setValorCuotaIva(new java.math.BigDecimal(vci));
 
                 String ncn = get(row, map, "num_cuotas_numero");
                 if (!ncn.isEmpty())
@@ -1408,6 +1462,18 @@ public class CargaMasivaServlet extends HttpServlet {
                 String vmcn = cleanCurrency(get(row, map, "valor_media_cuota_numero"));
                 if (!vmcn.isEmpty())
                     contrato.setValorMediaCuotaNumero(new java.math.BigDecimal(vmcn));
+                    
+                String nca = get(row, map, "numero_cuotas_adicion");
+                if (!nca.isEmpty())
+                    contrato.setNumeroCuotasAdicion((int) Double.parseDouble(nca.replace(",", ".")));
+                    
+                String vta = cleanCurrency(get(row, map, "valor_total_adicion"));
+                if (!vta.isEmpty())
+                    contrato.setValorTotalAdicion(new java.math.BigDecimal(vta));
+                    
+                String vcma = cleanCurrency(get(row, map, "valor_contrato_mas_adicion"));
+                if (!vcma.isEmpty())
+                    contrato.setValorContratoMasAdicion(new java.math.BigDecimal(vcma));
 
             } catch (Exception ex) {
             }

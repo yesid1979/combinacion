@@ -432,7 +432,7 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{VALOR_CDP}}",
                     presupuesto.getCdpValor() != null ? formatearMoneda(presupuesto.getCdpValor()) : "");
             replacements.put("{{COMPROMISO_CDP}}",
-                    presupuesto.getCompromiso() != null ? presupuesto.getCompromiso() : "");
+                    presupuesto.getApropiacionPresupuestal() != null ? presupuesto.getApropiacionPresupuestal() : "");
 
             // Fechas del CDP
             SimpleDateFormat sdfDoc = new SimpleDateFormat("d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
@@ -467,16 +467,73 @@ public class CombinacionServlet extends HttpServlet {
         } else {
             replacements.put("{{VALOR_CONTRATO}}", "");
         }
+        
+        // Antes de IVA
+        if (contrato.getValorAntesIvaLetras() != null) {
+            replacements.put("{{VALOR_ANTES_IVA_LETRAS}}", contrato.getValorAntesIvaLetras());
+        } else {
+            replacements.put("{{VALOR_ANTES_IVA_LETRAS}}", "");
+        }
+        if (contrato.getValorAntesIva() != null) {
+            replacements.put("{{VALOR_ANTES_IVA}}", formatearMoneda(contrato.getValorAntesIva()));
+        } else {
+            replacements.put("{{VALOR_ANTES_IVA}}", "");
+        }
+        
+        // IVA
+        if (contrato.getValorIvaLetras() != null) {
+            replacements.put("{{VALOR_IVA_LETRAS}}", contrato.getValorIvaLetras());
+        } else {
+            replacements.put("{{VALOR_IVA_LETRAS}}", "");
+        }
+        if (contrato.getValorIva() != null) {
+            replacements.put("{{VALOR_IVA}}", formatearMoneda(contrato.getValorIva()));
+        } else {
+            replacements.put("{{VALOR_IVA}}", "");
+        }
 
         if (contrato.getValorCuotaLetras() != null) {
             replacements.put("{{VALOR_CUOTA_LETRAS}}", contrato.getValorCuotaLetras());
         } else {
             replacements.put("{{VALOR_CUOTA_LETRAS}}", "");
         }
+        
+        // Cuota antes IVA
+        if (contrato.getValorCuotaAntesIvaLetras() != null) {
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA_LETRAS}}", contrato.getValorCuotaAntesIvaLetras());
+        } else {
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA_LETRAS}}", "");
+        }
+        if (contrato.getValorCuotaAntesIva() != null) {
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA}}", formatearMoneda(contrato.getValorCuotaAntesIva()));
+        } else {
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA}}", "");
+        }
+        
+        // Cuota IVA
+        if (contrato.getValorCuotaIvaLetras() != null) {
+            replacements.put("{{VALOR_CUOTA_IVA_LETRAS}}", contrato.getValorCuotaIvaLetras());
+        } else {
+            replacements.put("{{VALOR_CUOTA_IVA_LETRAS}}", "");
+        }
+        if (contrato.getValorCuotaIva() != null) {
+            replacements.put("{{VALOR_CUOTA_IVA}}", formatearMoneda(contrato.getValorCuotaIva()));
+        } else {
+            replacements.put("{{VALOR_CUOTA_IVA}}", "");
+        }
 
         // Número de cuotas (usando plazo meses como aproximación si aplica)
         replacements.put("{{NUMERO_CUOTAS}}",
                 contrato.getPlazoMeses() > 0 ? String.valueOf(contrato.getPlazoMeses()) : "PENDIENTE");
+
+        // Nuevos campos: Adición y SECOP
+        replacements.put("{{ADICION_SI_NO}}", contrato.getAdicionSiNo() != null ? contrato.getAdicionSiNo() : "");
+        replacements.put("{{NUMERO_CUOTAS_ADICION}}", contrato.getNumeroCuotasAdicion() > 0 ? String.valueOf(contrato.getNumeroCuotasAdicion()) : "");
+        replacements.put("{{VALOR_TOTAL_ADICION_LETRAS}}", contrato.getValorTotalAdicionLetras() != null ? contrato.getValorTotalAdicionLetras() : "");
+        replacements.put("{{VALOR_TOTAL_ADICION}}", contrato.getValorTotalAdicion() != null ? formatearMoneda(contrato.getValorTotalAdicion()) : "");
+        replacements.put("{{VALOR_CONTRATO_MAS_ADICION_LETRAS}}", contrato.getValorContratoMasAdicionLetras() != null ? contrato.getValorContratoMasAdicionLetras() : "");
+        replacements.put("{{VALOR_CONTRATO_MAS_ADICION}}", contrato.getValorContratoMasAdicion() != null ? formatearMoneda(contrato.getValorContratoMasAdicion()) : "");
+        replacements.put("{{ENLACE_SECOP}}", contrato.getEnlaceSecop() != null ? contrato.getEnlaceSecop() : "");
 
         // Fecha fin contrato
         SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
@@ -564,9 +621,18 @@ public class CombinacionServlet extends HttpServlet {
 
         // Marcas para el tipo de contrato (Profesional / Apoyo)
         String tipoC = contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "";
+        String nivelC = contrato.getNivel() != null ? contrato.getNivel().toUpperCase() : "";
         replacements.put("{{TIPO_CONTRATO}}", tipoC);
-        replacements.put("{{MARCA_PROFESIONAL}}", tipoC.contains("PROFESIONAL") ? "X" : "");
-        replacements.put("{{MARCA_APOYO}}", (tipoC.contains("APOYO") && tipoC.contains("GESTION")) ? "X" : "");
+        
+        boolean esProfesional = tipoC.contains("PROFESIONAL") || nivelC.contains("PROFESIONAL");
+        boolean esApoyo = tipoC.contains("APOYO") || nivelC.contains("APOYO");
+        
+        replacements.put("{{MARCA_PROFESIONAL}}", esProfesional ? "X" : "");
+        replacements.put("{{MARCA_APOYO}}", esApoyo ? "X" : "");
+        
+        // Manejo de errores tipográficos en las plantillas del usuario (ej: espacio extra)
+        replacements.put("{{ MARCA_PROFESIONAL}}", esProfesional ? "X" : "");
+        replacements.put("{{ MARCA_APOYO}}", esApoyo ? "X" : "");
 
         // 2. Formación y Título (Contratista)
         String formacion = contratista.getFormacionTitulo() != null ? contratista.getFormacionTitulo() : "";
@@ -602,9 +668,20 @@ public class CombinacionServlet extends HttpServlet {
 
         // 5. Actividades Ficha EBI (Presupuesto)
         if (presupuesto != null) {
-            String actEbi = presupuesto.getFichaEbiActividades() != null ? presupuesto.getFichaEbiActividades() : "";
-            actEbi = actEbi.replace("{{", "").replace("}}", "").trim();
-            replacements.put("{{ACTIVIDADES_FICHA_EBI}}", actEbi);
+            String fullActEbi = presupuesto.getFichaEbiActividades() != null ? presupuesto.getFichaEbiActividades() : "";
+            // Limpiar posibles llaves y espacios
+            String actEbi = fullActEbi.replace("{{", "").replace("}}", "").trim();
+            
+            // EBI No. - Se extrae el código base quitando lo que sigue al primer "/" 
+            // ej: BP-26005460/1/02/01/04 -> BP-26005460
+            String ebiNumero = actEbi;
+            if (ebiNumero.contains("/")) {
+                ebiNumero = ebiNumero.substring(0, ebiNumero.indexOf("/")).trim();
+            }
+            
+            // Se usa el valor recortado en ambos placeholders para facilitar su uso en la plantilla
+            replacements.put("{{ACTIVIDADES_FICHA_EBI}}", ebiNumero);
+            replacements.put("{{EBI_NUMERO}}", ebiNumero);
 
             String objEbi = presupuesto.getFichaEbiObjetivo() != null ? presupuesto.getFichaEbiObjetivo() : "";
             objEbi = objEbi.replace("{{", "").replace("}}", "").trim();

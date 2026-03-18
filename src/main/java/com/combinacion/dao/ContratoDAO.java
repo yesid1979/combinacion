@@ -13,12 +13,12 @@ public class ContratoDAO {
                 "trd_proceso, numero_contrato, tipo_contrato, nivel, objeto, modalidad, estado, periodo, " +
                 "fecha_suscripcion, fecha_inicio, fecha_terminacion, fecha_aprobacion, fecha_ejecucion, fecha_arl, " +
                 "plazo_ejecucion, plazo_meses, plazo_dias, valor_total_letras, valor_total_numeros, " +
-                "valor_antes_iva, valor_iva, valor_cuota_letras, valor_cuota_numero, num_cuotas_letras, " +
+                "valor_antes_iva, valor_iva, valor_antes_iva_letras, valor_iva_letras, valor_cuota_letras, valor_cuota_numero, valor_cuota_antes_iva_letras, valor_cuota_antes_iva, valor_cuota_iva_letras, valor_cuota_iva, num_cuotas_letras, " +
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -44,40 +44,53 @@ public class ContratoDAO {
             ps.setBigDecimal(19, c.getValorTotalNumeros());
             ps.setBigDecimal(20, c.getValorAntesIva());
             ps.setBigDecimal(21, c.getValorIva());
-            ps.setString(22, c.getValorCuotaLetras());
-            ps.setBigDecimal(23, c.getValorCuotaNumero());
-            ps.setString(24, c.getNumCuotasLetras());
-            ps.setInt(25, c.getNumCuotasNumero());
-            ps.setString(26, c.getValorMediaCuotaLetras());
-            ps.setBigDecimal(27, c.getValorMediaCuotaNumero());
-            ps.setString(28, c.getActividadesEntregables());
-            ps.setString(29, c.getLiquidacionAcuerdo());
-            ps.setString(30, c.getLiquidacionArticulo());
-            ps.setString(31, c.getLiquidacionDecreto());
-            ps.setString(32, c.getCircularHonorarios());
+            ps.setString(22, c.getValorAntesIvaLetras());
+            ps.setString(23, c.getValorIvaLetras());
+            ps.setString(24, c.getValorCuotaLetras());
+            ps.setBigDecimal(25, c.getValorCuotaNumero());
+            ps.setString(26, c.getValorCuotaAntesIvaLetras());
+            ps.setBigDecimal(27, c.getValorCuotaAntesIva());
+            ps.setString(28, c.getValorCuotaIvaLetras());
+            ps.setBigDecimal(29, c.getValorCuotaIva());
+            ps.setString(30, c.getNumCuotasLetras());
+            ps.setInt(31, c.getNumCuotasNumero());
+            ps.setString(32, c.getValorMediaCuotaLetras());
+            ps.setBigDecimal(33, c.getValorMediaCuotaNumero());
+            ps.setString(34, c.getActividadesEntregables());
+            ps.setString(35, c.getLiquidacionAcuerdo());
+            ps.setString(36, c.getLiquidacionArticulo());
+            ps.setString(37, c.getLiquidacionDecreto());
+            ps.setString(38, c.getCircularHonorarios());
             if (c.getContratistaId() > 0)
-                ps.setInt(33, c.getContratistaId());
+                ps.setInt(39, c.getContratistaId());
             else
-                ps.setNull(33, java.sql.Types.INTEGER);
+                ps.setNull(39, java.sql.Types.INTEGER);
             if (c.getSupervisorId() > 0)
-                ps.setInt(34, c.getSupervisorId());
+                ps.setInt(40, c.getSupervisorId());
             else
-                ps.setNull(34, java.sql.Types.INTEGER);
+                ps.setNull(40, java.sql.Types.INTEGER);
             if (c.getOrdenadorId() > 0)
-                ps.setInt(35, c.getOrdenadorId());
+                ps.setInt(41, c.getOrdenadorId());
             else
-                ps.setNull(35, java.sql.Types.INTEGER);
+                ps.setNull(41, java.sql.Types.INTEGER);
             if (c.getPresupuestoId() > 0)
-                ps.setInt(36, c.getPresupuestoId());
+                ps.setInt(42, c.getPresupuestoId());
             else
-                ps.setNull(36, java.sql.Types.INTEGER);
+                ps.setNull(42, java.sql.Types.INTEGER);
             if (c.getEstructuradorId() > 0)
-                ps.setInt(37, c.getEstructuradorId());
+                ps.setInt(43, c.getEstructuradorId());
             else
-                ps.setNull(37, java.sql.Types.INTEGER);
-            ps.setString(38, c.getApoyoSupervision());
-            ps.setDate(39, c.getFechaIdoneidad());
-            ps.setDate(40, c.getFechaEstructurador());
+                ps.setNull(43, java.sql.Types.INTEGER);
+            ps.setString(44, c.getApoyoSupervision());
+            ps.setDate(45, c.getFechaIdoneidad());
+            ps.setDate(46, c.getFechaEstructurador());
+            ps.setString(47, c.getAdicionSiNo());
+            ps.setInt(48, c.getNumeroCuotasAdicion());
+            ps.setString(49, c.getValorTotalAdicionLetras());
+            ps.setBigDecimal(50, c.getValorTotalAdicion());
+            ps.setString(51, c.getValorContratoMasAdicionLetras());
+            ps.setBigDecimal(52, c.getValorContratoMasAdicion());
+            ps.setString(53, c.getEnlaceSecop());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -234,16 +247,17 @@ public class ContratoDAO {
 
     public boolean actualizar(Contrato c) {
         String sql = "UPDATE contratos SET " +
-                "trd_proceso=?, tipo_contrato=?, nivel=?, objeto=?, modality=?, estado=?, periodo=?, " +
+                "trd_proceso=?, tipo_contrato=?, nivel=?, objeto=?, modalidad=?, estado=?, periodo=?, " +
                 "fecha_suscripcion=?, fecha_inicio=?, fecha_terminacion=?, fecha_aprobacion=?, fecha_ejecucion=?, fecha_arl=?, "
                 +
                 "plazo_ejecucion=?, plazo_meses=?, plazo_dias=?, valor_total_letras=?, valor_total_numeros=?, " +
-                "valor_antes_iva=?, valor_iva=?, valor_cuota_letras=?, valor_cuota_numero=?, num_cuotas_letras=?, " +
+                "valor_antes_iva=?, valor_iva=?, valor_antes_iva_letras=?, valor_iva_letras=?, valor_cuota_letras=?, valor_cuota_numero=?, valor_cuota_antes_iva_letras=?, valor_cuota_antes_iva=?, valor_cuota_iva_letras=?, valor_cuota_iva=?, num_cuotas_letras=?, " +
                 "num_cuotas_numero=?, valor_media_cuota_letras=?, valor_media_cuota_numero=?, actividades_entregables=?, "
                 +
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
                 "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
-                "fecha_idoneidad=?, fecha_estructurador=? " +
+                "fecha_idoneidad=?, fecha_estructurador=?, adicion_si_no=?, numero_cuotas_adicion=?, valor_total_adicion_letras=?, " +
+                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -269,41 +283,54 @@ public class ContratoDAO {
             ps.setBigDecimal(18, c.getValorTotalNumeros());
             ps.setBigDecimal(19, c.getValorAntesIva());
             ps.setBigDecimal(20, c.getValorIva());
-            ps.setString(21, c.getValorCuotaLetras());
-            ps.setBigDecimal(22, c.getValorCuotaNumero());
-            ps.setString(23, c.getNumCuotasLetras());
-            ps.setInt(24, c.getNumCuotasNumero());
-            ps.setString(25, c.getValorMediaCuotaLetras());
-            ps.setBigDecimal(26, c.getValorMediaCuotaNumero());
-            ps.setString(27, c.getActividadesEntregables());
-            ps.setString(28, c.getLiquidacionAcuerdo());
-            ps.setString(29, c.getLiquidacionArticulo());
-            ps.setString(30, c.getLiquidacionDecreto());
-            ps.setString(31, c.getCircularHonorarios());
+            ps.setString(21, c.getValorAntesIvaLetras());
+            ps.setString(22, c.getValorIvaLetras());
+            ps.setString(23, c.getValorCuotaLetras());
+            ps.setBigDecimal(24, c.getValorCuotaNumero());
+            ps.setString(25, c.getValorCuotaAntesIvaLetras());
+            ps.setBigDecimal(26, c.getValorCuotaAntesIva());
+            ps.setString(27, c.getValorCuotaIvaLetras());
+            ps.setBigDecimal(28, c.getValorCuotaIva());
+            ps.setString(29, c.getNumCuotasLetras());
+            ps.setInt(30, c.getNumCuotasNumero());
+            ps.setString(31, c.getValorMediaCuotaLetras());
+            ps.setBigDecimal(32, c.getValorMediaCuotaNumero());
+            ps.setString(33, c.getActividadesEntregables());
+            ps.setString(34, c.getLiquidacionAcuerdo());
+            ps.setString(35, c.getLiquidacionArticulo());
+            ps.setString(36, c.getLiquidacionDecreto());
+            ps.setString(37, c.getCircularHonorarios());
             if (c.getContratistaId() > 0)
-                ps.setInt(32, c.getContratistaId());
+                ps.setInt(38, c.getContratistaId());
             else
-                ps.setNull(32, java.sql.Types.INTEGER);
+                ps.setNull(38, java.sql.Types.INTEGER);
             if (c.getSupervisorId() > 0)
-                ps.setInt(33, c.getSupervisorId());
+                ps.setInt(39, c.getSupervisorId());
             else
-                ps.setNull(33, java.sql.Types.INTEGER);
+                ps.setNull(39, java.sql.Types.INTEGER);
             if (c.getOrdenadorId() > 0)
-                ps.setInt(34, c.getOrdenadorId());
+                ps.setInt(40, c.getOrdenadorId());
             else
-                ps.setNull(34, java.sql.Types.INTEGER);
+                ps.setNull(40, java.sql.Types.INTEGER);
             if (c.getPresupuestoId() > 0)
-                ps.setInt(35, c.getPresupuestoId());
+                ps.setInt(41, c.getPresupuestoId());
             else
-                ps.setNull(35, java.sql.Types.INTEGER);
+                ps.setNull(41, java.sql.Types.INTEGER);
             if (c.getEstructuradorId() > 0)
-                ps.setInt(36, c.getEstructuradorId());
+                ps.setInt(42, c.getEstructuradorId());
             else
-                ps.setNull(36, java.sql.Types.INTEGER);
-            ps.setString(37, c.getApoyoSupervision());
-            ps.setDate(38, c.getFechaIdoneidad());
-            ps.setDate(39, c.getFechaEstructurador());
-            ps.setInt(40, c.getId());
+                ps.setNull(42, java.sql.Types.INTEGER);
+            ps.setString(43, c.getApoyoSupervision());
+            ps.setDate(44, c.getFechaIdoneidad());
+            ps.setDate(45, c.getFechaEstructurador());
+            ps.setString(46, c.getAdicionSiNo());
+            ps.setInt(47, c.getNumeroCuotasAdicion());
+            ps.setString(48, c.getValorTotalAdicionLetras());
+            ps.setBigDecimal(49, c.getValorTotalAdicion());
+            ps.setString(50, c.getValorContratoMasAdicionLetras());
+            ps.setBigDecimal(51, c.getValorContratoMasAdicion());
+            ps.setString(52, c.getEnlaceSecop());
+            ps.setInt(53, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -342,8 +369,14 @@ public class ContratoDAO {
                     c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                     c.setValorAntesIva(rs.getBigDecimal("valor_antes_iva"));
                     c.setValorIva(rs.getBigDecimal("valor_iva"));
+                    c.setValorAntesIvaLetras(rs.getString("valor_antes_iva_letras"));
+                    c.setValorIvaLetras(rs.getString("valor_iva_letras"));
                     c.setValorCuotaLetras(rs.getString("valor_cuota_letras"));
                     c.setValorCuotaNumero(rs.getBigDecimal("valor_cuota_numero"));
+                    c.setValorCuotaAntesIvaLetras(rs.getString("valor_cuota_antes_iva_letras"));
+                    c.setValorCuotaAntesIva(rs.getBigDecimal("valor_cuota_antes_iva"));
+                    c.setValorCuotaIvaLetras(rs.getString("valor_cuota_iva_letras"));
+                    c.setValorCuotaIva(rs.getBigDecimal("valor_cuota_iva"));
                     c.setNumCuotasLetras(rs.getString("num_cuotas_letras"));
                     c.setNumCuotasNumero(rs.getInt("num_cuotas_numero"));
                     c.setValorMediaCuotaLetras(rs.getString("valor_media_cuota_letras"));
@@ -361,6 +394,13 @@ public class ContratoDAO {
                     c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
                     c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
+                    c.setAdicionSiNo(rs.getString("adicion_si_no"));
+                    c.setNumeroCuotasAdicion(rs.getInt("numero_cuotas_adicion"));
+                    c.setValorTotalAdicionLetras(rs.getString("valor_total_adicion_letras"));
+                    c.setValorTotalAdicion(rs.getBigDecimal("valor_total_adicion"));
+                    c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
+                    c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
+                    c.setEnlaceSecop(rs.getString("enlace_secop"));
                     return c;
                 }
             }
@@ -400,8 +440,14 @@ public class ContratoDAO {
                     c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                     c.setValorAntesIva(rs.getBigDecimal("valor_antes_iva"));
                     c.setValorIva(rs.getBigDecimal("valor_iva"));
+                    c.setValorAntesIvaLetras(rs.getString("valor_antes_iva_letras"));
+                    c.setValorIvaLetras(rs.getString("valor_iva_letras"));
                     c.setValorCuotaLetras(rs.getString("valor_cuota_letras"));
                     c.setValorCuotaNumero(rs.getBigDecimal("valor_cuota_numero"));
+                    c.setValorCuotaAntesIvaLetras(rs.getString("valor_cuota_antes_iva_letras"));
+                    c.setValorCuotaAntesIva(rs.getBigDecimal("valor_cuota_antes_iva"));
+                    c.setValorCuotaIvaLetras(rs.getString("valor_cuota_iva_letras"));
+                    c.setValorCuotaIva(rs.getBigDecimal("valor_cuota_iva"));
                     c.setNumCuotasLetras(rs.getString("num_cuotas_letras"));
                     c.setNumCuotasNumero(rs.getInt("num_cuotas_numero"));
                     c.setValorMediaCuotaLetras(rs.getString("valor_media_cuota_letras"));
@@ -419,6 +465,13 @@ public class ContratoDAO {
                     c.setApoyoSupervision(rs.getString("apoyo_supervision"));
                     c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
                     c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
+                    c.setAdicionSiNo(rs.getString("adicion_si_no"));
+                    c.setNumeroCuotasAdicion(rs.getInt("numero_cuotas_adicion"));
+                    c.setValorTotalAdicionLetras(rs.getString("valor_total_adicion_letras"));
+                    c.setValorTotalAdicion(rs.getBigDecimal("valor_total_adicion"));
+                    c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
+                    c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
+                    c.setEnlaceSecop(rs.getString("enlace_secop"));
                     return c;
                 }
             }
