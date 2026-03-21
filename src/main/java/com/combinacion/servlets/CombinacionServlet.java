@@ -41,10 +41,16 @@ public class CombinacionServlet extends HttpServlet {
             throws ServletException, IOException {
         String action = request.getParameter("action");
 
+        System.out.println("CombinacionServlet Action: " + action);
+
         if ("generate".equals(action)) {
             generarDocumentoIndividual(request, response);
         } else if ("downloadZip".equals(action)) {
             generarZipMasivo(request, response);
+        } else if ("generateModificacion".equals(action)) {
+            generarModificacionIndividual(request, response);
+        } else if ("downloadZipModificacion".equals(action)) {
+            generarModificacionMasivoZip(request, response);
         } else {
             // Default view: Show list of contractors for merge
             request.getRequestDispatcher("combinacion_contratistas.jsp").forward(request, response);
@@ -535,13 +541,76 @@ public class CombinacionServlet extends HttpServlet {
         replacements.put("{{VALOR_CONTRATO_MAS_ADICION}}", contrato.getValorContratoMasAdicion() != null ? formatearMoneda(contrato.getValorContratoMasAdicion()) : "");
         replacements.put("{{ENLACE_SECOP}}", contrato.getEnlaceSecop() != null ? contrato.getEnlaceSecop() : "");
 
-        // Fecha fin contrato
+        // Configurar X para la Adición si está lleno y es "Sí/Si" o "X"
+        String adicionFlag = contrato.getAdicionSiNo();
+        boolean esAdicion = adicionFlag != null && (adicionFlag.trim().equalsIgnoreCase("Si") || adicionFlag.trim().equalsIgnoreCase("Sí") || adicionFlag.trim().equalsIgnoreCase("X"));
+        replacements.put("{{ADICION_X}}", esAdicion ? "X" : " ");
+        
+        // Poner N/A en campos sin datos en el sistema
+        replacements.put("{{PRORROGAS}}", "N/A");
+        replacements.put("{{ACLARACION}}", "N/A");
+        replacements.put("{{SUSPENSION}}", "N/A");
+        replacements.put("{{REANUDACION}}", "N/A");
+        // Cesión: N/A fijo directo en la plantilla Word (no requiere variable)
+        
+        // Ciudad y Fecha de generación actual
+        SimpleDateFormat formatHoy = new SimpleDateFormat("'Santiago de Cali,' d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+        replacements.put("{{CIUDAD_Y_FECHA_HOY}}", formatHoy.format(new java.util.Date()));
+        
+        // Nombre y cargo del supervisor
+        if (supervisor != null && supervisor.getNombre() != null) {
+            replacements.put("{{SUPERVISOR_NOMBRE_COMPLETO}}", supervisor.getNombre().toUpperCase());
+        } else {
+            replacements.put("{{SUPERVISOR_NOMBRE_COMPLETO}}", "NOMBRE DEL SUPERVISOR NO ENCONTRADO");
+        }
+        if (supervisor != null && supervisor.getCargo() != null) {
+            replacements.put("{{SUPERVISOR_CARGO}}", supervisor.getCargo().toUpperCase());
+        } else {
+            replacements.put("{{SUPERVISOR_CARGO}}", "CARGO NO ENCONTRADO");
+        }
+
+        // Fechas de inicio, terminación y suscripción
         SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
         if (contrato.getFechaTerminacion() != null) {
-            replacements.put("{{FECHA_FIN_CONTRATO}}",
-                    dateFormat.format(contrato.getFechaTerminacion()));
+            // Formatear como "Treinta (30) de junio del dos mil veintiseis (2026)"
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(contrato.getFechaTerminacion());
+            int dia = cal.get(java.util.Calendar.DAY_OF_MONTH);
+            int anio = cal.get(java.util.Calendar.YEAR);
+            String mesText = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(contrato.getFechaTerminacion());
+            String diaLetras = convertirNumeroALetras(dia);
+            
+            // Convertir años conocidos a letras o hardcodearlos dinamicamente si es 2024, 2025, 2026, 2027
+            String anioLetras;
+            if (anio == 2024) anioLetras = "dos mil veinticuatro";
+            else if (anio == 2025) anioLetras = "dos mil veinticinco";
+            else if (anio == 2026) anioLetras = "dos mil veintiséis";
+            else if (anio == 2027) anioLetras = "dos mil veintisiete";
+            else if (anio == 2028) anioLetras = "dos mil veintiocho";
+            else anioLetras = "dos mil veintialgo"; // simple fallback
+            
+            // "treinta (30) de junio del dos mil veintiséis (2026)"
+            // Capitalizar primera letra del dia manual
+            diaLetras = diaLetras.substring(0, 1).toUpperCase() + diaLetras.substring(1);
+            
+            String fechaFinEspecial = diaLetras + " (" + dia + ") de " + mesText + " del " + anioLetras + " (" + anio + ")";
+            replacements.put("{{FECHA_FIN_CONTRATO}}", fechaFinEspecial);
         } else {
             replacements.put("{{FECHA_FIN_CONTRATO}}", "FECHA PENDIENTE");
+        }
+        
+        // Fecha de inicio mapeada a Fecha de Ejecucion
+        if (contrato.getFechaEjecucion() != null) {
+            replacements.put("{{FECHA_ACTA_INICIO}}", dateFormat.format(contrato.getFechaEjecucion()));
+        } else {
+            replacements.put("{{FECHA_ACTA_INICIO}}", "FECHA PENDIENTE");
+        }
+        
+        // Fecha de suscripción mapeada a Fecha de Aprobacion
+        if (contrato.getFechaAprobacion() != null) {
+            replacements.put("{{FECHA_SUSCRIPCION}}", dateFormat.format(contrato.getFechaAprobacion()));
+        } else {
+            replacements.put("{{FECHA_SUSCRIPCION}}", "FECHA PENDIENTE");
         }
 
         // ID del PAA (Plan Anual de Adquisiciones)
@@ -682,6 +751,9 @@ public class CombinacionServlet extends HttpServlet {
             // Se usa el valor recortado en ambos placeholders para facilitar su uso en la plantilla
             replacements.put("{{ACTIVIDADES_FICHA_EBI}}", ebiNumero);
             replacements.put("{{EBI_NUMERO}}", ebiNumero);
+            
+            // Nueva variable con la actividad completa, sin recortar
+            replacements.put("{{ACTIVIDAD_ESPECIFICA_EBI}}", actEbi);
 
             String objEbi = presupuesto.getFichaEbiObjetivo() != null ? presupuesto.getFichaEbiObjetivo() : "";
             objEbi = objEbi.replace("{{", "").replace("}}", "").trim();
@@ -689,6 +761,7 @@ public class CombinacionServlet extends HttpServlet {
         } else {
             replacements.put("{{ACTIVIDADES_FICHA_EBI}}", "");
             replacements.put("{{FICHA_EBI_OBJETIVO}}", "");
+            replacements.put("{{ACTIVIDAD_ESPECIFICA_EBI}}", "");
         }
 
         // 6. Valores numéricos específicos
@@ -907,6 +980,97 @@ public class CombinacionServlet extends HttpServlet {
             return "treinta";
         } else {
             return "treinta y " + unidades[numero - 30];
+        }
+    }
+
+    private void generarModificacionIndividual(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int contratistaId = Integer.parseInt(request.getParameter("id"));
+            Contratista c = contratistaDAO.obtenerPorId(contratistaId);
+            String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
+
+            Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+
+            String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
+            String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId;
+            String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
+
+            // Generar Documentos de Modificacion
+            for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
+                if (replacements != null) {
+                    byte[] fileBytes = generateBytes(tpl, replacements);
+                    if (fileBytes != null) {
+                        addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                    }
+                }
+            }
+
+            zos.close();
+
+            byte[] zipBytes = baos.toByteArray();
+            String zipFilename = "Modificaciones_" + cedula + ".zip";
+
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFilename + "\"");
+            response.getOutputStream().write(zipBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando documentos de modificacion");
+        }
+    }
+
+    private void generarModificacionMasivoZip(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String idsParam = request.getParameter("ids");
+        if (idsParam == null || idsParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No se seleccionaron contratistas");
+            return;
+        }
+
+        String[] ids = idsParam.split(",");
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+
+        try {
+            for (String idStr : ids) {
+                try {
+                    int id = Integer.parseInt(idStr.trim());
+                    Contratista c = contratistaDAO.obtenerPorId(id);
+                    if (c == null) continue;
+
+                    String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
+                    Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
+
+                    String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
+                    String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + id;
+                    String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
+
+                    for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                        Map<String, String> replacements = getFullReplacements(id, "modificacion");
+                        if (replacements != null) {
+                            byte[] fileBytes = generateBytes(tpl, replacements);
+                            if (fileBytes != null) {
+                                addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            zos.close();
+
+            byte[] zipBytes = baos.toByteArray();
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition", "attachment; filename=\"Modificaciones_Masivas_" + System.currentTimeMillis() + ".zip\"");
+            response.getOutputStream().write(zipBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando ZIP");
         }
     }
 }

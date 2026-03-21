@@ -26,8 +26,11 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex gap-2">
+                        <button class="btn btn-warning" onclick="descargarMasivoModificacion()">
+                            <i class="bi bi-file-zip me-2"></i>Modificaciones (ZIP)
+                        </button>
                         <button class="btn btn-success" onclick="descargarMasivo()">
-                            <i class="bi bi-file-zip me-2"></i>Descargar (ZIP)
+                            <i class="bi bi-file-zip me-2"></i>Descargar Normal (ZIP)
                         </button>
                     </div>
                 </div>
@@ -111,8 +114,11 @@
                                 "className": "text-end",
                                 "render": function (data, type, row) {
                                     return `
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button class="btn btn-sm btn-primary" title="Descargar" onclick="descargarIndividual(` + data + `)">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button class="btn btn-sm btn-warning" title="Formatos Modificación" onclick="descargarIndividualModificacion(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" title="Descargar Documentos" onclick="descargarIndividual(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
                                             <i class="bi bi-download"></i>
                                         </button>
                                     </div>
@@ -150,6 +156,10 @@
                 function descargarIndividual(id) {
                     window.location.href = 'combinacion?action=generate&id=' + id;
                 }
+                
+                function descargarIndividualModificacion(id) {
+                    window.location.href = 'combinacion?action=generateModificacion&id=' + id;
+                }
 
                 function descargarMasivo() {
                     let selected = [];
@@ -164,6 +174,21 @@
 
                     // Trigger extraction
                     window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',');
+                }
+                
+                function descargarMasivoModificacion() {
+                    let selected = [];
+                    $('.row-select:checked').each(function () {
+                        selected.push($(this).val());
+                    });
+
+                    if (selected.length === 0) {
+                        Swal.fire('Atención', 'Por favor seleccione al menos un contratista.', 'warning');
+                        return;
+                    }
+
+                    // Trigger extraction
+                    window.location.href = 'combinacion?action=downloadZipModificacion&ids=' + selected.join(',');
                 }
             </script>
         </body>
