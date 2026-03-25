@@ -113,11 +113,16 @@
                                 "orderable": false,
                                 "className": "text-end",
                                 "render": function (data, type, row) {
+                                    var btnMod = '';
+                                    var adicion = row[6] ? row[6].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : '';
+                                    if (adicion === 'si' || adicion === 'x') {
+                                        btnMod = '<button class="btn btn-sm btn-warning" title="Formatos Modificación" onclick="descargarIndividualModificacion(' + data + ')" style="padding: 0.25rem 0.5rem; line-height: 1;">' +
+                                                 '<i class="bi bi-file-earmark-text"></i></button>';
+                                    }
+
                                     return `
                                     <div class="d-flex justify-content-end gap-1">
-                                        <button class="btn btn-sm btn-warning" title="Formatos Modificación" onclick="descargarIndividualModificacion(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
-                                            <i class="bi bi-file-earmark-text"></i>
-                                        </button>
+                                        ` + btnMod + `
                                         <button class="btn btn-sm btn-primary" title="Descargar Documentos" onclick="descargarIndividual(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
                                             <i class="bi bi-download"></i>
                                         </button>

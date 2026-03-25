@@ -142,6 +142,9 @@ public class ContratistaServlet extends HttpServlet {
                 json.append("\"").append(c.getId()).append("\",");
                 // Index 5: Contrato (Extra data for combinacion)
                 json.append("\"").append(escapeJson(c.getNumeroContrato() != null ? c.getNumeroContrato().trim() : ""))
+                        .append("\",");
+                // Index 6: Adicion (Extra data to hide/show modificacion button)
+                json.append("\"").append(escapeJson(c.getAdicionSiNo() != null ? c.getAdicionSiNo().trim() : ""))
                         .append("\"");
                 json.append("]");
                 if (i < list.size() - 1)

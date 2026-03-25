@@ -161,4 +161,15 @@ public class Contratista {
     public void setNumeroContrato(String numeroContrato) {
         this.numeroContrato = numeroContrato;
     }
+
+    // Campo transitorio para check de adicion en combinacion_contratistas
+    private String adicionSiNo;
+
+    public String getAdicionSiNo() {
+        return adicionSiNo;
+    }
+
+    public void setAdicionSiNo(String adicionSiNo) {
+        this.adicionSiNo = adicionSiNo;
+    }
 }

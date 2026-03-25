@@ -535,6 +535,15 @@ public class CombinacionServlet extends HttpServlet {
         // Nuevos campos: Adición y SECOP
         replacements.put("{{ADICION_SI_NO}}", contrato.getAdicionSiNo() != null ? contrato.getAdicionSiNo() : "");
         replacements.put("{{NUMERO_CUOTAS_ADICION}}", contrato.getNumeroCuotasAdicion() > 0 ? String.valueOf(contrato.getNumeroCuotasAdicion()) : "");
+        if (contrato.getNumeroCuotasAdicion() > 0) {
+            replacements.put("{{NUMERO_CUOTAS_ADICION_LETRAS}}", convertirNumeroALetras(contrato.getNumeroCuotasAdicion()));
+        } else {
+            replacements.put("{{NUMERO_CUOTAS_ADICION_LETRAS}}", "");
+        }
+
+        replacements.put("{{NUMERO_CUOTAS_NUMERO}}", contrato.getNumCuotasNumero() > 0 ? String.valueOf(contrato.getNumCuotasNumero()) : "");
+        replacements.put("{{NUMERO_CUOTAS_LETRAS}}", contrato.getNumCuotasLetras() != null ? contrato.getNumCuotasLetras() : "");
+
         replacements.put("{{VALOR_TOTAL_ADICION_LETRAS}}", contrato.getValorTotalAdicionLetras() != null ? contrato.getValorTotalAdicionLetras() : "");
         replacements.put("{{VALOR_TOTAL_ADICION}}", contrato.getValorTotalAdicion() != null ? formatearMoneda(contrato.getValorTotalAdicion()) : "");
         replacements.put("{{VALOR_CONTRATO_MAS_ADICION_LETRAS}}", contrato.getValorContratoMasAdicionLetras() != null ? contrato.getValorContratoMasAdicionLetras() : "");
@@ -543,7 +552,11 @@ public class CombinacionServlet extends HttpServlet {
 
         // Configurar X para la Adición si está lleno y es "Sí/Si" o "X"
         String adicionFlag = contrato.getAdicionSiNo();
-        boolean esAdicion = adicionFlag != null && (adicionFlag.trim().equalsIgnoreCase("Si") || adicionFlag.trim().equalsIgnoreCase("Sí") || adicionFlag.trim().equalsIgnoreCase("X"));
+        boolean esAdicion = false;
+        if (adicionFlag != null) {
+            String adNorm = java.text.Normalizer.normalize(adicionFlag.trim().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+            esAdicion = adNorm.equals("si") || adNorm.equals("x");
+        }
         replacements.put("{{ADICION_X}}", esAdicion ? "X" : " ");
         
         // Poner N/A en campos sin datos en el sistema
@@ -555,7 +568,16 @@ public class CombinacionServlet extends HttpServlet {
         
         // Ciudad y Fecha de generación actual
         SimpleDateFormat formatHoy = new SimpleDateFormat("'Santiago de Cali,' d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
-        replacements.put("{{CIUDAD_Y_FECHA_HOY}}", formatHoy.format(new java.util.Date()));
+        java.util.Date fechaActual = new java.util.Date();
+        replacements.put("{{CIUDAD_Y_FECHA_HOY}}", formatHoy.format(fechaActual));
+        
+        java.util.Calendar calHoy = java.util.Calendar.getInstance();
+        calHoy.setTime(fechaActual);
+        int diaHoy = calHoy.get(java.util.Calendar.DAY_OF_MONTH);
+        int anioHoy = calHoy.get(java.util.Calendar.YEAR);
+        String mesHoyStr = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fechaActual);
+        String constanciaFecha = "a los " + convertirNumeroALetras(diaHoy).toLowerCase() + " (" + diaHoy + ") días del mes de " + mesHoyStr + " del año " + anioHoy;
+        replacements.put("{{FECHA_CONSTANCIA_HOY}}", constanciaFecha);
         
         // Nombre y cargo del supervisor
         if (supervisor != null && supervisor.getNombre() != null) {
@@ -597,6 +619,18 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{FECHA_FIN_CONTRATO}}", fechaFinEspecial);
         } else {
             replacements.put("{{FECHA_FIN_CONTRATO}}", "FECHA PENDIENTE");
+        }
+        
+        // Nueva variable FECHA_FINAL_ADICIONAL
+        if (contrato.getFechaTerminacion() != null && contrato.getNumeroCuotasAdicion() > 0) {
+            java.util.Calendar calAdicional = java.util.Calendar.getInstance();
+            calAdicional.setTime(contrato.getFechaTerminacion());
+            calAdicional.add(java.util.Calendar.MONTH, contrato.getNumeroCuotasAdicion());
+            
+            SimpleDateFormat sdfFinal = new SimpleDateFormat("d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+            replacements.put("{{FECHA_FINAL_ADICIONAL}}", sdfFinal.format(calAdicional.getTime()));
+        } else {
+            replacements.put("{{FECHA_FINAL_ADICIONAL}}", "");
         }
         
         // Fecha de inicio mapeada a Fecha de Ejecucion
@@ -691,7 +725,15 @@ public class CombinacionServlet extends HttpServlet {
         // Marcas para el tipo de contrato (Profesional / Apoyo)
         String tipoC = contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "";
         String nivelC = contrato.getNivel() != null ? contrato.getNivel().toUpperCase() : "";
-        replacements.put("{{TIPO_CONTRATO}}", tipoC);
+        
+        // Formato para el documento (Tipo frase: Prestación de servicios...)
+        String tipoC_Frase = tipoC;
+        if (!tipoC_Frase.isEmpty()) {
+            tipoC_Frase = tipoC_Frase.toLowerCase();
+            tipoC_Frase = Character.toUpperCase(tipoC_Frase.charAt(0)) + tipoC_Frase.substring(1);
+        }
+        replacements.put("{{TIPO_CONTRATO}}", tipoC_Frase);
+
         
         boolean esProfesional = tipoC.contains("PROFESIONAL") || nivelC.contains("PROFESIONAL");
         boolean esApoyo = tipoC.contains("APOYO") || nivelC.contains("APOYO");
@@ -781,11 +823,23 @@ public class CombinacionServlet extends HttpServlet {
         if (ordenador != null) {
             replacements.put("{{NOMBRE_ORDENADOR_GASTO}}",
                     ordenador.getNombreOrdenador() != null ? ordenador.getNombreOrdenador().toUpperCase() : "");
+            replacements.put("{{CEDULA_ORDENADOR}}",
+                    ordenador.getCedulaOrdenador() != null ? ordenador.getCedulaOrdenador() : "");
             replacements.put("{{CARGO_ORDENADOR_GASTO}}",
                     ordenador.getCargoOrdenador() != null ? ordenador.getCargoOrdenador() : "");
+            replacements.put("{{ORGANISMO}}",
+                    ordenador.getOrganismo() != null ? ordenador.getOrganismo() : "");
+            replacements.put("{{DECRETO_NOMBRAMIENTO}}",
+                    ordenador.getDecretoNombramiento() != null ? ordenador.getDecretoNombramiento() : "");
+            replacements.put("{{ACTA_POSESION}}",
+                    ordenador.getActaPosesion() != null ? ordenador.getActaPosesion() : "");
         } else {
             replacements.put("{{NOMBRE_ORDENADOR_GASTO}}", "SIN DESIGNAR");
+            replacements.put("{{CEDULA_ORDENADOR}}", "");
             replacements.put("{{CARGO_ORDENADOR_GASTO}}", "");
+            replacements.put("{{ORGANISMO}}", "");
+            replacements.put("{{DECRETO_NOMBRAMIENTO}}", "");
+            replacements.put("{{ACTA_POSESION}}", "");
         }
 
         // Lógica de fechas base (Priorizar según el tipo de documento)
@@ -828,7 +882,29 @@ public class CombinacionServlet extends HttpServlet {
         // RPC
         if (presupuesto != null) {
             replacements.put("${RPC_NUMERO}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
+            replacements.put("{{RPC_NUMERO}}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
+            replacements.put("{{RPC_NO}}", presupuesto.getRpNumero() != null ? presupuesto.getRpNumero() : "");
+            replacements.put("{{CDP_VALOR}}", presupuesto.getCdpValor() != null ? formatearMoneda(presupuesto.getCdpValor()) : "");
+        } else {
+            replacements.put("{{RPC_NO}}", "");
+            replacements.put("{{CDP_VALOR}}", "");
         }
+        
+        // Certificado Insuficiencia
+        if (presupuesto != null && presupuesto.getCertificadoInsuficiencia() != null) {
+            replacements.put("{{CERTIFICADO_INSUFICIENCIA}}", presupuesto.getCertificadoInsuficiencia());
+        } else {
+            replacements.put("{{CERTIFICADO_INSUFICIENCIA}}", "");
+        }
+
+        // Fechas adicionales
+        if (contrato.getFechaArl() != null) {
+            replacements.put("{{FECHA_ARL}}", dateFormat.format(contrato.getFechaArl()));
+        } else {
+            replacements.put("{{FECHA_ARL}}", "");
+        }
+
+
 
         // Standard Date Logic - Formato: "06 de enero de 2026"
         SimpleDateFormat sdfDoc = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
@@ -998,15 +1074,29 @@ public class CombinacionServlet extends HttpServlet {
             String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId;
             String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
 
-            // Generar Documentos de Modificacion
-            for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
-                if (replacements != null) {
-                    byte[] fileBytes = generateBytes(tpl, replacements);
-                    if (fileBytes != null) {
-                        addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+            String adicionFlag = contrato != null ? contrato.getAdicionSiNo() : null;
+            boolean esAdicion = false;
+            if (adicionFlag != null) {
+                String adNorm = java.text.Normalizer.normalize(adicionFlag.trim().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+                esAdicion = adNorm.equals("si") || adNorm.equals("x");
+            }
+
+            if (esAdicion) {
+                // Generar Documentos de Modificacion
+                for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                    Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
+                    if (replacements != null) {
+                        byte[] fileBytes = generateBytes(tpl, replacements);
+                        if (fileBytes != null) {
+                            addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                        }
                     }
                 }
+            } else {
+                String alertaTexto = "El contrato para " + (c != null ? c.getNombre() : "el contratista seleccionado") + 
+                                     " no tiene registrada una ADICIÓN en el sistema.\n" +
+                                     "Para generar estos documentos, el campo 'Adición' debe ser 'Sí' o 'X'.";
+                addToZip(zos, folderName, "ALERTA_SIN_ADICION_" + cedula + ".txt", alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             }
 
             zos.close();
@@ -1048,14 +1138,29 @@ public class CombinacionServlet extends HttpServlet {
                     String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + id;
                     String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
 
-                    for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                        Map<String, String> replacements = getFullReplacements(id, "modificacion");
-                        if (replacements != null) {
-                            byte[] fileBytes = generateBytes(tpl, replacements);
-                            if (fileBytes != null) {
-                                addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                    String adicionFlag = contrato != null ? contrato.getAdicionSiNo() : null;
+                    boolean esAdicion = false;
+                    if (adicionFlag != null) {
+                        String adNorm = java.text.Normalizer.normalize(adicionFlag.trim().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+                        esAdicion = adNorm.equals("si") || adNorm.equals("x");
+                    }
+
+                    if (esAdicion) {
+                        // Generar Documentos de Modificacion
+                        for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                            Map<String, String> replacements = getFullReplacements(id, "modificacion");
+                            if (replacements != null) {
+                                byte[] fileBytes = generateBytes(tpl, replacements);
+                                if (fileBytes != null) {
+                                    addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                                }
                             }
                         }
+                    } else {
+                        String alertaTexto = "El contrato para " + (c != null ? c.getNombre() : "este contratista") + 
+                                             " no tiene registrada una ADICIÓN en el sistema.\n" +
+                                             "Para generar estos documentos, el campo 'Adición' debe ser 'Sí' o 'X'.";
+                        addToZip(zos, folderName, "ALERTA_SIN_ADICION_" + cedula + ".txt", alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

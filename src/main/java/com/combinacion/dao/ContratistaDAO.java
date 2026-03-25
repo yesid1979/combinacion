@@ -188,7 +188,9 @@ public class ContratistaDAO {
         List<Contratista> lista = new ArrayList<>();
         // Fetch all needed columns plus latest contract number
         String sql = "SELECT id, cedula, nombre, correo, telefono, direccion, fecha_nacimiento, " +
-                "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato "
+                "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato, "
+                +
+                "(SELECT adicion_si_no FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as adicion_si_no "
                 +
                 "FROM contratistas WHERE 1=1 ";
 
@@ -239,6 +241,7 @@ public class ContratistaDAO {
                     c.setTelefono(rs.getString("telefono"));
                     c.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+                    c.setAdicionSiNo(rs.getString("adicion_si_no"));
                     lista.add(c);
                 }
             }
