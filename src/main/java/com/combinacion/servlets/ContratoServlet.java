@@ -193,6 +193,8 @@ public class ContratoServlet extends HttpServlet {
             // 2. Create Contrato
             Contrato contrato = new Contrato();
             contrato.setNumeroContrato(request.getParameter("numero_contrato"));
+            contrato.setTipoContrato(request.getParameter("tipo_contrato"));
+            contrato.setNivel(request.getParameter("nivel"));
             contrato.setObjeto(request.getParameter("objeto"));
             contrato.setValorTotalNumeros(ParseUtils.parseBigDecimal(request.getParameter("valor_total")));
             contrato.setValorTotalLetras(request.getParameter("valor_total_letras"));
@@ -395,6 +397,8 @@ public class ContratoServlet extends HttpServlet {
 
             // 4. Update Contrato fields
             contrato.setNumeroContrato(request.getParameter("numero_contrato"));
+            contrato.setTipoContrato(request.getParameter("tipo_contrato"));
+            contrato.setNivel(request.getParameter("nivel"));
             contrato.setObjeto(request.getParameter("objeto"));
             contrato.setValorTotalNumeros(ParseUtils.parseBigDecimal(request.getParameter("valor_total")));
             contrato.setValorTotalLetras(request.getParameter("valor_total_letras"));

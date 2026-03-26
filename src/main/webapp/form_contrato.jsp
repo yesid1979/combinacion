@@ -143,7 +143,17 @@
                                                     value="${contrato.numeroContrato}" required ${readonly ? 'readonly'
                                                     : '' }>
                                             </div>
-                                            <div class="col-md-8">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Tipo de Contrato</label>
+                                                <input type="text" class="form-control" name="tipo_contrato"
+                                                    value="${contrato.tipoContrato}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Nivel</label>
+                                                <input type="text" class="form-control" name="nivel"
+                                                    value="${contrato.nivel}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-12">
                                                 <label class="form-label">Objeto del Contrato</label>
                                                 <textarea class="form-control" name="objeto" rows="2" ${readonly
                                                     ? 'readonly' : '' }>${contrato.objeto}</textarea>

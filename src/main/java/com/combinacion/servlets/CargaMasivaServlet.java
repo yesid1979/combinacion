@@ -677,6 +677,22 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("supervisor_cargo", i);
 
                 // ===== CONTRATOS (NUEVO) =====
+            } else if (h.contains("adicion") && h.contains("si") && h.contains("no")) {
+                map.put("adicion_si_no", i);
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("adicion")) {
+                map.put("numero_cuotas_adicion", i);
+            } else if (h.contains("valor") && h.contains("total") && h.contains("contrato") && h.contains("mas") && h.contains("adicion")) {
+                if (h.contains("letras")) {
+                    map.put("valor_contrato_mas_adicion_letras", i);
+                } else {
+                    map.put("valor_contrato_mas_adicion", i);
+                }
+            } else if (h.contains("valor") && h.contains("total") && h.contains("adicion") && !h.contains("contrato")) {
+                if (h.contains("letras")) {
+                    map.put("valor_total_adicion_letras", i);
+                } else {
+                    map.put("valor_total_adicion", i);
+                }
             } else if (h.contains("trd") && h.contains("proceso")) {
                 map.put("trd_proceso", i);
             } else if ((h.contains("numero") || h.contains("nmero")) && h.contains("contrato") && !h.contains("tipo")
@@ -692,15 +708,15 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("tipo_contrato_profesional", i);
             } else if (h.contains("apoyo") && h.contains("gestion")) {
                 map.put("tipo_contrato_apoyo", i);
-            } else if (h.contains("nivel")) {
+            } else if (h.equals("nivel") || (h.contains("nivel") && !h.contains("observa") && !h.contains("central") && !h.contains("territorial"))) {
                 map.put("nivel", i);
-            } else if (h.contains("objeto")) {
+            } else if (h.equals("objeto") || (h.contains("objeto") && !h.contains("observa"))) {
                 map.put("objeto", i);
-            } else if (h.contains("modalidad")) {
+            } else if (h.equals("modalidad") || (h.contains("modalidad") && !h.contains("observa"))) {
                 map.put("modalidad", i);
-            } else if (h.contains("estado")) {
+            } else if (h.equals("estado") || (h.contains("estado") && !h.contains("tramite") && !h.contains("observa"))) {
                 map.put("estado", i);
-            } else if (h.contains("periodo")) {
+            } else if (h.equals("periodo") || (h.contains("periodo") && !h.contains("observa"))) {
                 map.put("periodo", i);
             } else if (h.contains("suscripcion")) {
                 map.put("fecha_suscripcion", i);
@@ -751,9 +767,9 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("fecha_estructurador", i);
             } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
                 map.put("plazo_dias", i);
-            } else if (h.contains("valor") && h.contains("total") && h.contains("letras")) {
+            } else if (h.contains("valor") && h.contains("total") && h.contains("letras") && !h.contains("adicion")) {
                 map.put("valor_total_letras", i);
-            } else if (h.contains("valor") && h.contains("total") && h.contains("numeros")) {
+            } else if (h.contains("valor") && h.contains("total") && h.contains("numeros") && !h.contains("adicion")) {
                 map.put("valor_total_numeros", i);
             } else if (h.contains("antes") && h.contains("iva")) {
                 if (h.contains("letras")) {
@@ -767,9 +783,9 @@ public class CargaMasivaServlet extends HttpServlet {
                 } else {
                     map.put("valor_iva", i);
                 }
-            } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media") && !h.contains("antes") && !h.contains("iva")) {
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
                 map.put("valor_cuota_letras", i);
-            } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media") && !h.contains("antes") && !h.contains("iva")) {
+            } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
                 map.put("valor_cuota_numero", i);
             } else if (h.contains("valor") && h.contains("cuota") && h.contains("antes") && h.contains("iva")) {
                 if (h.contains("letras")) {
@@ -783,30 +799,14 @@ public class CargaMasivaServlet extends HttpServlet {
                 } else {
                     map.put("valor_cuota_iva", i);
                 }
-            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("letras")) {
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("letras") && !h.contains("adicion")) {
                 map.put("num_cuotas_letras", i);
-            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("numero")) {
+            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("numero") && !h.contains("adicion")) {
                 map.put("num_cuotas_numero", i);
             } else if (h.contains("media") && h.contains("letras")) {
                 map.put("valor_media_cuota_letras", i);
             } else if (h.contains("media") && h.contains("numero")) {
                 map.put("valor_media_cuota_numero", i);
-            } else if (h.contains("adicion") && h.contains("si") && h.contains("no")) {
-                map.put("adicion_si_no", i);
-            } else if (h.contains("numero") && h.contains("cuotas") && h.contains("adicion")) {
-                map.put("numero_cuotas_adicion", i);
-            } else if (h.contains("valor") && h.contains("total") && h.contains("contrato") && h.contains("mas") && h.contains("adicion")) {
-                if (h.contains("letras")) {
-                    map.put("valor_contrato_mas_adicion_letras", i);
-                } else {
-                    map.put("valor_contrato_mas_adicion", i);
-                }
-            } else if (h.contains("valor") && h.contains("total") && h.contains("adicion") && !h.contains("contrato")) {
-                if (h.contains("letras")) {
-                    map.put("valor_total_adicion_letras", i);
-                } else {
-                    map.put("valor_total_adicion", i);
-                }
             } else if (h.contains("enlace") && h.contains("secop")) {
                 map.put("enlace_secop", i);
             } else if ((h.contains("entregables") || h.contains("actividades") || h.contains("obligaciones"))

@@ -548,6 +548,9 @@ public class CombinacionServlet extends HttpServlet {
         replacements.put("{{VALOR_TOTAL_ADICION}}", contrato.getValorTotalAdicion() != null ? formatearMoneda(contrato.getValorTotalAdicion()) : "");
         replacements.put("{{VALOR_CONTRATO_MAS_ADICION_LETRAS}}", contrato.getValorContratoMasAdicionLetras() != null ? contrato.getValorContratoMasAdicionLetras() : "");
         replacements.put("{{VALOR_CONTRATO_MAS_ADICION}}", contrato.getValorContratoMasAdicion() != null ? formatearMoneda(contrato.getValorContratoMasAdicion()) : "");
+        replacements.put("{{CIRCULAR_HONORARIOS}}", contrato.getCircularHonorarios() != null ? contrato.getCircularHonorarios() : "");
+        replacements.put("{{CIRCULAR_CONTRATACION}}", contrato.getCircularHonorarios() != null ? contrato.getCircularHonorarios() : "");
+        replacements.put("${CIRCULAR_HONORARIOS}", contrato.getCircularHonorarios() != null ? contrato.getCircularHonorarios() : "");
         replacements.put("{{ENLACE_SECOP}}", contrato.getEnlaceSecop() != null ? contrato.getEnlaceSecop() : "");
 
         // Configurar X para la Adición si está lleno y es "Sí/Si" o "X"
