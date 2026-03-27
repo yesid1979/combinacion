@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
@@ -435,8 +436,20 @@ public class CombinacionServlet extends HttpServlet {
         // Información Presupuestal (CDP)
         if (presupuesto != null) {
             replacements.put("{{NUMERO_CDP}}", presupuesto.getCdpNumero() != null ? presupuesto.getCdpNumero() : "");
-            replacements.put("{{VALOR_CDP}}",
-                    presupuesto.getCdpValor() != null ? formatearMoneda(presupuesto.getCdpValor()) : "");
+            
+            BigDecimal cdpVal = presupuesto.getCdpValor();
+            replacements.put("{{VALOR_CDP}}", cdpVal != null ? formatearMoneda(cdpVal) : "");
+            replacements.put("{{CDP_VALOR}}", cdpVal != null ? formatearMoneda(cdpVal) : "");
+            
+            String cdpLetras = cdpVal != null ? convertirMontoALetras(cdpVal) : "";
+            replacements.put("{{VALOR_CDP_LETRAS}}", cdpLetras);
+            replacements.put("{{CDP_VALOR_LETRAS}}", cdpLetras);
+            
+            // Versión en minúsculas (formato frase)
+            String cdpLetrasMin = !cdpLetras.isEmpty() ? capitalizeFirst(cdpLetras) : "";
+            replacements.put("{{VALOR_CDP_LETRAS_MIN}}", cdpLetrasMin);
+            replacements.put("{{CDP_VALOR_LETRAS_MIN}}", cdpLetrasMin);
+            
             replacements.put("{{COMPROMISO_CDP}}",
                     presupuesto.getApropiacionPresupuestal() != null ? presupuesto.getApropiacionPresupuestal() : "");
 
@@ -562,13 +575,6 @@ public class CombinacionServlet extends HttpServlet {
         }
         replacements.put("{{ADICION_X}}", esAdicion ? "X" : " ");
         
-        // Poner N/A en campos sin datos en el sistema
-        replacements.put("{{PRORROGAS}}", "N/A");
-        replacements.put("{{ACLARACION}}", "N/A");
-        replacements.put("{{SUSPENSION}}", "N/A");
-        replacements.put("{{REANUDACION}}", "N/A");
-        // Cesión: N/A fijo directo en la plantilla Word (no requiere variable)
-        
         // Ciudad y Fecha de generación actual
         SimpleDateFormat formatHoy = new SimpleDateFormat("'Santiago de Cali,' d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
         java.util.Date fechaActual = new java.util.Date();
@@ -581,6 +587,17 @@ public class CombinacionServlet extends HttpServlet {
         String mesHoyStr = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fechaActual);
         String constanciaFecha = "a los " + convertirNumeroALetras(diaHoy).toLowerCase() + " (" + diaHoy + ") días del mes de " + mesHoyStr + " del año " + anioHoy;
         replacements.put("{{FECHA_CONSTANCIA_HOY}}", constanciaFecha);
+        
+        // Poner N/A en campos sin datos en el sistema (especialmente para Modificación #1)
+        replacements.put("{{ADICIONES}}", "N/A");
+        replacements.put("{{ADICIONES_PREVIAS}}", "N/A");
+        replacements.put("{{VALOR_TOTAL_A_LA_FECHA}}", "N/A");
+        replacements.put("{{VALOR_TOTAL_AL_FECHA}}", "N/A");
+        replacements.put("{{PRORROGAS}}", "N/A");
+        replacements.put("{{ACLARACION}}", "N/A");
+        replacements.put("{{SUSPENSION}}", "N/A");
+        replacements.put("{{REANUDACION}}", "N/A");
+        // Cesión: N/A fijo directo en la plantilla Word (no requiere variable)
         
         // Nombre y cargo del supervisor
         if (supervisor != null && supervisor.getNombre() != null) {
@@ -1180,5 +1197,85 @@ public class CombinacionServlet extends HttpServlet {
             e.printStackTrace();
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando ZIP");
         }
+    }
+
+    /**
+     * Convierte un texto a minúsculas y capitaliza solo la primera letra.
+     */
+    private String capitalizeFirst(String input) {
+        if (input == null || input.trim().isEmpty()) return "";
+        String low = input.toLowerCase().trim();
+        return Character.toUpperCase(low.charAt(0)) + low.substring(1);
+    }
+
+    /**
+     * Convierte un monto BigDecimal a su representación en letras (Castellano).
+     * Ejemplo: 1500000 -> "UN MILLÓN QUINIENTOS MIL PESOS M/CTE"
+     */
+    private String convertirMontoALetras(java.math.BigDecimal monto) {
+        if (monto == null) return "";
+        
+        long lPart = monto.longValue();
+        if (lPart == 0) return "CERO PESOS M/CTE";
+        
+        String letras = convertirNumeroALetrasGrandes(lPart);
+        
+        // Regla: Millón/Millones + DE + PESOS
+        if (letras.endsWith("MILLON") || letras.endsWith("MILLONES")) {
+            letras += " DE";
+        }
+        
+        return letras + " PESOS M/CTE";
+    }
+
+    private String convertirNumeroALetrasGrandes(long n) {
+        if (n == 0) return "CERO";
+        if (n == 1) return "UN";
+        if (n == 100) return "CIEN";
+        
+        if (n < 1000) return getCentenas(n);
+        if (n < 1000000) {
+            long mil = n / 1000;
+            long resto = n % 1000;
+            String sMil = (mil == 1) ? "MIL" : (convertirNumeroALetrasGrandes(mil) + " MIL");
+            return (resto == 0) ? sMil : (sMil + " " + getCentenas(resto));
+        }
+        
+        long millon = n / 1000000;
+        long restoMillon = n % 1000000;
+        String sMillon = (millon == 1) ? "UN MILLON" : (convertirNumeroALetrasGrandes(millon) + " MILLONES");
+        
+        if (restoMillon == 0) return sMillon;
+        return sMillon + " " + (restoMillon < 1000 ? getCentenas(restoMillon) : convertirNumeroALetrasGrandes(restoMillon));
+    }
+
+    private String getCentenas(long n) {
+        if (n > 999) return "";
+        if (n == 100) return "CIEN";
+        if (n < 10) return getUnidades(n);
+        if (n < 20) return getEspeciales(n);
+        if (n < 100) {
+            int d = (int)(n / 10);
+            int u = (int)(n % 10);
+            String[] dec = {"", "", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"};
+            if (n == 20) return "VEINTE";
+            if (n < 30) return "VEINTI" + getUnidades(u);
+            return dec[d] + (u == 0 ? "" : " Y " + getUnidades(u));
+        }
+        
+        int c = (int)(n / 100);
+        long r = n % 100;
+        String[] cent = {"", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"};
+        return cent[c] + (r == 0 ? "" : " " + getCentenas(r));
+    }
+
+    private String getUnidades(long n) {
+        String[] u = {"", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"};
+        return u[(int)n];
+    }
+
+    private String getEspeciales(long n) {
+        String[] esp = {"DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"};
+        return esp[(int)(n - 10)];
     }
 }

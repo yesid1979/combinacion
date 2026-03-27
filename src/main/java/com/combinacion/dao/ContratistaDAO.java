@@ -113,10 +113,19 @@ public class ContratistaDAO {
     }
 
     public Contratista obtenerPorCedula(String cedula) {
-        String sql = "SELECT * FROM contratistas WHERE cedula = ?";
+        String searchDigits = (cedula != null) ? cedula.replaceAll("[^0-9]", "") : "";
+        String sql = "SELECT * FROM contratistas WHERE cedula = ? ";
+        if (!searchDigits.isEmpty()) {
+            sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') = ? ";
+        }
+        sql += " LIMIT 1 ";
+
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cedula);
+            if (!searchDigits.isEmpty()) {
+                ps.setString(2, searchDigits);
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Contratista c = new Contratista();
@@ -160,19 +169,31 @@ public class ContratistaDAO {
 
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM contratistas WHERE 1=1 ";
+        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
+        
         if (search != null && !search.isEmpty()) {
             search = removeAccents(search).toLowerCase();
             sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
                     + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?)";
+                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?";
+            
+            if (!searchDigits.isEmpty()) {
+                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ?";
+            }
+            sql += ")";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search + "%";
-                ps.setString(1, like);
-                ps.setString(2, like);
-                ps.setString(3, like);
+                String likeDigits = "%" + searchDigits + "%";
+                int idx = 1;
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                if (!searchDigits.isEmpty()) {
+                    ps.setString(idx++, likeDigits);
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
@@ -186,6 +207,8 @@ public class ContratistaDAO {
 
     public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir) {
         List<Contratista> lista = new ArrayList<>();
+        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
+        
         // Fetch all needed columns plus latest contract number
         String sql = "SELECT id, cedula, nombre, correo, telefono, direccion, fecha_nacimiento, " +
                 "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato, "
@@ -195,14 +218,15 @@ public class ContratistaDAO {
                 "FROM contratistas WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
-            // Normalizamos la busqueda en Java (quitamos tildes al input)
             search = removeAccents(search).toLowerCase();
-
-            // En SQL usamos translate para quitar tildes a las columnas antes de comparar
-            // PostgreSQL specific: translate(LOWER(col), 'áéíóú', 'aeiou')
             sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
                     + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?)";
+                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?";
+            
+            if (!searchDigits.isEmpty()) {
+                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ?";
+            }
+            sql += ")";
         }
 
         // Validate sortCol to prevent SQL injection
@@ -224,9 +248,13 @@ public class ContratistaDAO {
             int index = 1;
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search + "%";
+                String likeDigits = "%" + searchDigits + "%";
                 ps.setString(index++, like);
                 ps.setString(index++, like);
                 ps.setString(index++, like);
+                if (!searchDigits.isEmpty()) {
+                    ps.setString(index++, likeDigits);
+                }
             }
             ps.setInt(index++, length);
             ps.setInt(index++, start);

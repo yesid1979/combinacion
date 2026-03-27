@@ -474,6 +474,20 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("actividades_entregables", i);
                 continue;
             }
+
+            // PRIORIDAD PARA NIVEL Y TIPO CONTRATO (Evitar matchings erróneos por ser palabras cortas)
+            if (h.equals("nivel") || (h.contains("nivel") && !h.contains("observa") && !h.contains("central") && !h.contains("territorial"))) {
+                map.put("nivel", i);
+                continue;
+            }
+            if (h.contains("tipo") && h.contains("contrato") && h.contains("xxx")) {
+                map.put("tipo_contrato", i);
+                continue;
+            }
+            if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !map.containsKey("tipo_contrato")) {
+                map.put("tipo_contrato", i);
+                continue;
+            }
             // ----------------------------------------------------------------------
 
             // --- PRIORITY 1: ACTIVIDADES (To prevent false matches in other columns) ---
@@ -698,18 +712,10 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if ((h.contains("numero") || h.contains("nmero")) && h.contains("contrato") && !h.contains("tipo")
                     && !h.contains("valor")) {
                 map.put("numero_contrato", i);
-            } else if (h.contains("tipo") && h.contains("contrato") && h.contains("xxx")) {
-                // Prioridad máxima para el campo específico solicitado
-                map.put("tipo_contrato", i);
-            } else if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !map.containsKey("tipo_contrato")) {
-                // "Tipo de contrato (Profesional o de Apoyo...)" - Solo si no se encontró el de 'xxx'
-                map.put("tipo_contrato", i);
             } else if (h.equals("profesional") || (h.contains("profesional") && !h.contains("tarjeta") && !h.contains("formacion") && !h.contains("perfil"))) {
                 map.put("tipo_contrato_profesional", i);
             } else if (h.contains("apoyo") && h.contains("gestion")) {
                 map.put("tipo_contrato_apoyo", i);
-            } else if (h.equals("nivel") || (h.contains("nivel") && !h.contains("observa") && !h.contains("central") && !h.contains("territorial"))) {
-                map.put("nivel", i);
             } else if (h.equals("objeto") || (h.contains("objeto") && !h.contains("observa"))) {
                 map.put("objeto", i);
             } else if (h.equals("modalidad") || (h.contains("modalidad") && !h.contains("observa"))) {

@@ -148,16 +148,28 @@ public class ContratoDAO {
 
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
+        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
+        
         if (search != null && !search.isEmpty()) {
-            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ?)";
+            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ? OR ct.cedula LIKE ?";
+            if (!searchDigits.isEmpty()) {
+                sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+            }
+            sql += ")";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search + "%";
-                ps.setString(1, like);
-                ps.setString(2, like);
-                ps.setString(3, like);
+                String likeDigits = "%" + searchDigits + "%";
+                int idx = 1;
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                if (!searchDigits.isEmpty()) {
+                    ps.setString(idx++, likeDigits);
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
@@ -172,9 +184,14 @@ public class ContratoDAO {
     public List<Contrato> findWithPagination(int start, int length, String search, int orderCol, String orderDir) {
         List<Contrato> lista = new ArrayList<>();
         String sql = "SELECT c.*, ct.nombre as contratista_nombre FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
+        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
 
         if (search != null && !search.isEmpty()) {
-            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ?)";
+            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ? OR ct.cedula LIKE ?";
+            if (!searchDigits.isEmpty()) {
+                sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+            }
+            sql += ")";
         }
 
         // Mapping DataTables column index to DB column name for sorting
@@ -196,9 +213,14 @@ public class ContratoDAO {
             int index = 1;
             if (search != null && !search.isEmpty()) {
                 String like = "%" + search + "%";
+                String likeDigits = "%" + searchDigits + "%";
                 ps.setString(index++, like);
                 ps.setString(index++, like);
                 ps.setString(index++, like);
+                ps.setString(index++, like);
+                if (!searchDigits.isEmpty()) {
+                    ps.setString(index++, likeDigits);
+                }
             }
             ps.setInt(index++, length);
             ps.setInt(index++, start);
