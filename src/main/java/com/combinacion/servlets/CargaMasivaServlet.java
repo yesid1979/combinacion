@@ -258,7 +258,10 @@ public class CargaMasivaServlet extends HttpServlet {
 
                 // 3. CACHE EXISTING DATA (Optimización para evitar N+1 queries)
                 java.util.Set<String> cedulasOrdenadoresExistentes = ordenadorDAO.obtenerTodasLasCedulas();
-                java.util.Set<String> cedulasContratistasExistentes = contratistaDAO.obtenerTodasLasCedulas();
+                java.util.Set<String> cedulasContratistasExistentes = new java.util.HashSet<>();
+                for(String ced : contratistaDAO.obtenerTodasLasCedulas()) {
+                    if (ced != null) cedulasContratistasExistentes.add(ced.replaceAll("[^0-9]", ""));
+                }
                 java.util.Set<String> cedulasSupervisoresExistentes = supervisorDAO.obtenerTodasLasCedulas();
 
                 // 4. PROCESS DATA ROWS
@@ -997,7 +1000,9 @@ public class CargaMasivaServlet extends HttpServlet {
 
             Contratista contratista;
             boolean exists = false;
-            if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
+            String normalizedCedula = cedula.replaceAll("[^0-9]", "");
+            
+            if (!normalizedCedula.isEmpty() && cedulasExistentes.contains(normalizedCedula)) {
                 contratista = contratistaDAO.obtenerPorCedula(cedula);
                 if (contratista != null) {
                     exists = true;
@@ -1059,8 +1064,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 }
             } else {
                 if (contratistaDAO.insertar(contratista)) {
-                    if (!cedula.isEmpty())
-                        cedulasExistentes.add(cedula);
+                    if (!normalizedCedula.isEmpty())
+                        cedulasExistentes.add(normalizedCedula);
                     return contratista;
                 }
             }

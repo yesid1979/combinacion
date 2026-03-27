@@ -285,11 +285,21 @@ public class ContratistaServlet extends HttpServlet {
             c.setDescripcionTarjeta(request.getParameter("descripcion_tarjeta"));
             c.setRestricciones(request.getParameter("restricciones"));
 
+            // Validar si ya existe un contratista con esa cédula
+            Contratista existing = contratistaDAO.obtenerPorCedula(c.getCedula());
+            if (existing != null) {
+                request.setAttribute("error", "El contratista con cédula " + c.getCedula() + " ya existe (" + existing.getNombre() + ").");
+                request.setAttribute("contratista", c); // Devolver los datos al formulario
+                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+                return;
+            }
+
             if (contratistaDAO.insertar(c)) {
                 // Success
                 response.sendRedirect("contratistas?status=created");
             } else {
-                request.setAttribute("error", "Error al guardar. Verifique si la cédula ya existe.");
+                request.setAttribute("error", "Error al guardar el contratista. Verifique los datos e intente nuevamente.");
+                request.setAttribute("contratista", c);
                 request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
             }
         } catch (Exception e) {
@@ -325,7 +335,16 @@ public class ContratistaServlet extends HttpServlet {
                 response.sendRedirect("contratistas?action=list");
                 return;
             }
-            c.setCedula(request.getParameter("cedula"));
+            String newCedula = request.getParameter("cedula");
+            Contratista other = contratistaDAO.obtenerPorCedula(newCedula);
+            if (other != null && other.getId() != id) {
+                request.setAttribute("error", "La cédula " + newCedula + " ya se encuentra asignada a otro contratista (" + other.getNombre() + ").");
+                c.setCedula(newCedula);
+                request.setAttribute("contratista", c);
+                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+                return;
+            }
+            c.setCedula(newCedula);
             c.setDv(request.getParameter("dv"));
             c.setNombre(request.getParameter("nombre"));
             c.setTelefono(request.getParameter("telefono"));

@@ -27,13 +27,13 @@
                     <div class="card-body p-4">
                         <h2 class="mb-4 fw-bold">
                             <c:choose>
-                                <c:when test="${contratista != null}">Editar Contratista</c:when>
+                                <c:when test="${contratista != null && contratista.id > 0}">Editar Contratista</c:when>
                                 <c:otherwise>Registrar Nuevo Contratista</c:otherwise>
                             </c:choose>
                         </h2>
                         <form action="contratistas" method="POST">
                             <c:choose>
-                                <c:when test="${contratista != null}">
+                                <c:when test="${contratista != null && contratista.id > 0}">
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="id" value="${contratista.id}">
                                 </c:when>
