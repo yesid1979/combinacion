@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <!DOCTYPE html>
         <html lang="es">
@@ -127,7 +127,7 @@
                         "pageLength": 10,
                         "lengthMenu": [5, 10, 25, 50, 100],
                         "responsive": true
-                    });
+                        });
                 });
 
                 // Check for URL parameters for SweetAlert
