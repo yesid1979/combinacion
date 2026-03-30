@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
             <!DOCTYPE html>
@@ -23,7 +23,8 @@
                         font-weight: bold;
                     }
                 </style>
-            </head>
+            <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    </head>
 
             <body class="bg-light d-flex flex-column min-vh-100">
 

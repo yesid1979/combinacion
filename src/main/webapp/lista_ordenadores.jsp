@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <!DOCTYPE html>
         <html lang="es">
@@ -16,7 +16,8 @@
             <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
             <!-- Custom Styles -->
             <link href="assets/css/styles.css" rel="stylesheet">
-        </head>
+        <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    </head>
 
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
