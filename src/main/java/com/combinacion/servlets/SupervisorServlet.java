@@ -1,7 +1,7 @@
 package com.combinacion.servlets;
 
-import com.combinacion.dao.SupervisorDAO;
 import com.combinacion.models.Supervisor;
+import com.combinacion.services.SupervisorService;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,36 +13,39 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Controlador HTTP para Supervisor.
+ * Responsabilidad exclusiva: leer parámetros HTTP, delegar al Service,
+ * y dirigir la respuesta a la Vista correcta.
+ */
 @WebServlet("/supervisores")
 public class SupervisorServlet extends HttpServlet {
 
-    private SupervisorDAO supervisorDAO;
+    private SupervisorService supervisorService;
 
     @Override
     public void init() {
-        supervisorDAO = new SupervisorDAO();
+        supervisorService = new SupervisorService();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
 
         switch (action) {
             case "data":
-                listSupervisoresData(request, response);
+                responderDatosTabla(request, response);
                 break;
             case "edit":
-                showEditForm(request, response);
+                mostrarFormularioEdicion(request, response);
                 break;
             case "delete":
-                deleteSupervisor(request, response);
+                eliminar(request, response);
                 break;
             default:
-                listSupervisores(request, response);
+                request.getRequestDispatcher("lista_supervisores.jsp").forward(request, response);
                 break;
         }
     }
@@ -52,97 +55,75 @@ public class SupervisorServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-
         if ("update".equals(action)) {
-            updateSupervisor(request, response);
+            actualizar(request, response);
         } else {
-            insertSupervisor(request, response);
+            insertar(request, response);
         }
     }
 
-    private void listSupervisores(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("lista_supervisores.jsp").forward(request, response);
-    }
-
-    private void listSupervisoresData(HttpServletRequest request, HttpServletResponse response)
+    private void responderDatosTabla(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        // ... (Similar logic for DataTables pagination)
-        String draw = request.getParameter("draw");
-        int start = Integer.parseInt(request.getParameter("start") != null ? request.getParameter("start") : "0");
-        int length = Integer.parseInt(request.getParameter("length") != null ? request.getParameter("length") : "10");
-        String search = request.getParameter("search[value]");
+        String draw     = request.getParameter("draw");
+        int    start    = parseIntSafe(request.getParameter("start"),            0);
+        int    length   = parseIntSafe(request.getParameter("length"),          10);
+        String search   = request.getParameter("search[value]");
+        int    orderCol = parseIntSafe(request.getParameter("order[0][column]"), 0);
+        String orderDir = request.getParameter("order[0][dir]");
+        if (orderDir == null) orderDir = "asc";
 
-        int orderCol = 0;
-        String orderDir = "asc";
-        if (request.getParameter("order[0][column]") != null) {
-            orderCol = Integer.parseInt(request.getParameter("order[0][column]"));
-            orderDir = request.getParameter("order[0][dir]");
-        }
-
-        int totalRecords = supervisorDAO.countAll();
-        int filteredRecords = supervisorDAO.countFiltered(search);
-        List<Supervisor> supervisores = supervisorDAO.findWithPagination(start, length, search, orderCol, orderDir);
+        int totalRecords    = supervisorService.countAll();
+        int filteredRecords = supervisorService.countFiltered(search);
+        List<Supervisor> supervisores = supervisorService.findWithPagination(start, length, search, orderCol, orderDir);
 
         Map<String, Object> jsonMap = new HashMap<>();
-        jsonMap.put("draw", draw);
-        jsonMap.put("recordsTotal", totalRecords);
+        jsonMap.put("draw",            draw);
+        jsonMap.put("recordsTotal",    totalRecords);
         jsonMap.put("recordsFiltered", filteredRecords);
-        jsonMap.put("data", supervisores);
+        jsonMap.put("data",            supervisores);
 
-        String json = new Gson().toJson(jsonMap);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json);
+        response.getWriter().write(new Gson().toJson(jsonMap));
     }
 
-    private void insertSupervisor(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        // Implement insertion logic manually or redirect to form execution
-        // For simplicity, assuming form posts here
-        String nombre = request.getParameter("nombre");
-        String cedula = request.getParameter("cedula");
-        String cargo = request.getParameter("cargo");
-
-        Supervisor s = new Supervisor();
-        s.setNombre(nombre);
-        s.setCedula(cedula);
-        s.setCargo(cargo);
-
-        if (supervisorDAO.insertar(s)) {
-            response.sendRedirect("supervisores?status=created");
-        } else {
-            response.sendRedirect("supervisores?status=error");
-        }
-    }
-
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+    private void mostrarFormularioEdicion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Supervisor existingSupervisor = supervisorDAO.obtenerPorId(id);
-            request.setAttribute("supervisor", existingSupervisor);
+            Supervisor existing = supervisorService.obtenerPorId(id);
+            request.setAttribute("supervisor", existing);
             request.getRequestDispatcher("form_supervisor.jsp").forward(request, response);
         } catch (Exception e) {
             response.sendRedirect("supervisores");
         }
     }
 
-    private void updateSupervisor(HttpServletRequest request, HttpServletResponse response)
+    private void insertar(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        Supervisor s = supervisorService.construirDesdeParametros(
+            request.getParameter("nombre"),
+            request.getParameter("cedula"),
+            request.getParameter("cargo")
+        );
+        if (supervisorService.insertar(s)) {
+            response.sendRedirect("supervisores?status=created");
+        } else {
+            response.sendRedirect("supervisores?status=error");
+        }
+    }
+
+    private void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            String nombre = request.getParameter("nombre");
-            String cedula = request.getParameter("cedula");
-            String cargo = request.getParameter("cargo");
-
-            Supervisor s = new Supervisor();
+            Supervisor s = supervisorService.construirDesdeParametros(
+                request.getParameter("nombre"),
+                request.getParameter("cedula"),
+                request.getParameter("cargo")
+            );
             s.setId(id);
-            s.setNombre(nombre);
-            s.setCedula(cedula);
-            s.setCargo(cargo);
-
-            if (supervisorDAO.actualizar(s)) {
+            if (supervisorService.actualizar(s)) {
                 response.sendRedirect("supervisores?status=updated");
             } else {
                 response.sendRedirect("supervisores?status=error");
@@ -153,11 +134,11 @@ public class SupervisorServlet extends HttpServlet {
         }
     }
 
-    private void deleteSupervisor(HttpServletRequest request, HttpServletResponse response)
+    private void eliminar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            if (supervisorDAO.eliminar(id)) {
+            if (supervisorService.eliminar(id)) {
                 response.getWriter().write("success");
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -165,5 +146,10 @@ public class SupervisorServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
+    }
+
+    private int parseIntSafe(String val, int defaultVal) {
+        if (val == null) return defaultVal;
+        try { return Integer.parseInt(val); } catch (NumberFormatException e) { return defaultVal; }
     }
 }

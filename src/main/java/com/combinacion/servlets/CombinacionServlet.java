@@ -343,15 +343,31 @@ public class CombinacionServlet extends HttpServlet {
     }
 
     private byte[] generateBytes(String templateName, Map<String, String> replacements) throws IOException {
-        File templateFile = new File("plantillas/" + templateName);
+        // 1. Buscar dentro del WAR desplegado (ruta correcta y portable)
+        String realPath = getServletContext().getRealPath("/plantillas/" + templateName);
+        File templateFile = (realPath != null) ? new File(realPath) : null;
+
+        // 2. Fallback: ruta de desarrollo de proyecto (NetBeans sin despliegue)
+        if (templateFile == null || !templateFile.exists()) {
+            templateFile = new File(
+                "c:\\Users\\Soporte y Desarrollo\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
+                + templateName);
+        }
+
+        // 3. Fallback legado (usuario anterior)
         if (!templateFile.exists()) {
             templateFile = new File(
-                    "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
-                            + templateName);
+                "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
+                + templateName);
         }
-        if (!templateFile.exists())
-            return null;
 
+        if (!templateFile.exists()) {
+            System.err.println("⚠️ Plantilla NO encontrada: " + templateName
+                + " | realPath=" + realPath);
+            return null;
+        }
+
+        System.out.println("✅ Plantilla encontrada: " + templateFile.getAbsolutePath());
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         try (FileInputStream fis = new FileInputStream(templateFile)) {
             TemplateGenerator.generate(fis, replacements, baos);
