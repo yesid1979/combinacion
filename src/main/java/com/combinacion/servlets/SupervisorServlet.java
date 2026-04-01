@@ -38,6 +38,9 @@ public class SupervisorServlet extends HttpServlet {
             case "data":
                 responderDatosTabla(request, response);
                 break;
+            case "new":
+                request.getRequestDispatcher("form_supervisor.jsp").forward(request, response);
+                break;
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;

@@ -27,6 +27,44 @@ public class DatabasePatcher {
                 System.out.println("✅ La columna 'apoyo_supervision' ya existe.");
             }
 
+            // Verificar tabla usuario_permisos
+            ResultSet rs2 = stmt.executeQuery(
+                    "SELECT 1 FROM information_schema.tables WHERE table_name='usuario_permisos'");
+            if (!rs2.next()) {
+                System.out.println("⚠️ Tabla 'usuario_permisos' no encontrada. Creándola...");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS usuario_permisos (" +
+                                 "usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE, " +
+                                 "permiso_id INT REFERENCES permisos(id) ON DELETE CASCADE, " +
+                                 "PRIMARY KEY (usuario_id, permiso_id))");
+                System.out.println("✅ Tabla 'usuario_permisos' creada exitosamente.");
+            }
+
+            // Asegurar permisos VER TODO para la mallas dinámica
+            String[] modulosPerms = {"ADMINISTRACION", "CARGA_MASIVA", "COMBINACION", "CONTRATISTAS", "CONTRATOS", "ORDENADORES", "PRESUPUESTO", "SUPERVISORES"};
+            for (String mod : modulosPerms) {
+                String cod = mod + "_VER_TODO";
+                if (mod.equals("ADMINISTRACION")) cod = "ADMIN_VER_TODO";
+                stmt.executeUpdate("INSERT INTO permisos (codigo, nombre, modulo, descripcion) " +
+                                 "VALUES ('" + cod + "', 'Ver todo', '" + mod + "', 'Ver todo del módulo " + mod + "') " +
+                                 "ON CONFLICT (codigo) DO NOTHING");
+            }
+
+            // Asegurar permisos para el módulo ADMINISTRACION (CRUD completo)
+            String[] adminPerms = {"ADMIN_EDITAR", "ADMIN_ELIMINAR", "ADMIN_VER"};
+            for (String ap : adminPerms) {
+                stmt.executeUpdate("INSERT INTO permisos (codigo, nombre, modulo, descripcion) " +
+                                 "VALUES ('" + ap + "', 'Gestionar admin', 'ADMINISTRACION', 'Permisos de administración') " +
+                                 "ON CONFLICT (codigo) DO NOTHING");
+            }
+
+            // Asegurar que el rol Administrador tenga TODOS los permisos incluyendo los nuevos
+            stmt.executeUpdate("INSERT INTO rol_permisos (rol_id, permiso_id) " +
+                             "SELECT r.id, p.id FROM roles r, permisos p " +
+                             "WHERE r.nombre = 'Administrador' " +
+                             "ON CONFLICT DO NOTHING");
+
+            System.out.println("✅ Todos los permisos de ADMINISTRACION asegurados.");
+
         } catch (Exception e) {
             e.printStackTrace();
         }

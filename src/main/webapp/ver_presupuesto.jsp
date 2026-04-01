@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
             <!DOCTYPE html>
@@ -34,19 +34,19 @@
                             <div class="card-body p-4">
                                 <div class="row g-3">
                                     <div class="col-md-3">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">No.
+                                        <label class="form-label text-muted small fw-bold">No.
                                             CDP</label>
                                         <div class="form-control bg-light">${presupuesto.cdpNumero}</div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Fecha
+                                        <label class="form-label text-muted small fw-bold">Fecha
                                             CDP</label>
                                         <div class="form-control bg-light">
                                             <fmt:formatDate value="${presupuesto.cdpFecha}" pattern="dd/MM/yyyy" />
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Valor
+                                        <label class="form-label text-muted small fw-bold">Valor
                                             CDP</label>
                                         <div class="form-control bg-light">
                                             <fmt:formatNumber value="${presupuesto.cdpValor}" type="currency"
@@ -54,7 +54,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Vencimiento
+                                        <label class="form-label text-muted small fw-bold">Vencimiento
                                             CDP</label>
                                         <div class="form-control bg-light">
                                             <fmt:formatDate value="${presupuesto.cdpVencimiento}"
@@ -67,13 +67,13 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">No. RP
+                                        <label class="form-label text-muted small fw-bold">No. RP
                                             (Registro Presupuestal)</label>
                                         <div class="form-control bg-light">${presupuesto.rpNumero != null ?
                                             presupuesto.rpNumero : 'N/A'}</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Fecha
+                                        <label class="form-label text-muted small fw-bold">Fecha
                                             RP</label>
                                         <div class="form-control bg-light">
                                             <c:if test="${presupuesto.rpFecha != null}">
@@ -93,14 +93,14 @@
                             <div class="card-body p-4">
                                 <div class="row g-3">
                                     <div class="col-12">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Rubro /
+                                        <label class="form-label text-muted small fw-bold">Rubro /
                                             Apropiación Presupuestal</label>
                                         <div class="form-control bg-light" style="min-height: 60px;">
                                             ${presupuesto.apropiacionPresupuestal}</div>
                                     </div>
 
                                     <div class="col-12">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Nombre Ficha
+                                        <label class="form-label text-muted small fw-bold">Nombre Ficha
                                             EBI / Proyecto</label>
                                         <div class="form-control bg-light" style="min-height: 60px;">
                                             ${presupuesto.fichaEbiNombre != null ? presupuesto.fichaEbiNombre : 'N/A'}
@@ -108,12 +108,12 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">ID PAA</label>
+                                        <label class="form-label text-muted small fw-bold">ID PAA</label>
                                         <div class="form-control bg-light">${presupuesto.idPaa != null ?
                                             presupuesto.idPaa : 'N/A'}</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Código
+                                        <label class="form-label text-muted small fw-bold">Código
                                             DANE</label>
                                         <div class="form-control bg-light">${presupuesto.codigoDane != null ?
                                             presupuesto.codigoDane : 'N/A'}</div>
@@ -121,26 +121,26 @@
 
                                     <div class="col-md-6">
                                         <label
-                                            class="form-label text-muted small text-uppercase fw-bold">Inversión</label>
+                                            class="form-label text-muted small fw-bold">Inversión</label>
                                         <div class="form-control bg-light">${presupuesto.inversion != null ?
                                             presupuesto.inversion : 'N/A'}</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label
-                                            class="form-label text-muted small text-uppercase fw-bold">Funcionamiento</label>
+                                            class="form-label text-muted small fw-bold">Funcionamiento</label>
                                         <div class="form-control bg-light">${presupuesto.funcionamiento != null ?
                                             presupuesto.funcionamiento : 'N/A'}</div>
                                     </div>
 
                                     <div class="col-12">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Objetivo Ficha
+                                        <label class="form-label text-muted small fw-bold">Objetivo Ficha
                                             EBI</label>
                                         <div class="form-control bg-light" style="min-height: 80px;">
                                             ${presupuesto.fichaEbiObjetivo != null ? presupuesto.fichaEbiObjetivo :
                                             'N/A'}</div>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Actividades
+                                        <label class="form-label text-muted small fw-bold">Actividades
                                             Ficha EBI</label>
                                         <div class="form-control bg-light" style="min-height: 80px;">
                                             ${presupuesto.fichaEbiActividades != null ? presupuesto.fichaEbiActividades
@@ -148,13 +148,13 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Certificado
+                                        <label class="form-label text-muted small fw-bold">Certificado
                                             Insuficiencia</label>
                                         <div class="form-control bg-light">${presupuesto.certificadoInsuficiencia !=
                                             null ? presupuesto.certificadoInsuficiencia : 'N/A'}</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted small text-uppercase fw-bold">Fecha
+                                        <label class="form-label text-muted small fw-bold">Fecha
                                             Insuficiencia</label>
                                         <div class="form-control bg-light">
                                             <c:if test="${presupuesto.fechaInsuficiencia != null}">

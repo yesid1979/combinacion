@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <!DOCTYPE html>
         <html lang="es">
@@ -133,6 +133,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Administración -->
+                    <c:if test="${usuarioLogueado.rolId == 1}">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='admin/usuarios'">
+                            <div class="card-body text-center">
+                                <div class="icon-box bg-dark bg-opacity-10 text-dark mx-auto">
+                                    <i class="bi bi-shield-lock fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Administración</h5>
+                                <p class="card-text text-muted small">Gestión de usuarios, roles y permisos.</p>
+                            </div>
+                        </div>
+                    </div>
+                    </c:if>
 
 
 

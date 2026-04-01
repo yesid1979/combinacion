@@ -6,7 +6,7 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Lista de Contratistas - Gestión de Prestadores</title>
+            <title>Lista de Contratistas - DAGJP</title>
             <!-- Bootstrap 5 CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <!-- Bootstrap Icons CSS -->
@@ -15,142 +15,139 @@
             <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
             <!-- DataTables Responsive CSS -->
             <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
-            <!-- Custom Styles -->
+            <!-- Custom Styles (The secret of the "Combinación" look) -->
             <link href="assets/css/styles.css" rel="stylesheet">
-        <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
-    </head>
+            <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+            <style>
+                .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
+                .table td { vertical-align: middle; }
+                /* IDENTIDAD GLOBAL TURQUESA */
+                body::before {
+                    content: "";
+                    position: fixed;
+                    top: 0; left: 0; width: 100%; height: 6px;
+                    background: #00ced1;
+                    z-index: 9999;
+                    box-shadow: 0 2px 10px rgba(0, 206, 209, 0.4);
+                }
+                
+                .footer-main {
+                    background: #212529;
+                    color: rgba(255, 255, 255, 0.7);
+                    padding: 25px 0;
+                    margin-top: 50px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    text-align: center;
+                }
+                .footer-main strong { color: #ffffff; }
+            </style>
+        </head>
 
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4">
+            <div class="container mt-4 mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Contratistas registrados</h2>
-                    <a href="contratistas?action=new" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>
-                        Nuevo contratista</a>
+                    <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_CREAR')}">
+                        <a href="${pageContext.request.contextPath}/contratistas?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                            <i class="bi bi-person-plus-fill me-1"></i>Nuevo contratista
+                        </a>
+                    </c:if>
                 </div>
 
-                <div class="card shadow-sm border-0">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <!-- Removed table-responsive -->
-                        <table id="contratistasTable" class="table table-striped" style="width:100%">
+                        <table class="table table-striped w-100" id="tablaContratistas">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>No. de cédula</th>
+                                    <th>Cédula</th>
                                     <th>Nombres y Apellidos</th>
                                     <th>Correo</th>
-                                    <th>No. de teléfono</th>
-                                    <th class="text-end">Acciones</th>
+                                    <th>Teléfono</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Data loaded by Server-Side Processing -->
+                                <!-- Datos cargados por AJAX -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer -->
-            <jsp:include page="inc/footer.jsp" />
+            <footer class="footer-main">
+                <div class="container-fluid">
+                    &copy; 2026 DAGJP - Todos los derechos reservados | Diseñado por: <strong>Ing. Yesid Javier Piedrahita Correa</strong>
+                </div>
+            </footer>
 
-            <!-- jQuery and Bootstrap JS -->
+            <!-- Scripts -->
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            <!-- DataTables JS -->
             <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
             <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
             <!-- DataTables Responsive JS -->
             <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
             <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
-            <!-- SweetAlert2 -->
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
             <script>
                 $(document).ready(function () {
-                    $('#contratistasTable').DataTable({
+                    $('#tablaContratistas').DataTable({
                         "processing": true,
                         "serverSide": true,
                         "responsive": true,
                         "autoWidth": false,
-                        "order": [[1, 'asc']], // Order by Nombre (Col 1) asc by default
                         "ajax": {
-                            "url": "${pageContext.request.contextPath}/contratistas?action=data&t=" + new Date().getTime(),
-                            "type": "POST",
-                            "error": function (xhr, error, thrown) {
-                                console.error("Error AJAX Status:", xhr.status);
-                                console.error("Error AJAX Response:", xhr.responseText);
-                                Swal.fire('Error de Conexión', 'El servidor respondió con código ' + xhr.status + '. Revise la consola (F12).', 'error');
-                            }
+                            "url": "${pageContext.request.contextPath}/contratistas?action=data",
+                            "type": "POST"
                         },
                         "columns": [
                             { "data": 0 }, // Cedula
-                            { "data": 1 }, // Nombre
+                            { 
+                                "data": 1, 
+                                "render": function(data, type, row) {
+                                    return '<span class="text-primary fw-bold">' + data + '</span>';
+                                }
+                            },
                             { "data": 2 }, // Correo
-                            { "data": 3 }, // Telefono
+                            { "data": 3 }, // Teléfono
                             {
-                                "data": 4, // ID (Actions)
+                                "data": 4, // ID para acciones
+                                "className": "text-center",
                                 "orderable": false,
-                                "className": "text-end",
                                 "render": function (data, type, row) {
-                                    return `
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a href="contratistas?action=edit&id=` + data + `" class="btn btn-sm btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <button onclick="confirmarEliminar(` + data + `)" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                    `;
+                                    let btnEdit = '';
+                                    let btnDel = '';
+                                    
+                                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_EDITAR')}">
+                                        btnEdit = '<a href="contratistas?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a> ';
+                                    </c:if>
+                                    
+                                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_ELIMINAR')}">
+                                        btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                                    </c:if>
+                                    
+                                    return '<div class="d-flex justify-content-center gap-2">' + btnEdit + btnDel + '</div>';
                                 }
                             }
                         ],
-                        language: {
-                            "decimal": "",
-                            "emptyTable": "No hay datos disponibles en la tabla",
-                            "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                            "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
-                            "infoFiltered": "(filtrado de _MAX_ entradas totales)",
-                            "infoPostFix": "",
-                            "thousands": ",",
-                            "lengthMenu": "Mostrar _MENU_ entradas",
-                            "loadingRecords": "Cargando...",
-                            "processing": "Procesando...",
-                            "search": "Buscar:",
-                            "zeroRecords": "No se encontraron registros coincidentes",
-                            "paginate": {
-                                "first": "Primero",
-                                "last": "Último",
-                                "next": "Siguiente",
-                                "previous": "Anterior"
-                            },
-                            "aria": {
-                                "sortAscending": ": activar para ordenar columna ascendente",
-                                "sortDescending": ": activar para ordenar columna descendente"
-                            }
+                        "language": {
+                            "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                         }
-                        });
+                    });
+
+                    // Alertas de estado
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const status = urlParams.get('status');
+                    if (status === 'created') Swal.fire('¡Listo!', 'Contratista registrado con éxito.', 'success');
+                    if (status === 'updated') Swal.fire('¡Listo!', 'Contratista actualizado.', 'success');
+                    if (status === 'deleted') Swal.fire('¡Eliminado!', 'El registro ha sido removido.', 'success');
+                    if (status === 'error') Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
+
+                    if (status) window.history.replaceState({}, document.title, window.location.pathname);
                 });
-
-                // Check for URL parameters for SweetAlert
-                const urlParams = new URLSearchParams(window.location.search);
-                const status = urlParams.get('status');
-
-                if (status === 'created') {
-                    Swal.fire('¡Creado!', 'El registro ha sido creado exitosamente.', 'success');
-                } else if (status === 'updated') {
-                    Swal.fire('¡Actualizado!', 'El registro ha sido actualizado correctamente.', 'success');
-                } else if (status === 'deleted') {
-                    Swal.fire('¡Eliminado!', 'El registro ha sido eliminado.', 'success');
-                } else if (status === 'error') {
-                    Swal.fire('Error', 'Ha ocurrido un error al procesar la solicitud.', 'error');
-                }
-
-                // Clean URL
-                if (status) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
 
                 function confirmarEliminar(id) {
                     Swal.fire({
@@ -158,13 +155,13 @@
                         text: "Esta acción no se puede deshacer",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d33',
+                        confirmButtonColor: '#dc3545',
                         cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Sí, eliminar',
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = 'contratistas?action=delete&id=' + id;
+                            window.location.href = '${pageContext.request.contextPath}/contratistas?action=delete&id=' + id;
                         }
                     });
                 }

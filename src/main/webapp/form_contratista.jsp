@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <!DOCTYPE html>
         <html lang="es">
@@ -33,15 +33,10 @@
                             </c:choose>
                         </h2>
                         <form action="contratistas" method="POST">
-                            <c:choose>
-                                <c:when test="${contratista != null && contratista.id > 0}">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="id" value="${contratista.id}">
-                                </c:when>
-                                <c:otherwise>
-                                    <input type="hidden" name="action" value="insert">
-                                </c:otherwise>
-                            </c:choose>
+                            <input type="hidden" name="action" value="${contratista != null && contratista.id > 0 ? 'update' : 'insert'}">
+                            <c:if test="${contratista != null && contratista.id > 0}">
+                                <input type="hidden" name="id" value="${contratista.id}">
+                            </c:if>
 
                             <div class="row g-3">
                                 <div class="col-md-4">
@@ -121,9 +116,9 @@
                             </div>
 
                             <div class="mt-4 text-end">
-                                <a href="contratistas" class="btn btn-secondary me-2" style="width: 140px;"><i
+                                <a href="contratistas" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
                                         class="bi bi-x-circle me-2"></i> Cerrar</a>
-                                <button type="submit" class="btn btn-primary" style="width: 140px;"><i
+                                <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
                                         class="bi bi-save me-2"></i> Guardar</button>
                             </div>
                         </form>

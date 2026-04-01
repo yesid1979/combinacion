@@ -2,6 +2,8 @@ package com.combinacion.servlets;
 
 import com.combinacion.models.Contratista;
 import com.combinacion.services.ContratistaService;
+import com.combinacion.services.AuthService;
+import com.combinacion.models.Usuario;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -9,16 +11,21 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  * Controlador HTTP para Contratista.
- * Responsabilidad exclusiva: leer parámetros HTTP, delegar al Service,
- * y dirigir la respuesta a la Vista correcta.
  */
 @WebServlet(name = "ContratistaServlet", urlPatterns = { "/contratistas" })
 public class ContratistaServlet extends HttpServlet {
 
     private final ContratistaService contratistaService = new ContratistaService();
+    private final AuthService authService = new AuthService();
+
+    private Usuario getUsuario(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return (session != null) ? (Usuario) session.getAttribute("usuario") : null;
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -26,6 +33,7 @@ public class ContratistaServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) action = "list";
 
+        Usuario u = getUsuario(request);
         switch (action) {
             case "search":
                 buscarPorCedula(request, response);
@@ -34,13 +42,25 @@ public class ContratistaServlet extends HttpServlet {
                 responderDatosTabla(request, response);
                 break;
             case "new":
-                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+                if (authService.tienePermiso(u, "CONTRATISTAS_CREAR")) {
+                    request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
+                } else {
+                    response.sendRedirect("contratistas?error=sin_permiso");
+                }
                 break;
             case "edit":
-                mostrarFormularioEdicion(request, response);
+                if (authService.tienePermiso(u, "CONTRATISTAS_EDITAR")) {
+                    mostrarFormularioEdicion(request, response);
+                } else {
+                    response.sendRedirect("contratistas?error=sin_permiso");
+                }
                 break;
             case "delete":
-                eliminar(request, response);
+                if (authService.tienePermiso(u, "CONTRATISTAS_ELIMINAR")) {
+                    eliminar(request, response);
+                } else {
+                    response.sendRedirect("contratistas?error=sin_permiso");
+                }
                 break;
             default:
                 listar(request, response);
@@ -53,10 +73,20 @@ public class ContratistaServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
+        Usuario u = getUsuario(request);
+
         if ("insert".equals(action)) {
-            insertar(request, response);
+            if (authService.tienePermiso(u, "CONTRATISTAS_CREAR")) {
+                insertar(request, response);
+            } else {
+                response.sendRedirect("contratistas?error=sin_permiso");
+            }
         } else if ("update".equals(action)) {
-            actualizar(request, response);
+            if (authService.tienePermiso(u, "CONTRATISTAS_EDITAR")) {
+                actualizar(request, response);
+            } else {
+                response.sendRedirect("contratistas?error=sin_permiso");
+            }
         } else if ("data".equals(action)) {
             responderDatosTabla(request, response);
         } else if ("search".equals(action)) {

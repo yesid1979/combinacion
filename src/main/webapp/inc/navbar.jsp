@@ -1,12 +1,12 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-
-    <!-- Navbar Principal -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
+    <!-- Navbar Principal Compacto y Equilibrado -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+        <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center me-4" href="${pageContext.request.contextPath}/index.jsp">
                 <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png"
-                    alt="Alcaldía de Santiago de Cali" style="height: 60px; width: auto;">
+                    alt="Logo" style="height: 50px; width: auto;">
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -14,42 +14,83 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Changed ms-auto to ms-3 to stick menu close to the image -->
-                <ul class="navbar-nav ms-3 align-items-center">
-                    <li class="nav-item mx-2">
-                        <a class="nav-link small fw-bold" style="color: #004884;"
-                            href="${pageContext.request.contextPath}/index.jsp">
-                            <i class="bi bi-house-door me-1"></i>Inicio
+                <ul class="navbar-nav gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
+                           style="color: #004884; font-size: 0.9rem;"
+                           href="${pageContext.request.contextPath}/index.jsp">
+                            <i class="bi bi-house-door me-2"></i>Inicio
                         </a>
                     </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link small fw-bold" style="color: #004884;"
-                            href="${pageContext.request.contextPath}/contratos">
-                            <i class="bi bi-file-text me-1"></i>Contratos
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
+                           style="color: #004884; font-size: 0.9rem;"
+                           href="${pageContext.request.contextPath}/contratos">
+                            <i class="bi bi-file-earmark-text me-2"></i>Contratos
                         </a>
                     </li>
-                    <!-- Dropdown for Master Data -->
-                    <li class="nav-item dropdown mx-2">
-                        <a class="nav-link dropdown-toggle small fw-bold" href="#" id="navbarDropdownMaster"
-                            role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #004884;">
-                            <i class="bi bi-database me-1"></i>Datos maestros
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
+                           style="color: #004884; font-size: 0.9rem;"
+                           href="#" id="masterDataDrop" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-database-fill-add me-2"></i>Datos maestros
                         </a>
-                        <ul class="dropdown-menu border-0 shadow" aria-labelledby="navbarDropdownMaster">
-                            <li><a class="dropdown-item small" href="${pageContext.request.contextPath}/contratistas"><i
-                                        class="bi bi-people me-2"></i>Contratistas</a></li>
-                            <li><a class="dropdown-item small" href="${pageContext.request.contextPath}/supervisores"><i
-                                        class="bi bi-person-badge me-2"></i>Supervisores</a></li>
-                            <li><a class="dropdown-item small" href="${pageContext.request.contextPath}/ordenadores"><i
-                                        class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
+                        <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
+                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/contratistas"><i class="bi bi-people me-2"></i>Contratistas</a></li>
+                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/supervisores"><i class="bi bi-person-badge me-2"></i>Supervisores</a></li>
+                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/ordenadores"><i class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item mx-2">
-                        <a class="nav-link small fw-bold" style="color: #004884;"
-                            href="${pageContext.request.contextPath}/combinacion">
-                            <i class="bi bi-files me-1"></i>Combinación
+
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
+                           style="color: #004884; font-size: 0.9rem;"
+                           href="${pageContext.request.contextPath}/combinacion">
+                            <i class="bi bi-files me-2"></i>Combinaci&oacute;n
                         </a>
                     </li>
+
+                    <c:if test="${not empty sessionScope.usuario && sessionScope.usuario.esAdministrador()}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
+                               style="color: #004884; font-size: 0.9rem;"
+                               href="#" id="adminDrop" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-shield-lock-fill me-2"></i>Administraci&oacute;n
+                            </a>
+                            <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-person-gear me-2"></i>Usuarios</a></li>
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/roles"><i class="bi bi-key-fill me-2"></i>Roles y permisos</a></li>
+                            </ul>
+                        </li>
+                    </c:if>
                 </ul>
+
+                <c:if test="${not empty sessionScope.usuario}">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center px-2 py-2" 
+                               href="#" id="userDrop" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle fs-5 me-2 text-primary"></i>
+                                <div class="text-start">
+                                    <div class="fw-bold text-dark" style="font-size: 0.8rem; line-height: 1.1;">${sessionScope.nombreUsuario}</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">${sessionScope.rolNombre}</div>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2 p-2">
+                                <li><a class="dropdown-item text-danger py-2" href="${pageContext.request.contextPath}/logout">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesi&oacute;n
+                                </a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </c:if>
             </div>
         </div>
     </nav>
+
+    <style>
+        .nav-link { min-height: 40px; display: flex !important; align-items: center; }
+        .nav-link:hover { background-color: #f0f7ff; color: #004884 !important; border-radius: 8px; }
+        .dropdown-item:hover { background-color: #f0f7ff; color: #004884; border-radius: 5px; }
+    </style>

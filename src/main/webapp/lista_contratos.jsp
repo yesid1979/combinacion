@@ -29,25 +29,51 @@
 
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2>Contratos registrados</h2>
-                        <a href="contratos?action=new" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>
-                            Nuevo Contrato</a>
-                    </div>
+            <h3 class="fw-bold text-dark mb-0">Contratos registrados</h3>
+            <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
+                <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
+            </a>
+        </div>
 
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <!-- Removed table-responsive class to prevent double scrollbar -->
+                    <style>
+                        .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
+                        .table td { vertical-align: middle; }
+                        .badge { font-weight: 600; padding: 6px 12px; border-radius: 6px; text-transform: uppercase; font-size: 0.75rem; }
+                        .btn-view { background-color: #004884; border: none; color: #fff; }
+                        .btn-edit { background-color: #ffc107; border: none; color: #000; }
+                        .btn-action { padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        /* LÍNEA TURQUESA DE IDENTIDAD */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: #00ced1;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0, 206, 209, 0.4);
+        }
+        
+        .footer-main {
+            background: #212529;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 25px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .footer-main strong { color: #ffffff; }
+                    </style>
                             <table id="contratosTable" class="table table-striped" style="width:100%">
                                 <thead class="table-dark">
                                     <tr>
                                         <th># Contrato</th>
                                         <th>Contratista</th>
                                         <th>Objeto</th>
-                                        <th>Valor Total</th>
-                                        <th>Fecha Inicio</th>
-                                        <th>Fecha Fin</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th class="text-center">Fecha Inicio</th>
+                                        <th class="text-center">Fecha Fin</th>
+                                        <th class="text-center">Estado</th>
+                                        <th class="text-center" style="width: 100px;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -107,7 +133,6 @@
                         }
 
                         $('#contratosTable').DataTable({
-                            // ... existing config ...
                             "processing": true,
                             "serverSide": true,
                             "responsive": true,
@@ -142,9 +167,9 @@
                                     "data": 7, // Actions (ID)
                                     "orderable": false,
                                     "render": function (data, type, row) {
-                                        return '<div class="d-flex gap-1">' +
-                                            '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-info text-white" title="Ver Detalle"><i class="bi bi-eye"></i></a>' +
-                                            '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-warning text-dark" title="Editar"><i class="bi bi-pencil-square"></i></a>' +
+                                        return '<div class="d-flex justify-content-center" style="white-space: nowrap;">' +
+                                            '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info me-1" title="Ver"><i class="bi bi-eye"></i></a>' +
+                                            '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>' +
                                             '</div>';
                                     }
                                 }

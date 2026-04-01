@@ -11,12 +11,18 @@
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <!-- Bootstrap Icons CSS -->
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-            <!-- DataTables CSS -->
+            <!-- DataTables CSS for advanced table features -->
             <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+            <!-- DataTables Responsive CSS -->
             <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
-            <!-- Custom Styles -->
+            <!-- Custom Styles (The secret of the "Combinación" look) -->
             <link href="assets/css/styles.css" rel="stylesheet">
-        <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+            <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+            <style>
+                table { width: 100% !important; }
+                .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
+                .table td { vertical-align: middle; }
+            </style>
     </head>
 
         <body class="bg-light d-flex flex-column min-vh-100">
@@ -24,8 +30,10 @@
 
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="bi bi-cash-coin me-2 text-info"></i>Detalles Presupuestales</h2>
-                    <!-- Optional: Add New button if manual entry is required later -->
+                    <h3 class="fw-bold text-dark mb-0">Presupuestos registrados</h3>
+                    <a href="${pageContext.request.contextPath}/presupuesto?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Nuevo presupuesto
+                    </a>
                 </div>
 
                 <div class="card shadow-sm border-0">
@@ -68,7 +76,7 @@
                 $(document).ready(function () {
                     $('#presupuestoTable').DataTable({
                         "processing": true,
-                        // "serverSide": true, // We are doing client-side processing for simplicity in the servlet
+                        "serverSide": false,
                         "responsive": true,
                         "ajax": {
                             "url": "presupuesto?action=data",
@@ -108,9 +116,7 @@
                                 "orderable": false,
                                 "className": "text-end",
                                 "render": function (data, type, row) {
-                                    return `<a href="presupuesto?action=view&id=` + data + `" class="btn btn-sm btn-outline-secondary" title="Ver Detalle Completo">
-                                        <i class="bi bi-eye"></i>
-                                    </a>`;
+                                    return '<a href="presupuesto?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver Detalle Completo"><i class="bi bi-eye"></i></a>';
                                 }
                             }
                         ],

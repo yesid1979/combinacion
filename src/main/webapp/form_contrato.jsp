@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
             <!DOCTYPE html>
@@ -50,7 +50,7 @@
 
                             <form action="contratos" method="POST" id="contratoForm">
                                 <input type="hidden" name="action"
-                                    value="${not empty action ? (action == 'view' ? 'list' : action) : 'insert'}">
+                                    value="${contrato != null ? 'update' : 'insert'}">
                                 <c:if test="${not empty contrato.id}">
                                     <input type="hidden" name="id" value="${contrato.id}">
                                 </c:if>
@@ -351,10 +351,10 @@
                                          </div>
 
                                         <div class="mt-4 text-end">
-                                            <a href="contratos" class="btn btn-secondary me-2" style="width: 140px;"><i
+                                            <a href="contratos" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
                                                     class="bi bi-x-circle me-2"></i> Cerrar</a>
                                             <c:if test="${not readonly}">
-                                                <button type="submit" class="btn btn-primary" style="width: 140px;"><i
+                                                <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
                                                         class="bi bi-save me-2"></i> Guardar</button>
                                             </c:if>
                                         </div>
