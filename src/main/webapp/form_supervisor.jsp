@@ -18,7 +18,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
 
                 <c:if test="${not empty error}">
                     <div class="alert alert-danger">${error}</div>
@@ -28,6 +28,7 @@
                     <div class="card-body p-4">
                         <h2 class="mb-4 fw-bold">
                             <c:choose>
+                                <c:when test="${readonly}">Detalles del Supervisor</c:when>
                                 <c:when test="${supervisor != null}">Editar Supervisor</c:when>
                                 <c:otherwise>Registrar Nuevo Supervisor</c:otherwise>
                             </c:choose>
@@ -47,25 +48,27 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Cédula *</label>
                                     <input type="text" class="form-control" name="cedula" value="${supervisor.cedula}"
-                                        required>
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nombre Completo *</label>
                                     <input type="text" class="form-control" name="nombre" value="${supervisor.nombre}"
-                                        required>
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label">Cargo</label>
-                                    <input type="text" class="form-control" name="cargo" value="${supervisor.cargo}">
+                                    <input type="text" class="form-control" name="cargo" value="${supervisor.cargo}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
 
                             <div class="mt-4 text-end">
                                 <a href="supervisores" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
                                         class="bi bi-x-circle me-2"></i> Cerrar</a>
-                                <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
-                                        class="bi bi-save me-2"></i> Guardar</button>
+                                <c:if test="${not readonly}">
+                                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
+                                            class="bi bi-save me-2"></i> Guardar</button>
+                                </c:if>
                             </div>
                         </form>
                     </div>

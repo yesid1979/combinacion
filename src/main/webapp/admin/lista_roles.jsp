@@ -24,14 +24,6 @@
                 .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
                 .table td { vertical-align: middle; }
                 .rol-name { color: #0d6efd; font-weight: bold; text-transform: uppercase; }
-                .btn-accion { 
-                    width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; 
-                    background: white; border: 1px solid #dee2e6; border-radius: 4px; transition: all 0.2s;
-                }
-                .btn-accion.edit { border-color: #0d6efd; color: #0d6efd; }
-                .btn-accion.edit:hover { background-color: #0d6efd; color: white; }
-                .btn-accion.delete { border-color: #dc3545; color: #dc3545; }
-                .btn-accion.delete:hover { background-color: #dc3545; color: white; }
                 .dataTables_wrapper .dataTables_filter input { border: 1px solid #dee2e6; border-radius: 4px; padding: 4px 8px; }
             </style>
         </head>
@@ -39,7 +31,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="/inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5" data-context-path="${pageContext.request.contextPath}">
+            <div class="container mt-4 mb-5 flex-grow-1" data-context-path="${pageContext.request.contextPath}">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-dark">Roles registrados</h2>
                     <a href="${pageContext.request.contextPath}/admin/roles?action=new" class="btn btn-success fw-bold">
@@ -47,13 +39,13 @@
                     </a>
                 </div>
 
-                <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 8px;">
-                    <div class="card-body p-0">
-                        <table class="table table-hover table-striped w-100 mb-0" id="tablaRoles">
-                            <thead>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <table class="table table-striped w-100" id="tablaRoles">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th class="ps-4">ID</th>
-                                    <th style="width: 300px;">Nombre del Rol</th>
+                                    <th>ID</th>
+                                    <th>Nombre del Rol</th>
                                     <th>Descripción</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
@@ -61,7 +53,7 @@
                             <tbody>
                                 <c:forEach var="rol" items="${listRoles}">
                                     <tr>
-                                        <td class="ps-4 text-secondary">${rol.id}</td>
+                                        <td><span class="text-secondary fw-bold">${rol.id}</span></td>
                                         <td>
                                             <div class="rol-name">${rol.nombre}</div>
                                         </td>
@@ -71,11 +63,11 @@
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2">
                                                 <a href="${pageContext.request.contextPath}/admin/roles?action=edit&id=${rol.id}" 
-                                                   class="btn-accion edit" title="Editar">
+                                                   class="btn btn-sm btn-outline-primary" title="Editar">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
                                                 <button type="button" onclick="confirmarEliminar(${rol.id})" 
-                                                        class="btn-accion delete" title="Eliminar">
+                                                        class="btn btn-sm btn-outline-danger" title="Eliminar">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -105,7 +97,8 @@
                         "processing": true,
                         "serverSide": false,
                         "responsive": true,
-                        "autoWidth": false
+                        "autoWidth": false,
+                        "columnDefs": [{ "orderable": false, "targets": 3 }]
                     });
                 });
 

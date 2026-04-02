@@ -50,6 +50,9 @@
                             <c:if test="${sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/ordenadores"><i class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
                             </c:if>
+                            <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/presupuesto"><i class="bi bi-graph-up me-2"></i>Presupuesto</a></li>
+                            </c:if>
                         </ul>
                     </li>
                     </c:if>
@@ -64,15 +67,6 @@
                     </li>
                     </c:if>
 
-                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_VER')}">
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
-                           style="color: #004884; font-size: 0.9rem;"
-                           href="${pageContext.request.contextPath}/carga_masiva.jsp">
-                            <i class="bi bi-cloud-upload me-2"></i>Carga Masiva
-                        </a>
-                    </li>
-                    </c:if>
 
                     <c:if test="${sessionScope.usuario.tienePermiso('ADMINISTRACION_VER')}">
                         <li class="nav-item dropdown">
@@ -92,12 +86,12 @@
                 <c:if test="${not empty sessionScope.usuario}">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center px-2 py-2" 
-                               href="#" id="userDrop" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle fs-5 me-2 text-primary"></i>
-                                <div class="text-start">
-                                    <div class="fw-bold text-dark" style="font-size: 0.8rem; line-height: 1.1;">${sessionScope.nombreUsuario}</div>
-                                    <div class="text-muted" style="font-size: 0.65rem;">${sessionScope.rolNombre}</div>
+                            <a class="nav-link dropdown-toggle d-flex align-items-center px-3" 
+                               href="#" id="userDrop" role="button" data-bs-toggle="dropdown" style="min-height: 50px;">
+                                <i class="bi bi-person-circle fs-4 me-2 text-primary"></i>
+                                <div class="d-flex flex-column justify-content-center me-1" style="height: 100%;">
+                                    <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;">${sessionScope.nombreUsuario}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem; line-height: 1;">${sessionScope.rolNombre}</div>
                                 </div>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2 p-2">

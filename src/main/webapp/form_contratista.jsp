@@ -18,7 +18,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
 
                 <c:if test="${not empty error}">
                     <div class="alert alert-danger">${error}</div>
@@ -28,6 +28,7 @@
                     <div class="card-body p-4">
                         <h2 class="mb-4 fw-bold">
                             <c:choose>
+                                <c:when test="${readonly}">Detalles del Contratista</c:when>
                                 <c:when test="${contratista != null && contratista.id > 0}">Editar Contratista</c:when>
                                 <c:otherwise>Registrar Nuevo Contratista</c:otherwise>
                             </c:choose>
@@ -42,84 +43,86 @@
                                 <div class="col-md-4">
                                     <label class="form-label">Cédula *</label>
                                     <input type="text" class="form-control" name="cedula" value="${contratista.cedula}"
-                                        required>
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">DV</label>
                                     <input type="text" class="form-control" name="dv" maxlength="2"
-                                        value="${contratista.dv}">
+                                        value="${contratista.dv}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nombre Completo *</label>
                                     <input type="text" class="form-control" name="nombre" value="${contratista.nombre}"
-                                        required>
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Correo Electrónico</label>
                                     <input type="email" class="form-control" name="correo"
-                                        value="${contratista.correo}">
+                                        value="${contratista.correo}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Teléfono</label>
                                     <input type="text" class="form-control" name="telefono"
-                                        value="${contratista.telefono}">
+                                        value="${contratista.telefono}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label">Dirección</label>
                                     <input type="text" class="form-control" name="direccion"
-                                        value="${contratista.direccion}">
+                                        value="${contratista.direccion}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha Nacimiento</label>
                                     <input type="date" class="form-control" name="fecha_nacimiento"
-                                        value="${contratista.fechaNacimiento}">
+                                        value="${contratista.fechaNacimiento}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Edad</label>
-                                    <input type="number" class="form-control" name="edad" value="${contratista.edad}">
+                                    <input type="number" class="form-control" name="edad" value="${contratista.edad}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 
                                 <h5 class="mt-4 mb-2 border-bottom pb-2">Perfil y Experiencia</h5>
                                 <div class="col-md-6">
                                     <label class="form-label">Título Formación</label>
                                     <input type="text" class="form-control" name="formacion_titulo"
-                                        value="${contratista.formacionTitulo}">
+                                        value="${contratista.formacionTitulo}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Descripción Formación</label>
-                                    <textarea class="form-control" name="descripcion_formacion" rows="3">${contratista.descripcionFormacion}</textarea>
+                                    <textarea class="form-control" name="descripcion_formacion" rows="3" ${readonly ? 'readonly' : ''}>${contratista.descripcionFormacion}</textarea>
                                 </div>
                                 
                                 <div class="col-md-6">
                                     <label class="form-label">Experiencia</label>
                                     <input type="text" class="form-control" name="experiencia"
-                                        value="${contratista.experiencia}">
+                                        value="${contratista.experiencia}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Descripción Experiencia</label>
-                                    <textarea class="form-control" name="descripcion_experiencia" rows="3">${contratista.descripcionExperiencia}</textarea>
+                                    <textarea class="form-control" name="descripcion_experiencia" rows="3" ${readonly ? 'readonly' : ''}>${contratista.descripcionExperiencia}</textarea>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Tarjeta Profesional</label>
                                     <input type="text" class="form-control" name="tarjeta_profesional"
-                                        value="${contratista.tarjetaProfesional}">
+                                        value="${contratista.tarjetaProfesional}" ${readonly ? 'readonly' : ''}>
                                 </div>                                
                                 <div class="col-md-6">
                                     <label class="form-label">Restricciones</label>
                                     <input type="text" class="form-control" name="restricciones"
-                                        value="${contratista.restricciones}">
+                                        value="${contratista.restricciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
 
                             <div class="mt-4 text-end">
                                 <a href="contratistas" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
                                         class="bi bi-x-circle me-2"></i> Cerrar</a>
-                                <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
-                                        class="bi bi-save me-2"></i> Guardar</button>
+                                <c:if test="${not readonly}">
+                                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
+                                            class="bi bi-save me-2"></i> Guardar</button>
+                                </c:if>
                             </div>
                         </form>
                     </div>

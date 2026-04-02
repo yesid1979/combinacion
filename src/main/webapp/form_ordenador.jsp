@@ -18,7 +18,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
                 <c:if test="${not empty error}">
                     <div class="alert alert-danger">${error}</div>
                 </c:if>
@@ -27,6 +27,7 @@
                     <div class="card-body p-4">
                         <h2 class="mb-4 fw-bold">
                             <c:choose>
+                                <c:when test="${readonly}">Detalles del Ordenador del Gasto</c:when>
                                 <c:when test="${ordenador != null}">Editar Ordenador del Gasto</c:when>
                                 <c:otherwise>Registrar nuevo ordenador del gasto</c:otherwise>
                             </c:choose>
@@ -41,47 +42,49 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Organismo *</label>
                                     <input type="text" class="form-control" name="organismo"
-                                        value="${ordenador.organismo}" required>
+                                        value="${ordenador.organismo}" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Dirección Organismo</label>
                                     <input type="text" class="form-control" name="direccion_organismo"
-                                        value="${ordenador.direccionOrganismo}">
+                                        value="${ordenador.direccionOrganismo}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Nombre Ordenador *</label>
                                     <input type="text" class="form-control" name="nombre_ordenador"
-                                        value="${ordenador.nombreOrdenador}" required>
+                                        value="${ordenador.nombreOrdenador}" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Cédula Ordenador</label>
                                     <input type="text" class="form-control" name="cedula_ordenador"
-                                        value="${ordenador.cedulaOrdenador}">
+                                        value="${ordenador.cedulaOrdenador}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label">Cargo</label>
                                     <input type="text" class="form-control" name="cargo_ordenador"
-                                        value="${ordenador.cargoOrdenador}">
+                                        value="${ordenador.cargoOrdenador}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Decreto Nombramiento</label>
                                     <input type="text" class="form-control" name="decreto_nombramiento"
-                                        value="${ordenador.decretoNombramiento}">
+                                        value="${ordenador.decretoNombramiento}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Acta Posesión</label>
                                     <input type="text" class="form-control" name="acta_posesion"
-                                        value="${ordenador.actaPosesion}">
+                                        value="${ordenador.actaPosesion}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
 
                             <div class="mt-4 text-end">
                                 <a href="ordenadores" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
                                         class="bi bi-x-circle me-2"></i> Cerrar</a>
-                                <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
-                                        class="bi bi-save me-2"></i> Guardar</button>
+                                <c:if test="${not readonly}">
+                                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
+                                            class="bi bi-save me-2"></i> Guardar</button>
+                                </c:if>
                             </div>
                         </form>
                     </div>

@@ -22,44 +22,45 @@
             font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
         .main-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
         }
         .login-card {
             background: #ffffff;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             width: 100%;
-            max-width: 440px; /* ANCHO EQUILIBRADO */
-            padding: 40px;
+            max-width: 440px;
+            padding: 30px;
             border: 1px solid #eef0f2;
         }
         .login-title {
             color: #212529;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .input-group {
             border: 1px solid #ced4da;
             border-radius: 10px;
-            height: 54px;
+            height: 50px;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             transition: all 0.2s;
         }
         .input-group-text {
             background: transparent !important;
             border: none !important;
             color: #004884;
-            font-size: 1.3rem;
-            width: 45px;
+            font-size: 1.2rem;
+            width: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -81,17 +82,22 @@
             background-color: #004884;
             border: none;
             border-radius: 10px;
-            padding: 14px;
+            padding: 12px;
             font-weight: 600;
             width: 100%;
             color: white;
             transition: all 0.3s;
-            height: 54px;
+            height: 50px;
             font-size: 1.1rem;
         }
         .btn-login:hover {
             background-color: #003366;
             transform: translateY(-1px);
+        }
+        .footer-simple {
+            margin-top: 0 !important;
+            padding: 10px 0 !important;
+            border-top: none !important;
         }
     </style>
 </head>
@@ -99,8 +105,8 @@
     <div class="main-container">
         <div class="login-card">
             <div class="text-center mb-4">
-                <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png" alt="Logo" style="height: 75px;">
-                <h2 class="login-title mt-4">Sistema de Gestión Contractual del DAGJP</h2>
+                <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png" alt="Logo" style="height: 60px;">
+                <h2 class="login-title mt-3">Sistema de Gestión Contractual del DAGJP</h2>
             </div>
             
             <form action="login" method="POST">
@@ -116,7 +122,7 @@
             </form>
 
             <c:if test="${not empty error}">
-                <div class="alert alert-danger mt-4 py-2 small text-center" role="alert">
+                <div class="alert alert-danger mt-3 py-2 small text-center" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i> ${error}
                 </div>
             </c:if>

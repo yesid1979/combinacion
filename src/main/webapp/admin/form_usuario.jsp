@@ -14,7 +14,7 @@
 
     <jsp:include page="/inc/navbar.jsp" />
 
-    <div class="container mt-4 mb-5">
+    <div class="container mt-4 mb-5 flex-grow-1">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
@@ -194,9 +194,9 @@
 
                     <hr class="my-4">
 
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-end gap-2">
                         <a href="${pageContext.request.contextPath}/admin/usuarios" class="btn btn-secondary px-4 fw-bold" style="border-radius: 8px;">
-                            <i class="bi bi-arrow-left me-1"></i>Cancelar
+                            <i class="bi bi-x-circle me-1"></i>Cerrar
                         </a>
                         <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
                             <i class="bi bi-check-lg me-1"></i>

@@ -19,69 +19,67 @@
             <body class="bg-light d-flex flex-column min-vh-100">
                 <jsp:include page="inc/navbar.jsp" />
 
-                <div class="container mt-4 mb-5">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2><i class="bi bi-file-earmark-text me-2 text-primary"></i>Detalle del Registro Presupuestal
-                        </h2>
-                        <a href="presupuesto" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Volver</a>
-                    </div>
-
-                    <c:if test="${not empty presupuesto}">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
-                                <h5 class="text-primary fw-bold mb-0">Información del CDP y RP</h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="form-label text-muted small fw-bold">No.
-                                            CDP</label>
-                                        <div class="form-control bg-light">${presupuesto.cdpNumero}</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label text-muted small fw-bold">Fecha
-                                            CDP</label>
-                                        <div class="form-control bg-light">
-                                            <fmt:formatDate value="${presupuesto.cdpFecha}" pattern="dd/MM/yyyy" />
+                    <div class="container mt-4 mb-5 flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2><i class="bi bi-file-earmark-text me-2 text-primary"></i>Detalle del Registro Presupuestal de Compromiso (RPC)</h2>
+                        </div>
+    
+                        <c:if test="${not empty presupuesto}">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                                    <h5 class="text-primary fw-bold mb-0">Información del CDP y RPC</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label text-muted small fw-bold">No.
+                                                CDP</label>
+                                            <div class="form-control bg-light">${presupuesto.cdpNumero}</div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label text-muted small fw-bold">Valor
-                                            CDP</label>
-                                        <div class="form-control bg-light">
-                                            <fmt:formatNumber value="${presupuesto.cdpValor}" type="currency"
-                                                currencySymbol="$" />
+                                        <div class="col-md-3">
+                                            <label class="form-label text-muted small fw-bold">Fecha
+                                                CDP</label>
+                                            <div class="form-control bg-light">
+                                                <fmt:formatDate value="${presupuesto.cdpFecha}" pattern="dd/MM/yyyy" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label text-muted small fw-bold">Vencimiento
-                                            CDP</label>
-                                        <div class="form-control bg-light">
-                                            <fmt:formatDate value="${presupuesto.cdpVencimiento}"
-                                                pattern="dd/MM/yyyy" />
+                                        <div class="col-md-3">
+                                            <label class="form-label text-muted small fw-bold">Valor
+                                                CDP</label>
+                                            <div class="form-control bg-light">
+                                                <fmt:formatNumber value="${presupuesto.cdpValor}" type="currency"
+                                                    currencySymbol="$" />
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <hr class="text-muted opacity-25">
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label text-muted small fw-bold">No. RP
-                                            (Registro Presupuestal)</label>
-                                        <div class="form-control bg-light">${presupuesto.rpNumero != null ?
-                                            presupuesto.rpNumero : 'N/A'}</div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label text-muted small fw-bold">Fecha
-                                            RP</label>
-                                        <div class="form-control bg-light">
-                                            <c:if test="${presupuesto.rpFecha != null}">
-                                                <fmt:formatDate value="${presupuesto.rpFecha}" pattern="dd/MM/yyyy" />
-                                            </c:if>
-                                            <c:if test="${presupuesto.rpFecha == null}">N/A</c:if>
+                                        <div class="col-md-3">
+                                            <label class="form-label text-muted small fw-bold">Vencimiento
+                                                CDP</label>
+                                            <div class="form-control bg-light">
+                                                <fmt:formatDate value="${presupuesto.cdpVencimiento}"
+                                                    pattern="dd/MM/yyyy" />
+                                            </div>
                                         </div>
-                                    </div>
+    
+                                        <div class="col-12">
+                                            <hr class="text-muted opacity-25">
+                                        </div>
+    
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted small fw-bold">No. RPC
+                                                (Registro Presupuestal)</label>
+                                            <div class="form-control bg-light">${presupuesto.rpNumero != null ?
+                                                presupuesto.rpNumero : 'N/A'}</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label text-muted small fw-bold">Fecha
+                                                RPC</label>
+                                            <div class="form-control bg-light">
+                                                <c:if test="${presupuesto.rpFecha != null}">
+                                                    <fmt:formatDate value="${presupuesto.rpFecha}" pattern="dd/MM/yyyy" />
+                                                </c:if>
+                                                <c:if test="${presupuesto.rpFecha == null}">N/A</c:if>
+                                            </div>
+                                        </div>
                                 </div>
                             </div>
                         </div>
@@ -166,6 +164,12 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mt-4 text-end">
+                            <a href="presupuesto" class="btn btn-secondary px-4 fw-bold" style="border-radius: 8px;">
+                                <i class="bi bi-x-circle me-2"></i> Cerrar
+                            </a>
                         </div>
                     </c:if>
 

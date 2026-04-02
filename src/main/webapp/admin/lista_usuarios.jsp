@@ -28,7 +28,7 @@
 <body class="bg-light d-flex flex-column min-vh-100">
     <jsp:include page="/inc/navbar.jsp" />
 
-    <div class="container mt-4 mb-5">
+    <div class="container mt-4 mb-5 flex-grow-1">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Usuarios registrados</h3>
             <a href="${pageContext.request.contextPath}/admin/usuarios?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
@@ -105,7 +105,8 @@
                 },
                 "order": [[0, "asc"]],
                 "serverSide": false,
-                "autoWidth": false
+                "autoWidth": false,
+                "columnDefs": [{ "orderable": false, "targets": 6 }]
             });
 
             // Check URL params for status

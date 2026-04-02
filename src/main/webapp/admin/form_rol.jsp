@@ -23,7 +23,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="/inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb small">
                         <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Inicio</a></li>
@@ -42,12 +42,6 @@
 
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h3 class="fw-bold mb-0">${rol_edit != null ? 'Editar Rol' : 'Nuevo Rol'}</h3>
-                                <div class="gap-2 d-flex">
-                                    <a href="${pageContext.request.contextPath}/admin/roles" class="btn btn-outline-secondary fw-bold px-4">Cancelar</a>
-                                    <button type="submit" class="btn btn-save fw-bold px-4">
-                                        <i class="bi bi-save-fill me-2"></i> Guardar Cambios
-                                    </button>
-                                </div>
                             </div>
 
                             <div class="row g-4 mb-4">
@@ -90,6 +84,15 @@
                                         </div>
                                     </div>
                                 </c:forEach>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="${pageContext.request.contextPath}/admin/roles" class="btn btn-outline-secondary fw-bold px-4">Cerrar</a>
+                                <button type="submit" class="btn btn-save fw-bold px-4">
+                                    <i class="bi bi-save-fill me-2"></i> Guardar Cambios
+                                </button>
                             </div>
                         </form>
                     </div>

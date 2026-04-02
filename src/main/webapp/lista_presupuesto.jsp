@@ -46,8 +46,8 @@
                                     <th>No. CDP</th>
                                     <th>Fecha CDP</th>
                                     <th>Vencimiento</th>
-                                    <th>No. RP</th>
-                                    <th>Fecha RP</th>
+                                    <th>No. RPC</th>
+                                    <th>Fecha RPC</th>
                                     <th>Rubro / Apropiación</th>
                                     <th>Ficha EBI / Proyecto</th>
                                     <th>Valor CDP</th>
@@ -118,7 +118,19 @@
                                 "orderable": false,
                                 "className": "text-end",
                                 "render": function (data, type, row) {
-                                    return '<a href="presupuesto?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver Detalle Completo"><i class="bi bi-eye"></i></a>';
+                                    let btnView = '<a href="presupuesto?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver Detalle Completo"><i class="bi bi-eye"></i></a> ';
+                                    let btnEdit = '';
+                                    let btnDel = '';
+
+                                    <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_EDITAR')}">
+                                        btnEdit = '<a href="presupuesto?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a> ';
+                                    </c:if>
+
+                                    <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_ELIMINAR')}">
+                                        btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                                    </c:if>
+
+                                    return '<div class="d-flex justify-content-center gap-1">' + btnView + btnEdit + btnDel + '</div>';
                                 }
                             }
                         ],
@@ -157,6 +169,23 @@
                         showCloseButton: true,
                         focusConfirm: false,
                         confirmButtonText: 'Cerrar'
+                    });
+                }
+                
+                function confirmarEliminar(id) {
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "Esta acción no se puede deshacer.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = 'presupuesto?action=delete&id=' + id;
+                        }
                     });
                 }
             </script>

@@ -22,23 +22,14 @@
 
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
-                <!-- DEBUG PANEL (TEMPORAL) -->
-                <div class="alert alert-info py-1 mb-4" style="font-size: 0.75rem;">
-                    <strong>DEBUG PERMISOS:</strong> 
-                    <c:forEach var="p" items="${sessionScope.usuario.permisosEspeciales}">
-                        <span class="badge bg-secondary me-1">${p.codigo}</span>
-                    </c:forEach>
-                    <c:if test="${empty sessionScope.usuario.permisosEspeciales}">
-                        <span class="text-danger">SIN PERMISOS ESPECIALES</span>
-                    </c:if>
-                </div>
+            <div class="container mt-4 mb-5 flex-grow-1">
+
 
                 <h2 class="mb-4 text-center fw-bold text-primary">Panel de Operaciones</h2>
                 <div class="row g-4 justify-content-center">
 
-                    <!-- Carga Masiva -->
-                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA')}">
+                    <!-- Carga Masiva (RESTAURADA) -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_EJECUTAR')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='carga_masiva.jsp'">
                             <div class="card-body text-center">
@@ -51,6 +42,7 @@
                         </div>
                     </div>
                     </c:if>
+
 
                     <!-- Contratos -->
                     <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">

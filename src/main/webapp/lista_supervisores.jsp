@@ -61,6 +61,10 @@
                                         <td>${s.cargo}</td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2">
+                                                <a href="${pageContext.request.contextPath}/supervisores?action=view&id=${s.id}"
+                                                   class="btn btn-sm btn-outline-info" title="Ver">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
                                                 <a href="${pageContext.request.contextPath}/supervisores?action=edit&id=${s.id}"
                                                    class="btn btn-sm btn-outline-primary" title="Editar">
                                                     <i class="bi bi-pencil-square"></i>
@@ -112,6 +116,8 @@
                                 "orderable": false,
                                 "render": function (data, type, row) {
                                     let html = '<div class="d-flex justify-content-center gap-2">';
+                                    html += '<a href="supervisores?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver">' +
+                                            '<i class="bi bi-eye"></i></a>';
                                     if (canEdit) {
                                         html += '<a href="supervisores?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar">' +
                                                 '<i class="bi bi-pencil-square"></i></a>';

@@ -30,7 +30,7 @@
 
                 <jsp:include page="inc/navbar.jsp" />
 
-                <div class="container mt-4 mb-5">
+                <div class="container mt-4 mb-5 flex-grow-1">
                     <div class="row">
                         <div class="col-12">
                             <c:if test="${not empty error}">

@@ -63,7 +63,7 @@
         .dataTables_wrapper .dataTables_length { float: left; margin-bottom: 20px; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center; height: 34px; }
         .dataTables_wrapper .dataTables_filter { float: right; margin-bottom: 20px; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center; height: 34px; }
         .dataTables_wrapper .dataTables_filter input { width: 220px !important; height: 34px !important; border: 1px solid #ced4da !important; border-radius: 4px; padding: 0 12px; margin-left: 8px; }
-        .dataTables_length select { height: 32px !important; border: 1px solid #ced4da !important; border-radius: 4px; padding: 0 8px !important; margin: 0 5px; vertical-align: middle; background-image: none !important; }
+        .dataTables_length select { height: 34px !important; border: 1px solid #ced4da !important; border-radius: 4px; padding: 0 30px 0 10px !important; margin: 0 5px; vertical-align: middle; }
         
         .dataTables_wrapper:after { content: ""; display: block; clear: both; }
         
@@ -76,9 +76,9 @@
     </style>
 </head>
 
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
     <jsp:include page="/inc/navbar.jsp" />
-
+<div class="flex-grow-1">
     <div class="container mt-5 mb-5 pb-5">
         <div class="matrix-card">
             <h2 class="h3 mb-4 text-secondary d-flex align-items-center">
@@ -214,7 +214,7 @@
         </div>
     </div>
 
-    <jsp:include page="/inc/footer.jsp" />
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -260,5 +260,8 @@
             });
         });
     </script>
+    </div>
+</div>
+    <jsp:include page="/inc/footer.jsp" />
 </body>
 </html>

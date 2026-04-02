@@ -101,6 +101,8 @@
                                 "orderable": false,
                                 "render": function (data, type, row) {
                                     let html = '<div class="d-flex justify-content-center gap-2">';
+                                    html += '<a href="ordenadores?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver">' +
+                                            '<i class="bi bi-eye"></i></a>';
                                     if (canEdit) {
                                         html += '<a href="ordenadores?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar">' +
                                                 '<i class="bi bi-pencil-square"></i></a>';
