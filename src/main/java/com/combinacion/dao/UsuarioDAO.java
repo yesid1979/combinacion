@@ -1,5 +1,6 @@
 package com.combinacion.dao;
 
+import com.combinacion.models.Permiso;
 import com.combinacion.models.Rol;
 import com.combinacion.models.Usuario;
 import com.combinacion.util.DBConnection;
