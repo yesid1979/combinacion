@@ -41,12 +41,14 @@ public class SupervisorServlet extends HttpServlet {
             case "new":
                 request.getRequestDispatcher("form_supervisor.jsp").forward(request, response);
                 break;
+            case "view":
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;
             case "delete":
                 eliminar(request, response);
                 break;
+            case "list":
             default:
                 request.getRequestDispatcher("lista_supervisores.jsp").forward(request, response);
                 break;
@@ -96,6 +98,9 @@ public class SupervisorServlet extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             Supervisor existing = supervisorService.obtenerPorId(id);
             request.setAttribute("supervisor", existing);
+            if ("view".equals(request.getParameter("action"))) {
+                request.setAttribute("readonly", true);
+            }
             request.getRequestDispatcher("form_supervisor.jsp").forward(request, response);
         } catch (Exception e) {
             response.sendRedirect("supervisores");

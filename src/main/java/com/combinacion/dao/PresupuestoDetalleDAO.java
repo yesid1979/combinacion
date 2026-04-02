@@ -168,4 +168,15 @@ public class PresupuestoDetalleDAO {
         }
         return null;
     }
+    public boolean eliminar(int id) {
+        String sql = "DELETE FROM presupuesto_detalles WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

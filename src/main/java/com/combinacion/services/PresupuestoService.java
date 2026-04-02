@@ -50,4 +50,24 @@ public class PresupuestoService {
         }
         return data;
     }
+    /**
+     * Inserta un presupuesto.
+     */
+    public boolean insertar(PresupuestoDetalle p) {
+        return presupuestoDAO.insertar(p);
+    }
+
+    /**
+     * Actualiza un presupuesto.
+     */
+    public boolean actualizar(PresupuestoDetalle p) {
+        return presupuestoDAO.actualizar(p);
+    }
+
+    /**
+     * Elimina un presupuesto.
+     */
+    public boolean eliminar(int id) {
+        return presupuestoDAO.eliminar(id);
+    }
 }

@@ -33,12 +33,14 @@ public class OrdenadorServlet extends HttpServlet {
             case "new":
                 request.getRequestDispatcher("form_ordenador.jsp").forward(request, response);
                 break;
+            case "view":
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;
             case "delete":
                 eliminar(request, response);
                 break;
+            case "list":
             default:
                 listar(request, response);
                 break;
@@ -91,6 +93,9 @@ public class OrdenadorServlet extends HttpServlet {
             OrdenadorGasto existing = ordenadorService.obtenerPorId(id);
             if (existing != null) {
                 request.setAttribute("ordenador", existing);
+                if ("view".equals(request.getParameter("action"))) {
+                    request.setAttribute("readonly", true);
+                }
                 request.getRequestDispatcher("form_ordenador.jsp").forward(request, response);
             } else {
                 response.sendRedirect("ordenadores?action=list");

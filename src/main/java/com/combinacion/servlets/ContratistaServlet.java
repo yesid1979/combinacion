@@ -48,11 +48,18 @@ public class ContratistaServlet extends HttpServlet {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 }
                 break;
+            case "view":
             case "edit":
-                if (authService.tienePermiso(u, "CONTRATISTAS_EDITAR")) {
-                    mostrarFormularioEdicion(request, response);
-                } else {
+                if ("view".equals(action)) {
+                    // response.getWriter().write("LLEGO A VIEW");
+                    // response.getWriter().flush();
+                    // if(true) return;
+                    request.setAttribute("readonly", true);
+                }
+                if ("edit".equals(action) && !authService.tienePermiso(u, "CONTRATISTAS_EDITAR")) {
                     response.sendRedirect("contratistas?error=sin_permiso");
+                } else {
+                    mostrarFormularioEdicion(request, response);
                 }
                 break;
             case "delete":
@@ -62,6 +69,7 @@ public class ContratistaServlet extends HttpServlet {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 }
                 break;
+            case "list":
             default:
                 listar(request, response);
                 break;
@@ -143,13 +151,16 @@ public class ContratistaServlet extends HttpServlet {
             Contratista existing = contratistaService.obtenerPorId(id);
             if (existing != null) {
                 request.setAttribute("contratista", existing);
+                if ("view".equals(request.getParameter("action"))) {
+                    request.setAttribute("readonly", true);
+                }
                 request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
             } else {
-                response.sendRedirect("contratistas?action=list");
+                response.sendRedirect("contratistas?action=list&error=not_found&id=" + request.getParameter("id"));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect("contratistas?action=list");
+            response.sendRedirect("contratistas?action=list&error=exception&msg=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
         }
     }
 
