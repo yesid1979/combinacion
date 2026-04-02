@@ -27,17 +27,18 @@
 
                 <jsp:include page="inc/navbar.jsp" />
 
-                <div class="container mt-4">
+                <div class="container mt-4 flex-grow-1">
                     <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Contratos registrados</h3>
-            <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
-                <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
-            </a>
+            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_CREAR')}">
+                <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
+                </a>
+            </c:if>
         </div>
 
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
-                            <!-- Removed table-responsive class to prevent double scrollbar -->
                     <style>
                         .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
                         .table td { vertical-align: middle; }
@@ -45,23 +46,14 @@
                         .btn-view { background-color: #004884; border: none; color: #fff; }
                         .btn-edit { background-color: #ffc107; border: none; color: #000; }
                         .btn-action { padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                        /* LÍNEA TURQUESA DE IDENTIDAD */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 6px;
-            background: #00ced1;
-            z-index: 9999;
-            box-shadow: 0 2px 10px rgba(0, 206, 209, 0.4);
-        }
-        
-        .footer-main {
-            background: #212529;
-            color: rgba(255, 255, 255, 0.7);
-            padding: 25px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .footer-main strong { color: #ffffff; }
+                        
+                        .footer-main {
+                            background: #212529;
+                            color: rgba(255, 255, 255, 0.7);
+                            padding: 25px 0;
+                            border-top: 1px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .footer-main strong { color: #ffffff; }
                     </style>
                             <table id="contratosTable" class="table table-striped" style="width:100%">
                                 <thead class="table-dark">
@@ -101,6 +93,9 @@
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <script>
+                    // Permisos de usuario cargados desde el servidor
+                    var canEditContratos = ${sessionScope.usuario.tienePermiso('CONTRATOS_ACTUALIZAR')};
+
                     $(document).ready(function () {
                         // Check for session-based alerts (e.g. from Redirects)
                         var successMsg = "${sessionScope.successMessage}";
@@ -112,24 +107,12 @@
                         // Fallback for "error" attribute currently used in servlet
                         if (!errorMsg) errorMsg = "${error}";
 
-                        // Clean up session attributes is done via c:remove at the end of body
-
                         if (successMsg && successMsg.trim() !== "") {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: successMsg,
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
+                            Swal.fire({ icon: 'success', title: '¡Éxito!', text: successMsg, showConfirmButton: false, timer: 2000 });
                         }
 
                         if (errorMsg && errorMsg.trim() !== "") {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: errorMsg
-                            });
+                            Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
                         }
 
                         $('#contratosTable').DataTable({
@@ -142,17 +125,17 @@
                                 "type": "POST"
                             },
                             "columns": [
-                                { "data": 0 }, // Numero
-                                { "data": 1 }, // Contratista (Nombre)
-                                { "data": 2 }, // Objeto
+                                { "data": 0 }, 
+                                { "data": 1 }, 
+                                { "data": 2 }, 
                                 {
-                                    "data": 3, // Valor Total
+                                    "data": 3, 
                                     "render": $.fn.dataTable.render.number(',', '.', 2, '$ ')
                                 },
-                                { "data": 4 }, // Fecha Inicio
-                                { "data": 5 }, // Fecha Fin
+                                { "data": 4 }, 
+                                { "data": 5 }, 
                                 {
-                                    "data": 6, // Estado
+                                    "data": 6, 
                                     "render": function (data, type, row) {
                                         var badgeClass = 'bg-secondary';
                                         if (!data) return '';
@@ -164,13 +147,18 @@
                                     }
                                 },
                                 {
-                                    "data": 7, // Actions (ID)
+                                    "data": 7, 
                                     "orderable": false,
                                     "render": function (data, type, row) {
-                                        return '<div class="d-flex justify-content-center" style="white-space: nowrap;">' +
-                                            '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info me-1" title="Ver"><i class="bi bi-eye"></i></a>' +
-                                            '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>' +
-                                            '</div>';
+                                        var btns = '<div class="d-flex justify-content-center" style="white-space: nowrap;">' +
+                                                   '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info me-1" title="Ver"><i class="bi bi-eye"></i></a>';
+                                        
+                                        if (canEditContratos) {
+                                            btns += '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>';
+                                        }
+                                        
+                                        btns += '</div>';
+                                        return btns;
                                     }
                                 }
                             ],
@@ -180,29 +168,20 @@
                                 "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
                                 "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
                                 "infoFiltered": "(filtrado de _MAX_ entradas totales)",
-                                "infoPostFix": "",
-                                "thousands": ",",
                                 "lengthMenu": "Mostrar _MENU_ entradas",
                                 "loadingRecords": "Cargando...",
                                 "processing": "Procesando...",
                                 "search": "Buscar:",
                                 "zeroRecords": "No se encontraron registros coincidentes",
                                 "paginate": {
-                                    "first": "Primero",
-                                    "last": "Último",
-                                    "next": "Siguiente",
-                                    "previous": "Anterior"
-                                },
-                                "aria": {
-                                    "sortAscending": ": activar para ordenar columna ascendente",
-                                    "sortDescending": ": activar para ordenar columna descendente"
+                                    "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior"
                                 }
                             }
                         });
                     });
                 </script>
 
-                <!-- Remove session messages to avoid showing them again on refresh -->
+                <!-- Remove session messages -->
                 <c:if test="${not empty sessionScope.successMessage}">
                     <c:remove var="successMessage" scope="session" />
                 </c:if>

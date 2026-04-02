@@ -21,32 +21,14 @@
             <style>
                 .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
                 .table td { vertical-align: middle; }
-                /* IDENTIDAD GLOBAL TURQUESA */
-                body::before {
-                    content: "";
-                    position: fixed;
-                    top: 0; left: 0; width: 100%; height: 6px;
-                    background: #00ced1;
-                    z-index: 9999;
-                    box-shadow: 0 2px 10px rgba(0, 206, 209, 0.4);
-                }
-                
-                .footer-main {
-                    background: #212529;
-                    color: rgba(255, 255, 255, 0.7);
-                    padding: 25px 0;
-                    margin-top: 50px;
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    text-align: center;
-                }
-                .footer-main strong { color: #ffffff; }
+                .flex-grow-1 { flex-grow: 1 !important; }
             </style>
         </head>
 
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
                     <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_CREAR')}">
@@ -76,11 +58,7 @@
                 </div>
             </div>
 
-            <footer class="footer-main">
-                <div class="container-fluid">
-                    &copy; 2026 DAGJP - Todos los derechos reservados | Diseñado por: <strong>Ing. Yesid Javier Piedrahita Correa</strong>
-                </div>
-            </footer>
+            <jsp:include page="inc/footer.jsp" />
 
             <!-- Scripts -->
             <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -118,6 +96,7 @@
                                 "className": "text-center",
                                 "orderable": false,
                                 "render": function (data, type, row) {
+                                    let btnView = '<a href="contratistas?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver"><i class="bi bi-eye"></i></a> ';
                                     let btnEdit = '';
                                     let btnDel = '';
                                     
@@ -129,7 +108,7 @@
                                         btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
                                     </c:if>
                                     
-                                    return '<div class="d-flex justify-content-center gap-2">' + btnEdit + btnDel + '</div>';
+                                    return '<div class="d-flex justify-content-center gap-2">' + btnView + btnEdit + btnDel + '</div>';
                                 }
                             }
                         ],

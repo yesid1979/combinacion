@@ -21,7 +21,8 @@ public class UsuarioDAO {
     public List<Usuario> listarTodos() {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "ORDER BY u.id";
@@ -38,11 +39,12 @@ public class UsuarioDAO {
     }
 
     /**
-     * Obtiene un usuario por ID con su rol y permisos cargados.
+     * Obtiene un usuario por ID.
      */
     public Usuario obtenerPorId(int id) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "WHERE u.id = ?";
@@ -52,11 +54,9 @@ public class UsuarioDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Usuario u = mapear(rs);
-                    // Cargar rol completo con permisos
                     if (u.getRolId() > 0) {
                         u.setRol(rolDAO.obtenerPorId(u.getRolId()));
                     }
-                    // Cargar permisos especiales
                     u.setPermisosEspeciales(permisoDAO.listarPorUsuarioId(id));
                     return u;
                 }
@@ -68,55 +68,12 @@ public class UsuarioDAO {
     }
 
     /**
-     * Reemplaza los permisos especiales de un usuario.
-     */
-    public boolean actualizarPermisosEspeciales(int usuarioId, List<Integer> permisosIds) {
-        Connection conn = null;
-        try {
-            conn = DBConnection.getConnection();
-            conn.setAutoCommit(false);
-
-            // Eliminar permisos actuales del usuario
-            String deleteSql = "DELETE FROM usuario_permisos WHERE usuario_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-                ps.setInt(1, usuarioId);
-                ps.executeUpdate();
-            }
-
-            // Insertar nuevos permisos
-            if (permisosIds != null && !permisosIds.isEmpty()) {
-                String insertSql = "INSERT INTO usuario_permisos (usuario_id, permiso_id) VALUES (?, ?)";
-                try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                    for (Integer permisoId : permisosIds) {
-                        ps.setInt(1, usuarioId);
-                        ps.setInt(2, permisoId);
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                }
-            }
-
-            conn.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            }
-        } finally {
-            if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Obtiene un usuario por username con rol y permisos completos (para login).
+     * Obtiene un usuario por username.
      */
     public Usuario obtenerPorUsername(String username) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "WHERE u.username = ?";
@@ -129,7 +86,6 @@ public class UsuarioDAO {
                     if (u.getRolId() > 0) {
                         u.setRol(rolDAO.obtenerPorId(u.getRolId()));
                     }
-                    // Cargar permisos especiales para sesión
                     u.setPermisosEspeciales(permisoDAO.listarPorUsuarioId(u.getId()));
                     return u;
                 }
@@ -141,11 +97,12 @@ public class UsuarioDAO {
     }
 
     /**
-     * Inserta un nuevo usuario. Devuelve el ID generado o -1 si falla.
+     * Inserta un nuevo usuario con los campos modernos.
      */
     public int insertar(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (username, password_hash, salt, nombre_completo, correo, activo, rol_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
+        String sql = "INSERT INTO usuarios (username, password_hash, salt, nombre_completo, correo, "
+                   + "cedula, celular, sexo, vinculacion, fecha_inicio_contrato, fecha_fin_contrato, activo, rol_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, usuario.getUsername());
@@ -153,12 +110,16 @@ public class UsuarioDAO {
             ps.setString(3, usuario.getSalt());
             ps.setString(4, usuario.getNombreCompleto());
             ps.setString(5, usuario.getCorreo());
-            ps.setBoolean(6, usuario.isActivo());
-            ps.setInt(7, usuario.getRolId());
+            ps.setString(6, usuario.getCedula());
+            ps.setString(7, usuario.getCelular());
+            ps.setString(8, usuario.getSexo());
+            ps.setString(9, usuario.getVinculacion());
+            ps.setDate(10, usuario.getFechaInicioContrato());
+            ps.setDate(11, usuario.getFechaFinContrato());
+            ps.setBoolean(12, usuario.isActivo());
+            ps.setInt(13, usuario.getRolId());
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                if (rs.next()) return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -167,19 +128,27 @@ public class UsuarioDAO {
     }
 
     /**
-     * Actualiza los datos de un usuario (sin cambiar la contraseña).
+     * Actualiza un usuario sin cambiar el password.
      */
     public boolean actualizar(Usuario usuario) {
-        String sql = "UPDATE usuarios SET username = ?, nombre_completo = ?, correo = ?, activo = ?, rol_id = ? "
+        String sql = "UPDATE usuarios SET username = ?, nombre_completo = ?, correo = ?, "
+                   + "cedula = ?, celular = ?, sexo = ?, vinculacion = ?, "
+                   + "fecha_inicio_contrato = ?, fecha_fin_contrato = ?, activo = ?, rol_id = ? "
                    + "WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, usuario.getUsername());
             ps.setString(2, usuario.getNombreCompleto());
             ps.setString(3, usuario.getCorreo());
-            ps.setBoolean(4, usuario.isActivo());
-            ps.setInt(5, usuario.getRolId());
-            ps.setInt(6, usuario.getId());
+            ps.setString(4, usuario.getCedula());
+            ps.setString(5, usuario.getCelular());
+            ps.setString(6, usuario.getSexo());
+            ps.setString(7, usuario.getVinculacion()); 
+            ps.setDate(8, usuario.getFechaInicioContrato());
+            ps.setDate(9, usuario.getFechaFinContrato());
+            ps.setBoolean(10, usuario.isActivo());
+            ps.setInt(11, usuario.getRolId());
+            ps.setInt(12, usuario.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -187,9 +156,6 @@ public class UsuarioDAO {
         return false;
     }
 
-    /**
-     * Actualiza la contraseña de un usuario.
-     */
     public boolean actualizarPassword(int id, String passwordHash, String salt) {
         String sql = "UPDATE usuarios SET password_hash = ?, salt = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -204,9 +170,6 @@ public class UsuarioDAO {
         return false;
     }
 
-    /**
-     * Actualiza la fecha de último acceso.
-     */
     public boolean actualizarUltimoAcceso(int id) {
         String sql = "UPDATE usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -219,9 +182,6 @@ public class UsuarioDAO {
         return false;
     }
 
-    /**
-     * Elimina un usuario por ID.
-     */
     public boolean eliminar(int id) {
         String sql = "DELETE FROM usuarios WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -234,9 +194,6 @@ public class UsuarioDAO {
         return false;
     }
 
-    /**
-     * Verifica si un username ya existe (excluyendo un ID específico para edición).
-     */
     public boolean existeUsername(String username, int excludeId) {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE username = ? AND id != ?";
         try (Connection conn = DBConnection.getConnection();
@@ -252,9 +209,22 @@ public class UsuarioDAO {
         return false;
     }
 
-    /**
-     * Cuenta el total de usuarios.
-     */
+    public boolean existeCedula(String cedula, int excludeId) {
+        if (cedula == null || cedula.trim().isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE cedula = ? AND id != ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cedula.trim());
+            ps.setInt(2, excludeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public int contarTotal() {
         String sql = "SELECT COUNT(*) FROM usuarios";
         try (Connection conn = DBConnection.getConnection();
@@ -267,6 +237,49 @@ public class UsuarioDAO {
         return 0;
     }
 
+    /**
+     * Actualiza los permisos especiales de un usuario (sobrescritura).
+     */
+    public boolean actualizarPermisosEspeciales(int id, List<Integer> permisosIds) {
+        String deleteSql = "DELETE FROM usuario_permisos WHERE usuario_id = ?";
+        String insertSql = "INSERT INTO usuario_permisos (usuario_id, permiso_id) VALUES (?, ?)";
+        
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Eliminar permisos especiales previos
+                try (PreparedStatement psDel = conn.prepareStatement(deleteSql)) {
+                    psDel.setInt(1, id);
+                    psDel.executeUpdate();
+                }
+                
+                // 2. Insertar los nuevos permisos seleccionados
+                if (permisosIds != null && !permisosIds.isEmpty()) {
+                    try (PreparedStatement psIns = conn.prepareStatement(insertSql)) {
+                        for (Integer pid : permisosIds) {
+                            psIns.setInt(1, id);
+                            psIns.setInt(2, pid);
+                            psIns.addBatch();
+                        }
+                        psIns.executeBatch();
+                    }
+                }
+                
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private Usuario mapear(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setId(rs.getInt("id"));
@@ -275,12 +288,17 @@ public class UsuarioDAO {
         u.setSalt(rs.getString("salt"));
         u.setNombreCompleto(rs.getString("nombre_completo"));
         u.setCorreo(rs.getString("correo"));
+        u.setCedula(rs.getString("cedula"));
+        u.setCelular(rs.getString("celular"));
+        u.setSexo(rs.getString("sexo"));
+        u.setVinculacion(rs.getString("vinculacion")); 
+        u.setFechaInicioContrato(rs.getDate("fecha_inicio_contrato"));
+        u.setFechaFinContrato(rs.getDate("fecha_fin_contrato"));
         u.setActivo(rs.getBoolean("activo"));
         u.setUltimoAcceso(rs.getTimestamp("ultimo_acceso"));
         u.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
         u.setRolId(rs.getInt("rol_id"));
 
-        // Crear un Rol básico con el nombre del JOIN
         try {
             String rolNombre = rs.getString("rol_nombre");
             if (rolNombre != null) {
@@ -289,9 +307,7 @@ public class UsuarioDAO {
                 rol.setNombre(rolNombre);
                 u.setRol(rol);
             }
-        } catch (SQLException ignored) {
-            // Column not in result set
-        }
+        } catch (SQLException ignored) {}
         return u;
     }
 }

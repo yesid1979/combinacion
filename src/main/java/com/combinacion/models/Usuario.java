@@ -15,6 +15,12 @@ public class Usuario implements Serializable {
     private String salt;
     private String nombreCompleto;
     private String correo;
+    private String cedula;
+    private String celular;
+    private String sexo;
+    private String vinculacion;
+    private java.sql.Date fechaInicioContrato;
+    private java.sql.Date fechaFinContrato;
     private boolean activo;
     private Timestamp ultimoAcceso;
     private Timestamp fechaCreacion;
@@ -47,6 +53,24 @@ public class Usuario implements Serializable {
     public String getCorreo() { return correo; }
     public void setCorreo(String correo) { this.correo = correo; }
 
+    public String getCedula() { return cedula; }
+    public void setCedula(String cedula) { this.cedula = cedula; }
+
+    public String getCelular() { return celular; }
+    public void setCelular(String celular) { this.celular = celular; }
+
+    public String getSexo() { return sexo; }
+    public void setSexo(String sexo) { this.sexo = sexo; }
+
+    public String getVinculacion() { return vinculacion; }
+    public void setVinculacion(String vinculacion) { this.vinculacion = vinculacion; }
+
+    public java.sql.Date getFechaInicioContrato() { return fechaInicioContrato; }
+    public void setFechaInicioContrato(java.sql.Date fechaInicioContrato) { this.fechaInicioContrato = fechaInicioContrato; }
+
+    public java.sql.Date getFechaFinContrato() { return fechaFinContrato; }
+    public void setFechaFinContrato(java.sql.Date fechaFinContrato) { this.fechaFinContrato = fechaFinContrato; }
+
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
@@ -63,57 +87,58 @@ public class Usuario implements Serializable {
     public void setRol(Rol rol) { this.rol = rol; }
 
     /**
-     * Verifica si el usuario tiene un permiso específico, considerando 
-     * permisos especiales (sobrescritura) o los del rol por defecto.
+     * Comprueba si el usuario tiene un permiso específico.
+     * Lógica de Jerarquía Inteligente:
+     * 1. Si el usuario tiene el permiso en su lista de permisos especiales, se concede.
+     * 2. Si no está en su lista especial, se busca en los permisos heredados de su Rol.
+     */
+    /**
+     * Comprueba si el usuario tiene un permiso específico.
+     * Lógica de Respeto Absoluto a los Interruptores (FOTO-CENTRISTA):
+     * 1. El Administrador (rolId == 1) siempre tiene permiso absoluto (Imagen 3).
+     * 2. Si el usuario tiene permisos especiales (Manual), NO se usa la herencia del Rol. 
+     *    Solo se concede lo que esté marcado con "Si" (presente en la lista).
+     * 3. Si el usuario NO tiene permisos manuales, se usa el permiso por defecto de su Rol.
      */
     public boolean tienePermiso(String codigoPermiso) {
-        // 1. Si el usuario tiene el permiso asignado de forma especial
-        for (Permiso p : permisosEspeciales) {
-            if (p.getCodigo().equals(codigoPermiso)) {
-                return true;
-            }
-        }
+        // --- 1. LLAVE MAESTRA: Administrador ---
+        if (this.rolId == 1) return true;
 
-        // 2. Lógica de "Sobre-escritura" por módulo:
-        // Si existen permisos especiales para el módulo del permiso solicitado,
-        // pero el permiso solicitado NO está en ellos, entonces está denegado explícitamente.
-        
-        // Pero primero necesitamos identificar a qué módulo pertenece el permiso.
-        // Si no tenemos esa info a la mano, verificamos si el rol lo tiene.
-        if (rol == null) return false;
-        
-        // Buscamos el permiso en el rol para saber su módulo
-        String moduloDelPermiso = null;
-        if (rol.getPermisos() != null) {
-            for (Permiso rp : rol.getPermisos()) {
-                if (rp.getCodigo().equals(codigoPermiso)) {
-                    moduloDelPermiso = rp.getModulo();
-                    break;
+        // --- 2. MODO MANUAL: Si tiene excepciones, la lista es la UNICA fuente de verdad ---
+        if (permisosEspeciales != null && !permisosEspeciales.isEmpty()) {
+            String target = codigoPermiso.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
+            
+            // Búsqueda directa
+            for (Permiso p : permisosEspeciales) {
+                String cod = p.getCodigo();
+                if (cod == null) continue;
+                String normalized = cod.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
+                if (normalized.equals(target)) return true;
+                
+                // --- MEJORA: Búsqueda por Prefijo de Módulo (Fuzzy Match) ---
+                // Si buscamos un 'VER' y el permiso especial coincide con el módulo base
+                if (target.endsWith("_VER")) {
+                    String moduloBase = target.substring(0, target.lastIndexOf("_"));
+                    if (normalized.startsWith(moduloBase)) return true;
                 }
+                // Caso especial para CARGA_MASIVA
+                if (target.contains("CARGA") && normalized.contains("CARGA")) return true;
             }
-        }
-        
-        // Si no encontramos el módulo del permiso, devolvemos lo que diga el rol directamente
-        if (moduloDelPermiso == null) {
-            return rol.tienePermiso(codigoPermiso);
-        }
-
-        // ¿Tiene el usuario ALGÚN permiso especial para ESE módulo?
-        boolean moduloSobreescrito = false;
-        for (Permiso p : permisosEspeciales) {
-            if (moduloDelPermiso.equals(p.getModulo())) {
-                moduloSobreescrito = true;
-                break;
-            }
-        }
-
-        // Si el módulo está sobreescrito pero no lo encontramos en el paso 1, es FALSE.
-        if (moduloSobreescrito) {
+            
+            // Si tiene otros permisos especiales pero ESTE no se encontró ni por asomo, se deniega
             return false;
         }
 
-        // Si el módulo NO está sobreescrito, usamos el del rol por defecto.
-        return rol.tienePermiso(codigoPermiso);
+        // --- 3. MODO DEFAULT: Sin excepciones, manda el Rol ---
+        if (rol != null) {
+            boolean tieneRol = rol.tienePermiso(codigoPermiso);
+            if (!tieneRol && codigoPermiso.contains("_ACTUALIZAR")) {
+                tieneRol = rol.tienePermiso(codigoPermiso.replace("_ACTUALIZAR", "_EDITAR"));
+            }
+            return tieneRol;
+        }
+
+        return false;
     }
 
     /**

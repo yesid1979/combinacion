@@ -27,13 +27,20 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="/inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5">
+            <div class="container mt-4 mb-5 flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Supervisores registrados</h3>
-                    <a href="${pageContext.request.contextPath}/supervisores?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
-                        <i class="bi bi-person-plus-fill me-1"></i>Nuevo supervisor
-                    </a>
+                    <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_CREAR')}">
+                        <a href="${pageContext.request.contextPath}/supervisores?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                            <i class="bi bi-person-plus-fill me-1"></i>Nuevo supervisor
+                        </a>
+                    </c:if>
                 </div>
+
+                <script>
+                    const canEdit = ${sessionScope.usuario.tienePermiso('SUPERVISORES_EDITAR')};
+                    const canDelete = ${sessionScope.usuario.tienePermiso('SUPERVISORES_ELIMINAR')};
+                </script>
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
@@ -104,11 +111,17 @@
                                 "className": "text-center",
                                 "orderable": false,
                                 "render": function (data, type, row) {
-                                    return '<div class="d-flex justify-content-center gap-2">' +
-                                           '<a href="supervisores?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar">' +
-                                           '<i class="bi bi-pencil-square"></i></a>' +
-                                           '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar">' +
-                                           '<i class="bi bi-trash"></i></button></div>';
+                                    let html = '<div class="d-flex justify-content-center gap-2">';
+                                    if (canEdit) {
+                                        html += '<a href="supervisores?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar">' +
+                                                '<i class="bi bi-pencil-square"></i></a>';
+                                    }
+                                    if (canDelete) {
+                                        html += '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar">' +
+                                                '<i class="bi bi-trash"></i></button>';
+                                    }
+                                    html += '</div>';
+                                    return html;
                                 }
                             }
                         ],

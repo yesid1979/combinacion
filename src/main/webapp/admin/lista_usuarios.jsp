@@ -41,11 +41,11 @@
                 <table class="table table-striped w-100" id="tablaUsuarios">
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
+                            <th>No. de Cédula</th>
                             <th>Usuario</th>
-                            <th>Nombre Completo</th>
-                            <th>Correo</th>
-                            <th>Rol</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Correo electrónico</th>
+                            <th>Vinculación</th>
                             <th>Estado</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -53,11 +53,11 @@
                     <tbody>
                         <c:forEach var="u" items="${listUsuarios}">
                             <tr>
-                                <td><strong>${u.id}</strong></td>
+                                <td><span class="text-secondary fw-bold">${u.cedula}</span></td>
                                 <td><span class="text-primary fw-bold">${u.username}</span></td>
                                 <td>${u.nombreCompleto}</td>
                                 <td>${u.correo}</td>
-                                <td><span class="badge bg-primary bg-opacity-75">${u.rol.nombre}</span></td>
+                                <td><span class="badge bg-info text-dark bg-opacity-25">${u.vinculacion}</span></td>
                                 <td>
                                     <span class="badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}">
                                         ${u.activo ? 'Activo' : 'Inactivo'}

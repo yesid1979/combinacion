@@ -177,22 +177,21 @@
                                             
                                             <c:if test="${permisoItem != null}">
                                                 <c:set var="check" value="${false}" />
-                                                <c:set var="espEx" value="${false}" />
+                                                <c:set var="hasSpecials" value="${not empty usuario_perms.permisosEspeciales}" />
+                                                
                                                 <c:forEach var="uep" items="${usuario_perms.permisosEspeciales}">
-                                                    <c:if test="${uep.id == permisoItem.id}"><c:set var="check" value="${true}" /><c:set var="espEx" value="${true}" /></c:if>
-                                                    <c:if test="${uep.modulo == moduloItem}"><c:set var="espEx" value="${true}" /></c:if>
+                                                    <c:if test="${uep.id == permisoItem.id}"><c:set var="check" value="${true}" /></c:if>
                                                 </c:forEach>
-                                                <c:if test="${not espEx}">
+                                                
+                                                <c:if test="${not hasSpecials}">
                                                     <c:if test="${usuario_perms.rol.tienePermiso(permisoItem.codigo)}"><c:set var="check" value="${true}" /></c:if>
                                                 </c:if>
 
                                                 <div class="sw-box">
                                                     <input class="sw-check" type="checkbox" name="permisos" 
                                                            value="${permisoItem.id}" id="s_${permisoItem.id}"
-                                                           ${check ? 'checked' : ''}
-                                                           ${usuario_perms.rol.nombre == 'Administrador del Sistema' ? 'disabled' : ''}>
-                                                    <label for="s_${permisoItem.id}" class="sw-btn" 
-                                                           style="${usuario_perms.rol.nombre == 'Administrador del Sistema' ? 'cursor: not-allowed; opacity: 0.8;' : ''}"></label>
+                                                           ${check ? 'checked' : ''}>
+                                                    <label for="s_${permisoItem.id}" class="sw-btn"></label>
                                                 </div>
                                             </c:if>
                                         </td>
@@ -226,7 +225,7 @@
     
     <script>
         $(document).ready(function() {
-            $('#tablaPermisos').DataTable({
+            var table = $('#tablaPermisos').DataTable({
                 columnDefs: [
                     { 
                         targets: [2, 3, 4, 5], 
@@ -239,7 +238,25 @@
                 "responsive": true,
                 "autoWidth": false,
                 dom: 'lfrtip',
-                pageLength: 25
+                pageLength: 50 // Mayor longitud para evitar paginación excesiva
+            });
+
+            // FIX: Capturar checkboxes de TODAS las páginas del DataTable
+            $('form').on('submit', function(e) {
+                var form = this;
+                
+                // Iterar sobre todos los checkboxes marcados en la tabla (incluso fuera del DOM actual)
+                table.$('input[type="checkbox"]:checked').each(function() {
+                    // Si el checkbox no está físicamente en el DOM (en otra página), añadirlo como oculto
+                    if(!$.contains(document, this)) {
+                        $(form).append(
+                            $('<input>')
+                                .attr('type', 'hidden')
+                                .attr('name', 'permisos')
+                                .val($(this).val())
+                        );
+                    }
+                });
             });
         });
     </script>

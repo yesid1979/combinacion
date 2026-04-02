@@ -11,25 +11,9 @@
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
             <style>
-                .card-menu {
-                    transition: transform 0.2s;
-                    cursor: pointer;
-                }
-
-                .card-menu:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                }
-
-                .icon-box {
-                    width: 60px;
-                    height: 60px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                }
+                .card-menu { transition: transform 0.2s; cursor: pointer; }
+                .card-menu:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+                .icon-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 15px; }
             </style>
         <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     </head>
@@ -39,10 +23,22 @@
             <jsp:include page="inc/navbar.jsp" />
 
             <div class="container mt-4 mb-5">
-                <h2 class="mb-4 text-center fw-bold text-primary">Panel de Administración</h2>
-                <div class="row g-4">
+                <!-- DEBUG PANEL (TEMPORAL) -->
+                <div class="alert alert-info py-1 mb-4" style="font-size: 0.75rem;">
+                    <strong>DEBUG PERMISOS:</strong> 
+                    <c:forEach var="p" items="${sessionScope.usuario.permisosEspeciales}">
+                        <span class="badge bg-secondary me-1">${p.codigo}</span>
+                    </c:forEach>
+                    <c:if test="${empty sessionScope.usuario.permisosEspeciales}">
+                        <span class="text-danger">SIN PERMISOS ESPECIALES</span>
+                    </c:if>
+                </div>
+
+                <h2 class="mb-4 text-center fw-bold text-primary">Panel de Operaciones</h2>
+                <div class="row g-4 justify-content-center">
 
                     <!-- Carga Masiva -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='carga_masiva.jsp'">
                             <div class="card-body text-center">
@@ -54,8 +50,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Contratos -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='contratos'">
                             <div class="card-body text-center">
@@ -67,8 +65,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Contratistas -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='contratistas'">
                             <div class="card-body text-center">
@@ -80,8 +80,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Supervisores -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='supervisores'">
                             <div class="card-body text-center">
@@ -93,8 +95,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Ordenadores -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='ordenadores'">
                             <div class="card-body text-center">
@@ -106,8 +110,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
-                    <!-- Presupuesto (Bonus) -->
+                    <!-- Presupuesto -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='presupuesto'">
                             <div class="card-body text-center">
@@ -119,8 +125,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Combinación -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('COMBINACION_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='combinacion'">
                             <div class="card-body text-center">
@@ -133,9 +141,10 @@
                             </div>
                         </div>
                     </div>
+                    </c:if>
 
                     <!-- Administración -->
-                    <c:if test="${usuarioLogueado.rolId == 1}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('ADMINISTRACION_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='admin/usuarios'">
                             <div class="card-body text-center">
@@ -149,12 +158,9 @@
                     </div>
                     </c:if>
 
-
-
                 </div>
             </div>
 
-            <!-- Footer if you want -->
             <!-- Footer -->
             <jsp:include page="inc/footer.jsp" />
 

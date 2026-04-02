@@ -2,6 +2,7 @@ package com.combinacion.servlets;
 
 import com.combinacion.models.Usuario;
 import com.combinacion.services.AuthService;
+import com.combinacion.services.LoginResult;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -38,9 +39,10 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        Usuario usuario = authService.autenticar(username, password);
+        LoginResult result = authService.autenticarDetallado(username, password);
 
-        if (usuario != null) {
+        if (result.isExitoso()) {
+            Usuario usuario = result.getUsuario();
             // Login exitoso: crear sesión
             HttpSession session = request.getSession(true);
             session.setAttribute("usuario", usuario);
@@ -50,8 +52,8 @@ public class LoginServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/index.jsp");
         } else {
-            // Login fallido
-            request.setAttribute("error", "Usuario o contraseña incorrectos, o la cuenta está desactivada.");
+            // Login fallido con mensaje detallado
+            request.setAttribute("error", result.getMensaje());
             request.setAttribute("username", username);
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }

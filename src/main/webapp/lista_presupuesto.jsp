@@ -31,9 +31,11 @@
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Presupuestos registrados</h3>
-                    <a href="${pageContext.request.contextPath}/presupuesto?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
-                        <i class="bi bi-plus-circle-fill me-1"></i>Nuevo presupuesto
-                    </a>
+                    <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_CREAR')}">
+                        <a href="${pageContext.request.contextPath}/presupuesto?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                            <i class="bi bi-plus-circle-fill me-1"></i>Nuevo presupuesto
+                        </a>
+                    </c:if>
                 </div>
 
                 <div class="card shadow-sm border-0">

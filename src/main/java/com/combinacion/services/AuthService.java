@@ -1,92 +1,140 @@
 package com.combinacion.services;
 
-import com.combinacion.dao.UsuarioDAO;
 import com.combinacion.models.Usuario;
+import com.combinacion.dao.UsuarioDAO;
 import com.combinacion.util.PasswordUtils;
 
 /**
- * Servicio de autenticación: login y verificación de permisos.
+ * Servicio para la gestion de autenticacion y seguridad.
  */
 public class AuthService {
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
     /**
-     * Intenta autenticar un usuario con username y password.
-     * @return El Usuario autenticado (con rol y permisos cargados) o null si falla.
+     * Autentica un usuario por username y password (metodo simple compatible).
      */
     public Usuario autenticar(String username, String password) {
-        if (username == null || password == null 
-                || username.trim().isEmpty() || password.trim().isEmpty()) {
-            return null;
+        LoginResult result = autenticarDetallado(username, password);
+        if (result != null) {
+            return result.getUsuario();
+        }
+        return null;
+    }
+
+    /**
+     * Version detallada para distinguir entre credenciales e inactividad.
+     */
+    public LoginResult autenticarDetallado(String username, String password) {
+        if (username == null || username.trim().isEmpty() || password == null) {
+            return new LoginResult(null, "Por favor, complete todos los campos.", false);
         }
 
         Usuario usuario = usuarioDAO.obtenerPorUsername(username.trim());
+
         if (usuario == null) {
-            return null;
+            return new LoginResult(null, "Usuario o contraseña incorrectos.", false);
         }
 
-        // Comprobación de activo (temporalmente permitimos acceso para diagnóstico)
-        /* if (!usuario.isActivo()) {
-            return null;
-        } */
+        // Comprobacion de estado inactivo
+        if (!usuario.isActivo()) {
+            return new LoginResult(null, "El usuario se encuentra inactivo por favor consulte al administrador.", false);
+        }
 
-        // Verificar contraseña
+        // --- AUTOMATIZACION: Inactivacion por fin de contrato ---
+        if ("Contratista".equalsIgnoreCase(usuario.getVinculacion()) && usuario.getFechaFinContrato() != null) {
+            java.util.Date hoy = new java.util.Date();
+            // Si la fecha de fin es antes que hoy (ya vencio)
+            if (usuario.getFechaFinContrato().before(hoy)) {
+                usuario.setActivo(false);
+                usuarioDAO.actualizar(usuario); // Guardar en DB el cambio automatico
+                return new LoginResult(null, "El usuario se encuentra inactivo por favor consulte al administrador.", false);
+            }
+        }
+        // ---------------------------------------------------------
+
+        // Verificar contraseña hasheada
         if (!PasswordUtils.verifyPassword(password, usuario.getPasswordHash(), usuario.getSalt())) {
-            return null;
+            return new LoginResult(null, "Usuario o contraseña incorrectos.", false);
         }
 
-        // Actualizar último acceso
+        // Registro de acceso exitoso
         usuarioDAO.actualizarUltimoAcceso(usuario.getId());
-
-        return usuario;
+        return new LoginResult(usuario, null, true);
     }
 
     /**
-     * Verifica si un usuario tiene un permiso específico.
+     * Determina si un usuario tiene permiso para acceder a una ruta especifica.
+     */
+    public boolean puedeAcceder(Usuario usuario, String path) {
+        if (usuario == null) return false;
+        
+        // Bloqueo inmediato para usuarios inactivados
+        if (!usuario.isActivo()) return false;
+
+        // El Administrador total (Rol ID: 1) tiene acceso a TODO
+        if (usuario.getRolId() == 1) return true;
+
+        // --- AUTOMATIZACION: Inactivacion en tiempo real por fin de contrato ---
+        if ("Contratista".equalsIgnoreCase(usuario.getVinculacion()) && usuario.getFechaFinContrato() != null) {
+            java.util.Date hoy = new java.util.Date();
+            if (usuario.getFechaFinContrato().before(hoy)) {
+                usuario.setActivo(false);
+                usuarioDAO.actualizar(usuario); // Persistir en DB
+                return false; // Denegar acceso de inmediato
+            }
+        }
+        // -----------------------------------------------------------------------
+
+        // Rutas publicas y basicas (Index y Logout siempre permitidos si esta activo)
+        if (path.equals("/index.jsp") || path.equals("/") || path.equals("/logout")) {
+            return true;
+        }
+        
+        // --- VALIDACION DE MODULOS POR PERMISO DE 'VER' ---
+        String lowerPath = path.toLowerCase();
+
+        if (lowerPath.contains("/admin/") || lowerPath.contains("/admin/usuarios") || lowerPath.contains("/roles")) {
+            return tienePermiso(usuario, "ADMINISTRACION_VER");
+        }
+        if (lowerPath.contains("carga_masiva") || lowerPath.contains("cargamasiva") || lowerPath.contains("cargamos")) {
+            return tienePermiso(usuario, "CARGA_MASIVA_VER");
+        }
+        if (lowerPath.contains("/contratos")) {
+            return tienePermiso(usuario, "CONTRATOS_VER");
+        }
+        if (lowerPath.contains("/contratistas")) {
+            return tienePermiso(usuario, "CONTRATISTAS_VER");
+        }
+        if (lowerPath.contains("/presupuesto")) {
+            return tienePermiso(usuario, "PRESUPUESTO_VER");
+        }
+        if (lowerPath.contains("/ordenador")) {
+            return tienePermiso(usuario, "ORDENADORES_VER");
+        }
+        if (lowerPath.contains("/supervisor")) {
+            return tienePermiso(usuario, "SUPERVISORES_VER");
+        }
+        if (lowerPath.contains("/combinacion")) {
+             return tienePermiso(usuario, "COMBINACION_VER");
+        }
+
+        return false; 
+    }
+
+    /**
+     * Determina si un usuario tiene permiso para realizar una accion especifica.
      */
     public boolean tienePermiso(Usuario usuario, String codigoPermiso) {
         if (usuario == null) return false;
-        // Administrador tiene acceso total
-        if (usuario.esAdministrador()) return true;
+        
+        // Bloqueo de permisos para cuentas inactivas
+        if (!usuario.isActivo()) return false;
+        
+        // El Administrador total (Rol ID: 1) tiene todos los poderes
+        if (usuario.getRolId() == 1) return true;
+        
+        // Consultar la logica de permisos (especiales vs rol) definida en el modelo
         return usuario.tienePermiso(codigoPermiso);
-    }
-
-    /**
-     * Verifica si un usuario puede acceder a una URL determinada.
-     * Mapea las URLs a los permisos requeridos.
-     */
-    public boolean puedeAcceder(Usuario usuario, String uri) {
-        if (usuario == null) return false;
-        if (usuario.esAdministrador()) return true;
-
-        // Mapeo de URLs a permisos
-        if (uri.contains("/admin/")) {
-            return tienePermiso(usuario, "ADMIN_USUARIOS") || tienePermiso(usuario, "ADMIN_ROLES");
-        }
-        if (uri.contains("/contratos")) {
-            return tienePermiso(usuario, "CONTRATOS_VER");
-        }
-        if (uri.contains("/contratistas")) {
-            return tienePermiso(usuario, "CONTRATISTAS_VER");
-        }
-        if (uri.contains("/supervisores")) {
-            return tienePermiso(usuario, "SUPERVISORES_VER");
-        }
-        if (uri.contains("/ordenadores")) {
-            return tienePermiso(usuario, "ORDENADORES_VER");
-        }
-        if (uri.contains("/presupuesto")) {
-            return tienePermiso(usuario, "PRESUPUESTO_VER");
-        }
-        if (uri.contains("/combinacion")) {
-            return tienePermiso(usuario, "COMBINACION_VER");
-        }
-        if (uri.contains("/carga_masiva") || uri.contains("/cargamasiva")) {
-            return tienePermiso(usuario, "CARGA_MASIVA_EJECUTAR");
-        }
-
-        // Páginas genéricas (index, resources) → acceso libre si está autenticado
-        return true;
     }
 }

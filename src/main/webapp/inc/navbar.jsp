@@ -22,6 +22,8 @@
                             <i class="bi bi-house-door me-2"></i>Inicio
                         </a>
                     </li>
+
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
                     <li class="nav-item">
                         <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -29,7 +31,9 @@
                             <i class="bi bi-file-earmark-text me-2"></i>Contratos
                         </a>
                     </li>
+                    </c:if>
                     
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -37,12 +41,20 @@
                             <i class="bi bi-database-fill-add me-2"></i>Datos maestros
                         </a>
                         <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
-                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/contratistas"><i class="bi bi-people me-2"></i>Contratistas</a></li>
-                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/supervisores"><i class="bi bi-person-badge me-2"></i>Supervisores</a></li>
-                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/ordenadores"><i class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
+                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/contratistas"><i class="bi bi-people me-2"></i>Contratistas</a></li>
+                            </c:if>
+                            <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/supervisores"><i class="bi bi-person-badge me-2"></i>Supervisores</a></li>
+                            </c:if>
+                            <c:if test="${sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/ordenadores"><i class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
+                            </c:if>
                         </ul>
                     </li>
+                    </c:if>
 
+                    <c:if test="${sessionScope.usuario.tienePermiso('COMBINACION_VER')}">
                     <li class="nav-item">
                         <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -50,8 +62,19 @@
                             <i class="bi bi-files me-2"></i>Combinaci&oacute;n
                         </a>
                     </li>
+                    </c:if>
 
-                    <c:if test="${not empty sessionScope.usuario && sessionScope.usuario.esAdministrador()}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_VER')}">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
+                           style="color: #004884; font-size: 0.9rem;"
+                           href="${pageContext.request.contextPath}/carga_masiva.jsp">
+                            <i class="bi bi-cloud-upload me-2"></i>Carga Masiva
+                        </a>
+                    </li>
+                    </c:if>
+
+                    <c:if test="${sessionScope.usuario.tienePermiso('ADMINISTRACION_VER')}">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                                style="color: #004884; font-size: 0.9rem;"

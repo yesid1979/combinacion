@@ -34,6 +34,12 @@ public class UsuarioServlet extends HttpServlet {
             case "edit":
                 editarUsuario(request, response);
                 break;
+            case "checkCedula":
+                checkCedula(request, response);
+                break;
+            case "checkUsername":
+                checkUsername(request, response);
+                break;
             case "delete":
                 eliminarUsuario(request, response);
                 break;
@@ -142,16 +148,29 @@ public class UsuarioServlet extends HttpServlet {
         String password = request.getParameter("password");
         String nombreCompleto = request.getParameter("nombre_completo");
         String correo = request.getParameter("correo");
+        String cedula = request.getParameter("cedula");
+        String celular = request.getParameter("celular");
+        String sexo = request.getParameter("sexo");
+        String vinculacion = request.getParameter("vinculacion");
+        java.sql.Date fechaInicio = parseDate(request.getParameter("fecha_inicio"));
+        java.sql.Date fechaFin = parseDate(request.getParameter("fecha_fin"));
         int rolId = 0;
         try { rolId = Integer.parseInt(request.getParameter("rol_id")); } catch (Exception ignored) {}
 
-        String error = usuarioService.crear(username, password, nombreCompleto, correo, rolId);
+        String error = usuarioService.crear(username, password, nombreCompleto, correo, 
+                                          cedula, celular, sexo, vinculacion, fechaInicio, fechaFin, rolId);
         if (error != null) {
             request.setAttribute("error", error);
             Usuario u = new Usuario();
             u.setUsername(username);
             u.setNombreCompleto(nombreCompleto);
             u.setCorreo(correo);
+            u.setCedula(cedula);
+            u.setCelular(celular);
+            u.setSexo(sexo);
+            u.setVinculacion(vinculacion);
+            u.setFechaInicioContrato(fechaInicio);
+            u.setFechaFinContrato(fechaFin);
             u.setRolId(rolId);
             mostrarFormulario(request, response, u);
         } else {
@@ -166,10 +185,18 @@ public class UsuarioServlet extends HttpServlet {
             String username = request.getParameter("username");
             String nombreCompleto = request.getParameter("nombre_completo");
             String correo = request.getParameter("correo");
+            String cedula = request.getParameter("cedula");
+            String celular = request.getParameter("celular");
+            String sexo = request.getParameter("sexo");
+            String vinculacion = request.getParameter("vinculacion");
+            java.sql.Date fechaInicio = parseDate(request.getParameter("fecha_inicio"));
+            java.sql.Date fechaFin = parseDate(request.getParameter("fecha_fin"));
             boolean activo = "on".equals(request.getParameter("activo")) || "true".equals(request.getParameter("activo"));
             int rolId = Integer.parseInt(request.getParameter("rol_id"));
 
-            String error = usuarioService.actualizar(id, username, nombreCompleto, correo, activo, rolId);
+            String error = usuarioService.actualizar(id, username, nombreCompleto, correo, 
+                                                   cedula, celular, sexo, vinculacion, fechaInicio, fechaFin,
+                                                   activo, rolId);
             if (error != null) {
                 request.setAttribute("error", error);
                 Usuario u = new Usuario();
@@ -177,6 +204,12 @@ public class UsuarioServlet extends HttpServlet {
                 u.setUsername(username);
                 u.setNombreCompleto(nombreCompleto);
                 u.setCorreo(correo);
+                u.setCedula(cedula);
+                u.setCelular(celular);
+                u.setSexo(sexo);
+                u.setVinculacion(vinculacion);
+                u.setFechaInicioContrato(fechaInicio);
+                u.setFechaFinContrato(fechaFin);
                 u.setActivo(activo);
                 u.setRolId(rolId);
                 mostrarFormulario(request, response, u);
@@ -216,6 +249,43 @@ public class UsuarioServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=error");
+        }
+    }
+
+    private void checkCedula(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String cedula = request.getParameter("cedula");
+        int excludeId = 0;
+        try { excludeId = Integer.parseInt(request.getParameter("id")); } catch (Exception ignored) {}
+        
+        boolean existe = usuarioService.existeCedula(cedula, excludeId);
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"exists\": " + existe + "}");
+    }
+
+    private void checkUsername(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String username = request.getParameter("username");
+        int excludeId = 0;
+        try { excludeId = Integer.parseInt(request.getParameter("id")); } catch (Exception ignored) {}
+        
+        boolean existe = usuarioService.existeUsername(username, excludeId);
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"exists\": " + existe + "}");
+    }
+
+    private java.sql.Date parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return java.sql.Date.valueOf(dateStr);
+        } catch (Exception e) {
+            return null;
         }
     }
 }
