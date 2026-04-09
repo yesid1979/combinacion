@@ -232,11 +232,6 @@ public class CargaMasivaService {
             if (h.startsWith("actividades") && h.contains("aplica") && h.contains("entregables")) { map.put("actividades_entregables", i); continue; }
             if (h.equals("nivel") || (h.contains("nivel") && !h.contains("observa") && !h.contains("central") && !h.contains("territorial"))) { map.put("nivel", i); continue; }
             if (h.contains("tipo") && h.contains("contrato") && !h.contains("laboral") && !map.containsKey("tipo_contrato")) { map.put("tipo_contrato", i); continue; }
-            // Prioridad: Registro Presupuestal / RPC (antes de la cadena else-if que puede bloquearlo)
-            if (h.contains("rpc") || (h.contains("registro") && h.contains("presup"))) {
-                if (h.contains("fecha")) { map.put("rp_fecha", i); } else { map.put("rp_numero", i); }
-                continue;
-            }
 
             // Actividades (prioridad alta)
             if ((h.contains("actividades") && h.contains("aplica") && h.contains("entregables"))
@@ -284,6 +279,9 @@ public class CargaMasivaService {
                 else if (h.contains("valor"))  map.put("cdp_valor", i);
                 else if (h.contains("fecha") && !h.contains("numero") && !h.contains("num")) map.put("cdp_fecha", i);
                 else map.put("cdp_numero", i);
+            }
+            else if (h.contains("rpc") || (h.contains("registro") && h.contains("presup"))) {
+                if (h.contains("fecha")) map.put("rp_fecha", i); else map.put("rp_numero", i);
             }
             else if (h.contains("apropiacion"))  { map.put("apropiacion_presupuestal", i); }
             else if (h.contains("rubro") && h.contains("presupuestal")) { map.put("rubro_presupuestal", i); }
@@ -516,24 +514,18 @@ public class CargaMasivaService {
             String rpNum      = get(row, map, "rp_numero");
             String idPaa      = get(row, map, "id_paa");
             String apropiacion= get(row, map, "apropiacion_presupuestal");
-            String cdpFechaRaw= get(row, map, "cdp_fecha");
-            String rpFechaRaw = get(row, map, "rp_fecha");
-            String cdpValRaw  = get(row, map, "cdp_valor");
-            // Retornar null solo si NO existe ningún dato presupuestal en la fila
-            boolean sinDatos = cdpNum.isEmpty() && rpNum.isEmpty() && idPaa.isEmpty()
-                    && apropiacion.isEmpty() && cdpFechaRaw.isEmpty()
-                    && rpFechaRaw.isEmpty() && cdpValRaw.isEmpty();
-            if (sinDatos) return null;
+            if (cdpNum.isEmpty() && rpNum.isEmpty() && idPaa.isEmpty() && apropiacion.isEmpty()) return null;
 
             PresupuestoDetalle p = new PresupuestoDetalle();
             p.setCdpNumero(cdpNum);
-            p.setCdpFecha(parsearFecha(cdpFechaRaw));
+            p.setCdpFecha(parsearFecha(get(row, map, "cdp_fecha")));
             try {
-                if (!cdpValRaw.isEmpty()) { String val = limpiarMoneda(cdpValRaw); if (!val.isEmpty()) p.setCdpValor(new java.math.BigDecimal(val)); }
+                String rawVal = get(row, map, "cdp_valor");
+                if (!rawVal.isEmpty()) { String val = limpiarMoneda(rawVal); if (!val.isEmpty()) p.setCdpValor(new java.math.BigDecimal(val)); }
             } catch (Exception ignored) {}
             p.setCdpVencimiento(parsearFecha(get(row, map, "cdp_vencimiento")));
             p.setRpNumero(rpNum);
-            p.setRpFecha(parsearFecha(rpFechaRaw));
+            p.setRpFecha(parsearFecha(get(row, map, "rp_fecha")));
             p.setApropiacionPresupuestal(apropiacion);
             p.setIdPaa(idPaa);
             p.setCodigoDane(get(row, map, "codigo_dane"));
@@ -545,20 +537,14 @@ public class CargaMasivaService {
             p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
             p.setFechaInsuficiencia(parsearFecha(get(row, map, "fecha_insuficiencia")));
 
-            // Solo deduplicar si hay al menos UN campo clave no vacío.
-            // Si todos están vacíos, siempre insertar (evita que todos los contratos
-            // apunten al mismo presupuesto_detalle).
-            boolean hayClaveUnica = !cdpNum.isEmpty() || !rpNum.isEmpty()
-                    || !apropiacion.isEmpty() || !idPaa.isEmpty();
-            if (hayClaveUnica) {
-                PresupuestoDetalle existente = presupuestoDAO.obtenerExistente(cdpNum, rpNum, apropiacion, idPaa);
-                if (existente != null) {
-                    p.setId(existente.getId());
-                    if (presupuestoDAO.actualizar(p)) return p;
-                    return existente;
-                }
+            PresupuestoDetalle existente = presupuestoDAO.obtenerExistente(cdpNum, rpNum, apropiacion, idPaa);
+            if (existente != null) {
+                p.setId(existente.getId());
+                if (presupuestoDAO.actualizar(p)) return p;
+                return existente;
+            } else {
+                if (presupuestoDAO.insertar(p)) return p;
             }
-            if (presupuestoDAO.insertar(p)) return p;
             return null;
         } catch (Exception ex) { log.append("⚠️ Error presupuesto: ").append(ex.getMessage()).append("\n"); return null; }
     }
