@@ -273,13 +273,14 @@ public class CargaMasivaServlet extends HttpServlet {
                         continue;
 
                     try {
+                        // REUPERAR CONTRATO EXISTENTE (para evitar duplicados en tablas relacionadas)
+                        String numContrato = get(row, map, "numero_contrato");
+                        Contrato cExistente = (numContrato != null && !numContrato.isEmpty()) ? contratoDAO.obtenerPorNumero(numContrato) : null;
+
                         // Intentar procesar como Ordenador
                         OrdenadorGasto ordenadorObj = processOrdenador(row, map, cedulasOrdenadoresExistentes);
                         if (ordenadorObj != null) {
-                            if (ordenadorObj.getId() > 0) {
-                                // Exito o Recuperado
-                            }
-                            ordenadoresCount++; // Count attempts/found
+                            ordenadoresCount++;
                         }
 
                         // Intentar procesar como Contratista
@@ -295,13 +296,13 @@ public class CargaMasivaServlet extends HttpServlet {
                         }
 
                         // Intentar procesar como Estructurador
-                        Estructurador estructuradorObj = processEstructurador(row, map, log);
+                        Estructurador estructuradorObj = processEstructurador(row, map, cExistente, log);
                         if (estructuradorObj != null) {
                             estructuradoresCount++;
                         }
 
-                        // Intentar procesar como PresupuestoDetalle
-                        PresupuestoDetalle presupuestoObj = processPresupuestoDetalle(row, map, log);
+                        // Intentar procesar como PresupuestoDetalle (Pasando el contrato existente)
+                        PresupuestoDetalle presupuestoObj = processPresupuestoDetalle(row, map, cExistente, log);
                         if (presupuestoObj != null) {
                             presupuestoCount++;
                         }
@@ -432,6 +433,12 @@ public class CargaMasivaServlet extends HttpServlet {
         return val;
     }
 
+    private void safePut(Map<String, Integer> map, String key, int index) {
+        if (!map.containsKey(key)) {
+            map.put(key, index);
+        }
+    }
+
     private Map<String, Integer> mapHeaders(String[] header, StringBuilder log) {
         Map<String, Integer> map = new HashMap<>();
 
@@ -454,43 +461,54 @@ public class CargaMasivaServlet extends HttpServlet {
 
             String h = normalizeText(header[i]);
 
-            // --- STRICT EXACT MATCHES (PRIORIDAD MAXIMA SOLICITADA POR USUARIO) ---
-            // El usuario indica que las columnas se llaman exactamente "Objeto contractual"
-            // y "Actividades y, si aplica, entregables".
-            // Al normalizar, los signos de puntuación se eliminan, así que buscamos la
-            // cadena limpia.
+            // === BLOQUE DE PRIORIDAD ABSOLUTA (Solicitado por Usuario) ===
+            // 1. CDP Numero (Incluyendo variantes con "y fecha")
+            if (h.contains("cdp") && (h.contains("numero") || h.contains("nmero") || h.contains("num"))) {
+                log.append(">>> MAPEO CRITICO: CDP_NUMERO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "cdp_numero", i);
+                if (!h.contains("fecha") && !h.contains("venc")) continue; 
+            }
+            // 2. CDP Fecha (Solo si no es vencimiento Y NO tiene numero)
+            if (h.contains("cdp") && h.contains("fecha") && !h.contains("vencimiento") && !h.contains("venc") && !h.contains("numero") && !h.contains("num")) {
+                log.append(">>> MAPEO CRITICO: CDP_FECHA -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "cdp_fecha", i);
+                continue;
+            }
+            // 3. CDP Valor
+            if (h.contains("cdp") && h.contains("valor")) {
+                log.append(">>> MAPEO CRITICO: CDP_VALOR -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "cdp_valor", i);
+                continue;
+            }
+            // 4. CDP Vencimiento
+            if (h.contains("cdp") && (h.contains("vencimiento") || h.contains("venc"))) {
+                log.append(">>> MAPEO CRITICO: CDP_VENCIMIENTO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "cdp_vencimiento", i);
+                continue;
+            }
+            // 5. RPC / RP Numero (Mas flexible si no es fecha ni vencimiento)
+            if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && 
+                !h.contains("fecha") && !h.contains("venc") && !h.contains("apropiacion") && !h.contains("objeto")) {
+                log.append(">>> MAPEO CRITICO: RP_NUMERO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "rp_numero", i);
+                continue;
+            }
+            // 6. RPC / RP Fecha
+            if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && h.contains("fecha")) {
+                log.append(">>> MAPEO CRITICO: RP_FECHA -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
+                safePut(map, "rp_fecha", i);
+                continue;
+            }
+            // ==============================================================
 
+            // --- STRICT EXACT MATCHES (PRIORIDAD MAXIMA SOLICITADA POR USUARIO) ---
             if (h.startsWith("objeto") && h.contains("contractual")) {
-                String msg = ">>> MATCH EXACTO (SUPER PRIORITY): 'Objeto contractual' found at index " + i;
-                System.out.println(msg);
-                log.append(msg).append("\n");
-                map.put("objeto", i);
+                safePut(map, "objeto", i);
                 continue;
             }
 
             if (h.startsWith("actividades") && h.contains("aplica") && h.contains("entregables")) {
-                // "Actividades y, si aplica, entregables"
-                String msg = ">>> MATCH EXACTO (SUPER PRIORITY): 'Actividades y, si aplica, entregables' found at index "
-                        + i;
-                System.out.println(msg);
-                log.append(msg).append("\n");
-                map.put("actividades_entregables", i);
-                continue;
-            }
-
-            // PRIORIDAD PARA RPC o RP (Estrictos para evitar falsos positivos con otras columnas que contengan 'rp')
-            boolean isRpIndex = h.equals("rp") || h.equals("rpc") 
-                    || (h.contains("numero") && (h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")))
-                    || (h.contains("no ") && (h.contains("rp") || h.contains("rpc")))
-                    || h.startsWith("rp ") || h.startsWith("rpc ") 
-                    || (h.contains("fecha") && (h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")));
-
-            if (isRpIndex) {
-                if (h.contains("fecha") || h.contains("f.")) {
-                    map.put("rp_fecha", i);
-                } else {
-                    map.put("rp_numero", i);
-                }
+                safePut(map, "actividades_entregables", i);
                 continue;
             }
 
@@ -617,13 +635,13 @@ public class CargaMasivaServlet extends HttpServlet {
             // ===== PRESUPUESTO DETALLES =====
             else if (h.contains("cdp")) {
                 if (h.contains("vencimiento")) {
-                    map.put("cdp_vencimiento", i);
+                    safePut(map, "cdp_vencimiento", i);
                 } else if (h.contains("valor")) {
-                    map.put("cdp_valor", i);
+                    safePut(map, "cdp_valor", i);
                 } else if (h.contains("fecha") && !h.contains("numero") && !h.contains("mero") && !h.contains("num")) {
-                    map.put("cdp_fecha", i);
+                    safePut(map, "cdp_fecha", i);
                 } else {
-                    map.put("cdp_numero", i);
+                    safePut(map, "cdp_numero", i);
                 }
             } else if (h.contains("apropiacion")) {
                 map.put("apropiacion_presupuestal", i);
@@ -739,7 +757,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("periodo", i);
             } else if (h.contains("suscripcion")) {
                 map.put("fecha_suscripcion", i);
-            } else if (h.contains("inicio") && (h.contains("fecha") || h.contains("f.") || h.equals("inicio"))) {
+            } else if (h.contains("inicio") && (h.contains("fecha") || h.startsWith("f ") || h.equals("f") || h.contains(" f ") || h.equals("inicio"))) {
                 map.put("fecha_inicio", i);
 
                 // === CAMBIO SOLICITADO: 'Plazo de ejecución' del Excel corresponde a
@@ -747,7 +765,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 // Originalmente buscabamos 'terminacion', ahora incluimos 'plazo' + 'ejecucion'
                 // para este campo
             } else if ((h.contains("terminacion")
-                    && (h.contains("fecha") || h.contains("f.") || h.equals("terminacion")))
+                    && (h.contains("fecha") || h.startsWith("f ") || h.equals("f") || h.contains(" f ") || h.equals("terminacion")))
                     || (h.contains("plazo") && (h.contains("ejecucion") || h.contains("ejecuci")))) {
 
                 // Prioridad 1: Mapear a fecha_terminacion (para cálculo/conversión de fecha)
@@ -763,7 +781,7 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if (h.contains("aprobacion") || h.contains("aprobaci")) {
                 map.put("fecha_aprobacion", i);
             } else if ((h.contains("ejecucion") || h.contains("ejejcuci") || h.contains("ejecuci"))
-                    && (h.contains("fecha") || h.contains("f.") || h.contains("feche"))
+                    && (h.contains("fecha") || h.startsWith("f ") || h.equals("f") || h.contains(" f ") || h.contains("feche"))
                     && !h.contains("plazo")) { // Mantener !plazo aqui para evitar conflicto si hubiera otra col
                 map.put("fecha_ejecucion", i);
             } else if (h.contains("arl")) {
@@ -883,13 +901,18 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("estructurador_tecnico", i);
             } else if (h.contains("financiero") && !h.contains("contratista") && !h.contains("supervisor")) {
                 map.put("estructurador_financiero", i);
-            } else if (h.contains("circular") && h.contains("honorarios")) {
-                map.put("circular_honorarios", i);
             }
         }
+        // --- RESUMEN FINAL DE MAPE0 PARA DEPURACIÓN ---
+        log.append("\n--- RESUMEN DE MAPEADO FINAL ---\n");
+        String[] criticalKeys = {"numero_contrato", "cdp_numero", "cdp_fecha", "cdp_valor", "rp_numero", "rp_fecha", "objeto", "contratista_nombre", "contratista_cedula"};
+        for(String key : criticalKeys) {
+            Integer idx = map.get(key);
+            log.append("  > ").append(key).append(": ").append(idx != null ? "Col " + idx + " ('" + header[idx] + "')" : "NO ENCONTRADO").append("\n");
+        }
+        log.append("---------------------------------\n\n");
 
         return map;
-
     }
 
     private String normalizeText(String text) {
@@ -1198,38 +1221,36 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
-    private Estructurador processEstructurador(String[] row, Map<String, Integer> map, StringBuilder log) {
+    private Estructurador processEstructurador(String[] row, Map<String, Integer> map, Contrato cExistente, StringBuilder log) {
         try {
             String jurNombre = get(row, map, "estructurador_juridico");
             String tecNombre = get(row, map, "estructurador_tecnico");
             String finNombre = get(row, map, "estructurador_financiero");
 
-            if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
-                return null;
-            }
-
             String jurCargo = get(row, map, "estructurador_juridico_cargo");
             String tecCargo = get(row, map, "estructurador_tecnico_cargo");
             String finCargo = get(row, map, "estructurador_financiero_cargo");
 
-            // DEBUG LOGGING
-            System.out.println("Processing Estructuradores for Row...");
-            System.out.println("Jur: " + jurNombre + " | Cargo: " + jurCargo);
-            System.out.println("Tec: " + tecNombre + " | Cargo: " + tecCargo);
-            System.out.println("Fin: " + finNombre + " | Cargo: " + finCargo);
-
+            // Si no hay nombres en el excel, pero el contrato ya tenia un estructurador, lo devolvemos para no perderlo
             if (jurNombre.isEmpty() && tecNombre.isEmpty() && finNombre.isEmpty()) {
-                System.out.println("All structurer names empty. Skipping.");
+                if (cExistente != null && cExistente.getEstructuradorId() > 0) {
+                    return estructuradorDAO.obtenerPorId(cExistente.getEstructuradorId());
+                }
                 return null;
             }
 
-            // 1. Verificar si ya existe el estructurador idéntico
+            // 1. Verificar si ya existe un estructurador con estos datos exactos (usando el DAO mejorado con TRIM/ILIKE)
             Estructurador existente = estructuradorDAO.obtenerExistente(jurNombre, jurCargo, tecNombre, tecCargo,
                     finNombre, finCargo);
             if (existente != null) {
-                System.out.println("Estructurador Reutilizado! ID: " + existente.getId());
                 return existente;
             }
+
+            // 2. Si no existe, pero el contrato ya tenia uno, podriamos ACTUALIZAR el existente 
+            // en lugar de crear uno nuevo si los nombres son similares? 
+            // Por ahora, mejor crear uno nuevo para no alterar otros contratos que compartan el estructurador antiguo.
+            // A menos que el usuario prefiera unificar. 
+            // Mantendremos la creacion para seguridad de integridad referencial.
 
             // 2. Si no existe, crear uno nuevo
             Estructurador e = new Estructurador();
@@ -1259,86 +1280,147 @@ public class CargaMasivaServlet extends HttpServlet {
      * 
      * @return 1=insertado, 0=omitido (datos vacíos)
      */
-    private PresupuestoDetalle processPresupuestoDetalle(String[] row, Map<String, Integer> map, StringBuilder log) {
+    private PresupuestoDetalle processPresupuestoDetalle(String[] row, Map<String, Integer> map, Contrato cExistente, StringBuilder log) {
         try {
-            // Verificar si hay algún dato clave
-            String cdpNum = get(row, map, "cdp_numero");
-            String rpNum = get(row, map, "rp_numero");
-            String idPaa = get(row, map, "id_paa");
-            String apropiacion = get(row, map, "apropiacion_presupuestal");
-            String cdpFechaStr = get(row, map, "cdp_fecha");
-            String rpFechaRaw = get(row, map, "rp_fecha");
-            String cdpValRaw = get(row, map, "cdp_valor");
-
-            boolean sinDatos = cdpNum.isEmpty() && rpNum.isEmpty() && idPaa.isEmpty() &&
-                    apropiacion.isEmpty() && cdpFechaStr.isEmpty() &&
-                    rpFechaRaw.isEmpty() && cdpValRaw.isEmpty();
-
-            if (sinDatos) {
-                return null;
-            }
-
-            // --- 1. POPULATE OBJECT FIRST (EXTRACT ALL DATA) ---
-            PresupuestoDetalle p = new PresupuestoDetalle();
-            p.setCdpNumero(cdpNum);
-
-            p.setCdpFecha(parseDateStr(cdpFechaStr));
-            if (p.getCdpFecha() == null && !cdpFechaStr.isEmpty()) {
-                log.append("⚠️ Warn: No se pudo parsear fecha CDP: '").append(cdpFechaStr).append("'\n");
-            }
-
-            // Log si no lee
-            if (cdpFechaStr.isEmpty() && map.containsKey("cdp_fecha")) {
-                int idx = map.get("cdp_fecha");
-                if (idx < row.length && !row[idx].isEmpty())
-                    log.append("⚠️ Warn: cdp_fecha detectada en col ").append(idx).append(" pero leida vacia. Raw='")
-                            .append(row[idx]).append("'\n");
-            }
-
-            // Parsear valor
-            try {
-                String rawVal = get(row, map, "cdp_valor");
-                if (!rawVal.isEmpty()) {
-                    String val = cleanCurrency(rawVal);
-                    if (!val.isEmpty())
-                        p.setCdpValor(new java.math.BigDecimal(val));
-                }
-            } catch (Exception e) {
-            }
-
-            p.setCdpVencimiento(parseDateStr(get(row, map, "cdp_vencimiento")));
-            p.setRpNumero(rpNum);
-            p.setRpFecha(parseDateStr(get(row, map, "rp_fecha")));
-            p.setApropiacionPresupuestal(apropiacion);
-            p.setIdPaa(idPaa);
-            p.setCodigoDane(get(row, map, "codigo_dane"));
-            p.setInversion(parseBooleanCheck(get(row, map, "inversion")));
-            p.setFuncionamiento(parseBooleanCheck(get(row, map, "funcionamiento")));
-            p.setFichaEbiNombre(get(row, map, "ficha_ebi_nombre"));
-            p.setFichaEbiObjetivo(get(row, map, "ficha_ebi_objetivo"));
-            p.setFichaEbiActividades(get(row, map, "ficha_ebi_actividades"));
-            p.setCertificadoInsuficiencia(get(row, map, "certificado_insuficiencia"));
-            p.setFechaInsuficiencia(parseDateStr(get(row, map, "fecha_insuficiencia")));
-
-            // --- 2. CHECK EXISTENCE VÍA CONTRATO ---
-            // Para no sobreescribir datos de otras personas con el mismo CDP,
-            // vinculamos la existencia del presupuesto a la existencia previa del contrato.
             String numContrato = get(row, map, "numero_contrato");
-            if (!numContrato.isEmpty()) {
-                Contrato cExistente = contratoDAO.obtenerPorNumero(numContrato);
-                if (cExistente != null && cExistente.getPresupuestoId() > 0) {
-                    p.setId(cExistente.getPresupuestoId());
-                    if (presupuestoDAO.actualizar(p)) {
-                        return p;
+            PresupuestoDetalle p = null;
+            boolean isUpdate = false;
+
+            // 1. Intentar recuperar presupuesto existente vinculado al contrato
+            if (cExistente != null) {
+                if (cExistente.getPresupuestoId() > 0) {
+                    p = presupuestoDAO.obtenerPorId(cExistente.getPresupuestoId());
+                    if (p != null) {
+                        isUpdate = true;
                     }
                 }
             }
 
-            // Si el contrato no existe aún o no tiene presupuesto, creamos uno nuevo individual
-            if (presupuestoDAO.insertar(p)) {
-                return p;
+            if (p == null) {
+                p = new PresupuestoDetalle();
+                log.append("DEBUG >> Se creará un NUEVO objeto PresupuestoDetalle.\n");
             }
-            
+
+            // 2. Mapear datos SOLO SI NO ESTAN VACIOS en el Excel (Estrategia de Actualización Parcial)
+            boolean hasNewData = false;
+            String val;
+
+            val = get(row, map, "cdp_numero");
+            if (!val.isEmpty()) { 
+                // Si el numero viene con texto adicional tipo "123 del 5 de enero", extraemos solo el numero
+                String cleanNum = val;
+                if (val.toLowerCase().contains(" del ")) {
+                    cleanNum = val.split("(?i) del ")[0].trim();
+                }
+                p.setCdpNumero(cleanNum); 
+                hasNewData = true; 
+                log.append("DEBUG >> CDP_NUMERO: '").append(val).append("' -> Limpiado: '").append(cleanNum).append("'\n");
+            }
+
+            val = get(row, map, "cdp_fecha");
+            if (!val.isEmpty()) {
+                java.sql.Date d = parseDateStr(val);
+                if (d != null) { 
+                    p.setCdpFecha(d); 
+                    hasNewData = true; 
+                    log.append("DEBUG >> CDP_FECHA: '").append(val).append("' -> ").append(d).append("\n");
+                } else {
+                    log.append("DEBUG >> CDP_FECHA falló parse: '").append(val).append("'\n");
+                }
+            }
+
+            val = get(row, map, "cdp_valor");
+            if (!val.isEmpty()) {
+                try {
+                    String clean = cleanCurrency(val);
+                    if (!clean.isEmpty()) {
+                        p.setCdpValor(new java.math.BigDecimal(clean));
+                        hasNewData = true;
+                        log.append("DEBUG >> CDP_VALOR: '").append(val).append("' -> ").append(clean).append("\n");
+                    }
+                } catch (Exception e) {
+                    log.append("DEBUG >> CDP_VALOR Error parse: '").append(val).append("'\n");
+                }
+            }
+
+            val = get(row, map, "cdp_vencimiento");
+            if (!val.isEmpty()) {
+                java.sql.Date d = parseDateStr(val);
+                if (d != null) { 
+                    p.setCdpVencimiento(d); 
+                    hasNewData = true; 
+                    log.append("DEBUG >> CDP_VENCIMIENTO: '").append(val).append("' -> ").append(d).append("\n");
+                } else {
+                    log.append("DEBUG >> CDP_VENCIMIENTO falló parse: '").append(val).append("'\n");
+                }
+            }
+
+            val = get(row, map, "rp_numero");
+            if (!val.isEmpty()) { 
+                p.setRpNumero(val); 
+                hasNewData = true; 
+                log.append("DEBUG >> RP_NUMERO encontrado: '").append(val).append("' para contrato ").append(numContrato).append("\n");
+            }
+
+            val = get(row, map, "rp_fecha");
+            if (!val.isEmpty()) {
+                java.sql.Date d = parseDateStr(val);
+                if (d != null) { 
+                    p.setRpFecha(d); 
+                    hasNewData = true; 
+                    log.append("DEBUG >> RP_FECHA encontrada: '").append(val).append("' -> ").append(d).append("\n");
+                } else {
+                    log.append("DEBUG >> RP_FECHA falló parseo: '").append(val).append("'\n");
+                }
+            }
+
+            val = get(row, map, "apropiacion_presupuestal");
+            if (!val.isEmpty()) { p.setApropiacionPresupuestal(val); hasNewData = true; }
+
+            val = get(row, map, "id_paa");
+            if (!val.isEmpty()) { p.setIdPaa(val); hasNewData = true; }
+
+            val = get(row, map, "codigo_dane");
+            if (!val.isEmpty()) { p.setCodigoDane(val); hasNewData = true; }
+
+            val = get(row, map, "inversion");
+            if (!val.isEmpty()) { p.setInversion(parseBooleanCheck(val)); hasNewData = true; }
+
+            val = get(row, map, "funcionamiento");
+            if (!val.isEmpty()) { p.setFuncionamiento(parseBooleanCheck(val)); hasNewData = true; }
+
+            val = get(row, map, "ficha_ebi_nombre");
+            if (!val.isEmpty()) { p.setFichaEbiNombre(val); hasNewData = true; }
+
+            val = get(row, map, "ficha_ebi_objetivo");
+            if (!val.isEmpty()) { p.setFichaEbiObjetivo(val); hasNewData = true; }
+
+            val = get(row, map, "ficha_ebi_actividades");
+            if (!val.isEmpty()) { p.setFichaEbiActividades(val); hasNewData = true; }
+
+            val = get(row, map, "certificado_insuficiencia");
+            if (!val.isEmpty()) { p.setCertificadoInsuficiencia(val); hasNewData = true; }
+
+            val = get(row, map, "fecha_insuficiencia");
+            if (!val.isEmpty()) {
+                java.sql.Date d = parseDateStr(val);
+                if (d != null) { p.setFechaInsuficiencia(d); hasNewData = true; }
+            }
+
+            // 3. Persistir cambios
+            if (isUpdate) {
+                if (hasNewData) {
+                    presupuestoDAO.actualizar(p);
+                }
+                return p;
+            } else {
+                // Solo insertar si hay al menos algún dato en las columnas de presupuesto
+                if (hasNewData) {
+                    if (presupuestoDAO.insertar(p)) {
+                        return p;
+                    }
+                }
+            }
             return null;
 
         } catch (Exception ex) {
@@ -1630,14 +1712,15 @@ public class CargaMasivaServlet extends HttpServlet {
                 if (d.matches("^[0-9]+(\\.[0-9]+)?$")) {
                     try {
                         double val = Double.parseDouble(d);
-                        // Convert Excel serial date to Java Date
-                        // 0-based offset, DateUtil handles 1900 leap year bug
-                        java.util.Date javaDate = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(val);
-                        if (javaDate != null) {
-                            return new java.sql.Date(javaDate.getTime());
+                        // Rango razonable para fechas excel (1 a 100000 es aprox año 1900 a 2173)
+                        if (val > 0 && val < 100000) {
+                            java.util.Date javaDate = org.apache.poi.ss.usermodel.DateUtil.getJavaDate(val);
+                            if (javaDate != null) {
+                                return new java.sql.Date(javaDate.getTime());
+                            }
                         }
                     } catch (Exception ex) {
-                        // unparseable logic ignore
+                        // ignore
                     }
                 }
 

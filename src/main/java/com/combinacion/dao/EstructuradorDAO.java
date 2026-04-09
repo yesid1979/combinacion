@@ -107,9 +107,12 @@ public class EstructuradorDAO {
     public Estructurador obtenerExistente(String jNom, String jCar, String tNom, String tCar, String fNom,
             String fCar) {
         String sql = "SELECT * FROM estructuradores WHERE "
-                + "juridico_nombre = ? AND juridico_cargo = ? AND "
-                + "tecnico_nombre = ? AND tecnico_cargo = ? AND "
-                + "financiero_nombre = ? AND financiero_cargo = ?";
+                + "COALESCE(TRIM(juridico_nombre), '') ILIKE COALESCE(TRIM(?), '') AND "
+                + "COALESCE(TRIM(juridico_cargo), '') ILIKE COALESCE(TRIM(?), '') AND "
+                + "COALESCE(TRIM(tecnico_nombre), '') ILIKE COALESCE(TRIM(?), '') AND "
+                + "COALESCE(TRIM(tecnico_cargo), '') ILIKE COALESCE(TRIM(?), '') AND "
+                + "COALESCE(TRIM(financiero_nombre), '') ILIKE COALESCE(TRIM(?), '') AND "
+                + "COALESCE(TRIM(financiero_cargo), '') ILIKE COALESCE(TRIM(?), '')";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
