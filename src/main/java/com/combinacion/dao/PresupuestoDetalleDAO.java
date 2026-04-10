@@ -9,7 +9,7 @@ import java.util.List;
 public class PresupuestoDetalleDAO {
 
     public boolean insertar(PresupuestoDetalle p) {
-        String sql = "INSERT INTO presupuesto_detalles (cdp_numero, cdp_fecha, cdp_valor, cdp_vencimiento, rp_numero, rp_fecha, apropiacion_presupuestal, id_paa, codigo_dane, inversion, funcionamiento, ficha_ebi_nombre, ficha_ebi_objetivo, ficha_ebi_actividades, certificado_insuficiencia, fecha_insuficiencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO presupuesto_detalles (cdp_numero, cdp_fecha, cdp_valor, cdp_vencimiento, rp_numero, rp_fecha, apropiacion_presupuestal, id_paa, codigo_dane, inversion, funcionamiento, ficha_ebi_nombre, ficha_ebi_objetivo, ficha_ebi_actividades, certificado_insuficiencia, fecha_insuficiencia, cdp_adicion, cdp_valor_adicion, rp_adicion, rp_fecha_adicion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -29,6 +29,10 @@ public class PresupuestoDetalleDAO {
             ps.setString(14, p.getFichaEbiActividades());
             ps.setString(15, p.getCertificadoInsuficiencia());
             ps.setDate(16, p.getFechaInsuficiencia());
+            ps.setString(17, p.getCdpAdicion());
+            ps.setBigDecimal(18, p.getCdpValorAdicion());
+            ps.setString(19, p.getRpAdicion());
+            ps.setDate(20, p.getRpFechaAdicion());
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -71,6 +75,10 @@ public class PresupuestoDetalleDAO {
                 p.setFichaEbiActividades(rs.getString("ficha_ebi_actividades"));
                 p.setCertificadoInsuficiencia(rs.getString("certificado_insuficiencia"));
                 p.setFechaInsuficiencia(rs.getDate("fecha_insuficiencia"));
+                p.setCdpAdicion(rs.getString("cdp_adicion"));
+                p.setCdpValorAdicion(rs.getBigDecimal("cdp_valor_adicion"));
+                p.setRpAdicion(rs.getString("rp_adicion"));
+                p.setRpFechaAdicion(rs.getDate("rp_fecha_adicion"));
                 lista.add(p);
             }
         } catch (SQLException e) {
@@ -104,6 +112,10 @@ public class PresupuestoDetalleDAO {
                     p.setFichaEbiActividades(rs.getString("ficha_ebi_actividades"));
                     p.setCertificadoInsuficiencia(rs.getString("certificado_insuficiencia"));
                     p.setFechaInsuficiencia(rs.getDate("fecha_insuficiencia"));
+                    p.setCdpAdicion(rs.getString("cdp_adicion"));
+                    p.setCdpValorAdicion(rs.getBigDecimal("cdp_valor_adicion"));
+                    p.setRpAdicion(rs.getString("rp_adicion"));
+                    p.setRpFechaAdicion(rs.getDate("rp_fecha_adicion"));
                     return p;
                 }
             }
@@ -114,7 +126,7 @@ public class PresupuestoDetalleDAO {
     }
 
     public boolean actualizar(PresupuestoDetalle p) {
-        String sql = "UPDATE presupuesto_detalles SET cdp_numero=?, cdp_fecha=?, cdp_valor=?, cdp_vencimiento=?, rp_numero=?, rp_fecha=?, apropiacion_presupuestal=?, id_paa=?, codigo_dane=?, inversion=?, funcionamiento=?, ficha_ebi_nombre=?, ficha_ebi_objetivo=?, ficha_ebi_actividades=?, certificado_insuficiencia=?, fecha_insuficiencia=? WHERE id=?";
+        String sql = "UPDATE presupuesto_detalles SET cdp_numero=?, cdp_fecha=?, cdp_valor=?, cdp_vencimiento=?, rp_numero=?, rp_fecha=?, apropiacion_presupuestal=?, id_paa=?, codigo_dane=?, inversion=?, funcionamiento=?, ficha_ebi_nombre=?, ficha_ebi_objetivo=?, ficha_ebi_actividades=?, certificado_insuficiencia=?, fecha_insuficiencia=?, cdp_adicion=?, cdp_valor_adicion=?, rp_adicion=?, rp_fecha_adicion=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -134,7 +146,11 @@ public class PresupuestoDetalleDAO {
             ps.setString(14, p.getFichaEbiActividades());
             ps.setString(15, p.getCertificadoInsuficiencia());
             ps.setDate(16, p.getFechaInsuficiencia());
-            ps.setInt(17, p.getId());
+            ps.setString(17, p.getCdpAdicion());
+            ps.setBigDecimal(18, p.getCdpValorAdicion());
+            ps.setString(19, p.getRpAdicion());
+            ps.setDate(20, p.getRpFechaAdicion());
+            ps.setInt(21, p.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

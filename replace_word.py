@@ -23,7 +23,10 @@ replacements_f001 = [
     ("«Incluir la fecha de terminación a la fecha de suscripción del presente documento»", "{{FECHA_FIN_CONTRATO}}"),
     ("«Incluir la fecha de terminación del Contrato / Orden de Compra / Convenio»", "{{FECHA_FIN_CONTRATO}}"),
     ("«Incluir la fecha en que se suscribe el Contrato / Orden de Compra / Convenio»", "{{FECHA_SUSCRIPCION}}"),
-    ("«Incluir si existen adiciones en letras y números»", "{{VALOR_TOTAL_ADICION_LETRAS}} ({{VALOR_TOTAL_ADICION}})")
+    ("«Incluir si existen adiciones en letras y números»", "{{VALOR_TOTAL_ADICION_LETRAS}} ({{VALOR_TOTAL_ADICION}})"),
+    ("«No_CDP_adicion»", "{{CDP_ADICION}}"),
+    ("«No_RP_adicion»", "{{RP_ADICION}}"),
+    ("«Fecha_del_RP_adicion»", "{{FECHA_RP_ADICION}}")
 ]
 
 replacements_f002 = [
@@ -36,7 +39,10 @@ replacements_f002 = [
     ("«fecha_terminación_»", "{{FECHA_FIN_CONTRATO}}"),
     ("«Valor_de_la_adicion_letra_»", "{{VALOR_TOTAL_ADICION_LETRAS}}"),
     ("«Valor_de_la_adicion_numero__»", "{{VALOR_TOTAL_ADICION}}"),
-    ("«objeto»", "{{OBJETO_CONTRACTUAL}}")
+    ("«objeto»", "{{OBJETO_CONTRACTUAL}}"),
+    ("«No_CDP_adicion»", "{{CDP_ADICION}}"),
+    ("«No_RP_adicion»", "{{RP_ADICION}}"),
+    ("«Fecha_del_RP_adicion»", "{{FECHA_RP_ADICION}}")
 ]
 
 try:

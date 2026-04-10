@@ -123,13 +123,15 @@ public class ContratistaServlet extends HttpServlet {
 
         String source  = request.getParameter("source");
         String sortCol = resolverColumnaOrden(source, orderCol);
+        
+        boolean soloAdiciones = "true".equals(request.getParameter("filterAdicion"));
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-store");
         response.getWriter().write(
             contratistaService.generarJsonDataTables(
-                parseIntSafe(draw, 1), start, length, search, sortCol, orderDir)
+                parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones)
         );
         response.getWriter().flush();
     }

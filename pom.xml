@@ -57,6 +57,12 @@
             <artifactId>xmlbeans</artifactId>
             <version>5.1.1</version>
         </dependency>
+        <!-- Esquemas completos para POI 5.x -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>5.2.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -76,8 +82,28 @@
             <version>2.10.1</version>
         </dependency>
         
-        <!-- Xerces, Xalan and xml-apis removed to avoid conflict with POI 5.x and Tomcat -->
-        <!-- These are often already provided by the runtime or unnecessary for POI 5.2.3 -->
+        <!-- Conversion de DOCX a PDF (Multiplataforma - Java Nativo) -->
+        <dependency>
+            <groupId>fr.opensagres.xdocreport</groupId>
+            <artifactId>fr.opensagres.poi.xwpf.converter.pdf</artifactId>
+            <version>2.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>fr.opensagres.xdocreport</groupId>
+            <artifactId>fr.opensagres.poi.xwpf.converter.core</artifactId>
+            <version>2.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>fr.opensagres.xdocreport</groupId>
+            <artifactId>fr.opensagres.xdocreport.itext.extension</artifactId>
+            <version>2.0.4</version>
+        </dependency>
+        <!-- iText Core necesario para XDocReport -->
+        <dependency>
+            <groupId>com.lowagie</groupId>
+            <artifactId>itext</artifactId>
+            <version>2.1.7</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -119,10 +119,10 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Standard Docs
             if (supervisorBytes != null) {
-                addToZip(zos, folderName, "Designacion_Supervisor_" + cedula + ".docx", supervisorBytes);
+                addDocxAndPdfToZip(zos, folderName, "Designacion_Supervisor_" + cedula, supervisorBytes);
             }
             if (estructuradoresBytes != null) {
-                addToZip(zos, folderName, "Designacion_Estructuradores_" + cedula + ".docx", estructuradoresBytes);
+                addDocxAndPdfToZip(zos, folderName, "Designacion_Estructuradores_" + cedula, estructuradoresBytes);
             }
 
             // Add Inversion Docs
@@ -134,9 +134,8 @@ public class CombinacionServlet extends HttpServlet {
                     if (replacements != null) {
                         byte[] fileBytes = generateBytes(tpl, replacements);
                         if (fileBytes != null) {
-                            addToZip(zos, folderName,
-                                    tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula + (".docx")),
-                                    fileBytes);
+                            String baseName = tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula);
+                            addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
                         }
                     }
                 }
@@ -247,12 +246,12 @@ public class CombinacionServlet extends HttpServlet {
                     // Standard Docs
                     byte[] supervisorBytes = generarBytesDocumento(id, "supervisor");
                     if (supervisorBytes != null) {
-                        addToZip(zos, folderName, "Designacion_Supervisor_" + cedula + ".docx", supervisorBytes);
+                        addDocxAndPdfToZip(zos, folderName, "Designacion_Supervisor_" + cedula, supervisorBytes);
                     }
 
                     byte[] estructuradoresBytes = generarBytesDocumento(id, "estructuradores");
                     if (estructuradoresBytes != null) {
-                        addToZip(zos, folderName, "Designacion_Estructuradores_" + cedula + ".docx",
+                        addDocxAndPdfToZip(zos, folderName, "Designacion_Estructuradores_" + cedula,
                                 estructuradoresBytes);
                     }
 
@@ -264,9 +263,8 @@ public class CombinacionServlet extends HttpServlet {
                             if (replacements != null) {
                                 byte[] fileBytes = generateBytes(tpl, replacements);
                                 if (fileBytes != null) {
-                                    addToZip(zos, folderName,
-                                            tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula + (".docx")),
-                                            fileBytes);
+                                    String baseName = tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula);
+                                    addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
                                 }
                             }
                         }
@@ -482,6 +480,26 @@ public class CombinacionServlet extends HttpServlet {
             } else {
                 replacements.put("{{FECHA_VENCIMIENTO_CDP}}", "");
             }
+
+            // --- NUEVOS CAMPOS DE ADICIÓN ---
+            replacements.put("{{CDP_ADICION}}", presupuesto.getCdpAdicion() != null ? presupuesto.getCdpAdicion() : "");
+            
+            BigDecimal valAdicion = presupuesto.getCdpValorAdicion();
+            if (valAdicion != null) {
+                replacements.put("{{VALOR_CDP_ADICION}}", formatearMoneda(valAdicion));
+                replacements.put("{{VALOR_CDP_ADICION_LETRAS}}", convertirMontoALetras(valAdicion));
+            } else {
+                replacements.put("{{VALOR_CDP_ADICION}}", "");
+                replacements.put("{{VALOR_CDP_ADICION_LETRAS}}", "");
+            }
+
+            replacements.put("{{RP_ADICION}}", presupuesto.getRpAdicion() != null ? presupuesto.getRpAdicion() : "");
+            if (presupuesto.getRpFechaAdicion() != null) {
+                replacements.put("{{FECHA_RP_ADICION}}", sdfDoc.format(presupuesto.getRpFechaAdicion()));
+            } else {
+                replacements.put("{{FECHA_RP_ADICION}}", "");
+            }
+            // --------------------------------
         } else {
             replacements.put("{{NUMERO_CDP}}", "");
             replacements.put("{{FECHA_EXPEDICION_CDP}}", "");
@@ -591,10 +609,24 @@ public class CombinacionServlet extends HttpServlet {
         }
         replacements.put("{{ADICION_X}}", esAdicion ? "X" : " ");
         
-        // Ciudad y Fecha de generación actual
-        SimpleDateFormat formatHoy = new SimpleDateFormat("'Santiago de Cali,' d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+        // Ciudad y Fecha de generación actual (Formato corto: Santiago de Cali, Abril 10 de 2026)
         java.util.Date fechaActual = new java.util.Date();
-        replacements.put("{{CIUDAD_Y_FECHA_HOY}}", formatHoy.format(fechaActual));
+        SimpleDateFormat sdfCorta = new SimpleDateFormat("'Santiago de Cali,' MMMM d 'de' yyyy", new Locale("es", "CO"));
+        String fechaHoyCorta = sdfCorta.format(fechaActual);
+        // Capitalizar el mes
+        if (fechaHoyCorta.contains(",")) {
+            String[] parts = fechaHoyCorta.split(", ");
+            if (parts.length > 1) {
+                String mesDiaAnio = parts[1];
+                mesDiaAnio = mesDiaAnio.substring(0, 1).toUpperCase() + mesDiaAnio.substring(1);
+                fechaHoyCorta = parts[0] + ", " + mesDiaAnio;
+            }
+        }
+        replacements.put("{{CIUDAD_Y_FECHA_HOY}}", fechaHoyCorta);
+        
+        // Nueva FECHA_HOY_SIMPLE para partes como "5. Que el día..." (Ej: 10 de abril de 2026)
+        SimpleDateFormat sdfSimple = new SimpleDateFormat("d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+        replacements.put("{{FECHA_HOY_SIMPLE}}", sdfSimple.format(fechaActual));
         
         java.util.Calendar calHoy = java.util.Calendar.getInstance();
         calHoy.setTime(fechaActual);
@@ -628,30 +660,13 @@ public class CombinacionServlet extends HttpServlet {
         }
 
         // Fechas de inicio, terminación y suscripción
-        SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'del' yyyy", new Locale("es", "CO"));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("d 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
         if (contrato.getFechaTerminacion() != null) {
-            // Formatear como "Treinta (30) de junio del dos mil veintiseis (2026)"
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(contrato.getFechaTerminacion());
-            int dia = cal.get(java.util.Calendar.DAY_OF_MONTH);
-            int anio = cal.get(java.util.Calendar.YEAR);
-            String mesText = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(contrato.getFechaTerminacion());
-            String diaLetras = convertirNumeroALetras(dia);
-            
-            // Convertir años conocidos a letras o hardcodearlos dinamicamente si es 2024, 2025, 2026, 2027
-            String anioLetras;
-            if (anio == 2024) anioLetras = "dos mil veinticuatro";
-            else if (anio == 2025) anioLetras = "dos mil veinticinco";
-            else if (anio == 2026) anioLetras = "dos mil veintiséis";
-            else if (anio == 2027) anioLetras = "dos mil veintisiete";
-            else if (anio == 2028) anioLetras = "dos mil veintiocho";
-            else anioLetras = "dos mil veintialgo"; // simple fallback
-            
-            // "treinta (30) de junio del dos mil veintiséis (2026)"
-            // Capitalizar primera letra del dia manual
-            diaLetras = diaLetras.substring(0, 1).toUpperCase() + diaLetras.substring(1);
-            
-            String fechaFinEspecial = diaLetras + " (" + dia + ") de " + mesText + " del " + anioLetras + " (" + anio + ")";
+            String fechaFinEspecial = formatearFechaLargaLegal(contrato.getFechaTerminacion());
+            // Capitalizar la primera letra si es necesario (ej: Treinta...)
+            if (!fechaFinEspecial.isEmpty()) {
+                fechaFinEspecial = fechaFinEspecial.substring(0, 1).toUpperCase() + fechaFinEspecial.substring(1);
+            }
             replacements.put("{{FECHA_FIN_CONTRATO}}", fechaFinEspecial);
         } else {
             replacements.put("{{FECHA_FIN_CONTRATO}}", "FECHA PENDIENTE");
@@ -1119,12 +1134,13 @@ public class CombinacionServlet extends HttpServlet {
 
             if (esAdicion) {
                 // Generar Documentos de Modificacion
-                for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                    Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
-                    if (replacements != null) {
-                        byte[] fileBytes = generateBytes(tpl, replacements);
-                        if (fileBytes != null) {
-                            addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
+                if (replacements != null) {
+                    for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                        byte[] docxBytes = generateBytes(tpl, replacements);
+                        if (docxBytes != null) {
+                            String baseName = tpl.replace(".docx", "_" + cedula);
+                            addDocxAndPdfToZip(zos, folderName, baseName, docxBytes);
                         }
                     }
                 }
@@ -1183,12 +1199,13 @@ public class CombinacionServlet extends HttpServlet {
 
                     if (esAdicion) {
                         // Generar Documentos de Modificacion
-                        for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                            Map<String, String> replacements = getFullReplacements(id, "modificacion");
-                            if (replacements != null) {
-                                byte[] fileBytes = generateBytes(tpl, replacements);
-                                if (fileBytes != null) {
-                                    addToZip(zos, folderName, tpl.replace(".docx", "_" + cedula + ".docx"), fileBytes);
+                        Map<String, String> replacements = getFullReplacements(id, "modificacion");
+                        if (replacements != null) {
+                            for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
+                                byte[] docxBytes = generateBytes(tpl, replacements);
+                                if (docxBytes != null) {
+                                    String baseName = tpl.replace(".docx", "_" + cedula);
+                                    addDocxAndPdfToZip(zos, folderName, baseName, docxBytes);
                                 }
                             }
                         }
@@ -1293,5 +1310,56 @@ public class CombinacionServlet extends HttpServlet {
     private String getEspeciales(long n) {
         String[] esp = {"DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"};
         return esp[(int)(n - 10)];
+    }
+
+    private void addDocxAndPdfToZip(java.util.zip.ZipOutputStream zos, String folderName, String baseNameWithoutExt, byte[] docxBytes) throws IOException {
+        // 1. Agregar el Word al ZIP
+        addToZip(zos, folderName, baseNameWithoutExt + ".docx", docxBytes);
+        
+        // 2. Intentar generar y agregar el PDF
+        try {
+            File tempDocx = File.createTempFile("pdfgen_", ".docx");
+            File tempPdf = new File(tempDocx.getAbsolutePath().replace(".docx", ".pdf"));
+            
+            java.nio.file.Files.write(tempDocx.toPath(), docxBytes);
+            
+            if (com.combinacion.util.PdfGenerator.convertToPdf(tempDocx, tempPdf)) {
+                byte[] pdfBytes = java.nio.file.Files.readAllBytes(tempPdf.toPath());
+                addToZip(zos, folderName, baseNameWithoutExt + ".pdf", pdfBytes);
+            }
+            
+            // Limpiar temporales
+            tempDocx.delete();
+            tempPdf.delete();
+        } catch (Exception ex) {
+            System.err.println("⚠️ No se pudo generar el PDF para " + baseNameWithoutExt + ": " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Formatea una fecha en formato formal/legal: "Treinta (30) de abril del dos mil veintiséis (2026)"
+     */
+    private String formatearFechaLargaLegal(java.util.Date fecha) {
+        if (fecha == null) return "";
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(fecha);
+        int dia = cal.get(java.util.Calendar.DAY_OF_MONTH);
+        int anio = cal.get(java.util.Calendar.YEAR);
+        String mesText = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fecha);
+        String diaLetras = convertirNumeroALetras(dia).toLowerCase();
+        
+        String anioLetras;
+        switch (anio) {
+            case 2024: anioLetras = "dos mil veinticuatro"; break;
+            case 2025: anioLetras = "dos mil veinticinco"; break;
+            case 2026: anioLetras = "dos mil veintiséis"; break;
+            case 2027: anioLetras = "dos mil veintisiete"; break;
+            case 2028: anioLetras = "dos mil veintiocho"; break;
+            case 2029: anioLetras = "dos mil veintinueve"; break;
+            case 2030: anioLetras = "dos mil treinta"; break;
+            default: anioLetras = "dos mil " + convertirNumeroALetras(anio % 2000).toLowerCase(); break;
+        }
+        
+        return diaLetras + " (" + dia + ") de " + mesText + " de " + anioLetras + " (" + anio + ")";
     }
 }

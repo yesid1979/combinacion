@@ -27,6 +27,27 @@ public class DatabasePatcher {
                 System.out.println("✅ La columna 'apoyo_supervision' ya existe.");
             }
 
+            // --- NUEVOS CAMPOS PARA ADICION EN PRESUPUESTO_DETALLES ---
+            String[] columnasPresupuesto = {
+                "cdp_adicion TEXT", 
+                "cdp_valor_adicion NUMERIC", 
+                "rp_adicion TEXT", 
+                "rp_fecha_adicion DATE"
+            };
+
+            for (String colInfo : columnasPresupuesto) {
+                String colName = colInfo.split(" ")[0];
+                ResultSet rsP = stmt.executeQuery(
+                        "SELECT column_name FROM information_schema.columns " +
+                        "WHERE table_name='presupuesto_detalles' AND column_name='" + colName + "'");
+                
+                if (!rsP.next()) {
+                    System.out.println("⚠️ Columna '" + colName + "' no encontrada en presupuesto_detalles. Agregándola...");
+                    stmt.executeUpdate("ALTER TABLE presupuesto_detalles ADD COLUMN " + colInfo);
+                    System.out.println("✅ Columna '" + colName + "' agregada.");
+                }
+            }
+
             // Verificar tabla usuario_permisos
             ResultSet rs2 = stmt.executeQuery(
                     "SELECT 1 FROM information_schema.tables WHERE table_name='usuario_permisos'");

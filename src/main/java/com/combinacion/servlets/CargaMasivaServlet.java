@@ -190,6 +190,12 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "id_paa", "ID PAA");
                 logMapping(log, map, "codigo_dane", "Código DANE");
                 logMapping(log, map, "ficha_ebi_nombre", "Ficha EBI Nombre");
+                
+                log.append("PRESUPUESTO ADICIÓN:\n");
+                logMapping(log, map, "cdp_adicion", "CDP Adición");
+                logMapping(log, map, "cdp_valor_adicion", "Valor CDP Adición");
+                logMapping(log, map, "rp_adicion", "RP Adición");
+                logMapping(log, map, "rp_fecha_adicion", "Fecha RP Adición");
 
                 // Log del mapeo de CONTRATISTAS
                 log.append("\nCONTRATISTAS:\n");
@@ -441,61 +447,62 @@ public class CargaMasivaServlet extends HttpServlet {
 
     private Map<String, Integer> mapHeaders(String[] header, StringBuilder log) {
         Map<String, Integer> map = new HashMap<>();
-
-        System.out.println("---------- HEADERS DEL EXCEL ----------");
-        log.append("--- ANALISIS DE ENCABEZADOS ---\n");
-        for (int i = 0; i < header.length; i++) {
-            if (header[i] != null && !header[i].isEmpty()) {
-                String norm = normalizeText(header[i]);
-                System.out.println("Col " + i + ": " + header[i] + " -> Normalizado: " + norm);
-                log.append("Col ").append(i).append(": '").append(header[i]).append("' -> Norm: '").append(norm)
-                        .append("'\n");
-            }
-        }
-        System.out.println("---------------------------------------");
-        log.append("-------------------------------\n");
-
+ 
         for (int i = 0; i < header.length; i++) {
             if (header[i] == null)
                 continue;
 
             String h = normalizeText(header[i]);
 
+            // === BLOQUE DE PRIORIDAD: ADICIONES ===
+            if (h.contains("adicion")) {
+                if (h.contains("cdp")) {
+                    if (h.contains("valor")) {
+                        safePut(map, "cdp_valor_adicion", i);
+                    } else {
+                        safePut(map, "cdp_adicion", i);
+                    }
+                    continue;
+                }
+                if (h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) {
+                    if (h.contains("fecha")) {
+                        safePut(map, "rp_fecha_adicion", i);
+                    } else {
+                        safePut(map, "rp_adicion", i);
+                    }
+                    continue;
+                }
+            }
+
             // === BLOQUE DE PRIORIDAD ABSOLUTA (Solicitado por Usuario) ===
             // 1. CDP Numero (Incluyendo variantes con "y fecha")
             if (h.contains("cdp") && (h.contains("numero") || h.contains("nmero") || h.contains("num"))) {
-                log.append(">>> MAPEO CRITICO: CDP_NUMERO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "cdp_numero", i);
                 if (!h.contains("fecha") && !h.contains("venc")) continue; 
             }
             // 2. CDP Fecha (Solo si no es vencimiento Y NO tiene numero)
             if (h.contains("cdp") && h.contains("fecha") && !h.contains("vencimiento") && !h.contains("venc") && !h.contains("numero") && !h.contains("num")) {
-                log.append(">>> MAPEO CRITICO: CDP_FECHA -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "cdp_fecha", i);
                 continue;
             }
             // 3. CDP Valor
             if (h.contains("cdp") && h.contains("valor")) {
-                log.append(">>> MAPEO CRITICO: CDP_VALOR -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "cdp_valor", i);
                 continue;
             }
             // 4. CDP Vencimiento
             if (h.contains("cdp") && (h.contains("vencimiento") || h.contains("venc"))) {
-                log.append(">>> MAPEO CRITICO: CDP_VENCIMIENTO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "cdp_vencimiento", i);
                 continue;
             }
             // 5. RPC / RP Numero (Mas flexible si no es fecha ni vencimiento)
             if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && 
                 !h.contains("fecha") && !h.contains("venc") && !h.contains("apropiacion") && !h.contains("objeto")) {
-                log.append(">>> MAPEO CRITICO: RP_NUMERO -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "rp_numero", i);
                 continue;
             }
             // 6. RPC / RP Fecha
             if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && h.contains("fecha")) {
-                log.append(">>> MAPEO CRITICO: RP_FECHA -> Col ").append(i).append(" ('").append(header[i]).append("')\n");
                 safePut(map, "rp_fecha", i);
                 continue;
             }
@@ -633,6 +640,7 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             // ===== PRESUPUESTO DETALLES =====
+            // (La prioridad para Adición se maneja al principio del loop)
             else if (h.contains("cdp")) {
                 if (h.contains("vencimiento")) {
                     safePut(map, "cdp_vencimiento", i);
@@ -864,6 +872,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("liquidacion_articulo", i);
             } else if (h.contains("liquidaci") && h.contains("decreto")) {
                 map.put("liquidacion_decreto", i);
+            } else if (h.contains("circular") && h.contains("honorarios")) {
+                map.put("circular_honorarios", i);
                 // (Duplicate logic removed)
             } else if (h.contains("tecnico") && h.contains("nombre") && !h.contains("contratista")) {
                 map.put("estructurador_tecnico", i);
@@ -903,15 +913,6 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("estructurador_financiero", i);
             }
         }
-        // --- RESUMEN FINAL DE MAPE0 PARA DEPURACIÓN ---
-        log.append("\n--- RESUMEN DE MAPEADO FINAL ---\n");
-        String[] criticalKeys = {"numero_contrato", "cdp_numero", "cdp_fecha", "cdp_valor", "rp_numero", "rp_fecha", "objeto", "contratista_nombre", "contratista_cedula"};
-        for(String key : criticalKeys) {
-            Integer idx = map.get(key);
-            log.append("  > ").append(key).append(": ").append(idx != null ? "Col " + idx + " ('" + header[idx] + "')" : "NO ENCONTRADO").append("\n");
-        }
-        log.append("---------------------------------\n\n");
-
         return map;
     }
 
@@ -1406,6 +1407,50 @@ public class CargaMasivaServlet extends HttpServlet {
                 java.sql.Date d = parseDateStr(val);
                 if (d != null) { p.setFechaInsuficiencia(d); hasNewData = true; }
             }
+
+            // --- LÓGICA DE ADICIÓN Y LOG DE DEPURACIÓN ---
+            String cdp_ad = get(row, map, "cdp_adicion");
+            String cdp_val_raw = get(row, map, "cdp_valor_adicion");
+            String rp_ad = get(row, map, "rp_adicion");
+            String rp_fec_raw = get(row, map, "rp_fecha_adicion");
+
+            if (!cdp_ad.isEmpty()) { p.setCdpAdicion(cdp_ad); hasNewData = true; }
+            
+            String cdp_val_clean = cleanCurrency(cdp_val_raw);
+            if (!cdp_val_clean.isEmpty()) {
+                try {
+                    p.setCdpValorAdicion(new java.math.BigDecimal(cdp_val_clean));
+                    hasNewData = true;
+                } catch (Exception ignored) {}
+            }
+
+            if (!rp_ad.isEmpty()) { p.setRpAdicion(rp_ad); hasNewData = true; }
+            
+            if (!rp_fec_raw.isEmpty()) {
+                java.sql.Date d = parseDateStr(rp_fec_raw);
+                if (d != null) {
+                    p.setRpFechaAdicion(d);
+                    hasNewData = true;
+                }
+            }
+            
+            // --- AUTO-MARCAR ADICION EN EL CONTRATO ---
+            // Si hay algun dato de adicion, aseguramos que el contrato este marcado como "Si"
+            if (!cdp_ad.isEmpty() || !cdp_val_clean.isEmpty() || !rp_ad.isEmpty() || !rp_fec_raw.isEmpty()) {
+                try {
+                    // Obtener contrato y marcarlo
+                    if (cExistente != null) {
+                        if (cExistente.getAdicionSiNo() == null || (!cExistente.getAdicionSiNo().equalsIgnoreCase("si") && !cExistente.getAdicionSiNo().equalsIgnoreCase("x"))) {
+                            cExistente.setAdicionSiNo("Sí");
+                            contratoDAO.actualizar(cExistente);
+                            log.append("DEBUG >> Contrato marcado automáticamente con ADICION = Sí\n");
+                        }
+                    }
+                } catch (Exception e) {
+                    log.append("ERROR marcando contrato: " + e.getMessage() + "\n");
+                }
+            }
+            // -----------------------------------------
 
             // 3. Persistir cambios
             if (isUpdate) {

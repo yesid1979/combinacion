@@ -167,7 +167,7 @@ public class ContratistaDAO {
         return 0;
     }
 
-    public int countFiltered(String search) {
+    public int countFiltered(String search, boolean soloAdiciones) {
         String sql = "SELECT COUNT(*) FROM contratistas WHERE 1=1 ";
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
         
@@ -182,6 +182,15 @@ public class ContratistaDAO {
             }
             sql += ")";
         }
+
+        if (soloAdiciones) {
+            sql += " AND ( "
+                 + "   EXISTS (SELECT 1 FROM contratos WHERE contratista_id = contratistas.id AND (adicion_si_no = 'Sí' OR adicion_si_no = 'X' OR adicion_si_no = 'si' OR adicion_si_no = 'x')) "
+                 + "   OR EXISTS (SELECT 1 FROM presupuesto_detalles p JOIN contratos ct ON p.id = ct.presupuesto_id WHERE ct.contratista_id = contratistas.id AND p.cdp_adicion IS NOT NULL AND p.cdp_adicion <> '') "
+                 + " ) ";
+        }
+
+
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             if (search != null && !search.isEmpty()) {
@@ -205,17 +214,17 @@ public class ContratistaDAO {
         return 0;
     }
 
-    public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir) {
+    public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir, boolean soloAdiciones) {
         List<Contratista> lista = new ArrayList<>();
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
-        
-        // Fetch all needed columns plus latest contract number
         String sql = "SELECT id, cedula, nombre, correo, telefono, direccion, fecha_nacimiento, " +
-                "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato, "
-                +
-                "(SELECT adicion_si_no FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as adicion_si_no "
-                +
-                "FROM contratistas WHERE 1=1 ";
+                     "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato, " +
+                     "(SELECT CASE WHEN ct.adicion_si_no IN ('Sí','X','si','x') THEN 'Sí' " +
+                     "             WHEN p.cdp_adicion IS NOT NULL AND p.cdp_adicion <> '' THEN 'Sí' " +
+                     "             ELSE '' END " +
+                     " FROM contratos ct LEFT JOIN presupuesto_detalles p ON ct.presupuesto_id = p.id " +
+                     " WHERE ct.contratista_id = contratistas.id ORDER BY ct.fecha_inicio DESC LIMIT 1) as adicion_si_no " +
+                     "FROM contratistas WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
             search = removeAccents(search).toLowerCase();
@@ -228,6 +237,14 @@ public class ContratistaDAO {
             }
             sql += ")";
         }
+
+        if (soloAdiciones) {
+            sql += " AND ( "
+                 + "   EXISTS (SELECT 1 FROM contratos WHERE contratista_id = contratistas.id AND (adicion_si_no = 'Sí' OR adicion_si_no = 'X' OR adicion_si_no = 'si' OR adicion_si_no = 'x')) "
+                 + "   OR EXISTS (SELECT 1 FROM presupuesto_detalles p JOIN contratos ct ON p.id = ct.presupuesto_id WHERE ct.contratista_id = contratistas.id AND p.cdp_adicion IS NOT NULL AND TRIM(p.cdp_adicion) <> '') "
+                 + " ) ";
+        }
+
 
         // Validate sortCol to prevent SQL injection
         List<String> allowedCols = Arrays.asList("id", "cedula", "nombre", "correo", "telefono", "numero_contrato");

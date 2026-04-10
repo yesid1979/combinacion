@@ -76,11 +76,11 @@ public class ContratistaService {
      * Genera el JSON de respuesta para DataTables.
      */
     public String generarJsonDataTables(int draw, int start, int length,
-            String searchValue, String sortCol, String orderDir) {
+            String searchValue, String sortCol, String orderDir, boolean soloAdiciones) {
 
         int total    = contratistaDAO.countAll();
-        int filtered = contratistaDAO.countFiltered(searchValue);
-        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir);
+        int filtered = contratistaDAO.countFiltered(searchValue, soloAdiciones);
+        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir, soloAdiciones);
 
         StringBuilder json = new StringBuilder();
         json.append("{");

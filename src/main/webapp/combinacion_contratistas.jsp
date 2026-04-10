@@ -27,6 +27,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex gap-2">
+                        <button id="btnFilterAdicion" class="btn btn-outline-warning">
+                            <i class="bi bi-filter"></i> Ver solo otrosí
+                        </button>
                         <button class="btn btn-warning" onclick="descargarMasivoModificacion()">
                             <i class="bi bi-file-zip me-2"></i>Modificaciones (ZIP)
                         </button>
@@ -90,6 +93,9 @@
                         "ajax": {
                             "url": "${pageContext.request.contextPath}/contratistas?action=data&source=combinacion&t=" + new Date().getTime(),
                             "type": "POST",
+                            "data": function (d) {
+                                d.filterAdicion = $('#btnFilterAdicion').hasClass('active');
+                            },
                             "error": function (xhr, error, thrown) {
                                 console.error("Error AJAX Status:", xhr.status);
                                 Swal.fire('Error de Conexión', 'El servidor respondió con código ' + xhr.status, 'error');
@@ -156,6 +162,19 @@
                     $('#selectAll').on('click', function () {
                         var rows = $('#contratistasTable').DataTable().rows({ 'search': 'applied' }).nodes();
                         $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                    });
+
+                    // Toggle Filter Adicion
+                    $('#btnFilterAdicion').on('click', function() {
+                        $(this).toggleClass('active');
+                        if ($(this).hasClass('active')) {
+                            $(this).removeClass('btn-outline-warning').addClass('btn-warning');
+                            $(this).html('<i class="bi bi-filter-fill"></i> Ver todos');
+                        } else {
+                            $(this).removeClass('btn-warning').addClass('btn-outline-warning');
+                            $(this).html('<i class="bi bi-filter"></i> Ver solo Otrosí');
+                        }
+                        $('#contratistasTable').DataTable().ajax.reload();
                     });
                 });
 
