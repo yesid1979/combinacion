@@ -98,7 +98,7 @@ public class AuthService {
             return tienePermiso(usuario, "ADMINISTRACION_VER");
         }
         if (lowerPath.contains("carga_masiva") || lowerPath.contains("cargamasiva") || lowerPath.contains("cargamos")) {
-            return tienePermiso(usuario, "CARGA_MASIVA_VER");
+            return tienePermiso(usuario, "CARGA_MASIVA_EJECUTAR");
         }
         if (lowerPath.contains("/contratos")) {
             return tienePermiso(usuario, "CONTRATOS_VER");
