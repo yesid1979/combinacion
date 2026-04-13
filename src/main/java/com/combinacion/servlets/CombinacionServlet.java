@@ -1074,7 +1074,7 @@ public class CombinacionServlet extends HttpServlet {
         symbols.setGroupingSeparator('.');
         symbols.setDecimalSeparator(',');
 
-        DecimalFormat formatter = new DecimalFormat("$ #,##0", symbols);
+        DecimalFormat formatter = new DecimalFormat("$#,##0", symbols);
         return formatter.format(valor);
     }
 
