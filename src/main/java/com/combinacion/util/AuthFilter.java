@@ -43,7 +43,25 @@ public class AuthFilter implements Filter {
         // Verificar sesión activa
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("usuario") == null) {
-            response.sendRedirect(contextPath + "/login?error=session_expired");
+            // Verificar si existía una cookie de sesión previa (JSESSIONID)
+            // Si hay cookie pero no hay sesión, significa que la sesión expiró
+            // Si no hay cookie, es una visita nueva (primera vez o después de logout)
+            boolean teniaSessionPrevia = false;
+            javax.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (javax.servlet.http.Cookie cookie : cookies) {
+                    if ("JSESSIONID".equals(cookie.getName())) {
+                        teniaSessionPrevia = true;
+                        break;
+                    }
+                }
+            }
+
+            if (teniaSessionPrevia) {
+                response.sendRedirect(contextPath + "/login?error=session_expired");
+            } else {
+                response.sendRedirect(contextPath + "/login");
+            }
             return;
         }
 
