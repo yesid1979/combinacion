@@ -43,7 +43,7 @@ public class AuthFilter implements Filter {
         // Verificar sesión activa
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("usuario") == null) {
-            response.sendRedirect(contextPath + "/login");
+            response.sendRedirect(contextPath + "/login?error=session_expired");
             return;
         }
 

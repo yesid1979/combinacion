@@ -118,7 +118,8 @@ public class SupervisorDAO {
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM supervisores WHERE 1=1 ";
         if (search != null && !search.isEmpty()) {
-            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR cargo LIKE ?)";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(cargo), 'áéíóú', 'aeiou') LIKE ?)";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -143,7 +144,8 @@ public class SupervisorDAO {
         String sql = "SELECT * FROM supervisores WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
-            sql += " AND (cedula LIKE ? OR nombre LIKE ? OR cargo LIKE ?)";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(cargo), 'áéíóú', 'aeiou') LIKE ?)";
         }
 
         String[] cols = { "cedula", "nombre", "cargo" };

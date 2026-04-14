@@ -157,6 +157,23 @@
             <jsp:include page="inc/footer.jsp" />
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('error') === 'sin_permiso') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Acceso Denegado',
+                            text: 'No tienes permisos suficientes para acceder a este módulo.',
+                            confirmButtonColor: '#004884'
+                        }).then(() => {
+                            // Limpiar la URL param de error para evitar que la alerta vuelva a salir al recargar
+                            window.history.replaceState(null, null, window.location.pathname);
+                        });
+                    }
+                });
+            </script>
         </body>
 
         </html>

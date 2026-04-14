@@ -151,7 +151,8 @@ public class ContratoDAO {
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
         
         if (search != null && !search.isEmpty()) {
-            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ? OR ct.cedula LIKE ?";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
             if (!searchDigits.isEmpty()) {
                 sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
             }
@@ -187,7 +188,8 @@ public class ContratoDAO {
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
 
         if (search != null && !search.isEmpty()) {
-            sql += " AND (c.numero_contrato LIKE ? OR ct.nombre LIKE ? OR c.objeto LIKE ? OR ct.cedula LIKE ?";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
             if (!searchDigits.isEmpty()) {
                 sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
             }

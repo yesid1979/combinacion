@@ -96,7 +96,8 @@ public class OrdenadorGastoDAO {
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM ordenadores_gasto WHERE 1=1 ";
         if (search != null && !search.isEmpty()) {
-            sql += " AND (nombre_ordenador LIKE ? OR cargo_ordenador LIKE ? OR organismo LIKE ?)";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(nombre_ordenador), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(cargo_ordenador), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(organismo), 'áéíóú', 'aeiou') LIKE ?)";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -122,7 +123,8 @@ public class OrdenadorGastoDAO {
         String sql = "SELECT * FROM ordenadores_gasto WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
-            sql += " AND (nombre_ordenador LIKE ? OR cargo_ordenador LIKE ? OR organismo LIKE ?)";
+            search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
+            sql += " AND (translate(LOWER(nombre_ordenador), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(cargo_ordenador), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(organismo), 'áéíóú', 'aeiou') LIKE ?)";
         }
 
         String[] cols = { "nombre_ordenador", "cargo_ordenador", "organismo" };

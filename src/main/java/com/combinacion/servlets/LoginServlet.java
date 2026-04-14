@@ -28,6 +28,12 @@ public class LoginServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/index.jsp");
             return;
         }
+
+        String errorParam = request.getParameter("error");
+        if ("session_expired".equals(errorParam)) {
+            request.setAttribute("error", "Tu sesión ha expirado o no has iniciado sesión. Por favor, ingresa de nuevo.");
+        }
+
         request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
 

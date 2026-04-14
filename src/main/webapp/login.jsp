@@ -122,9 +122,16 @@
             </form>
 
             <c:if test="${not empty error}">
-                <div class="alert alert-danger mt-3 py-2 small text-center" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> ${error}
-                </div>
+                <c:choose>
+                    <c:when test="${error.contains('expirado')}">
+                        <!-- Sesión expirada: se muestra con SweetAlert abajo -->
+                    </c:when>
+                    <c:otherwise>
+                        <div class="alert alert-danger mt-3 py-2 small text-center" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> ${error}
+                        </div>
+                    </c:otherwise>
+                </c:choose>
             </c:if>
         </div>
     </div>
@@ -133,5 +140,17 @@
     <jsp:include page="inc/footer.jsp" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <c:if test="${not empty error and error.contains('expirado')}">
+    <script>
+        Swal.fire({
+            icon: 'info',
+            title: 'Sesión Expirada',
+            text: 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión de nuevo.',
+            confirmButtonColor: '#004884',
+            confirmButtonText: 'Entendido'
+        });
+    </script>
+    </c:if>
 </body>
 </html>
