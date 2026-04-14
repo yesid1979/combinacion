@@ -166,7 +166,7 @@ public class CombinacionServlet extends HttpServlet {
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
-            String zipFilename = "Documentos_" + cedula + ".zip";
+            String zipFilename = folderName + ".zip";
 
             response.setContentType("application/zip");
             response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFilename + "\"");
@@ -1154,7 +1154,7 @@ public class CombinacionServlet extends HttpServlet {
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
-            String zipFilename = "Modificaciones_" + cedula + ".zip";
+            String zipFilename = folderName + ".zip";
 
             response.setContentType("application/zip");
             response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFilename + "\"");
