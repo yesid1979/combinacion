@@ -1348,18 +1348,6 @@ public class CombinacionServlet extends HttpServlet {
         String mesText = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fecha);
         String diaLetras = convertirNumeroALetras(dia).toLowerCase();
         
-        String anioLetras;
-        switch (anio) {
-            case 2024: anioLetras = "dos mil veinticuatro"; break;
-            case 2025: anioLetras = "dos mil veinticinco"; break;
-            case 2026: anioLetras = "dos mil veintiséis"; break;
-            case 2027: anioLetras = "dos mil veintisiete"; break;
-            case 2028: anioLetras = "dos mil veintiocho"; break;
-            case 2029: anioLetras = "dos mil veintinueve"; break;
-            case 2030: anioLetras = "dos mil treinta"; break;
-            default: anioLetras = "dos mil " + convertirNumeroALetras(anio % 2000).toLowerCase(); break;
-        }
-        
-        return diaLetras + " (" + dia + ") de " + mesText + " de " + anioLetras + " (" + anio + ")";
+        return diaLetras + " (" + dia + ") de " + mesText + " de " + anio;
     }
 }
