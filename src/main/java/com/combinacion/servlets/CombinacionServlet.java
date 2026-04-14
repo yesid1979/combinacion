@@ -1136,11 +1136,14 @@ public class CombinacionServlet extends HttpServlet {
                 // Generar Documentos de Modificacion
                 Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
                 if (replacements != null) {
-                    for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                        byte[] docxBytes = generateBytes(tpl, replacements);
+                    String[][] plantillas = {
+                        {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACION No. 01"},
+                        {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACION No. 01"}
+                    };
+                    for (String[] par : plantillas) {
+                        byte[] docxBytes = generateBytes(par[0], replacements);
                         if (docxBytes != null) {
-                            String baseName = tpl.replace(".docx", "_" + cedula);
-                            addDocxAndPdfToZip(zos, folderName, baseName, docxBytes);
+                            addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
                         }
                     }
                 }
@@ -1201,11 +1204,14 @@ public class CombinacionServlet extends HttpServlet {
                         // Generar Documentos de Modificacion
                         Map<String, String> replacements = getFullReplacements(id, "modificacion");
                         if (replacements != null) {
-                            for (String tpl : new String[]{"MODIFICACION_1_JUSTIFICACION.docx", "MODIFICACION_2_ACEPTACION.docx"}) {
-                                byte[] docxBytes = generateBytes(tpl, replacements);
+                            String[][] plantillas = {
+                                {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACION No. 01"},
+                                {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACION No. 01"}
+                            };
+                            for (String[] par : plantillas) {
+                                byte[] docxBytes = generateBytes(par[0], replacements);
                                 if (docxBytes != null) {
-                                    String baseName = tpl.replace(".docx", "_" + cedula);
-                                    addDocxAndPdfToZip(zos, folderName, baseName, docxBytes);
+                                    addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
                                 }
                             }
                         }
