@@ -1,6 +1,6 @@
 <style>
     .footer-simple {
-        margin-top: 3rem; /* Espacio para que no se pegue al contenido */
+        margin-top: auto; /* Empuja el footer al final en layouts flex */
         padding: 12px 25px;
         font-family: 'Inter', sans-serif;
         color: #6c757d;
