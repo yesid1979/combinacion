@@ -1137,8 +1137,8 @@ public class CombinacionServlet extends HttpServlet {
                 Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
                 if (replacements != null) {
                     String[][] plantillas = {
-                        {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACION No. 01"},
-                        {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACION No. 01"}
+                        {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
+                        {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
                     };
                     for (String[] par : plantillas) {
                         byte[] docxBytes = generateBytes(par[0], replacements);
@@ -1205,8 +1205,8 @@ public class CombinacionServlet extends HttpServlet {
                         Map<String, String> replacements = getFullReplacements(id, "modificacion");
                         if (replacements != null) {
                             String[][] plantillas = {
-                                {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACION No. 01"},
-                                {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACION No. 01"}
+                                {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
+                                {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
                             };
                             for (String[] par : plantillas) {
                                 byte[] docxBytes = generateBytes(par[0], replacements);
