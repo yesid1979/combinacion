@@ -21,6 +21,14 @@ public class PresupuestoDetalle {
     private String fichaEbiActividades;
     private String certificadoInsuficiencia;
     private Date fechaInsuficiencia;
+    private String bpin;
+    private String compromiso;
+
+    // Campos para Adición
+    private String cdpAdicion;
+    private BigDecimal cdpValorAdicion;
+    private String rpAdicion;
+    private Date rpFechaAdicion;
 
     public PresupuestoDetalle() {
     }
@@ -159,5 +167,53 @@ public class PresupuestoDetalle {
 
     public void setFechaInsuficiencia(Date fechaInsuficiencia) {
         this.fechaInsuficiencia = fechaInsuficiencia;
+    }
+
+    public String getBpin() {
+        return bpin;
+    }
+
+    public void setBpin(String bpin) {
+        this.bpin = bpin;
+    }
+
+    public String getCompromiso() {
+        return compromiso;
+    }
+
+    public void setCompromiso(String compromiso) {
+        this.compromiso = compromiso;
+    }
+
+    public String getCdpAdicion() {
+        return cdpAdicion;
+    }
+
+    public void setCdpAdicion(String cdpAdicion) {
+        this.cdpAdicion = cdpAdicion;
+    }
+
+    public BigDecimal getCdpValorAdicion() {
+        return cdpValorAdicion;
+    }
+
+    public void setCdpValorAdicion(BigDecimal cdpValorAdicion) {
+        this.cdpValorAdicion = cdpValorAdicion;
+    }
+
+    public String getRpAdicion() {
+        return rpAdicion;
+    }
+
+    public void setRpAdicion(String rpAdicion) {
+        this.rpAdicion = rpAdicion;
+    }
+
+    public Date getRpFechaAdicion() {
+        return rpFechaAdicion;
+    }
+
+    public void setRpFechaAdicion(Date rpFechaAdicion) {
+        this.rpFechaAdicion = rpFechaAdicion;
     }
 }

@@ -1,7 +1,9 @@
 package com.combinacion.servlets;
 
-import com.combinacion.dao.*;
-import com.combinacion.models.*;
+import com.combinacion.models.OrdenadorGasto;
+import com.combinacion.models.Supervisor;
+import com.combinacion.services.ContratoService;
+import com.combinacion.services.ContratoService.ContratoFormData;
 import com.combinacion.util.ParseUtils;
 import java.io.IOException;
 import java.util.List;
@@ -11,32 +13,36 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "ContratoServlet", urlPatterns = { "/contratos" })
+/**
+ * Controlador HTTP para Contrato.
+ * Responsabilidad exclusiva: leer parámetros HTTP, delegar al Service,
+ * y dirigir la respuesta a la Vista correcta.
+ */
+// @WebServlet(name = "ContratoServlet", urlPatterns = { "/contratos" })
 public class ContratoServlet extends HttpServlet {
 
-    private ContratoDAO contratoDAO = new ContratoDAO();
-    private ContratistaDAO contratistaDAO = new ContratistaDAO(); // Assuming this exists or will continue working if it
-                                                                  // does
-    private SupervisorDAO supervisorDAO = new SupervisorDAO(); // Assuming this exists
-    private OrdenadorGastoDAO ordenadorDAO = new OrdenadorGastoDAO();
-    private PresupuestoDetalleDAO presupuestoDAO = new PresupuestoDetalleDAO();
-    private EstructuradorDAO estructuradorDAO = new EstructuradorDAO();
+    private final ContratoService contratoService = new ContratoService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
 
         switch (action) {
-            case "new":
-                showNewForm(request, response);
+            case "data":
+                responderDatosTabla(request, response);
                 break;
-            case "list":
+            case "new":
+                mostrarFormularioNuevo(request, response);
+                break;
+            case "view":
+            case "edit":
+                mostrarFormularioEdicion(request, response);
+                break;
             default:
-                listContratos(request, response);
+                listar(request, response);
                 break;
         }
     }
@@ -44,116 +50,168 @@ public class ContratoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
-            insertContrato(request, response);
+            insertar(request, response);
+        } else if ("update".equals(action)) {
+            actualizar(request, response);
+        } else if ("data".equals(action)) {
+            responderDatosTabla(request, response);
         } else {
-            listContratos(request, response);
+            listar(request, response);
         }
     }
 
-    private void showNewForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("form_contrato.jsp").forward(request, response);
-    }
+    // -------------------------------------------------------------------------
+    // PRIVADOS
+    // -------------------------------------------------------------------------
 
-    private void listContratos(HttpServletRequest request, HttpServletResponse response)
+    private void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        List<Contrato> listContratos = contratoDAO.listarTodos();
-        request.setAttribute("listContratos", listContratos);
+        request.setAttribute("listContratos", contratoService.listarTodos());
         request.getRequestDispatcher("lista_contratos.jsp").forward(request, response);
     }
 
-    private void insertContrato(HttpServletRequest request, HttpServletResponse response)
+    private void responderDatosTabla(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            String draw     = request.getParameter("draw");
+            int    start    = ParseUtils.parseInt(request.getParameter("start"));
+            int    length   = ParseUtils.parseInt(request.getParameter("length"));
+            String search   = request.getParameter("search[value]");
+            int    orderCol = ParseUtils.parseInt(request.getParameter("order[0][column]"));
+            String orderDir = request.getParameter("order[0][dir]");
+
+            response.getWriter().write(
+                contratoService.generarJsonDataTables(draw, start, length, search, orderCol, orderDir)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().write("{\"error\": \"Error generando datos: " + e.getMessage() + "\"}");
+        }
+    }
+
+    private void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("listaSupervisores", contratoService.listarSupervisores());
+        request.setAttribute("listaOrdenadores",  contratoService.listarOrdenadores());
+        request.getRequestDispatcher("form_contrato.jsp").forward(request, response);
+    }
+
+    private void mostrarFormularioEdicion(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = ParseUtils.parseInt(request.getParameter("id"));
+            com.combinacion.models.Contrato contrato = contratoService.obtenerConRelaciones(id);
+            if (contrato == null) {
+                request.setAttribute("error", "Contrato no encontrado.");
+                listar(request, response);
+                return;
+            }
+            request.setAttribute("contrato", contrato);
+
+            List<Supervisor>     listaSupervisores = contratoService.listarSupervisores();
+            List<OrdenadorGasto> listaOrdenadores  = contratoService.listarOrdenadores();
+            request.setAttribute("listaSupervisores", listaSupervisores);
+            request.setAttribute("listaOrdenadores",  listaOrdenadores);
+
+            if ("view".equals(request.getParameter("action"))) {
+                request.setAttribute("action",   "view");
+                request.setAttribute("readonly", true);
+            } else {
+                request.setAttribute("action", "update");
+            }
+            request.getRequestDispatcher("form_contrato.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar el contrato: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+
+    private void insertar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         try {
-            // 1. Create/Find Related Entities
-
-            // Contratista
-            Contratista contratista = new Contratista();
-            contratista.setCedula(request.getParameter("contratista_cedula"));
-            contratista.setNombre(request.getParameter("contratista_nombre"));
-            contratista.setTelefono(request.getParameter("contratista_telefono"));
-            contratista.setCorreo(request.getParameter("contratista_correo"));
-            contratista.setDireccion(request.getParameter("contratista_direccion"));
-            contratista.setFechaNacimiento(ParseUtils.parseDate(request.getParameter("contratista_fecha_nac")));
-            contratista.setEdad(ParseUtils.parseInt(request.getParameter("contratista_edad")));
-
-            // Try insert. If fails, try to find by cedula.
-            if (!contratistaDAO.insertar(contratista)) {
-                Contratista existing = contratistaDAO.obtenerPorCedula(contratista.getCedula());
-                if (existing != null) {
-                    contratista.setId(existing.getId());
-                } else {
-                    // Error fatal
-                    throw new Exception("No se pudo crear ni encontrar el contratista.");
-                }
-            }
-
-            // Supervisor
-            Supervisor supervisor = new Supervisor();
-            supervisor.setCedula(request.getParameter("supervisor_cedula"));
-            supervisor.setNombre(request.getParameter("supervisor_nombre"));
-            supervisor.setCargo(request.getParameter("supervisor_cargo"));
-            if (!supervisorDAO.insertar(supervisor)) {
-                Supervisor existingSup = supervisorDAO.obtenerPorCedula(supervisor.getCedula());
-                if (existingSup != null) {
-                    supervisor.setId(existingSup.getId());
-                }
-            }
-
-            // Ordenador
-            OrdenadorGasto ordenador = new OrdenadorGasto();
-            ordenador.setNombreOrdenador(request.getParameter("ordenador_nombre"));
-            if (!ordenadorDAO.insertar(ordenador)) {
-                OrdenadorGasto existingOrd = ordenadorDAO.obtenerPorNombre(ordenador.getNombreOrdenador());
-                if (existingOrd != null) {
-                    ordenador.setId(existingOrd.getId());
-                }
-            }
-
-            // Presupuesto
-            PresupuestoDetalle presupuesto = new PresupuestoDetalle();
-            presupuesto.setCdpNumero(request.getParameter("presupuesto_cdp"));
-            presupuestoDAO.insertar(presupuesto);
-
-            // Estructurador
-            Estructurador estructurador = new Estructurador();
-            estructurador.setJuridicoNombre(request.getParameter("estructurador_juridico"));
-            estructuradorDAO.insertar(estructurador);
-
-            // 2. Create Contrato
-            Contrato contrato = new Contrato();
-            contrato.setNumeroContrato(request.getParameter("numero_contrato"));
-            contrato.setObjeto(request.getParameter("objeto"));
-            contrato.setValorTotalNumeros(ParseUtils.parseBigDecimal(request.getParameter("valor_total")));
-            contrato.setValorTotalLetras(request.getParameter("valor_total_letras"));
-            contrato.setValorCuotaNumero(ParseUtils.parseBigDecimal(request.getParameter("valor_cuota_numero")));
-            contrato.setValorCuotaLetras(request.getParameter("valor_cuota_letras"));
-            contrato.setValorMediaCuotaLetras(request.getParameter("valor_media_cuota_letras"));
-            contrato.setValorMediaCuotaNumero(
-                    ParseUtils.parseBigDecimal(request.getParameter("valor_media_cuota_numero")));
-
-            contrato.setFechaInicio(ParseUtils.parseDate(request.getParameter("fecha_inicio")));
-            contrato.setFechaTerminacion(ParseUtils.parseDate(request.getParameter("fecha_terminacion")));
-
-            // Foreign Keys
-            contrato.setContratistaId(contratista.getId());
-            contrato.setSupervisorId(supervisor.getId());
-            contrato.setOrdenadorId(ordenador.getId());
-            contrato.setPresupuestoId(presupuesto.getId());
-            contrato.setEstructuradorId(estructurador.getId());
-
-            if (contratoDAO.insertar(contrato)) {
-                response.sendRedirect("contratos?action=list");
+            ContratoFormData form = construirFormData(request);
+            String error = contratoService.insertar(form);
+            if (error != null) {
+                request.setAttribute("error", error);
+                listar(request, response);
             } else {
-                request.setAttribute("error", "Error al guardar el contrato. Verifique los datos.");
-                listContratos(request, response);
+                request.getSession().setAttribute("successMessage", "El contrato ha sido creado correctamente.");
+                response.sendRedirect("contratos?action=list");
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error inesperado: " + e.getMessage());
-            listContratos(request, response);
+            listar(request, response);
         }
+    }
+
+    private void actualizar(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        try {
+            int id = ParseUtils.parseInt(request.getParameter("id"));
+            ContratoFormData form = construirFormData(request);
+            String error = contratoService.actualizar(id, form);
+            if (error != null) {
+                request.setAttribute("error", error);
+                listar(request, response);
+            } else {
+                request.getSession().setAttribute("successMessage", "El contrato ha sido actualizado correctamente.");
+                response.sendRedirect("contratos?action=list");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error inesperado al actualizar: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+
+    /**
+     * Construye el DTO de datos de formulario a partir del HttpServletRequest.
+     */
+    private ContratoFormData construirFormData(HttpServletRequest r) {
+        ContratoFormData f = new ContratoFormData();
+        f.contratistaCedula            = r.getParameter("contratista_cedula");
+        f.contratistaDv                = r.getParameter("contratista_dv");
+        f.contratistaNombre            = r.getParameter("contratista_nombre");
+        f.contratistaTelefono          = r.getParameter("contratista_telefono");
+        f.contratistaCorreo            = r.getParameter("contratista_correo");
+        f.contratistaDireccion         = r.getParameter("contratista_direccion");
+        f.contratistaFechaNac          = r.getParameter("contratista_fecha_nac");
+        f.contratistaEdad              = r.getParameter("contratista_edad");
+        f.presupuestoCdp               = r.getParameter("presupuesto_cdp");
+        f.presupuestoRpc               = r.getParameter("presupuesto_rpc");
+        f.estructuradorJuridico        = r.getParameter("estructurador_juridico");
+        f.estructuradorTecnico         = r.getParameter("estructurador_tecnico");
+        f.estructuradorFinanciero      = r.getParameter("estructurador_financiero");
+        f.supervisorId                 = ParseUtils.parseInt(r.getParameter("id_supervisor"));
+        f.ordenadorId                  = ParseUtils.parseInt(r.getParameter("id_ordenador"));
+        f.numeroContrato               = r.getParameter("numero_contrato");
+        f.tipoContrato                 = r.getParameter("tipo_contrato");
+        f.nivel                        = r.getParameter("nivel");
+        f.objeto                       = r.getParameter("objeto");
+        f.valorTotal                   = r.getParameter("valor_total");
+        f.valorTotalLetras             = r.getParameter("valor_total_letras");
+        f.valorCuotaNumero             = r.getParameter("valor_cuota_numero");
+        f.valorCuotaLetras             = r.getParameter("valor_cuota_letras");
+        f.valorMediaCuotaLetras        = r.getParameter("valor_media_cuota_letras");
+        f.valorMediaCuotaNumero        = r.getParameter("valor_media_cuota_numero");
+        f.fechaInicio                  = r.getParameter("fecha_inicio");
+        f.fechaTerminacion             = r.getParameter("fecha_terminacion");
+        f.fechaIdoneidad               = r.getParameter("fecha_idoneidad");
+        f.fechaEstructurador           = r.getParameter("fecha_estructurador");
+        f.actividadesEntregables       = r.getParameter("actividades_entregables");
+        f.adicionSiNo                  = r.getParameter("adicion_si_no");
+        f.numeroCuotasAdicion          = r.getParameter("numero_cuotas_adicion");
+        f.valorTotalAdicion            = r.getParameter("valor_total_adicion");
+        f.valorTotalAdicionLetras      = r.getParameter("valor_total_adicion_letras");
+        f.valorContratoMasAdicion      = r.getParameter("valor_contrato_mas_adicion");
+        f.valorContratoMasAdicionLetras= r.getParameter("valor_contrato_mas_adicion_letras");
+        f.enlaceSecop                  = r.getParameter("enlace_secop");
+        return f;
     }
 }

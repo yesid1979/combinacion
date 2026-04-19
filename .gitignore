@@ -1,0 +1,10 @@
+target/
+*.class
+*.war
+.nb-gradle/
+dist/
+build/
+nbproject/private/
+*.log
+.DS_Store
+Thumbs.db

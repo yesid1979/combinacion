@@ -10,105 +10,74 @@
                 <title>Lista de Contratos - Gestión de Prestadores</title>
                 <!-- Bootstrap 5 CSS -->
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <!-- Bootstrap Icons CSS -->
+                <link rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
                 <!-- DataTables CSS for advanced table features -->
                 <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-            </head>
+                <!-- DataTables Responsive CSS -->
+                <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css"
+                    rel="stylesheet">
+                <!-- Custom Styles -->
+                <link href="assets/css/styles.css" rel="stylesheet">
+            <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    </head>
 
-            <body class="bg-light">
+            <body class="bg-light d-flex flex-column min-vh-100">
 
-                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-                    <div class="container-fluid">
-                        <a class="navbar-brand" href="#">Gestión Contratos</a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#navbarNav">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <div class="collapse navbar-collapse" id="navbarNav">
-                            <ul class="navbar-nav">
-                                <li class="nav-item">
-                                    <a class="nav-link active" href="contratos">Listado</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="contratos?action=new">Nuevo Contrato</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
+                <jsp:include page="inc/navbar.jsp" />
 
-                <div class="container mt-4">
+                <div class="container mt-4 mb-5 flex-grow-1">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2>Contratos Registrados</h2>
-                        <a href="contratos?action=new" class="btn btn-success"><i class="bi bi-plus-lg"></i> Nuevo
-                            Contrato</a>
-                    </div>
+            <h3 class="fw-bold text-dark mb-0">Contratos registrados</h3>
+            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_CREAR')}">
+                <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
+                </a>
+            </c:if>
+        </div>
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="contratosTable" class="table table-striped table-hover">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th># Contrato</th>
-                                            <th>Contratista</th>
-                                            <th>Objeto</th>
-                                            <th>Valor Total</th>
-                                            <th>Fecha Inicio</th>
-                                            <th>Fecha Fin</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="c" items="${listContratos}">
-                                            <tr>
-                                                <td>${c.numeroContrato}</td>
-                                                <td>${c.contratistaNombre}</td>
-                                                <td>
-                                                    <span class="d-inline-block text-truncate"
-                                                        style="max-width: 250px;">
-                                                        ${c.objeto}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <fmt:formatNumber value="${c.valorTotalNumeros}" type="currency"
-                                                        currencySymbol="$" />
-                                                </td>
-                                                <td>
-                                                    <fmt:formatDate value="${c.fechaInicio}" pattern="dd/MM/yyyy" />
-                                                </td>
-                                                <td>
-                                                    <fmt:formatDate value="${c.fechaTerminacion}"
-                                                        pattern="dd/MM/yyyy" />
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="badge ${c.estado == 'Activo' ? 'bg-success' : 'bg-secondary'}">
-                                                        ${c.estado}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                                                        <a href="#" class="btn btn-sm btn-outline-primary">Editar</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                        <c:if test="${empty listContratos}">
-                                            <tr>
-                                                <td colspan="8" class="text-center py-4">
-                                                    <div class="text-muted">No se encontraron contratos registrados.
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </c:if>
-                                    </tbody>
-                                </table>
-                            </div>
+                    <style>
+                        .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
+                        .table td { vertical-align: middle; }
+                        .badge { font-weight: 600; padding: 6px 12px; border-radius: 6px; text-transform: uppercase; font-size: 0.75rem; }
+                        .btn-view { background-color: #004884; border: none; color: #fff; }
+                        .btn-edit { background-color: #ffc107; border: none; color: #000; }
+                        .btn-action { padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        
+                        .footer-main {
+                            background: #212529;
+                            color: rgba(255, 255, 255, 0.7);
+                            padding: 25px 0;
+                            border-top: 1px solid rgba(255, 255, 255, 0.1);
+                        }
+                        .footer-main strong { color: #ffffff; }
+                    </style>
+                            <table id="contratosTable" class="table table-striped" style="width:100%">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th># Contrato</th>
+                                        <th>Contratista</th>
+                                        <th>Objeto</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th class="text-center">Fecha Inicio</th>
+                                        <th class="text-center">Fecha Fin</th>
+                                        <th class="text-center">Estado</th>
+                                        <th class="text-center" style="width: 100px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data loaded by Server-Side Processing via AJAX -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
+
+                <!-- Footer -->
+                <jsp:include page="inc/footer.jsp" />
 
                 <!-- jQuery and Bootstrap JS -->
                 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -116,17 +85,112 @@
                 <!-- DataTables JS -->
                 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
                 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+                <!-- DataTables Responsive JS -->
+                <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+                <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
+
+                <!-- SweetAlert2 -->
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <script>
+                    // Permisos de usuario cargados desde el servidor
+                    var canEditContratos = ${sessionScope.usuario.tienePermiso('CONTRATOS_ACTUALIZAR')};
+
                     $(document).ready(function () {
+                        // Check for session-based alerts (e.g. from Redirects)
+                        var successMsg = "${sessionScope.successMessage}";
+                        var errorMsg = "${sessionScope.errorMessage}";
+
+                        // Also check request scope for forwards
+                        if (!successMsg) successMsg = "${requestScope.successMessage}";
+                        if (!errorMsg) errorMsg = "${requestScope.errorMessage}";
+                        // Fallback for "error" attribute currently used in servlet
+                        if (!errorMsg) errorMsg = "${error}";
+
+                        if (successMsg && successMsg.trim() !== "") {
+                            Swal.fire({ icon: 'success', title: '¡Éxito!', text: successMsg, showConfirmButton: false, timer: 2000 });
+                        }
+
+                        if (errorMsg && errorMsg.trim() !== "") {
+                            Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
+                        }
+
                         $('#contratosTable').DataTable({
-                            language: {
-                                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                            "processing": true,
+                            "serverSide": true,
+                            "responsive": true,
+                            "autoWidth": false,
+                            "ajax": {
+                                "url": "contratos",
+                                "type": "POST",
+                                "data": function(d) {
+                                    d.action = "data";
+                                }
                             },
-                            responsive: true
+                            "columns": [
+                                { "data": 0 }, 
+                                { "data": 1 }, 
+                                { "data": 2 }, 
+                                {
+                                    "data": 3, 
+                                    "render": $.fn.dataTable.render.number(',', '.', 2, '$ ')
+                                },
+                                { "data": 4 }, 
+                                { "data": 5 }, 
+                                {
+                                    "data": 6, 
+                                    "render": function (data, type, row) {
+                                        var badgeClass = 'bg-secondary';
+                                        if (!data) return '';
+                                        if (data.toLowerCase() === 'activo') badgeClass = 'bg-success';
+                                        else if (data.toLowerCase() === 'liquidado') badgeClass = 'bg-info';
+                                        else if (data.toLowerCase() === 'suspendido') badgeClass = 'bg-warning text-dark';
+                                        else if (data.toLowerCase() === 'terminado') badgeClass = 'bg-danger';
+                                        return '<span class="badge ' + badgeClass + '">' + data + '</span>';
+                                    }
+                                },
+                                {
+                                    "data": 7, 
+                                    "orderable": false,
+                                    "render": function (data, type, row) {
+                                        var btns = '<div class="d-flex justify-content-center" style="white-space: nowrap;">' +
+                                                   '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info me-1" title="Ver"><i class="bi bi-eye"></i></a>';
+                                        
+                                        if (canEditContratos) {
+                                            btns += '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>';
+                                        }
+                                        
+                                        btns += '</div>';
+                                        return btns;
+                                    }
+                                }
+                            ],
+                            language: {
+                                "decimal": "",
+                                "emptyTable": "No hay datos disponibles en la tabla",
+                                "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                                "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                                "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+                                "lengthMenu": "Mostrar _MENU_ entradas",
+                                "loadingRecords": "Cargando...",
+                                "processing": "Procesando...",
+                                "search": "Buscar:",
+                                "zeroRecords": "No se encontraron registros coincidentes",
+                                "paginate": {
+                                    "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior"
+                                }
+                            }
                         });
                     });
                 </script>
+
+                <!-- Remove session messages -->
+                <c:if test="${not empty sessionScope.successMessage}">
+                    <c:remove var="successMessage" scope="session" />
+                </c:if>
+                <c:if test="${not empty sessionScope.errorMessage}">
+                    <c:remove var="errorMessage" scope="session" />
+                </c:if>
             </body>
 
             </html>

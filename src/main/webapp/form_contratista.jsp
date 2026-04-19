@@ -6,73 +6,155 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Nuevo Contratista</title>
+            <title>Registrar Contratista - Gestión de Prestadores</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        </head>
+            <!-- Bootstrap Icons -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+            <!-- Custom Styles -->
+            <link href="assets/css/styles.css" rel="stylesheet">
+        <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    </head>
 
-        <body class="bg-light">
+        <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-5">
-                <h2 class="mb-4">Registrar Nuevo Contratista</h2>
+            <div class="container mt-4 mb-5 flex-grow-1">
 
                 <c:if test="${not empty error}">
                     <div class="alert alert-danger">${error}</div>
                 </c:if>
 
-                <div class="card shadow-sm">
-                    <div class="card-body">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="mb-4 fw-bold">
+                            <c:choose>
+                                <c:when test="${readonly}">Detalles del Contratista</c:when>
+                                <c:when test="${contratista != null && contratista.id > 0}">Editar Contratista</c:when>
+                                <c:otherwise>Registrar Nuevo Contratista</c:otherwise>
+                            </c:choose>
+                        </h2>
                         <form action="contratistas" method="POST">
-                            <input type="hidden" name="action" value="insert">
+                            <input type="hidden" name="action" value="${contratista != null && contratista.id > 0 ? 'update' : 'insert'}">
+                            <c:if test="${contratista != null && contratista.id > 0}">
+                                <input type="hidden" name="id" value="${contratista.id}">
+                            </c:if>
 
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Cédula *</label>
-                                    <input type="text" class="form-control" name="cedula" required>
+                                    <input type="text" class="form-control" name="cedula" value="${contratista.cedula}"
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">DV</label>
-                                    <input type="text" class="form-control" name="dv" maxlength="1">
+                                    <input type="text" class="form-control" name="dv" maxlength="2"
+                                        value="${contratista.dv}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nombre Completo *</label>
-                                    <input type="text" class="form-control" name="nombre" required>
+                                    <input type="text" class="form-control" name="nombre" value="${contratista.nombre}"
+                                        required ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Correo Electrónico</label>
-                                    <input type="email" class="form-control" name="correo">
+                                    <input type="email" class="form-control" name="correo"
+                                        value="${contratista.correo}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Teléfono</label>
-                                    <input type="text" class="form-control" name="telefono">
+                                    <input type="text" class="form-control" name="telefono"
+                                        value="${contratista.telefono}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label">Dirección</label>
-                                    <input type="text" class="form-control" name="direccion">
+                                    <input type="text" class="form-control" name="direccion"
+                                        value="${contratista.direccion}" ${readonly ? 'readonly' : ''}>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha Nacimiento</label>
-                                    <input type="date" class="form-control" name="fecha_nacimiento">
+                                    <input type="date" class="form-control" name="fecha_nacimiento"
+                                        value="${contratista.fechaNacimiento}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Edad</label>
-                                    <input type="number" class="form-control" name="edad">
+                                    <input type="number" class="form-control" name="edad" value="${contratista.edad}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                
+                                <h5 class="mt-4 mb-2 border-bottom pb-2">Perfil y Experiencia</h5>
+                                <div class="col-md-6">
+                                    <label class="form-label">Título Formación</label>
+                                    <input type="text" class="form-control" name="formacion_titulo"
+                                        value="${contratista.formacionTitulo}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Descripción Formación</label>
+                                    <textarea class="form-control" name="descripcion_formacion" rows="3" ${readonly ? 'readonly' : ''}>${contratista.descripcionFormacion}</textarea>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Experiencia</label>
+                                    <input type="text" class="form-control" name="experiencia"
+                                        value="${contratista.experiencia}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Descripción Experiencia</label>
+                                    <textarea class="form-control" name="descripcion_experiencia" rows="3" ${readonly ? 'readonly' : ''}>${contratista.descripcionExperiencia}</textarea>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Tarjeta Profesional</label>
+                                    <input type="text" class="form-control" name="tarjeta_profesional"
+                                        value="${contratista.tarjetaProfesional}" ${readonly ? 'readonly' : ''}>
+                                </div>                                
+                                <div class="col-md-4">
+                                    <label class="form-label">Descripción Tarjeta</label>
+                                    <input type="text" class="form-control" name="descripcion_tarjeta"
+                                        value="${contratista.descripcionTarjeta}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Restricciones</label>
+                                    <input type="text" class="form-control" name="restricciones"
+                                        value="${contratista.restricciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
 
                             <div class="mt-4 text-end">
-                                <a href="contratistas" class="btn btn-secondary me-2">Cancelar</a>
-                                <button type="submit" class="btn btn-primary">Guardar Contratista</button>
+                                <a href="contratistas" class="btn btn-secondary px-4 fw-bold me-2" style="border-radius: 8px;"><i
+                                        class="bi bi-x-circle me-2"></i> Cerrar</a>
+                                <c:if test="${not readonly}">
+                                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;"><i
+                                            class="bi bi-save me-2"></i> Guardar</button>
+                                </c:if>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
 
+            <!-- Footer -->
+            <jsp:include page="inc/footer.jsp" />
+
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                $(document).ready(function () {
+                    $('input[name="fecha_nacimiento"]').on('change', function () {
+                        var fechaNac = new Date($(this).val());
+                        var hoy = new Date();
+                        if (!isNaN(fechaNac.getTime())) {
+                            var edad = hoy.getFullYear() - fechaNac.getFullYear();
+                            var m = hoy.getMonth() - fechaNac.getMonth();
+                            if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+                                edad--;
+                            }
+                            $('input[name="edad"]').val(edad);
+                        }
+                    });
+                });
+            </script>
         </body>
 
         </html>
