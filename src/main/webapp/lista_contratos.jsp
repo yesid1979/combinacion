@@ -121,8 +121,11 @@
                             "responsive": true,
                             "autoWidth": false,
                             "ajax": {
-                                "url": "contratos?action=data",
-                                "type": "POST"
+                                "url": "contratos",
+                                "type": "POST",
+                                "data": function(d) {
+                                    d.action = "data";
+                                }
                             },
                             "columns": [
                                 { "data": 0 }, 

@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession;
 /**
  * Servlet para el proceso de inicio de sesión.
  */
-@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
+// @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();

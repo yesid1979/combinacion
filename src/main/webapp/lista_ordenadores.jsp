@@ -83,8 +83,11 @@
                         "serverSide": false,
                         "responsive": true,
                         "ajax": {
-                            "url": "${pageContext.request.contextPath}/ordenadores?action=data",
-                            "type": "POST"
+                            "url": "${pageContext.request.contextPath}/ordenadores",
+                            "type": "POST",
+                            "data": function(d) {
+                                d.action = "data";
+                            }
                         },
                         "columns": [
                             { 

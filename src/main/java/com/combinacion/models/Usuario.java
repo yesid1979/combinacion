@@ -101,41 +101,37 @@ public class Usuario implements Serializable {
      * 3. Si el usuario NO tiene permisos manuales, se usa el permiso por defecto de su Rol.
      */
     public boolean tienePermiso(String codigoPermiso) {
-        // --- 1. LLAVE MAESTRA: Administrador ---
-        if (this.rolId == 1) return true;
+        if (codigoPermiso == null) return false;
+        
+        // --- 1. LLAVE MAESTRA: Administrador (Dinámico) ---
+        if (this.rolId == 1 || esAdministrador()) return true;
 
-        // --- 2. MODO MANUAL: Si tiene excepciones, la lista es la UNICA fuente de verdad ---
-        if (permisosEspeciales != null && !permisosEspeciales.isEmpty()) {
-            String target = codigoPermiso.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
-            
-            // Búsqueda directa
+        String target = codigoPermiso.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
+ 
+        // --- 2. VERIFICAR PERMISOS ESPECIALES (SUMATORIO) ---
+        if (permisosEspeciales != null) {
             for (Permiso p : permisosEspeciales) {
                 String cod = p.getCodigo();
                 if (cod == null) continue;
                 String normalized = cod.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
+                
                 if (normalized.equals(target)) return true;
                 
-                // --- MEJORA: Búsqueda por Prefijo de Módulo (Fuzzy Match) ---
-                // Si buscamos un 'VER' y el permiso especial coincide con el módulo base
+                // Fuzzy match para 'VER'
                 if (target.endsWith("_VER")) {
                     String moduloBase = target.substring(0, target.lastIndexOf("_"));
                     if (normalized.startsWith(moduloBase)) return true;
                 }
-                // Caso especial para CARGA_MASIVA
-                if (target.contains("CARGA") && normalized.contains("CARGA")) return true;
             }
-            
-            // Si tiene otros permisos especiales pero ESTE no se encontró ni por asomo, se deniega
-            return false;
         }
-
-        // --- 3. MODO DEFAULT: Sin excepciones, manda el Rol ---
+ 
+        // --- 3. VERIFICAR PERMISOS POR ROL (BASE) ---
         if (rol != null) {
-            boolean tieneRol = rol.tienePermiso(codigoPermiso);
-            if (!tieneRol && codigoPermiso.contains("_ACTUALIZAR")) {
-                tieneRol = rol.tienePermiso(codigoPermiso.replace("_ACTUALIZAR", "_EDITAR"));
+            boolean tieneRol = rol.tienePermiso(target);
+            if (!tieneRol && target.contains("_EDITAR")) {
+                tieneRol = rol.tienePermiso(target.replace("_EDITAR", "_ACTUALIZAR"));
             }
-            return tieneRol;
+            if (tieneRol) return true;
         }
 
         return false;
@@ -145,7 +141,8 @@ public class Usuario implements Serializable {
      * Verifica si el usuario tiene el rol Administrador.
      */
     public boolean esAdministrador() {
-        return rol != null && "Administrador".equals(rol.getNombre());
+        return rolId == 1 || (rol != null && rol.getNombre() != null && 
+               rol.getNombre().toUpperCase().contains("ADMINISTRADOR"));
     }
 
     @Override

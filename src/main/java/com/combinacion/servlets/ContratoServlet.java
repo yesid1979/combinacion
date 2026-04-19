@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
  * Responsabilidad exclusiva: leer parámetros HTTP, delegar al Service,
  * y dirigir la respuesta a la Vista correcta.
  */
-@WebServlet(name = "ContratoServlet", urlPatterns = { "/contratos" })
+// @WebServlet(name = "ContratoServlet", urlPatterns = { "/contratos" })
 public class ContratoServlet extends HttpServlet {
 
     private final ContratoService contratoService = new ContratoService();

@@ -98,8 +98,11 @@
                         "serverSide": false,
                         "responsive": true,
                         "ajax": {
-                            "url": "${pageContext.request.contextPath}/supervisores?action=data",
-                            "type": "GET"
+                            "url": "${pageContext.request.contextPath}/supervisores",
+                            "type": "POST",
+                            "data": function(d) {
+                                d.action = "data";
+                            }
                         },
                         "columns": [
                             { "data": "cedula" },

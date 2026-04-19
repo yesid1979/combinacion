@@ -81,8 +81,11 @@
                         "serverSide": false,
                         "responsive": true,
                         "ajax": {
-                            "url": "presupuesto?action=data",
-                            "type": "GET"
+                            "url": "${pageContext.request.contextPath}/presupuesto",
+                            "type": "POST",
+                            "data": function(d) {
+                                d.action = "data";
+                            }
                         },
                         "columns": [
                             { "data": 0 }, // No. CDP

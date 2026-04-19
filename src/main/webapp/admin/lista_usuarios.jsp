@@ -51,36 +51,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <c:forEach var="u" items="${listUsuarios}">
-                            <tr>
-                                <td><span class="text-secondary fw-bold">${u.cedula}</span></td>
-                                <td><span class="text-primary fw-bold">${u.username}</span></td>
-                                <td>${u.nombreCompleto}</td>
-                                <td>${u.correo}</td>
-                                <td><span class="badge bg-info text-dark bg-opacity-25">${u.vinculacion}</span></td>
-                                <td>
-                                    <span class="badge ${u.activo ? 'badge-activo' : 'badge-inactivo'}">
-                                        ${u.activo ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <a href="${pageContext.request.contextPath}/admin/usuarios?action=permissions&id=${u.id}"
-                                           class="btn btn-sm btn-outline-warning text-dark border-warning" title="Gestionar Permisos Dinámicos" style="background-color: #ffc10722;">
-                                            <i class="bi bi-shield-lock-fill"></i>
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/admin/usuarios?action=edit&id=${u.id}"
-                                           class="btn btn-sm btn-outline-primary" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <button type="button" onclick="confirmarEliminar(${u.id})" 
-                                                class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </c:forEach>
+                        <!-- Datos cargados por AJAX -->
                     </tbody>
                 </table>
             </div>
@@ -100,13 +71,57 @@
     <script>
         $(document).ready(function() {
             $('#tablaUsuarios').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
-                },
-                "order": [[0, "asc"]],
-                "serverSide": false,
+                "processing": true,
+                "serverSide": true,
+                "responsive": true,
                 "autoWidth": false,
-                "columnDefs": [{ "orderable": false, "targets": 6 }]
+                "ajax": {
+                    "url": "${pageContext.request.contextPath}/admin/usuarios",
+                    "type": "POST",
+                    "data": function(d) {
+                        d.action = "data";
+                    }
+                },
+                "columns": [
+                    { "data": 0 }, // Cedula
+                    { 
+                        "data": 1,
+                        "render": function(data, type, row) {
+                            return '<span class="text-primary fw-bold">' + data + '</span>';
+                        }
+                    },
+                    { "data": 2 }, // Nombre
+                    { "data": 3 }, // Correo
+                    { 
+                        "data": 4, // Vinculacion
+                        "render": function(data, type, row) {
+                            return '<span class="badge bg-info text-dark bg-opacity-25">' + data + '</span>';
+                        }
+                    },
+                    { 
+                        "data": 5, // Activo
+                        "render": function(data, type, row) {
+                            let isActive = (data === "true" || data === true);
+                            return '<span class="badge ' + (isActive ? 'badge-activo' : 'badge-inactivo') + '">' + 
+                                   (isActive ? 'Activo' : 'Inactivo') + '</span>';
+                        }
+                    },
+                    {
+                        "data": 6, // ID para acciones
+                        "className": "text-center",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            let btnPerms = '<a href="${pageContext.request.contextPath}/admin/usuarios?action=permissions&id=' + data + '" class="btn btn-sm btn-outline-warning text-dark border-warning" title="Permisos" style="background-color: #ffc10722;"><i class="bi bi-shield-lock-fill"></i></a> ';
+                            let btnEdit = '<a href="${pageContext.request.contextPath}/admin/usuarios?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a> ';
+                            let btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                            
+                            return '<div class="d-flex justify-content-center gap-2">' + btnPerms + btnEdit + btnDel + '</div>';
+                        }
+                    }
+                ],
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                }
             });
 
             // Check URL params for status

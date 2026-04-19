@@ -62,6 +62,9 @@ public class PresupuestoServlet extends HttpServlet {
             case "update":
                 actualizar(request, response);
                 break;
+            case "data":
+                doGet(request, response);
+                break;
             default:
                 response.sendRedirect("presupuesto");
                 break;

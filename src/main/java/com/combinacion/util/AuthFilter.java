@@ -5,23 +5,15 @@ import com.combinacion.services.AuthService;
 import java.io.IOException;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 
-/**
- * Filtro de seguridad que protege todas las rutas de la aplicación.
- * Verifica autenticación y autorización en cada request.
- */
-@WebFilter(filterName = "AuthFilter", urlPatterns = {"/*"})
+// @WebFilter(filterName = "AuthFilter", urlPatterns = {"/*"})
 public class AuthFilter implements Filter {
 
     private final AuthService authService = new AuthService();
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // Nada que inicializar
-    }
+    public void init(FilterConfig filterConfig) throws ServletException {}
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
@@ -30,77 +22,80 @@ public class AuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        String uri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        String path = uri.substring(contextPath.length());
+        String servletPath = request.getServletPath();
+        String action = request.getParameter("action");
+        String method = request.getMethod();
 
-        // Rutas públicas que no requieren autenticación
+        String path = servletPath;
+        if (request.getPathInfo() != null) path += request.getPathInfo();
+        if (path == null) path = "/";
+        path = path.replace("//", "/");
+
+        System.out.println("[FILTER] Ruta solicitada: " + path + ", Acción: " + action + ", Método: " + method);
+
+        // 1. RECURSOS PÚBLICOS
         if (isPublicResource(path)) {
+            System.out.println("[FILTER] Recurso público. Acceso permitido.");
             chain.doFilter(request, response);
             return;
         }
 
-        // Verificar sesión activa
+        // 2. SESIÓN
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("usuario") == null) {
-            // Verificar si existía una cookie de sesión previa (JSESSIONID)
-            // Si hay cookie pero no hay sesión, significa que la sesión expiró
-            // Si no hay cookie, es una visita nueva (primera vez o después de logout)
-            boolean teniaSessionPrevia = false;
-            javax.servlet.http.Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (javax.servlet.http.Cookie cookie : cookies) {
-                    if ("JSESSIONID".equals(cookie.getName())) {
-                        teniaSessionPrevia = true;
-                        break;
-                    }
-                }
-            }
+        Usuario usuario = (session != null) ? (Usuario) session.getAttribute("usuario") : null;
 
-            if (teniaSessionPrevia) {
-                response.sendRedirect(contextPath + "/login?error=session_expired");
+        if (usuario == null) {
+            System.out.println("[FILTER] Usuario no autenticado. Redirigiendo a login.");
+            String requestedWith = request.getHeader("X-Requested-With");
+            if ("XMLHttpRequest".equals(requestedWith)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Sesión expirada");
             } else {
-                response.sendRedirect(contextPath + "/login");
+                response.sendRedirect(request.getContextPath() + "/login.jsp");
             }
             return;
         }
 
-        // Verificar autorización
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (!authService.puedeAcceder(usuario, path)) {
-            response.sendRedirect(contextPath + "/index.jsp?error=sin_permiso");
+        // 3. ADMIN
+        if (usuario.getRolId() == 1 || usuario.esAdministrador()) {
+            System.out.println("[FILTER] Usuario es administrador. Acceso total permitido.");
+            request.setAttribute("usuarioLogueado", usuario);
+            chain.doFilter(request, response);
             return;
         }
 
-        // Hacer el usuario disponible como atributo del request
-        request.setAttribute("usuarioLogueado", usuario);
+        // 4. VALIDACIÓN DE SEGURIDAD
+        boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
 
+        if (!autorizado) {
+            System.err.println("[FILTER] 403 FORBIDDEN: Usuario '" + usuario.getUsername() + "' denegado en '" + path + "' (Accion: " + action + ")");
+            String requestedWith = request.getHeader("X-Requested-With");
+            if ("XMLHttpRequest".equals(requestedWith)) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado: " + path);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/index.jsp?error=sin_permiso");
+            }
+            return;
+        }
+
+        request.setAttribute("usuarioLogueado", usuario);
         chain.doFilter(request, response);
     }
 
-    @Override
-    public void destroy() {
-        // Nada que limpiar
+    private boolean isPublicResource(String path) {
+        String p = path.toLowerCase();
+        return p.equals("/login")
+                || p.equals("/login.jsp")
+                || p.endsWith("login.jsp")
+                || p.contains("/assets/")
+                || p.contains("/css/")
+                || p.contains("/js/")
+                || p.contains("/images/")
+                || p.contains("/img/")
+                || p.endsWith("/favicon.ico")
+                || p.equals("/loginservlet")
+                || p.equals("/logout");
     }
 
-    /**
-     * Determina si una ruta es pública (no requiere autenticación).
-     */
-    private boolean isPublicResource(String path) {
-        return path.equals("/login")
-            || path.equals("/login.jsp")
-            || path.equals("/LoginServlet")
-            || path.startsWith("/assets/")
-            || path.equals("/favicon.ico")
-            || path.endsWith(".css")
-            || path.endsWith(".js")
-            || path.endsWith(".png")
-            || path.endsWith(".jpg")
-            || path.endsWith(".jpeg")
-            || path.endsWith(".gif")
-            || path.endsWith(".ico")
-            || path.endsWith(".woff")
-            || path.endsWith(".woff2")
-            || path.endsWith(".ttf");
-    }
+    @Override
+    public void destroy() {}
 }

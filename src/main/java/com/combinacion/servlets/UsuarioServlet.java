@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Controlador HTTP para la gestión de Usuarios.
  */
-@WebServlet(name = "UsuarioServlet", urlPatterns = {"/admin/usuarios"})
+// @WebServlet(name = "UsuarioServlet", urlPatterns = {"/admin/usuarios"})
 public class UsuarioServlet extends HttpServlet {
 
     private final UsuarioService usuarioService = new UsuarioService();
@@ -46,6 +46,9 @@ public class UsuarioServlet extends HttpServlet {
             case "permissions":
                 mostrarPermisosUsuario(request, response);
                 break;
+            case "data":
+                responderDatosTabla(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -66,6 +69,8 @@ public class UsuarioServlet extends HttpServlet {
             cambiarPassword(request, response);
         } else if ("updatePermissions".equals(action)) {
             guardarPermisosUsuario(request, response);
+        } else if ("data".equals(action)) {
+            doGet(request, response);
         } else {
             listar(request, response);
         }
@@ -276,6 +281,31 @@ public class UsuarioServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"exists\": " + existe + "}");
+    }
+
+    private void responderDatosTabla(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String draw = request.getParameter("draw");
+        int start = parseIntSafe(request.getParameter("start"), 0);
+        int length = parseIntSafe(request.getParameter("length"), 10);
+        String search = request.getParameter("search[value]");
+        String sortCol = request.getParameter("order[0][column]");
+        String orderDir = request.getParameter("order[0][dir]");
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+            usuarioService.generarJsonDataTables(
+                parseIntSafe(draw, 1), start, length, search, sortCol, orderDir)
+        );
+    }
+
+    private int parseIntSafe(String val, int defaultVal) {
+        try {
+            return Integer.parseInt(val);
+        } catch (Exception e) {
+            return defaultVal;
+        }
     }
 
     private java.sql.Date parseDate(String dateStr) {

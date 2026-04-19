@@ -281,6 +281,66 @@ public class UsuarioDAO {
         }
     }
 
+    public int countFiltered(String searchValue) {
+        String sql = "SELECT COUNT(*) FROM usuarios u WHERE u.username LIKE ? OR u.nombre_completo LIKE ? OR u.cedula LIKE ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + (searchValue != null ? searchValue : "") + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Usuario> findWithPagination(int start, int length, String searchValue, String sortCol, String orderDir) {
+        List<Usuario> lista = new ArrayList<>();
+        
+        // Mapeo básico de columnas para ordenamiento (basado en el índice de DataTable de Usuarios)
+        String orderBy = "u.id";
+        if ("0".equals(sortCol)) orderBy = "u.cedula";
+        else if ("1".equals(sortCol)) orderBy = "u.username";
+        else if ("2".equals(sortCol)) orderBy = "u.nombre_completo";
+        else if ("3".equals(sortCol)) orderBy = "u.correo";
+        else if ("4".equals(sortCol)) orderBy = "u.vinculacion";
+        else if ("5".equals(sortCol)) orderBy = "u.activo";
+
+        String dir = "ASC".equalsIgnoreCase(orderDir) ? "ASC" : "DESC";
+
+        String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "r.nombre as rol_nombre "
+                   + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
+                   + "WHERE u.username LIKE ? OR u.nombre_completo LIKE ? OR u.cedula LIKE ? "
+                   + "ORDER BY " + orderBy + " " + dir + " "
+                   + "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + (searchValue != null ? searchValue : "") + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            ps.setInt(4, length);
+            ps.setInt(5, start);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapear(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
     private Usuario mapear(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setId(rs.getInt("id"));

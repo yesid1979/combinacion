@@ -51,29 +51,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach var="rol" items="${listRoles}">
-                                    <tr>
-                                        <td><span class="text-secondary fw-bold">${rol.id}</span></td>
-                                        <td>
-                                            <div class="rol-name">${rol.nombre}</div>
-                                        </td>
-                                        <td class="text-muted">
-                                            ${rol.descripcion}
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <a href="${pageContext.request.contextPath}/admin/roles?action=edit&id=${rol.id}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Editar">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
-                                                <button type="button" onclick="confirmarEliminar(${rol.id})" 
-                                                        class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
+                                <!-- Datos cargados por AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -93,12 +71,41 @@
             <script data-context="${pageContext.request.contextPath}" id="scriptConfig">
                 $(document).ready(function() {
                     $('#tablaRoles').DataTable({
-                        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' },
                         "processing": true,
-                        "serverSide": false,
+                        "serverSide": true,
                         "responsive": true,
                         "autoWidth": false,
-                        "columnDefs": [{ "orderable": false, "targets": 3 }]
+                        "ajax": {
+                            "url": "${pageContext.request.contextPath}/admin/roles",
+                            "type": "POST",
+                            "data": function(d) {
+                                d.action = "data";
+                            }
+                        },
+                        "columns": [
+                            { "data": 0 }, // ID
+                            { 
+                                "data": 1,
+                                "render": function(data, type, row) {
+                                    return '<span class="text-primary fw-bold">' + data + '</span>';
+                                }
+                            },
+                            { "data": 2 }, // Descripcion
+                            {
+                                "data": 3, // ID para acciones
+                                "className": "text-center",
+                                "orderable": false,
+                                "render": function (data, type, row) {
+                                    let btnEdit = '<a href="${pageContext.request.contextPath}/admin/roles?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a> ';
+                                    let btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                                    
+                                    return '<div class="d-flex justify-content-center gap-2">' + btnEdit + btnDel + '</div>';
+                                }
+                            }
+                        ],
+                        "language": {
+                            "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                        }
                     });
                 });
 

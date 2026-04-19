@@ -91,9 +91,12 @@
                         "autoWidth": false,
                         "order": [[1, 'asc']], // Order by Contract No (Col 1) asc by default
                         "ajax": {
-                            "url": "${pageContext.request.contextPath}/contratistas?action=data&source=combinacion&t=" + new Date().getTime(),
+                            "url": "${pageContext.request.contextPath}/contratistas",
                             "type": "POST",
                             "data": function (d) {
+                                d.action = "data";
+                                d.source = "combinacion";
+                                d.t = new Date().getTime();
                                 d.filterAdicion = $('#btnFilterAdicion').hasClass('active');
                             },
                             "error": function (xhr, error, thrown) {

@@ -11,7 +11,7 @@ import javax.servlet.http.HttpSession;
 /**
  * Servlet para cerrar la sesión del usuario.
  */
-@WebServlet(name = "LogoutServlet", urlPatterns = {"/logout"})
+// @WebServlet(name = "LogoutServlet", urlPatterns = {"/logout"})
 public class LogoutServlet extends HttpServlet {
 
     @Override

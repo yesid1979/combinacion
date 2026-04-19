@@ -3,6 +3,9 @@ package com.combinacion.services;
 import com.combinacion.dao.UsuarioDAO;
 import com.combinacion.models.Usuario;
 import com.combinacion.util.PasswordUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -11,6 +14,7 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final Gson gson = new Gson();
 
     /**
      * Lista todos los usuarios.
@@ -201,5 +205,38 @@ public class UsuarioService {
     public boolean existeUsername(String username, int excludeId) {
         if (username == null || username.trim().isEmpty()) return false;
         return usuarioDAO.existeUsername(username.trim(), excludeId);
+    }
+
+    /**
+     * Genera el JSON de respuesta para DataTables de Usuarios.
+     */
+    public String generarJsonDataTables(int draw, int start, int length,
+            String searchValue, String sortCol, String orderDir) {
+
+        int total    = usuarioDAO.contarTotal();
+        int filtered = usuarioDAO.countFiltered(searchValue);
+        List<Usuario> list = usuarioDAO.findWithPagination(start, length, searchValue, sortCol, orderDir);
+
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("draw", draw);
+        jsonResponse.addProperty("recordsTotal", total);
+        jsonResponse.addProperty("recordsFiltered", filtered);
+ 
+        JsonArray dataArray = new JsonArray();
+
+        for (Usuario u : list) {
+            JsonArray rowArr = new JsonArray();
+            rowArr.add(u.getCedula() != null ? u.getCedula().trim() : "");
+            rowArr.add(u.getUsername() != null ? u.getUsername().trim() : "");
+            rowArr.add(u.getNombreCompleto() != null ? u.getNombreCompleto().trim() : "");
+            rowArr.add(u.getCorreo() != null ? u.getCorreo().trim() : "");
+            rowArr.add(u.getVinculacion() != null ? u.getVinculacion().trim() : "");
+            rowArr.add(u.isActivo());
+            rowArr.add(String.valueOf(u.getId()));
+            dataArray.add(rowArr);
+        }
+ 
+        jsonResponse.add("data", dataArray);
+        return gson.toJson(jsonResponse);
     }
 }
