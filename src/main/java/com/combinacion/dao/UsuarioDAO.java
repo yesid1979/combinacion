@@ -134,7 +134,7 @@ public class UsuarioDAO {
     public boolean actualizar(Usuario usuario) {
         String sql = "UPDATE usuarios SET username = ?, nombre_completo = ?, correo = ?, "
                    + "cedula = ?, celular = ?, sexo = ?, vinculacion = ?, "
-                   + "fecha_inicio_contrato = ?, fecha_fin_contrato = ?, activo = ?, rol_id = ? "
+                   + "fecha_inicio_contrato = ?, fecha_fin_contrato = ?, activo = ?, rol_id = ?, foto_url = ? "
                    + "WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -149,12 +149,41 @@ public class UsuarioDAO {
             ps.setDate(9, usuario.getFechaFinContrato());
             ps.setBoolean(10, usuario.isActivo());
             ps.setInt(11, usuario.getRolId());
-            ps.setInt(12, usuario.getId());
+            ps.setString(12, usuario.getFotoUrl());
+            ps.setInt(13, usuario.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean actualizarPerfil(int id, String nombre, String correo, String celular) {
+        String sql = "UPDATE usuarios SET nombre_completo = ?, correo = ?, celular = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            ps.setString(2, correo);
+            ps.setString(3, celular);
+            ps.setInt(4, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean actualizarFoto(int id, String fotoUrl) {
+        String sql = "UPDATE usuarios SET foto_url = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fotoUrl);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean actualizarPassword(int id, String passwordHash, String salt) {
@@ -359,6 +388,12 @@ public class UsuarioDAO {
         u.setUltimoAcceso(rs.getTimestamp("ultimo_acceso"));
         u.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
         u.setRolId(rs.getInt("rol_id"));
+        
+        try {
+            u.setFotoUrl(rs.getString("foto_url"));
+        } catch (SQLException e) {
+            // La columna no existe todavía, lo ignoramos
+        }
 
         try {
             String rolNombre = rs.getString("rol_nombre");

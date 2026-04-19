@@ -177,6 +177,20 @@ public class UsuarioService {
         return usuarioDAO.eliminar(id);
     }
 
+    public String actualizarPerfil(int id, String nombre, String correo, String celular) {
+        if (nombre == null || nombre.trim().isEmpty()) return "El nombre es obligatorio.";
+        if (correo == null || correo.trim().isEmpty()) return "El correo es obligatorio.";
+        
+        if (usuarioDAO.actualizarPerfil(id, nombre.trim(), correo.trim(), celular != null ? celular.trim() : "")) {
+            return null;
+        }
+        return "Error al actualizar los datos en la base de datos.";
+    }
+
+    public boolean actualizarFoto(int id, String fotoUrl) {
+        return usuarioDAO.actualizarFoto(id, fotoUrl);
+    }
+
     /**
      * Actualiza los permisos especiales (dinámicos) de un usuario.
      */

@@ -27,6 +27,7 @@ public class Usuario implements Serializable {
     private java.util.List<Permiso> permisosEspeciales = new java.util.ArrayList<>();
     private int rolId;
     private Rol rol;
+    private String fotoUrl;
 
     public Usuario() {
         this.activo = true;
@@ -85,6 +86,9 @@ public class Usuario implements Serializable {
 
     public Rol getRol() { return rol; }
     public void setRol(Rol rol) { this.rol = rol; }
+
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
 
     /**
      * Comprueba si el usuario tiene un permiso específico.

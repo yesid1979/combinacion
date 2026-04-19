@@ -88,13 +88,26 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center px-3" 
                                href="#" id="userDrop" role="button" data-bs-toggle="dropdown" style="min-height: 50px;">
-                                <i class="bi bi-person-circle fs-4 me-2 text-primary"></i>
+                                <c:choose>
+                                    <c:when test="${not empty sessionScope.usuario.fotoUrl}">
+                                        <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" 
+                                             alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; object-fit: cover; object-position: 50% 15%; border: 2px solid #fff; display: block;">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <img src="https://ui-avatars.com/api/?name=${sessionScope.nombreUsuario}&background=0D8ABC&color=fff&size=38" 
+                                             alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; border: 2px solid #fff; display: block;">
+                                    </c:otherwise>
+                                </c:choose>
                                 <div class="d-flex flex-column justify-content-center me-1" style="height: 100%;">
                                     <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;">${sessionScope.nombreUsuario}</div>
                                     <div class="text-muted" style="font-size: 0.7rem; line-height: 1;">${sessionScope.rolNombre}</div>
                                 </div>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2 p-2">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/usuarios?action=profile">
+                                    <i class="bi bi-person-vcard me-2 text-primary"></i>Mi Perfil
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger py-2" href="${pageContext.request.contextPath}/logout">
                                     <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesi&oacute;n
                                 </a></li>

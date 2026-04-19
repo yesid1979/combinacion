@@ -23,7 +23,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 flex-grow-1">
+            <div class="container mt-4 mb-5 flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex gap-2">

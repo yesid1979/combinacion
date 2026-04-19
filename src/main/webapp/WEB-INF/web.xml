@@ -76,6 +76,7 @@
     <servlet-mapping>
         <servlet-name>UsuarioServlet</servlet-name>
         <url-pattern>/admin/usuarios</url-pattern>
+        <url-pattern>/usuarios</url-pattern>
     </servlet-mapping>
 
     <!-- Roles -->
