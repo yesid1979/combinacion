@@ -63,6 +63,14 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // 3.5 EXCEPCIÓN: Todos los usuarios autenticados pueden ver su propio perfil
+        if (path.equals("/perfil.jsp") || (path.equals("/usuarios") && !path.contains("/admin/"))) {
+            System.out.println("[FILTER] Acceso a Mi Perfil permitido para todos los autenticados.");
+            request.setAttribute("usuarioLogueado", usuario);
+            chain.doFilter(request, response);
+            return;
+        }
+
         // 4. VALIDACIÓN DE SEGURIDAD
         boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
 
