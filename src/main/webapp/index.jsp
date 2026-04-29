@@ -18,11 +18,11 @@
         <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     </head>
 
-        <body class="bg-light d-flex flex-column min-vh-100">
+        <body class="bg-white d-flex flex-column min-vh-100">
 
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4 mb-5 flex-grow-1">
+            <div class="container-fluid mt-4 mb-5 flex-grow-1 px-4">
 
 
                 <h2 class="mb-4 text-center fw-bold text-primary">Panel de Operaciones</h2>
@@ -30,8 +30,8 @@
 
                     <!-- Carga Masiva (RESTAURADA) -->
                     <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_EJECUTAR')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='carga_masiva.jsp'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='carga_masiva.jsp'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-secondary bg-opacity-10 text-secondary mx-auto">
                                     <i class="bi bi-cloud-upload fs-2"></i>
@@ -46,8 +46,8 @@
 
                     <!-- Contratos -->
                     <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='contratos'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='contratos'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
                                     <i class="bi bi-file-earmark-text fs-2"></i>
@@ -61,8 +61,8 @@
 
                     <!-- Contratistas -->
                     <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='contratistas'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='contratistas'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-success bg-opacity-10 text-success mx-auto">
                                     <i class="bi bi-people fs-2"></i>
@@ -76,8 +76,8 @@
 
                     <!-- Supervisores -->
                     <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='supervisores'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='supervisores'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto">
                                     <i class="bi bi-person-check fs-2"></i>
@@ -91,8 +91,8 @@
 
                     <!-- Ordenadores -->
                     <c:if test="${sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='ordenadores'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='ordenadores'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-danger bg-opacity-10 text-danger mx-auto">
                                     <i class="bi bi-wallet2 fs-2"></i>
@@ -106,8 +106,8 @@
 
                     <!-- Presupuesto -->
                     <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='presupuesto'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='presupuesto'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-info bg-opacity-10 text-info mx-auto">
                                     <i class="bi bi-graph-up fs-2"></i>
@@ -121,8 +121,8 @@
 
                     <!-- Combinación -->
                     <c:if test="${sessionScope.usuario.tienePermiso('COMBINACION_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='combinacion'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='combinacion'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-purple bg-opacity-10 text-purple mx-auto"
                                     style="background-color: rgba(139, 92, 246, 0.1) !important; color: #8b5cf6 !important;">
@@ -137,8 +137,8 @@
 
                     <!-- Administración -->
                     <c:if test="${sessionScope.usuario.tienePermiso('ADMINISTRACION_VER')}">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='admin/usuarios'">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border card-menu" onclick="location.href='admin/usuarios'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-dark bg-opacity-10 text-dark mx-auto">
                                     <i class="bi bi-shield-lock fs-2"></i>

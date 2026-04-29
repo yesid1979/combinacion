@@ -250,7 +250,10 @@ public class ContratoDAO {
 
     public Contrato obtenerPorNumero(String numero) {
         if (numero == null) return null;
-        String sql = "SELECT * FROM contratos WHERE TRIM(numero_contrato) ILIKE TRIM(?)";
+        String sql = "SELECT c.*, ct.nombre as contratista_nombre " +
+                "FROM contratos c " +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "WHERE TRIM(c.numero_contrato) ILIKE TRIM(?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, numero.trim());
@@ -311,6 +314,10 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    
+                    // Set the display field
+                    c.setContratistaNombre(rs.getString("contratista_nombre"));
+                    
                     return c;
                 }
             }
@@ -415,7 +422,10 @@ public class ContratoDAO {
     }
 
     public Contrato obtenerPorContratistaId(int contratistaId) {
-        String sql = "SELECT * FROM contratos WHERE contratista_id = ? ORDER BY id DESC LIMIT 1";
+        String sql = "SELECT c.*, ct.nombre as contratista_nombre " +
+                "FROM contratos c " +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "WHERE c.contratista_id = ? ORDER BY c.id DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, contratistaId);
@@ -476,6 +486,10 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    
+                    // Set the display field
+                    c.setContratistaNombre(rs.getString("contratista_nombre"));
+                    
                     return c;
                 }
             }
@@ -486,7 +500,10 @@ public class ContratoDAO {
     }
 
     public Contrato obtenerPorId(int id) {
-        String sql = "SELECT * FROM contratos WHERE id = ?";
+        String sql = "SELECT c.*, ct.nombre as contratista_nombre " +
+                "FROM contratos c " +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "WHERE c.id = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -547,6 +564,10 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    
+                    // Set the display field
+                    c.setContratistaNombre(rs.getString("contratista_nombre"));
+                    
                     return c;
                 }
             }

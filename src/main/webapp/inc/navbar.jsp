@@ -2,19 +2,19 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <!-- Navbar Principal Compacto y Equilibrado -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+    <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom py-1">
         <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center me-4" href="${pageContext.request.contextPath}/index.jsp">
                 <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png"
-                    alt="Logo" style="height: 50px; width: auto;">
+                    alt="Logo" style="height: 40px; width: auto;">
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav gap-1">
+                <ul class="navbar-nav gap-xl-1">
                     <li class="nav-item">
                         <a class="nav-link fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -31,9 +31,10 @@
                             <i class="bi bi-file-earmark-text me-2"></i>Contratos
                         </a>
                     </li>
+
                     </c:if>
                     
-                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER') || sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -52,6 +53,9 @@
                             </c:if>
                             <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/presupuesto"><i class="bi bi-graph-up me-2"></i>Presupuesto</a></li>
+                            </c:if>
+                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/informes"><i class="bi bi-wallet2 me-2"></i>Cuentas</a></li>
                             </c:if>
                         </ul>
                     </li>

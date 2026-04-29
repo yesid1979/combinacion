@@ -1,11 +1,10 @@
 <style>
     .footer-simple {
         margin-top: auto; /* Empuja el footer al final en layouts flex */
-        padding: 12px 25px;
+        padding: 15px 25px;
         font-family: 'Inter', sans-serif;
-        color: #6c757d;
-        background-color: #ffffff;
-        box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+        color: #adb5bd;
+        border-top: 1px solid #f1f1f1;
         z-index: 1000;
         position: relative;
         display: flex;
@@ -19,6 +18,10 @@
         right: 25px; 
         font-weight: 600; 
         color: #adb5bd; 
+    }
+    @media (max-width: 768px) {
+        .footer-simple { flex-direction: column; text-align: center; gap: 5px; padding: 15px; }
+        .footer-version { position: static; }
     }
 </style>
 
