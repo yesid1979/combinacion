@@ -14,6 +14,8 @@ public class InformeSupervisionService {
 
     private final InformeSupervisionDAO informeDAO = new InformeSupervisionDAO();
     private final ContratoDAO contratoDAO = new ContratoDAO();
+    private final com.combinacion.dao.ContratistaDAO contratistaDAO = new com.combinacion.dao.ContratistaDAO();
+    private final com.combinacion.dao.SupervisorDAO supervisorDAO = new com.combinacion.dao.SupervisorDAO();
 
     public List<InformeSupervision> listarPorContrato(int contratoId) {
         return informeDAO.listarPorContrato(contratoId);
@@ -104,6 +106,18 @@ public class InformeSupervisionService {
     }
 
     public Contrato obtenerContrato(int id) {
-        return contratoDAO.obtenerPorId(id);
+        Contrato c = contratoDAO.obtenerPorId(id);
+        if (c != null) {
+            if (c.getContratistaId() > 0) {
+                c.setContratista(contratistaDAO.obtenerPorId(c.getContratistaId()));
+                if (c.getContratista() != null) {
+                    c.setContratistaNombre(c.getContratista().getNombre());
+                }
+            }
+            if (c.getSupervisorId() > 0) {
+                c.setSupervisor(supervisorDAO.obtenerPorId(c.getSupervisorId()));
+            }
+        }
+        return c;
     }
 }

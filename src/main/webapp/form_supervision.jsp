@@ -86,12 +86,7 @@
                         </div>
                     </c:if>
 
-                    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
-                        <i class="bi bi-info-circle-fill me-3 fs-4"></i>
-                        <div>
-                            <strong>Contrato:</strong> ${contrato.numeroContrato} - ${contrato.contratistaNombre}
-                        </div>
-                    </div>
+
 
                     <!-- Tabs -->
                     <ul class="nav nav-tabs mb-4" id="informeTabs" role="tablist">
@@ -117,6 +112,14 @@
                         <div class="tab-pane fade show active" id="general" role="tabpanel">
                             <div class="section-title">Aspectos Generales</div>
                             <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">No. de Contrato</label>
+                                    <input type="text" class="form-control bg-light text-muted" value="${contrato.numeroContrato}" readonly>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Objeto del Contrato</label>
+                                    <textarea class="form-control bg-light text-muted" rows="2" readonly>${contrato.objeto}</textarea>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Periodo del Informe (Mes y Año)</label>
                                     <input type="text" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" placeholder="Ej: Enero 2026" required ${readonly ? 'readonly' : ''}>
