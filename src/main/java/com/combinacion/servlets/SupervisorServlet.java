@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
  * Responsabilidad exclusiva: leer parámetros HTTP, delegar al Service,
  * y dirigir la respuesta a la Vista correcta.
  */
-@WebServlet("/supervisores")
+// @WebServlet("/supervisores")
 public class SupervisorServlet extends HttpServlet {
 
     private SupervisorService supervisorService;
@@ -60,10 +60,18 @@ public class SupervisorServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if ("update".equals(action)) {
-            actualizar(request, response);
-        } else {
-            insertar(request, response);
+        if (action == null) action = "insert";
+
+        switch (action) {
+            case "data":
+                responderDatosTabla(request, response);
+                break;
+            case "update":
+                actualizar(request, response);
+                break;
+            default:
+                insertar(request, response);
+                break;
         }
     }
 

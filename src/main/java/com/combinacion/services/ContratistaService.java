@@ -2,8 +2,10 @@ package com.combinacion.services;
 
 import com.combinacion.dao.ContratistaDAO;
 import com.combinacion.models.Contratista;
-import com.combinacion.util.JsonUtils;
 import com.combinacion.util.ParseUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
@@ -13,12 +15,17 @@ import java.util.List;
 public class ContratistaService {
 
     private final ContratistaDAO contratistaDAO = new ContratistaDAO();
+    private final Gson gson = new Gson();
 
     /**
      * Inserta un nuevo contratista. Valida que la cédula no esté duplicada.
      * @return null si fue exitoso, o un mensaje de error si falló.
      */
     public String insertar(Contratista c) {
+        if (c == null) {
+            return "El contratista no puede ser nulo.";
+        }
+
         Contratista existing = contratistaDAO.obtenerPorCedula(c.getCedula());
         if (existing != null) {
             return "El contratista con cédula " + c.getCedula() + " ya existe (" + existing.getNombre() + ").";
@@ -34,6 +41,10 @@ public class ContratistaService {
      * @return null si fue exitoso, o un mensaje de error si falló.
      */
     public String actualizar(int id, Contratista c) {
+        if (c == null) {
+            return "El contratista no puede ser nulo.";
+        }
+
         Contratista other = contratistaDAO.obtenerPorCedula(c.getCedula());
         if (other != null && other.getId() != id) {
             return "La cédula " + c.getCedula() + " ya se encuentra asignada a otro contratista (" + other.getNombre() + ").";
@@ -78,55 +89,68 @@ public class ContratistaService {
     public String generarJsonDataTables(int draw, int start, int length,
             String searchValue, String sortCol, String orderDir, boolean soloAdiciones) {
 
-        int total    = contratistaDAO.countAll();
+        System.out.println("[SERVICE] Iniciando generación de JSON para DataTables");
+
+        if (start < 0 || length < 0) {
+            System.err.println("[SERVICE] Parámetros de paginación inválidos: start=" + start + ", length=" + length);
+            return "{\"error\": \"Parámetros de paginación inválidos\"}";
+        }
+
+        int total = contratistaDAO.countAll();
         int filtered = contratistaDAO.countFiltered(searchValue, soloAdiciones);
         List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir, soloAdiciones);
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"draw\": ").append(draw).append(",");
-        json.append("\"recordsTotal\": ").append(total).append(",");
-        json.append("\"recordsFiltered\": ").append(filtered).append(",");
-        json.append("\"data\": [");
+        System.out.println("[SERVICE] Registros obtenidos: " + (list != null ? list.size() : "null"));
 
-        for (int i = 0; i < list.size(); i++) {
-            Contratista c = list.get(i);
-            json.append("[");
-            json.append("\"").append(JsonUtils.escape(c.getCedula()        != null ? c.getCedula().trim()        : "")).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getNombre()        != null ? c.getNombre().trim()        : "")).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getCorreo()        != null ? c.getCorreo().trim()        : "")).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getTelefono()      != null ? c.getTelefono().trim()      : "")).append("\",");
-            json.append("\"").append(c.getId()).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getNumeroContrato()!= null ? c.getNumeroContrato().trim(): "")).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getAdicionSiNo()   != null ? c.getAdicionSiNo().trim()   : "")).append("\"");
-            json.append("]");
-            if (i < list.size() - 1) json.append(",");
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("draw", draw);
+        jsonResponse.addProperty("recordsTotal", total);
+        jsonResponse.addProperty("recordsFiltered", filtered);
+
+        JsonArray dataArray = new JsonArray();
+        if (list != null) {
+            for (Contratista c : list) {
+                try {
+                    JsonArray row = new JsonArray();
+                    row.add(c.getCedula() != null ? c.getCedula().trim() : "");
+                    row.add(c.getNombre() != null ? c.getNombre().trim() : "");
+                    row.add(c.getCorreo() != null ? c.getCorreo().trim() : "");
+                    row.add(c.getTelefono() != null ? c.getTelefono().trim() : "");
+                    row.add(c.getId());
+                    row.add(c.getNumeroContrato() != null ? c.getNumeroContrato().trim() : "");
+                    row.add(c.getAdicionSiNo() != null ? c.getAdicionSiNo().trim() : "");
+                    dataArray.add(row);
+                } catch (Exception e) {
+                    System.err.println("[SERVICE] Error procesando contratista ID " + c.getId() + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
         }
-
-        json.append("]}");
-        return json.toString();
+        jsonResponse.add("data", dataArray);
+ 
+        return gson.toJson(jsonResponse);
     }
 
     /**
      * Genera el JSON de respuesta para búsqueda por cédula.
      */
     public String generarJsonBusqueda(Contratista c) {
-        if (c == null) return "{\"found\": false}";
+        if (c == null) {
+            return "{\"found\": false}";
+        }
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"found\": true,");
-        json.append("\"cedula\": \"").append(JsonUtils.escape(c.getCedula())).append("\",");
-        json.append("\"dv\": \"").append(JsonUtils.escape(c.getDv())).append("\",");
-        json.append("\"nombre\": \"").append(JsonUtils.escape(c.getNombre())).append("\",");
-        json.append("\"telefono\": \"").append(JsonUtils.escape(c.getTelefono())).append("\",");
-        json.append("\"correo\": \"").append(JsonUtils.escape(c.getCorreo())).append("\",");
-        json.append("\"direccion\": \"").append(JsonUtils.escape(c.getDireccion())).append("\",");
-        json.append("\"fecha_nacimiento\": \"")
-                .append(c.getFechaNacimiento() != null ? c.getFechaNacimiento().toString() : "").append("\",");
-        json.append("\"edad\": ").append(c.getEdad());
-        json.append("}");
-        return json.toString();
+        JsonObject json = new JsonObject();
+        json.addProperty("found", true);
+        json.addProperty("cedula", c.getCedula());
+        json.addProperty("dv", c.getDv());
+        json.addProperty("nombre", c.getNombre());
+        json.addProperty("telefono", c.getTelefono());
+        json.addProperty("correo", c.getCorreo());
+        json.addProperty("direccion", c.getDireccion());
+        json.addProperty("fecha_nacimiento", c.getFechaNacimiento() != null ? c.getFechaNacimiento().toString() : "");
+        json.addProperty("edad", c.getEdad());
+
+        return gson.toJson(json);
     }
 
     /**

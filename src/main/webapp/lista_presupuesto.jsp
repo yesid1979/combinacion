@@ -28,7 +28,7 @@
         <body class="bg-light d-flex flex-column min-vh-100">
             <jsp:include page="inc/navbar.jsp" />
 
-            <div class="container mt-4">
+            <div class="container mt-4 mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Presupuestos registrados</h3>
                     <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_CREAR')}">
@@ -81,8 +81,11 @@
                         "serverSide": false,
                         "responsive": true,
                         "ajax": {
-                            "url": "presupuesto?action=data",
-                            "type": "GET"
+                            "url": "${pageContext.request.contextPath}/presupuesto",
+                            "type": "POST",
+                            "data": function(d) {
+                                d.action = "data";
+                            }
                         },
                         "columns": [
                             { "data": 0 }, // No. CDP

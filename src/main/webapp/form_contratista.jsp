@@ -104,12 +104,17 @@
                                     <textarea class="form-control" name="descripcion_experiencia" rows="3" ${readonly ? 'readonly' : ''}>${contratista.descripcionExperiencia}</textarea>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">Tarjeta Profesional</label>
                                     <input type="text" class="form-control" name="tarjeta_profesional"
                                         value="${contratista.tarjetaProfesional}" ${readonly ? 'readonly' : ''}>
                                 </div>                                
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label">Descripción Tarjeta</label>
+                                    <input type="text" class="form-control" name="descripcion_tarjeta"
+                                        value="${contratista.descripcionTarjeta}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label">Restricciones</label>
                                     <input type="text" class="form-control" name="restricciones"
                                         value="${contratista.restricciones}" ${readonly ? 'readonly' : ''}>

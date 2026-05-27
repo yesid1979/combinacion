@@ -6,16 +6,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operaciones CRUD de Roles y asignación de permisos.
- */
 public class RolDAO {
-
     private final PermisoDAO permisoDAO = new PermisoDAO();
 
-    /**
-     * Lista todos los roles.
-     */
     public List<Rol> listarTodos() {
         List<Rol> lista = new ArrayList<>();
         String sql = "SELECT id, nombre, descripcion, activo, fecha_creacion FROM roles ORDER BY id";
@@ -27,15 +20,10 @@ public class RolDAO {
                 r.setPermisos(permisoDAO.listarPorRolId(r.getId()));
                 lista.add(r);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return lista;
     }
 
-    /**
-     * Obtiene un rol por ID con sus permisos cargados.
-     */
     public Rol obtenerPorId(int id) {
         String sql = "SELECT id, nombre, descripcion, activo, fecha_creacion FROM roles WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -48,15 +36,10 @@ public class RolDAO {
                     return r;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
-    /**
-     * Obtiene un rol por nombre.
-     */
     public Rol obtenerPorNombre(String nombre) {
         String sql = "SELECT id, nombre, descripcion, activo, fecha_creacion FROM roles WHERE nombre = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -69,36 +52,68 @@ public class RolDAO {
                     return r;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
-    /**
-     * Inserta un nuevo rol y devuelve el ID generado.
-     */
-    public int insertar(Rol rol) {
-        String sql = "INSERT INTO roles (nombre, descripcion, activo) VALUES (?, ?, ?) RETURNING id";
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM roles";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    public int countFiltered(String search) {
+        String sql = "SELECT COUNT(*) FROM roles WHERE nombre ILIKE ? OR descripcion ILIKE ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            String s = "%" + (search != null ? search : "") + "%";
+            ps.setString(1, s);
+            ps.setString(2, s);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    public List<Rol> findWithPagination(int start, int length, String search, String sortCol, String sortDir) {
+        List<Rol> lista = new ArrayList<>();
+        String sql = "SELECT id, nombre, descripcion, activo, fecha_creacion FROM roles " +
+                     "WHERE nombre ILIKE ? OR descripcion ILIKE ? " +
+                     "ORDER BY " + sortCol + " " + sortDir + " LIMIT ? OFFSET ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String s = "%" + (search != null ? search : "") + "%";
+            ps.setString(1, s);
+            ps.setString(2, s);
+            ps.setInt(3, length);
+            ps.setInt(4, start);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) { lista.add(mapear(rs)); }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return lista;
+    }
+
+    public int insertar(Rol rol) {
+        String sql = "INSERT INTO roles (nombre, descripcion, activo) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, rol.getNombre());
             ps.setString(2, rol.getDescripcion());
             ps.setBoolean(3, rol.isActivo());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return -1;
     }
 
-    /**
-     * Actualiza un rol existente.
-     */
     public boolean actualizar(Rol rol) {
         String sql = "UPDATE roles SET nombre = ?, descripcion = ?, activo = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -108,75 +123,42 @@ public class RolDAO {
             ps.setBoolean(3, rol.isActivo());
             ps.setInt(4, rol.getId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
-    /**
-     * Elimina un rol por ID (CASCADE eliminará rol_permisos).
-     */
     public boolean eliminar(int id) {
         String sql = "DELETE FROM roles WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
 
-    /**
-     * Reemplaza los permisos de un rol.
-     * Elimina todos los existentes y asigna los nuevos.
-     */
     public boolean asignarPermisos(int rolId, List<Integer> permisosIds) {
-        Connection conn = null;
-        try {
-            conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
-
-            // Eliminar permisos actuales
-            String deleteSql = "DELETE FROM rol_permisos WHERE rol_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-                ps.setInt(1, rolId);
-                ps.executeUpdate();
+            try (PreparedStatement psDel = conn.prepareStatement("DELETE FROM rol_permisos WHERE rol_id = ?")) {
+                psDel.setInt(1, rolId);
+                psDel.executeUpdate();
             }
-
-            // Insertar nuevos permisos
             if (permisosIds != null && !permisosIds.isEmpty()) {
-                String insertSql = "INSERT INTO rol_permisos (rol_id, permiso_id) VALUES (?, ?)";
-                try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                    for (Integer permisoId : permisosIds) {
-                        ps.setInt(1, rolId);
-                        ps.setInt(2, permisoId);
-                        ps.addBatch();
+                try (PreparedStatement psIns = conn.prepareStatement("INSERT INTO rol_permisos (rol_id, permiso_id) VALUES (?, ?)")) {
+                    for (Integer pId : permisosIds) {
+                        psIns.setInt(1, rolId);
+                        psIns.setInt(2, pId);
+                        psIns.addBatch();
                     }
-                    ps.executeBatch();
+                    psIns.executeBatch();
                 }
             }
-
             conn.commit();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            }
-        } finally {
-            if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) { e.printStackTrace(); }
-            }
-        }
-        return false;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
-    /**
-     * Cuenta cuántos usuarios están asociados a un rol.
-     */
     public int contarUsuariosPorRol(int rolId) {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE rol_id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -185,9 +167,7 @@ public class RolDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
 

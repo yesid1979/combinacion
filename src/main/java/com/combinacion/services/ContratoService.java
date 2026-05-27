@@ -2,8 +2,10 @@ package com.combinacion.services;
 
 import com.combinacion.dao.*;
 import com.combinacion.models.*;
-import com.combinacion.util.JsonUtils;
 import com.combinacion.util.ParseUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -209,30 +211,28 @@ public class ContratoService {
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"draw\": ").append(draw != null ? draw : 1).append(",");
-        json.append("\"recordsTotal\": ").append(total).append(",");
-        json.append("\"recordsFiltered\": ").append(filtered).append(",");
-        json.append("\"data\": [");
+        Gson gson = new Gson();
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("draw", draw != null ? Integer.parseInt(draw) : 1);
+        jsonResponse.addProperty("recordsTotal", total);
+        jsonResponse.addProperty("recordsFiltered", filtered);
+        JsonArray dataArray = new JsonArray();
 
-        for (int i = 0; i < contratos.size(); i++) {
-            Contrato c = contratos.get(i);
-            json.append("[");
-            json.append("\"").append(JsonUtils.escape(c.getNumeroContrato())).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getContratistaNombre())).append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getObjeto())).append("\",");
-            json.append("\"").append(c.getValorTotalNumeros() != null ? c.getValorTotalNumeros() : "0").append("\",");
-            json.append("\"").append(c.getFechaInicio()      != null ? sdf.format(c.getFechaInicio())      : "").append("\",");
-            json.append("\"").append(c.getFechaTerminacion() != null ? sdf.format(c.getFechaTerminacion()) : "").append("\",");
-            json.append("\"").append(JsonUtils.escape(c.getEstado())).append("\",");
-            json.append("\"").append(c.getId()).append("\"");
-            json.append("]");
-            if (i < contratos.size() - 1) json.append(",");
+        for (Contrato c : contratos) {
+            JsonArray row = new JsonArray();
+            row.add(c.getNumeroContrato() != null ? c.getNumeroContrato().trim() : "");
+            row.add(c.getContratistaNombre() != null ? c.getContratistaNombre().trim() : "");
+            row.add(c.getObjeto() != null ? c.getObjeto().trim() : "");
+            row.add(c.getValorTotalNumeros() != null ? c.getValorTotalNumeros().toString() : "0");
+            row.add(c.getFechaInicio()      != null ? sdf.format(c.getFechaInicio())      : "");
+            row.add(c.getFechaTerminacion() != null ? sdf.format(c.getFechaTerminacion()) : "");
+            row.add(c.getEstado() != null ? c.getEstado().trim() : "");
+            row.add(String.valueOf(c.getId()));
+            dataArray.add(row);
         }
 
-        json.append("]}");
-        return json.toString();
+        jsonResponse.add("data", dataArray);
+        return gson.toJson(jsonResponse);
     }
 
     // -------------------------------------------------------------------------

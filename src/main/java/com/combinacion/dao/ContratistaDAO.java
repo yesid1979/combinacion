@@ -113,19 +113,15 @@ public class ContratistaDAO {
     }
 
     public Contratista obtenerPorCedula(String cedula) {
-        String searchDigits = (cedula != null) ? cedula.replaceAll("[^0-9]", "") : "";
         String sql = "SELECT * FROM contratistas WHERE cedula = ? ";
-        if (!searchDigits.isEmpty()) {
-            sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') = ? ";
+        if (cedula != null && !cedula.trim().isEmpty()) {
+            // No usamos regexp_replace para evitar errores de entorno
         }
         sql += " LIMIT 1 ";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cedula);
-            if (!searchDigits.isEmpty()) {
-                ps.setString(2, searchDigits);
-            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Contratista c = new Contratista();
@@ -172,13 +168,12 @@ public class ContratistaDAO {
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
         
         if (search != null && !search.isEmpty()) {
-            search = removeAccents(search).toLowerCase();
-            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?";
-            
+            search = search.toLowerCase();
+            sql += " AND (LOWER(cedula) LIKE ? "
+                    + " OR LOWER(nombre) LIKE ? "
+                    + " OR LOWER(correo) LIKE ? ";
             if (!searchDigits.isEmpty()) {
-                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ?";
+                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ? ";
             }
             sql += ")";
         }
@@ -227,13 +222,12 @@ public class ContratistaDAO {
                      "FROM contratistas WHERE 1=1 ";
 
         if (search != null && !search.isEmpty()) {
-            search = removeAccents(search).toLowerCase();
-            sql += " AND (translate(LOWER(cedula), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(nombre), 'áéíóú', 'aeiou') LIKE ? "
-                    + " OR translate(LOWER(correo), 'áéíóú', 'aeiou') LIKE ?";
-            
+            search = search.toLowerCase();
+            sql += " AND (LOWER(cedula) LIKE ? "
+                    + " OR LOWER(nombre) LIKE ? "
+                    + " OR LOWER(correo) LIKE ? ";
             if (!searchDigits.isEmpty()) {
-                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ?";
+                sql += " OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ? ";
             }
             sql += ")";
         }

@@ -26,6 +26,9 @@ public class AuthInitializer implements ServletContextListener {
 
         // 1. Ejecutar el schema SQL
         ejecutarSchema();
+        
+        // 1.1 Asegurar columnas nuevas
+        asegurarColumnasPerfil();
 
         // 2. Crear usuario admin por defecto si no existe
         crearUsuarioAdminPorDefecto();
@@ -119,15 +122,24 @@ public class AuthInitializer implements ServletContextListener {
                     System.out.println("[AuthInitializer] Usuario 'admin' creado exitosamente.");
                 }
             } else {
-                // Forzar actualización de contraseña para el admin existente
-                existente.setPasswordHash(hash);
-                existente.setSalt(salt);
-                usuarioDAO.actualizar(existente);
-                System.out.println("[AuthInitializer] Se actualizó la contraseña del administrador a 'admin123'.");
+                // Solo actualizamos el acceso, no el nombre ni nada más para no borrar cambios del usuario
+                usuarioDAO.actualizarUltimoAcceso(existente.getId());
+                System.out.println("[AuthInitializer] Usuario 'admin' verificado.");
             }
         } catch (Exception e) {
             System.out.println("[AuthInitializer] ERROR en crearUsuarioAdminPorDefecto: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void asegurarColumnasPerfil() {
+        String sql = "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_url VARCHAR(255);";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            System.out.println("[AuthInitializer] Columna 'foto_url' verificada/creada.");
+        } catch (Exception e) {
+            System.out.println("[AuthInitializer] Nota: No se pudo verificar la columna 'foto_url' (posiblemente ya existe).");
         }
     }
 }
