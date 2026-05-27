@@ -109,7 +109,7 @@ public class CombinacionServlet extends HttpServlet {
 
             // Create ZIP
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
 
             // Nombre de carpeta: 4121-014-NombreContratista
             // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
@@ -119,22 +119,30 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Standard Docs
             if (supervisorBytes != null) {
-                addDocxAndPdfToZip(zos, folderName, "Designacion_Supervisor_" + cedula, supervisorBytes);
+                addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes);
             }
             if (estructuradoresBytes != null) {
-                addDocxAndPdfToZip(zos, folderName, "Designacion_Estructuradores_" + cedula, estructuradoresBytes);
+                addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS", estructuradoresBytes);
             }
 
             // Add Inversion Docs
             if (esInversion && contrato != null) {
-                // Para documentos de inversion, el 3 (Idoneidad) usa fecha_idoneidad
                 for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
                     String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
                     Map<String, String> replacements = getFullReplacements(contratistaId, docContext);
                     if (replacements != null) {
                         byte[] fileBytes = generateBytes(tpl, replacements);
                         if (fileBytes != null) {
-                            String baseName = tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula);
+                            String baseName = "";
+                            if (tpl.equals("INVERSION_1_ESTUDIOS_PREVIOS.docx")) {
+                                baseName = "ESTUDIOS PREVIOS";
+                            } else if (tpl.equals("INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx")) {
+                                baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
+                            } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
+                                baseName = "CERTIFICADO DE IDONEIDAD";
+                            } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
+                            }
                             addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
                         }
                     }
@@ -199,7 +207,7 @@ public class CombinacionServlet extends HttpServlet {
 
         String[] ids = idsParam.split(",");
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
 
         try {
             for (String idStr : ids) {
@@ -246,12 +254,12 @@ public class CombinacionServlet extends HttpServlet {
                     // Standard Docs
                     byte[] supervisorBytes = generarBytesDocumento(id, "supervisor");
                     if (supervisorBytes != null) {
-                        addDocxAndPdfToZip(zos, folderName, "Designacion_Supervisor_" + cedula, supervisorBytes);
+                        addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes);
                     }
 
                     byte[] estructuradoresBytes = generarBytesDocumento(id, "estructuradores");
                     if (estructuradoresBytes != null) {
-                        addDocxAndPdfToZip(zos, folderName, "Designacion_Estructuradores_" + cedula,
+                        addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS",
                                 estructuradoresBytes);
                     }
 
@@ -263,7 +271,16 @@ public class CombinacionServlet extends HttpServlet {
                             if (replacements != null) {
                                 byte[] fileBytes = generateBytes(tpl, replacements);
                                 if (fileBytes != null) {
-                                    String baseName = tpl.replace("INVERSION_", "").replace(".docx", "_" + cedula);
+                                    String baseName = "";
+                                    if (tpl.equals("INVERSION_1_ESTUDIOS_PREVIOS.docx")) {
+                                        baseName = "ESTUDIOS PREVIOS";
+                                    } else if (tpl.equals("INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx")) {
+                                        baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
+                                    } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
+                                        baseName = "CERTIFICADO DE IDONEIDAD";
+                                    } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                        baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
+                                    }
                                     addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
                                 }
                             }
@@ -1119,7 +1136,7 @@ public class CombinacionServlet extends HttpServlet {
             Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
 
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
 
             String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
             String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + contratistaId;
@@ -1177,7 +1194,7 @@ public class CombinacionServlet extends HttpServlet {
 
         String[] ids = idsParam.split(",");
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
 
         try {
             for (String idStr : ids) {

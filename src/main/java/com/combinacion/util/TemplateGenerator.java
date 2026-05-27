@@ -314,36 +314,35 @@ public class TemplateGenerator {
             OutputStream outputStream) throws IOException {
         try (XWPFDocument document = new XWPFDocument(templateInputStream)) {
 
-            // Process Paragraphs
-            for (XWPFParagraph para : document.getParagraphs()) {
-                replaceInParagraph(para, replacements);
-            }
+            // Process everything recursively
+            processBodyElements(document.getBodyElements(), replacements);
 
-            // Process Tables
-            for (XWPFTable table : document.getTables()) {
-                for (XWPFTableRow row : table.getRows()) {
-                    for (XWPFTableCell cell : row.getTableCells()) {
-                        for (XWPFParagraph para : cell.getParagraphs()) {
-                            replaceInParagraph(para, replacements);
-                        }
-                    }
-                }
-            }
-
-            // Process Headers (important if date is in header, though analysis showed body)
+            // Process Headers/Footers
             XWPFHeaderFooterPolicy policy = document.getHeaderFooterPolicy();
             if (policy != null) {
-                processHeader(policy.getDefaultHeader(), replacements);
-                processHeader(policy.getFirstPageHeader(), replacements);
-                processHeader(policy.getEvenPageHeader(), replacements);
-            }
-
-            // Process Footers
-            if (policy != null) {
-                processFooter(policy.getDefaultFooter(), replacements);
+                if (policy.getDefaultHeader() != null) processBodyElements(policy.getDefaultHeader().getBodyElements(), replacements);
+                if (policy.getFirstPageHeader() != null) processBodyElements(policy.getFirstPageHeader().getBodyElements(), replacements);
+                if (policy.getEvenPageHeader() != null) processBodyElements(policy.getEvenPageHeader().getBodyElements(), replacements);
+                
+                if (policy.getDefaultFooter() != null) processBodyElements(policy.getDefaultFooter().getBodyElements(), replacements);
             }
 
             document.write(outputStream);
+        }
+    }
+
+    private static void processBodyElements(java.util.List<org.apache.poi.xwpf.usermodel.IBodyElement> elements, Map<String, String> replacements) {
+        for (org.apache.poi.xwpf.usermodel.IBodyElement element : elements) {
+            if (element instanceof XWPFParagraph) {
+                replaceInParagraph((XWPFParagraph) element, replacements);
+            } else if (element instanceof XWPFTable) {
+                XWPFTable table = (XWPFTable) element;
+                for (XWPFTableRow row : table.getRows()) {
+                    for (XWPFTableCell cell : row.getTableCells()) {
+                        processBodyElements(cell.getBodyElements(), replacements);
+                    }
+                }
+            }
         }
     }
 
@@ -379,48 +378,48 @@ public class TemplateGenerator {
 
     private static void replaceInParagraph(XWPFParagraph para, Map<String, String> replacements) {
         String text = para.getText();
-        if (text == null || text.isEmpty())
+        if (text == null || text.isEmpty() || (!text.contains("${") && !text.contains("{{")))
             return;
+            
+        System.out.println("DEBUG - Párrafo con variable encontrado: [" + text + "]");
 
+        // Save original formatting of the first run
+        String fontFamily = "Arial";
+        int fontSize = 11;
+        boolean isBold = false;
+        String color = "000000";
+        if (!para.getRuns().isEmpty()) {
+            XWPFRun firstRun = para.getRuns().get(0);
+            fontFamily = firstRun.getFontFamily();
+            fontSize = firstRun.getFontSize();
+            isBold = firstRun.isBold();
+            color = firstRun.getColor();
+        }
+        if (fontFamily == null) fontFamily = "Arial";
+        if (fontSize == -1) fontSize = 11;
+
+        // Perform all replacements on the full text
+        String newText = text;
         boolean replaced = false;
-
-        // Iterate through map to find matches
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
-            if (text.contains(entry.getKey())) {
-                // Perform replacement
-                // Simple strategy: replace text string, then wipe runs and set new text.
-                // This destroys local formatting (bolding of specific words inside the
-                // paragraph),
-                // but preserves paragraph styles.
-
-                String val = entry.getValue();
-                text = text.replace(entry.getKey(), val);
+            if (newText.contains(entry.getKey())) {
+                newText = newText.replace(entry.getKey(), entry.getValue() != null ? entry.getValue() : "");
                 replaced = true;
             }
         }
 
         if (replaced) {
-            // Heuristic: Start with the formatting of the first run
-            String fontFamily = "Arial";
-            int fontSize = 10;
-            if (para.getRuns().size() > 0) {
-                fontFamily = para.getRuns().get(0).getFontFamily();
-                if (fontFamily == null)
-                    fontFamily = "Arial";
-                fontSize = para.getRuns().get(0).getFontSize();
-                if (fontSize == -1)
-                    fontSize = 11; // Default
-            }
-
-            while (para.getRuns().size() > 0) {
+            // Wipe runs and recreate one single run with the replaced text
+            while (!para.getRuns().isEmpty()) {
                 para.removeRun(0);
             }
+            
             XWPFRun newRun = para.createRun();
-            newRun.setText(text);
+            newRun.setText(newText);
             newRun.setFontFamily(fontFamily);
             newRun.setFontSize(fontSize);
-            // newRun.setBold(true); // Can't guess this easily, assuming plain text for
-            // replaced segments
+            newRun.setBold(isBold);
+            if (color != null) newRun.setColor(color);
         }
     }
 }
