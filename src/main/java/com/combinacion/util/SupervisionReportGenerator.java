@@ -38,6 +38,32 @@ public class SupervisionReportGenerator {
         return f;
     }
 
+    private static String formatearFechaLarga(java.util.Date fecha) {
+        if (fecha == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+        return sdf.format(fecha);
+    }
+    
+    private static String formatearPeriodo(String periodo) {
+        if (periodo == null || periodo.trim().isEmpty()) return "";
+        try {
+            String[] parts = periodo.split("-");
+            if (parts.length == 2) {
+                int year = Integer.parseInt(parts[0]);
+                int month = Integer.parseInt(parts[1]);
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.set(java.util.Calendar.YEAR, year);
+                cal.set(java.util.Calendar.MONTH, month - 1);
+                cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", new Locale("es", "CO"));
+                String formatted = sdf.format(cal.getTime());
+                return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
+            }
+        } catch (Exception e) {
+            // Ignore parse errors and return original
+        }
+        return periodo;
+    }
 
     private static final String TEMPLATE_PATH = "plantillas/INFORME_SUPERVISION_TEMPLATE.docx";
     private static final String OUTPUT_DIR = "generados/informes";
@@ -102,8 +128,8 @@ public class SupervisionReportGenerator {
         reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero());
         reps.put("${PLANILLA_PIN}", info.getPlanillaPin());
         reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador());
-        reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaEspecial(info.getPlanillaFechaPago()));
-        reps.put("${PLANILLA_PERIODO}", info.getPlanillaPeriodo());
+        reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaLarga(info.getPlanillaFechaPago()));
+        reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
         
         reps.put("${OBSERVACIONES_TECNICAS}", info.getObservacionesTecnicas());
         reps.put("${RECOMENDACIONES}", info.getRecomendaciones());
