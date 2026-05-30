@@ -154,6 +154,10 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.reanudaciones = r.getParameter("reanudaciones");
         f.cesiones = r.getParameter("cesiones");
         f.terminacionAnticipada = r.getParameter("terminacion_anticipada");
+        f.adiciones = r.getParameter("adiciones");
+        f.prorrogas = r.getParameter("prorrogas");
+        f.reciboSatisfaccion = r.getParameter("recibo_satisfaccion");
+        f.constanciaPazSalvo = r.getParameter("constancia_paz_salvo");
         f.valorCuotaPagar = r.getParameter("valor_cuota_pagar");
         f.valorAccumuladoPagado = r.getParameter("valor_acumulado_pagado");
         f.saldoPorCancelar = r.getParameter("saldo_por_cancelar");
@@ -162,6 +166,21 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.planillaOperador = r.getParameter("planilla_operador");
         f.planillaFechaPago = r.getParameter("planilla_fecha_pago");
         f.planillaPeriodo = r.getParameter("planilla_periodo");
+        
+        int count = ParseUtils.parseInt(r.getParameter("obligaciones_count"));
+        if (count > 0) {
+            org.json.JSONArray arr = new org.json.JSONArray();
+            for (int i = 0; i < count; i++) {
+                org.json.JSONObject obj = new org.json.JSONObject();
+                obj.put("obligacion", r.getParameter("obligacion_" + i));
+                obj.put("actividad", r.getParameter("actividad_" + i));
+                arr.put(obj);
+            }
+            f.conceptoSupervisor = arr.toString();
+        } else {
+            f.conceptoSupervisor = r.getParameter("concepto_supervisor");
+        }
+        
         f.observacionesTecnicas = r.getParameter("observaciones_tecnicas");
         f.recomendaciones = r.getParameter("recomendaciones");
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");

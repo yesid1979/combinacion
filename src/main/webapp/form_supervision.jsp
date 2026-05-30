@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -170,6 +171,22 @@
                                     <label class="form-label">Terminación anticipada</label>
                                     <input type="text" class="form-control" name="terminacion_anticipada" value="${informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
                                 </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Adición</label>
+                                    <input type="text" class="form-control" name="adiciones" value="${empty informe.adiciones ? 'N/A' : informe.adiciones}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Prórroga</label>
+                                    <input type="text" class="form-control" name="prorrogas" value="${empty informe.prorrogas ? 'N/A' : informe.prorrogas}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Recibo a Satisfacción de Servicios</label>
+                                    <input type="text" class="form-control" name="recibo_satisfaccion" value="${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}" ${readonly ? 'readonly' : ''}>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Constancia de Paz y Salvo</label>
+                                    <input type="text" class="form-control" name="constancia_paz_salvo" value="${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}" ${readonly ? 'readonly' : ''}>
+                                </div>
                             </div>
                         </div>
 
@@ -224,8 +241,35 @@
                             <div class="section-title">Informe Técnico y Recomendaciones</div>
                             <div class="row g-3">
                                 <div class="col-md-12">
+                                    <label class="form-label">Concepto Supervisor (Obligaciones y Actividades)</label>
+                                    <input type="hidden" name="obligaciones_count" value="${listaObligaciones.size()}">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 40%">Obligaciones del Contratista</th>
+                                                    <th style="width: 60%">Actividades (Use viñetas o guiones)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="item" items="${listaObligaciones}" varStatus="status">
+                                                    <tr>
+                                                        <td class="bg-light">
+                                                            <input type="hidden" name="obligacion_${status.index}" value="${item.obligacion}">
+                                                            <small class="text-muted d-block" style="white-space: pre-wrap;">${item.obligacion}</small>
+                                                        </td>
+                                                        <td>
+                                                            <textarea class="form-control border-0" name="actividad_${status.index}" rows="3" placeholder="Describa las actividades realizadas..." required ${readonly ? 'readonly' : ''}>${item.actividad}</textarea>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
                                     <label class="form-label">Observaciones al Informe Técnico</label>
-                                    <textarea class="form-control" name="observaciones_tecnicas" rows="4" placeholder="Describa el cumplimiento de las actividades..." required ${readonly ? 'readonly' : ''}>${informe.observacionesTecnicas}</textarea>
+                                    <textarea class="form-control" name="observaciones_tecnicas" rows="2" placeholder="Observaciones adicionales..." required ${readonly ? 'readonly' : ''}>${informe.observacionesTecnicas}</textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Recomendaciones para el Contratista</label>

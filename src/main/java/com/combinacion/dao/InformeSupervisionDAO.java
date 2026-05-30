@@ -13,11 +13,12 @@ public class InformeSupervisionDAO {
         String sql = "INSERT INTO informes_supervision (" +
                 "contrato_id, periodo_informe, tipo_informe, numero_cuota, " +
                 "fecha_inicio_periodo, fecha_fin_periodo, modificaciones, suspensiones, " +
-                "reanudaciones, cesiones, terminacion_anticipada, " +
+                "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, " +
-                "observaciones_tecnicas, recomendaciones, fecha_suscripcion" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -33,17 +34,22 @@ public class InformeSupervisionDAO {
             ps.setString(9, info.getReanudaciones());
             ps.setString(10, info.getCesiones());
             ps.setString(11, info.getTerminacionAnticipada());
-            ps.setBigDecimal(12, info.getValorCuotaPagar());
-            ps.setBigDecimal(13, info.getValorAccumuladoPagado());
-            ps.setBigDecimal(14, info.getSaldoPorCancelar());
-            ps.setString(15, info.getPlanillaNumero());
-            ps.setString(16, info.getPlanillaPin());
-            ps.setString(17, info.getPlanillaOperador());
-            ps.setDate(18, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
-            ps.setString(19, info.getPlanillaPeriodo());
-            ps.setString(20, info.getObservacionesTecnicas());
-            ps.setString(21, info.getRecomendaciones());
-            ps.setDate(22, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(12, info.getAdiciones());
+            ps.setString(13, info.getProrrogas());
+            ps.setString(14, info.getReciboSatisfaccion());
+            ps.setString(15, info.getConstanciaPazSalvo());
+            ps.setBigDecimal(16, info.getValorCuotaPagar());
+            ps.setBigDecimal(17, info.getValorAccumuladoPagado());
+            ps.setBigDecimal(18, info.getSaldoPorCancelar());
+            ps.setString(19, info.getPlanillaNumero());
+            ps.setString(20, info.getPlanillaPin());
+            ps.setString(21, info.getPlanillaOperador());
+            ps.setDate(22, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
+            ps.setString(23, info.getPlanillaPeriodo());
+            ps.setString(24, info.getConceptoSupervisor());
+            ps.setString(25, info.getObservacionesTecnicas());
+            ps.setString(26, info.getRecomendaciones());
+            ps.setDate(27, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -133,6 +139,10 @@ public class InformeSupervisionDAO {
         info.setReanudaciones(rs.getString("reanudaciones"));
         info.setCesiones(rs.getString("cesiones"));
         info.setTerminacionAnticipada(rs.getString("terminacion_anticipada"));
+        info.setAdiciones(rs.getString("adiciones"));
+        info.setProrrogas(rs.getString("prorrogas"));
+        info.setReciboSatisfaccion(rs.getString("recibo_satisfaccion"));
+        info.setConstanciaPazSalvo(rs.getString("constancia_paz_salvo"));
         info.setValorCuotaPagar(rs.getBigDecimal("valor_cuota_pagar"));
         info.setValorAccumuladoPagado(rs.getBigDecimal("valor_acumulado_pagado"));
         info.setSaldoPorCancelar(rs.getBigDecimal("saldo_por_cancelar"));
@@ -141,6 +151,7 @@ public class InformeSupervisionDAO {
         info.setPlanillaOperador(rs.getString("planilla_operador"));
         info.setPlanillaFechaPago(rs.getDate("planilla_fecha_pago"));
         info.setPlanillaPeriodo(rs.getString("planilla_periodo"));
+        info.setConceptoSupervisor(rs.getString("concepto_supervisor"));
         info.setObservacionesTecnicas(rs.getString("observaciones_tecnicas"));
         info.setRecomendaciones(rs.getString("recomendaciones"));
         info.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
@@ -177,6 +188,10 @@ public class InformeSupervisionDAO {
             "reanudaciones TEXT, " +
             "cesiones TEXT, " +
             "terminacion_anticipada TEXT, " +
+            "adiciones TEXT, " +
+            "prorrogas TEXT, " +
+            "recibo_satisfaccion TEXT, " +
+            "constancia_paz_salvo TEXT, " +
             "valor_cuota_pagar NUMERIC(15, 2), " +
             "valor_acumulado_pagado NUMERIC(15, 2), " +
             "saldo_por_cancelar NUMERIC(15, 2), " +
@@ -195,6 +210,13 @@ public class InformeSupervisionDAO {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            try {
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS adiciones TEXT");
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS prorrogas TEXT");
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS recibo_satisfaccion TEXT");
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS constancia_paz_salvo TEXT");
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS concepto_supervisor TEXT");
+            } catch (SQLException ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

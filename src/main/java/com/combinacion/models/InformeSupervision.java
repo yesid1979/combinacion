@@ -19,6 +19,12 @@ public class InformeSupervision implements Serializable {
     private String reanudaciones;
     private String cesiones;
     private String terminacionAnticipada;
+    private String adiciones;
+    private String prorrogas;
+    private String reciboSatisfaccion;
+    private String constanciaPazSalvo;
+    
+    private String conceptoSupervisor;
     
     // Informe Contable y Financiero
     private BigDecimal valorCuotaPagar;
@@ -81,6 +87,21 @@ public class InformeSupervision implements Serializable {
 
     public String getTerminacionAnticipada() { return terminacionAnticipada; }
     public void setTerminacionAnticipada(String terminacionAnticipada) { this.terminacionAnticipada = terminacionAnticipada; }
+
+    public String getAdiciones() { return adiciones; }
+    public void setAdiciones(String adiciones) { this.adiciones = adiciones; }
+
+    public String getProrrogas() { return prorrogas; }
+    public void setProrrogas(String prorrogas) { this.prorrogas = prorrogas; }
+
+    public String getReciboSatisfaccion() { return reciboSatisfaccion; }
+    public void setReciboSatisfaccion(String reciboSatisfaccion) { this.reciboSatisfaccion = reciboSatisfaccion; }
+
+    public String getConstanciaPazSalvo() { return constanciaPazSalvo; }
+    public void setConstanciaPazSalvo(String constanciaPazSalvo) { this.constanciaPazSalvo = constanciaPazSalvo; }
+
+    public String getConceptoSupervisor() { return conceptoSupervisor; }
+    public void setConceptoSupervisor(String conceptoSupervisor) { this.conceptoSupervisor = conceptoSupervisor; }
 
     public BigDecimal getValorCuotaPagar() { return valorCuotaPagar; }
     public void setValorCuotaPagar(BigDecimal valorCuotaPagar) { this.valorCuotaPagar = valorCuotaPagar; }

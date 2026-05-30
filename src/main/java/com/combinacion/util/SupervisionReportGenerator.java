@@ -93,7 +93,7 @@ public class SupervisionReportGenerator {
         reps.put("${CONTRATISTA_CEDULA}", contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "");
         reps.put("${TELEFONO}", contrato.getContratista() != null && contrato.getContratista().getTelefono() != null ? contrato.getContratista().getTelefono() : "");
         reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
-        reps.put("${ORGANISMO}", contrato.getSupervisor() != null && contrato.getSupervisor().getCargo() != null ? contrato.getSupervisor().getCargo() : "");
+        reps.put("${ORGANISMO}", contrato.getOrdenadorGasto() != null && contrato.getOrdenadorGasto().getOrganismo() != null ? contrato.getOrdenadorGasto().getOrganismo() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
         
         NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
@@ -120,6 +120,10 @@ public class SupervisionReportGenerator {
         reps.put("${REANUDACIONES}", info.getReanudaciones() != null && !info.getReanudaciones().trim().isEmpty() ? info.getReanudaciones() : "N/A");
         reps.put("${CESIONES}", info.getCesiones() != null && !info.getCesiones().trim().isEmpty() ? info.getCesiones() : "N/A");
         reps.put("${TERMINACION_ANTICIPADA}", info.getTerminacionAnticipada() != null && !info.getTerminacionAnticipada().trim().isEmpty() ? info.getTerminacionAnticipada() : "N/A");
+        reps.put("${ADICIONES}", info.getAdiciones() != null && !info.getAdiciones().trim().isEmpty() ? info.getAdiciones() : "N/A");
+        reps.put("${PRORROGAS}", info.getProrrogas() != null && !info.getProrrogas().trim().isEmpty() ? info.getProrrogas() : "N/A");
+        reps.put("${RECIBO_SATISFACCION}", info.getReciboSatisfaccion() != null && !info.getReciboSatisfaccion().trim().isEmpty() ? info.getReciboSatisfaccion() : "N/A");
+        reps.put("${CONSTANCIA_PAZ_SALVO}", info.getConstanciaPazSalvo() != null && !info.getConstanciaPazSalvo().trim().isEmpty() ? info.getConstanciaPazSalvo() : "N/A");
         
         reps.put("${VALOR_CUOTA_PAGAR}", info.getValorCuotaPagar() != null ? "$ " + nf.format(info.getValorCuotaPagar()).replace(',', '.') : "$ 0");
         reps.put("${VALOR_ACUMULADO}", info.getValorAccumuladoPagado() != null ? "$ " + nf.format(info.getValorAccumuladoPagado()).replace(',', '.') : "$ 0");
@@ -131,9 +135,18 @@ public class SupervisionReportGenerator {
         reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaLarga(info.getPlanillaFechaPago()));
         reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
         
-        reps.put("${OBSERVACIONES_TECNICAS}", info.getObservacionesTecnicas());
-        reps.put("${RECOMENDACIONES}", info.getRecomendaciones());
-        reps.put("${FECHA_SUSCRIPCION}", formatearFechaEspecial(info.getFechaSuscripcion()));
+        String concepto = info.getConceptoSupervisor();
+        if (concepto == null || concepto.trim().isEmpty()) {
+            concepto = contrato.getActividadesEntregables();
+        }
+        // No agregamos CONCEPTO_SUPERVISOR a reps para que TemplateGenerator no lo rompa.
+        // Lo reemplazaremos directamente en el XML en el post-procesamiento.
+        final String finalConceptoSup = concepto != null ? concepto : "";
+        reps.put("${OBSERVACIONES_TECNICAS}", info.getObservacionesTecnicas() != null ? info.getObservacionesTecnicas() : "");
+        reps.put("${RECOMENDACIONES}", info.getRecomendaciones() != null ? info.getRecomendaciones() : "");
+        String fechaSuscripcionFormateada = info.getFechaSuscripcion() != null ? 
+            "Santiago de Cali, " + formatearFechaLarga(info.getFechaSuscripcion()) : "";
+        reps.put("${FECHA_SUSCRIPCION}", fechaSuscripcionFormateada);
 
         try (FileInputStream fis = new FileInputStream(templateFile);
              FileOutputStream fos = new FileOutputStream(outputFile)) {
@@ -162,6 +175,59 @@ public class SupervisionReportGenerator {
                     
                     xml = xml.replace("${X_PARCIAL}", xParcial != null ? xParcial : "  ");
                     xml = xml.replace("${X_FINAL}", xFinal != null ? xFinal : "  ");
+                    
+                    if (finalConceptoSup != null) {
+                        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = 
+                            com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
+                            
+                        StringBuilder tablaXml = new StringBuilder();
+                        tablaXml.append("</w:t></w:r></w:p>"); // Cerrar el párrafo actual de ${CONCEPTO_SUPERVISOR}
+                        
+                        tablaXml.append("<w:tbl>");
+                        tablaXml.append("<w:tblPr>");
+                        tablaXml.append("<w:tblBorders>");
+                        tablaXml.append("<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
+                        tablaXml.append("</w:tblBorders>");
+                        tablaXml.append("<w:tblW w:w=\"5000\" w:type=\"pct\"/>"); // 100% width
+                        tablaXml.append("</w:tblPr>");
+                        
+                        // Header
+                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
+                        
+                        // Rows
+                        for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
+                            String ob = item.obligacion.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            String ac = item.actividad.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            
+                            // Reemplazar saltos de línea por <w:br/>
+                            ob = ob.replace("\n", "</w:t><w:br/><w:t>");
+                            ac = ac.replace("\n", "</w:t><w:br/><w:t>");
+                            
+                            tablaXml.append("<w:tr>");
+                            
+                            // Cell Obligacion
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/></w:tcPr><w:p><w:r><w:t>")
+                                    .append(ob)
+                                    .append("</w:t></w:r></w:p></w:tc>");
+                                    
+                            // Cell Actividad
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr><w:p><w:r><w:t>")
+                                    .append(ac)
+                                    .append("</w:t></w:r></w:p></w:tc>");
+                                    
+                            tablaXml.append("</w:tr>");
+                        }
+                        
+                        tablaXml.append("</w:tbl>");
+                        tablaXml.append("<w:p><w:r><w:t>"); // Reabrir para balancear el tag original
+                        
+                        xml = xml.replace("${CONCEPTO_SUPERVISOR}", tablaXml.toString());
+                    }
                     
                     byte[] newXmlData = xml.getBytes(StandardCharsets.UTF_8);
                     zos.write(newXmlData, 0, newXmlData.length);

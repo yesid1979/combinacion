@@ -16,6 +16,7 @@ public class InformeSupervisionService {
     private final ContratoDAO contratoDAO = new ContratoDAO();
     private final com.combinacion.dao.ContratistaDAO contratistaDAO = new com.combinacion.dao.ContratistaDAO();
     private final com.combinacion.dao.SupervisorDAO supervisorDAO = new com.combinacion.dao.SupervisorDAO();
+    private final com.combinacion.dao.OrdenadorGastoDAO ordenadorGastoDAO = new com.combinacion.dao.OrdenadorGastoDAO();
 
     public List<InformeSupervision> listarPorContrato(int contratoId) {
         return informeDAO.listarPorContrato(contratoId);
@@ -62,6 +63,10 @@ public class InformeSupervisionService {
         info.setReanudaciones(f.reanudaciones);
         info.setCesiones(f.cesiones);
         info.setTerminacionAnticipada(f.terminacionAnticipada);
+        info.setAdiciones(f.adiciones);
+        info.setProrrogas(f.prorrogas);
+        info.setReciboSatisfaccion(f.reciboSatisfaccion);
+        info.setConstanciaPazSalvo(f.constanciaPazSalvo);
         
         info.setValorCuotaPagar(ParseUtils.parseBigDecimal(f.valorCuotaPagar));
         info.setValorAccumuladoPagado(ParseUtils.parseBigDecimal(f.valorAccumuladoPagado));
@@ -73,6 +78,7 @@ public class InformeSupervisionService {
         info.setPlanillaFechaPago(ParseUtils.parseDate(f.planillaFechaPago));
         info.setPlanillaPeriodo(f.planillaPeriodo);
         
+        info.setConceptoSupervisor(f.conceptoSupervisor);
         info.setObservacionesTecnicas(f.observacionesTecnicas);
         info.setRecomendaciones(f.recomendaciones);
         info.setFechaSuscripcion(ParseUtils.parseDate(f.fechaSuscripcion));
@@ -92,6 +98,10 @@ public class InformeSupervisionService {
         public String reanudaciones;
         public String cesiones;
         public String terminacionAnticipada;
+        public String adiciones;
+        public String prorrogas;
+        public String reciboSatisfaccion;
+        public String constanciaPazSalvo;
         public String valorCuotaPagar;
         public String valorAccumuladoPagado;
         public String saldoPorCancelar;
@@ -100,6 +110,7 @@ public class InformeSupervisionService {
         public String planillaOperador;
         public String planillaFechaPago;
         public String planillaPeriodo;
+        public String conceptoSupervisor;
         public String observacionesTecnicas;
         public String recomendaciones;
         public String fechaSuscripcion;
@@ -116,6 +127,9 @@ public class InformeSupervisionService {
             }
             if (c.getSupervisorId() > 0) {
                 c.setSupervisor(supervisorDAO.obtenerPorId(c.getSupervisorId()));
+            }
+            if (c.getOrdenadorId() > 0) {
+                c.setOrdenadorGasto(ordenadorGastoDAO.obtenerPorId(c.getOrdenadorId()));
             }
         }
         return c;
