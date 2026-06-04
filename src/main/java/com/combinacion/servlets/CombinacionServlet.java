@@ -977,20 +977,30 @@ public class CombinacionServlet extends HttpServlet {
         // Standard Date Logic - Formato: "06 de enero de 2026"
         SimpleDateFormat sdfDoc = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
         String fechaStr = sdfDoc.format(fechaBase);
-        replacements.put("${FECHA_DOCUMENTO}", fechaStr);
-        replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
-        replacements.put("${FECHA_RPC_APOYO}", fechaStr);
-        replacements.put("${RPC_FECHA}", fechaStr);
+        
+        if ("supervisor".equals(docType) || "estructuradores".equals(docType)) {
+            String fechaGeneracion = sdfDoc.format(new java.util.Date());
+            replacements.put("${FECHA_DOCUMENTO}", fechaGeneracion);
+            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaGeneracion);
+            replacements.put("${FECHA_RPC_APOYO}", fechaGeneracion);
+            replacements.put("${RPC_FECHA}", fechaStr); // Esta se mantiene como la fecha del RP
+        } else {
+            replacements.put("${FECHA_DOCUMENTO}", fechaStr);
+            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
+            replacements.put("${FECHA_RPC_APOYO}", fechaStr);
+            replacements.put("${RPC_FECHA}", fechaStr);
+        }
 
         SimpleDateFormat yearOnly = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
 
         // Formato especial para FECHA_DOCUMENTO_LETRAS: "seis (06) días del mes de
         // enero de (2026)"
+        java.util.Date fechaLetrasBase = ("supervisor".equals(docType) || "estructuradores".equals(docType)) ? new java.util.Date() : fechaBase;
         java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTime(fechaBase);
+        cal.setTime(fechaLetrasBase);
         int dia = cal.get(java.util.Calendar.DAY_OF_MONTH);
-        String mes = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fechaBase);
-        String anio = yearOnly.format(fechaBase);
+        String mes = new SimpleDateFormat("MMMM", new Locale("es", "CO")).format(fechaLetrasBase);
+        String anio = yearOnly.format(fechaLetrasBase);
 
         // Convertir día a letras
         String diaLetras = convertirNumeroALetras(dia);
