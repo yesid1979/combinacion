@@ -930,14 +930,16 @@ public class CombinacionServlet extends HttpServlet {
         if (contrato.getFechaIdoneidad() != null) {
             String mesAnioIdoneidad = sdfMesAnio.format(contrato.getFechaIdoneidad());
             replacements.put("{{FECHA_IDONEIDAD}}", mesAnioIdoneidad);
-            // Solo usar como MES_ANIO_ACTUAL en el contexto de idoneidad o si no hay RP
-            if ("idoneidad".equals(docType) || (presupuesto == null || presupuesto.getRpFecha() == null)) {
-                replacements.put("{{MES_ANIO_ACTUAL}}", mesAnioIdoneidad);
-            } else {
-                replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(fechaBase));
-            }
         } else {
             replacements.put("{{FECHA_IDONEIDAD}}", "");
+        }
+        
+        if ("idoneidad".equals(docType)) {
+            // Requerimiento: MES_ANIO_ACTUAL debe ser la fecha del sistema (generación)
+            replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(new java.util.Date()));
+        } else if (contrato.getFechaIdoneidad() != null && (presupuesto == null || presupuesto.getRpFecha() == null)) {
+            replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(contrato.getFechaIdoneidad()));
+        } else {
             replacements.put("{{MES_ANIO_ACTUAL}}", sdfMesAnio.format(fechaBase));
         }
 
