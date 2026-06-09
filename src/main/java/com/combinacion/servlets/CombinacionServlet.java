@@ -149,26 +149,28 @@ public class CombinacionServlet extends HttpServlet {
                 }
             }
 
-            // Add Funcionamiento Alert
+            // Add Funcionamiento Docs
             if (!esInversion && esFuncionamiento && contrato != null) {
-                // Crear archivo de texto con alerta
-                String alertaTexto = "═══════════════════════════════════════════════════════════════\n" +
-                        "           DOCUMENTOS DE FUNCIONAMIENTO NO DISPONIBLES\n" +
-                        "═══════════════════════════════════════════════════════════════\n\n" +
-                        "Estimado usuario,\n\n" +
-                        "Los documentos para contratos de FUNCIONAMIENTO aún no están disponibles\n" +
-                        "en el sistema.\n\n" +
-                        "Información del contrato:\n" +
-                        "  • Contratista: " + c.getNombre() + "\n" +
-                        "  • Cédula: " + cedula + "\n" +
-                        "  • Tipo: FUNCIONAMIENTO\n\n" +
-                        "Por favor, contacte al administrador del sistema para más información.\n\n" +
-                        "Fecha de generación: "
-                        + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date()) + "\n" +
-                        "═══════════════════════════════════════════════════════════════\n";
-
-                addToZip(zos, folderName, "ALERTA_FUNCIONAMIENTO_NO_DISPONIBLE.txt",
-                        alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                    String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
+                    Map<String, String> replacements = getFullReplacements(contratistaId, docContext);
+                    if (replacements != null) {
+                        byte[] fileBytes = generateBytes(tpl, replacements);
+                        if (fileBytes != null) {
+                            String baseName = "";
+                            if (tpl.equals("FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx")) {
+                                baseName = "ESTUDIOS PREVIOS FUNCIONAMIENTO";
+                            } else if (tpl.equals("INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx")) {
+                                baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
+                            } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
+                                baseName = "CERTIFICADO DE IDONEIDAD";
+                            } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
+                            }
+                            addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                        }
+                    }
+                }
             }
 
             zos.close();
@@ -287,26 +289,28 @@ public class CombinacionServlet extends HttpServlet {
                         }
                     }
 
-                    // Funcionamiento Alert
+                    // Funcionamiento Docs
                     if (!esInversion && esFuncionamiento && contrato != null) {
-                        String alertaTexto = "═══════════════════════════════════════════════════════════════\n" +
-                                "           DOCUMENTOS DE FUNCIONAMIENTO NO DISPONIBLES\n" +
-                                "═══════════════════════════════════════════════════════════════\n\n" +
-                                "Estimado usuario,\n\n" +
-                                "Los documentos para contratos de FUNCIONAMIENTO aún no están disponibles\n" +
-                                "en el sistema.\n\n" +
-                                "Información del contrato:\n" +
-                                "  • Contratista: " + c.getNombre() + "\n" +
-                                "  • Cédula: " + cedula + "\n" +
-                                "  • Tipo: FUNCIONAMIENTO\n\n" +
-                                "Por favor, contacte al administrador del sistema para más información.\n\n" +
-                                "Fecha de generación: "
-                                + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())
-                                + "\n" +
-                                "═══════════════════════════════════════════════════════════════\n";
-
-                        addToZip(zos, folderName, "ALERTA_FUNCIONAMIENTO_NO_DISPONIBLE.txt",
-                                alertaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                            String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
+                            Map<String, String> replacements = getFullReplacements(id, docContext);
+                            if (replacements != null) {
+                                byte[] fileBytes = generateBytes(tpl, replacements);
+                                if (fileBytes != null) {
+                                    String baseName = "";
+                                    if (tpl.equals("FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx")) {
+                                        baseName = "ESTUDIOS PREVIOS FUNCIONAMIENTO";
+                                    } else if (tpl.equals("INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx")) {
+                                        baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
+                                    } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
+                                        baseName = "CERTIFICADO DE IDONEIDAD";
+                                    } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                        baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
+                                    }
+                                    addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                                }
+                            }
+                        }
                     }
 
                 } catch (Exception ex) {
@@ -471,6 +475,8 @@ public class CombinacionServlet extends HttpServlet {
             BigDecimal cdpVal = presupuesto.getCdpValor();
             replacements.put("{{VALOR_CDP}}", cdpVal != null ? formatearMoneda(cdpVal) : "");
             replacements.put("{{CDP_VALOR}}", cdpVal != null ? formatearMoneda(cdpVal) : "");
+            
+            replacements.put("{{CERTIFICADO_INSUFICIENCIA}}", presupuesto.getCertificadoInsuficiencia() != null ? presupuesto.getCertificadoInsuficiencia() : "");
             
             String cdpLetras = cdpVal != null ? convertirMontoALetras(cdpVal) : "";
             replacements.put("{{VALOR_CDP_LETRAS}}", cdpLetras);
