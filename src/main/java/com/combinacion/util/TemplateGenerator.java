@@ -332,9 +332,28 @@ public class TemplateGenerator {
     }
 
     private static void processBodyElements(java.util.List<org.apache.poi.xwpf.usermodel.IBodyElement> elements, Map<String, String> replacements) {
-        for (org.apache.poi.xwpf.usermodel.IBodyElement element : elements) {
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            org.apache.poi.xwpf.usermodel.IBodyElement element = elements.get(i);
             if (element instanceof XWPFParagraph) {
-                replaceInParagraph((XWPFParagraph) element, replacements);
+                XWPFParagraph para = (XWPFParagraph) element;
+                boolean shouldRemove = replaceInParagraph(para, replacements);
+                if (shouldRemove) {
+                    org.apache.poi.xwpf.usermodel.IBody parent = para.getBody();
+                    if (parent instanceof XWPFDocument) {
+                        int pos = ((XWPFDocument) parent).getPosOfParagraph(para);
+                        if (pos >= 0) ((XWPFDocument) parent).removeBodyElement(pos);
+                    } else if (parent instanceof XWPFTableCell) {
+                        XWPFTableCell cell = (XWPFTableCell) parent;
+                        int pIdx = cell.getParagraphs().indexOf(para);
+                        if (pIdx >= 0) cell.removeParagraph(pIdx);
+                    } else if (parent instanceof XWPFHeader) {
+                        XWPFHeader header = (XWPFHeader) parent;
+                        header.removeParagraph(para);
+                    } else if (parent instanceof XWPFFooter) {
+                        XWPFFooter footer = (XWPFFooter) parent;
+                        footer.removeParagraph(para);
+                    }
+                }
             } else if (element instanceof XWPFTable) {
                 XWPFTable table = (XWPFTable) element;
                 for (XWPFTableRow row : table.getRows()) {
@@ -376,10 +395,10 @@ public class TemplateGenerator {
         }
     }
 
-    private static void replaceInParagraph(XWPFParagraph para, Map<String, String> replacements) {
+    private static boolean replaceInParagraph(XWPFParagraph para, Map<String, String> replacements) {
         String text = para.getText();
         if (text == null || text.isEmpty() || (!text.contains("${") && !text.contains("{{")))
-            return;
+            return false;
             
         System.out.println("DEBUG - Párrafo con variable encontrado: [" + text + "]");
 
@@ -409,6 +428,11 @@ public class TemplateGenerator {
         }
 
         if (replaced) {
+            // Remove completely if instructed
+            if (newText.contains("{{REMOVE_PARAGRAPH}}")) {
+                return true;
+            }
+
             // Wipe runs and recreate one single run with the replaced text
             while (!para.getRuns().isEmpty()) {
                 para.removeRun(0);
@@ -421,5 +445,6 @@ public class TemplateGenerator {
             newRun.setBold(isBold);
             if (color != null) newRun.setColor(color);
         }
+        return false;
     }
 }

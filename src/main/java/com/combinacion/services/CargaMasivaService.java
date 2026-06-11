@@ -285,6 +285,7 @@ public class CargaMasivaService {
             }
             else if (h.contains("apropiacion"))  { map.put("apropiacion_presupuestal", i); }
             else if (h.contains("rubro") && h.contains("presupuestal")) { map.put("rubro_presupuestal", i); }
+            else if (h.contains("paa") && h.contains("si") && h.contains("no")) { map.put("id_paa_si_no", i); }
             else if (h.contains("paa") && (h.contains("id") || h.contains("cod"))) { map.put("id_paa", i); }
             else if (h.contains("dane") && h.contains("cod")) { map.put("codigo_dane", i); }
             else if (h.contains("inversion") && h.contains("aplica")) { map.put("inversion", i); }
@@ -528,6 +529,7 @@ public class CargaMasivaService {
             p.setRpFecha(parsearFecha(get(row, map, "rp_fecha")));
             p.setApropiacionPresupuestal(apropiacion);
             p.setIdPaa(idPaa);
+            p.setIdPaaSiNo(get(row, map, "id_paa_si_no"));
             p.setCodigoDane(get(row, map, "codigo_dane"));
             p.setInversion(parsearBoolean(get(row, map, "inversion")));
             p.setFuncionamiento(parsearBoolean(get(row, map, "funcionamiento")));

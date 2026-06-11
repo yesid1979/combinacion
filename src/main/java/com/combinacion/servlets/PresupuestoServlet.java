@@ -161,6 +161,7 @@ public class PresupuestoServlet extends HttpServlet {
         p.setApropiacionPresupuestal(request.getParameter("apropiacionPresupuestal"));
         p.setFichaEbiNombre(request.getParameter("fichaEbiNombre"));
         p.setIdPaa(request.getParameter("idPaa"));
+        p.setIdPaaSiNo(request.getParameter("idPaaSiNo"));
         p.setCodigoDane(request.getParameter("codigoDane"));
         p.setInversion(request.getParameter("inversion"));
         p.setFuncionamiento(request.getParameter("funcionamiento"));

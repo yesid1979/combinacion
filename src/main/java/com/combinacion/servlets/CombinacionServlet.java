@@ -728,6 +728,21 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{ID_PAA}}", "");
         }
 
+        if (presupuesto != null && presupuesto.getIdPaaSiNo() != null) {
+            replacements.put("{{ID_PAA_SI_NO}}", presupuesto.getIdPaaSiNo());
+            
+            // Lógica para ocultar el párrafo si NO es PAA
+            String paaNorm = java.text.Normalizer.normalize(presupuesto.getIdPaaSiNo().trim().toLowerCase(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+            if (paaNorm.equals("si") || paaNorm.equals("x")) {
+                replacements.put("{{OCULTAR_SI_NO_ES_PAA}}", ""); // Dejar el texto intacto
+            } else {
+                replacements.put("{{OCULTAR_SI_NO_ES_PAA}}", "{{REMOVE_PARAGRAPH}}"); // Eliminar párrafo entero
+            }
+        } else {
+            replacements.put("{{ID_PAA_SI_NO}}", "");
+            replacements.put("{{OCULTAR_SI_NO_ES_PAA}}", "{{REMOVE_PARAGRAPH}}"); // Eliminar si no hay datos
+        }
+
         // ===== PLACEHOLDERS ANTIGUOS CONTINUACIÓN =====
 
         // Values

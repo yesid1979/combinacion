@@ -32,7 +32,8 @@ public class DatabasePatcher {
                 "cdp_adicion TEXT", 
                 "cdp_valor_adicion NUMERIC", 
                 "rp_adicion TEXT", 
-                "rp_fecha_adicion DATE"
+                "rp_fecha_adicion DATE",
+                "id_paa_si_no VARCHAR(10)"
             };
 
             for (String colInfo : columnasPresupuesto) {

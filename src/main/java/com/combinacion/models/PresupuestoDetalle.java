@@ -23,6 +23,7 @@ public class PresupuestoDetalle {
     private Date fechaInsuficiencia;
     private String bpin;
     private String compromiso;
+    private String idPaaSiNo;
 
     // Campos para Adición
     private String cdpAdicion;
@@ -103,6 +104,14 @@ public class PresupuestoDetalle {
 
     public void setIdPaa(String idPaa) {
         this.idPaa = idPaa;
+    }
+
+    public String getIdPaaSiNo() {
+        return idPaaSiNo;
+    }
+
+    public void setIdPaaSiNo(String idPaaSiNo) {
+        this.idPaaSiNo = idPaaSiNo;
     }
 
     public String getCodigoDane() {

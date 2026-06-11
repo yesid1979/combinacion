@@ -110,6 +110,11 @@
                                         <div class="form-control bg-light">${presupuesto.idPaa != null ?
                                             presupuesto.idPaa : 'N/A'}</div>
                                     </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label text-muted small fw-bold">ID PAA SI/NO</label>
+                                        <div class="form-control bg-light">${presupuesto.idPaaSiNo != null ?
+                                            presupuesto.idPaaSiNo : 'N/A'}</div>
+                                    </div>
                                     <div class="col-md-6">
                                         <label class="form-label text-muted small fw-bold">Código
                                             DANE</label>

@@ -188,6 +188,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "apropiacion_presupuestal", "Apropiación");
                 logMapping(log, map, "rubro_presupuestal", "Rubro");
                 logMapping(log, map, "id_paa", "ID PAA");
+                logMapping(log, map, "id_paa_si_no", "ID PAA SI/NO");
                 logMapping(log, map, "codigo_dane", "Código DANE");
                 logMapping(log, map, "ficha_ebi_nombre", "Ficha EBI Nombre");
                 
@@ -655,6 +656,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("apropiacion_presupuestal", i);
             } else if (h.contains("rubro") && h.contains("presupuestal")) {
                 map.put("rubro_presupuestal", i);
+            } else if (h.contains("paa") && h.contains("si") && h.contains("no")) {
+                map.put("id_paa_si_no", i);
             } else if (h.contains("paa") && (h.contains("id") || h.contains("cod"))) {
                 map.put("id_paa", i);
             } else if (h.contains("dane") && h.contains("cod")) {
@@ -1380,6 +1383,9 @@ public class CargaMasivaServlet extends HttpServlet {
 
             val = get(row, map, "id_paa");
             if (!val.isEmpty()) { p.setIdPaa(val); hasNewData = true; }
+
+            val = get(row, map, "id_paa_si_no");
+            if (!val.isEmpty()) { p.setIdPaaSiNo(val); hasNewData = true; }
 
             val = get(row, map, "codigo_dane");
             if (!val.isEmpty()) { p.setCodigoDane(val); hasNewData = true; }

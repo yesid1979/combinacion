@@ -80,6 +80,10 @@
                             <label class="form-label text-muted small fw-bold">ID PAA</label>
                             <input type="text" class="form-control" name="idPaa" value="${presupuesto.idPaa}" ${readonly ? 'readonly' : ''}>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small fw-bold">ID PAA SI/NO</label>
+                            <input type="text" class="form-control" name="idPaaSiNo" value="${presupuesto.idPaaSiNo}" ${readonly ? 'readonly' : ''}>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small fw-bold">Código DANE</label>
                             <input type="text" class="form-control" name="codigoDane" value="${presupuesto.codigoDane}" ${readonly ? 'readonly' : ''}>
