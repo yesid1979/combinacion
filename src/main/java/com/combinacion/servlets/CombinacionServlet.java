@@ -10,6 +10,9 @@ import com.combinacion.models.Contrato;
 import com.combinacion.models.OrdenadorGasto;
 import com.combinacion.models.PresupuestoDetalle;
 import com.combinacion.models.Supervisor;
+import com.combinacion.models.Usuario;
+import com.combinacion.models.RevisorDocumento;
+import com.combinacion.dao.RevisorDocumentoDAO;
 import com.combinacion.util.TemplateGenerator;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,6 +39,7 @@ public class CombinacionServlet extends HttpServlet {
     private PresupuestoDetalleDAO presupuestoDAO = new PresupuestoDetalleDAO();
     private SupervisorDAO supervisorDAO = new SupervisorDAO();
     private OrdenadorGastoDAO ordenadorDAO = new OrdenadorGastoDAO();
+    private RevisorDocumentoDAO revisorDAO = new RevisorDocumentoDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -79,8 +83,8 @@ public class CombinacionServlet extends HttpServlet {
             }
 
             // Generate Standard Docs
-            byte[] supervisorBytes = generarBytesDocumento(contratistaId, "supervisor");
-            byte[] estructuradoresBytes = generarBytesDocumento(contratistaId, "estructuradores");
+            byte[] supervisorBytes = generarBytesDocumento(request, contratistaId, "supervisor");
+            byte[] estructuradoresBytes = generarBytesDocumento(request, contratistaId, "estructuradores");
 
             // Determinar tipo de contrato: Inversión o Funcionamiento
             boolean esInversion = false;
@@ -129,7 +133,7 @@ public class CombinacionServlet extends HttpServlet {
             if (esInversion && contrato != null) {
                 for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
                     String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
-                    Map<String, String> replacements = getFullReplacements(contratistaId, docContext);
+                    Map<String, String> replacements = getFullReplacements(request, contratistaId, docContext, tpl);
                     if (replacements != null) {
                         byte[] fileBytes = generateBytes(tpl, replacements);
                         if (fileBytes != null) {
@@ -153,7 +157,7 @@ public class CombinacionServlet extends HttpServlet {
             if (!esInversion && esFuncionamiento && contrato != null) {
                 for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
                     String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
-                    Map<String, String> replacements = getFullReplacements(contratistaId, docContext);
+                    Map<String, String> replacements = getFullReplacements(request, contratistaId, docContext, tpl);
                     if (replacements != null) {
                         byte[] fileBytes = generateBytes(tpl, replacements);
                         if (fileBytes != null) {
@@ -254,12 +258,12 @@ public class CombinacionServlet extends HttpServlet {
                     }
 
                     // Standard Docs
-                    byte[] supervisorBytes = generarBytesDocumento(id, "supervisor");
+                    byte[] supervisorBytes = generarBytesDocumento(request, id, "supervisor");
                     if (supervisorBytes != null) {
                         addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes);
                     }
 
-                    byte[] estructuradoresBytes = generarBytesDocumento(id, "estructuradores");
+                    byte[] estructuradoresBytes = generarBytesDocumento(request, id, "estructuradores");
                     if (estructuradoresBytes != null) {
                         addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS",
                                 estructuradoresBytes);
@@ -269,7 +273,7 @@ public class CombinacionServlet extends HttpServlet {
                     if (esInversion) {
                         for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
                             String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
-                            Map<String, String> replacements = getFullReplacements(id, docContext);
+                            Map<String, String> replacements = getFullReplacements(request, id, docContext, tpl);
                             if (replacements != null) {
                                 byte[] fileBytes = generateBytes(tpl, replacements);
                                 if (fileBytes != null) {
@@ -293,7 +297,7 @@ public class CombinacionServlet extends HttpServlet {
                     if (!esInversion && esFuncionamiento && contrato != null) {
                         for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
                             String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
-                            Map<String, String> replacements = getFullReplacements(id, docContext);
+                            Map<String, String> replacements = getFullReplacements(request, id, docContext, tpl);
                             if (replacements != null) {
                                 byte[] fileBytes = generateBytes(tpl, replacements);
                                 if (fileBytes != null) {
@@ -334,7 +338,7 @@ public class CombinacionServlet extends HttpServlet {
     // Inject DAO
     private com.combinacion.dao.EstructuradorDAO estructuradorDAO = new com.combinacion.dao.EstructuradorDAO();
 
-    private Map<String, String> getFullReplacements(int contratistaId, String docType) throws Exception {
+    private Map<String, String> getFullReplacements(HttpServletRequest request, int contratistaId, String docType, String realTemplateName) throws Exception {
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
         if (contratista == null)
             return null;
@@ -358,7 +362,7 @@ public class CombinacionServlet extends HttpServlet {
         if (contrato.getEstructuradorId() > 0)
             estructurador = estructuradorDAO.obtenerPorId(contrato.getEstructuradorId());
 
-        return getCommonReplacements(contratista, contrato, presupuesto, supervisor, ordenador, estructurador, docType);
+        return getCommonReplacements(contratista, contrato, presupuesto, supervisor, ordenador, estructurador, docType, request, realTemplateName);
     }
 
     private byte[] generateBytes(String templateName, Map<String, String> replacements) throws IOException {
@@ -396,7 +400,7 @@ public class CombinacionServlet extends HttpServlet {
 
     private Map<String, String> getCommonReplacements(Contratista contratista, Contrato contrato,
             PresupuestoDetalle presupuesto, Supervisor supervisor,
-            OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador, String docType) {
+            OrdenadorGasto ordenador, com.combinacion.models.Estructurador estructurador, String docType, HttpServletRequest request, String realTemplateName) {
         Map<String, String> replacements = new HashMap<>();
 
         // Extraer año de fecha de terminación para agregarlo a números de contrato y
@@ -1054,27 +1058,60 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("${NOMBRE_APOYO}", "");
         }
 
+        // ===== ELABORÓ / PROYECTÓ Y REVISÓ =====
+        Usuario usuarioLogueado = (Usuario) request.getSession().getAttribute("usuario");
+        if (usuarioLogueado != null) {
+            replacements.put("${NOMBRE_PROYECTO}", usuarioLogueado.getNombre() != null ? usuarioLogueado.getNombre().toUpperCase() : "");
+            replacements.put("${CARGO_PROYECTO}", usuarioLogueado.getCargo() != null ? usuarioLogueado.getCargo() : "");
+            replacements.put("{{NOMBRE_ELABORO}}", usuarioLogueado.getNombre() != null ? usuarioLogueado.getNombre().toUpperCase() : "");
+            replacements.put("{{CARGO_ELABORO}}", usuarioLogueado.getCargo() != null ? usuarioLogueado.getCargo() : "");
+        } else {
+            replacements.put("${NOMBRE_PROYECTO}", "SIN DESIGNAR");
+            replacements.put("${CARGO_PROYECTO}", "");
+            replacements.put("{{NOMBRE_ELABORO}}", "SIN DESIGNAR");
+            replacements.put("{{CARGO_ELABORO}}", "");
+        }
+
+        if (realTemplateName != null) {
+            String searchTpl = realTemplateName.replace(".docx", "").trim();
+            RevisorDocumento revisor = revisorDAO.obtenerPorTipoDocumento(searchTpl);
+            if (revisor != null) {
+                replacements.put("${NOMBRE_REVISO}", revisor.getNombreCompleto() != null ? revisor.getNombreCompleto().toUpperCase() : "");
+                replacements.put("${CARGO_REVISO}", revisor.getCargo() != null ? revisor.getCargo() : "");
+                replacements.put("{{NOMBRE_REVISO}}", revisor.getNombreCompleto() != null ? revisor.getNombreCompleto().toUpperCase() : "");
+                replacements.put("{{CARGO_REVISO}}", revisor.getCargo() != null ? revisor.getCargo() : "");
+            } else {
+                replacements.put("${NOMBRE_REVISO}", "SIN DESIGNAR");
+                replacements.put("${CARGO_REVISO}", "");
+                replacements.put("{{NOMBRE_REVISO}}", "SIN DESIGNAR");
+                replacements.put("{{CARGO_REVISO}}", "");
+            }
+        } else {
+            replacements.put("${NOMBRE_REVISO}", "SIN DESIGNAR");
+            replacements.put("${CARGO_REVISO}", "");
+            replacements.put("{{NOMBRE_REVISO}}", "SIN DESIGNAR");
+            replacements.put("{{CARGO_REVISO}}", "");
+        }
+
         return replacements;
     }
 
-    private byte[] generarBytesDocumento(int contratistaId, String docType) throws Exception {
-        Map<String, String> replacements = getFullReplacements(contratistaId, docType);
+    private byte[] generarBytesDocumento(HttpServletRequest request, int contratistaId, String docType) throws Exception {
+        Contrato contratoCheck = contratoDAO.obtenerPorContratistaId(contratistaId);
+        String templateName;
+        if ("estructuradores".equals(docType)) {
+            templateName = "DESIGNACION_RESPONSABLES_PARA_ESTRUCTURAR.docx";
+        } else {
+            boolean conApoyo = contratoCheck != null && contratoCheck.getApoyoSupervision() != null && !contratoCheck.getApoyoSupervision().trim().isEmpty();
+            templateName = conApoyo ? "DESIGNACION_SUPERVISOR_CON APOYO.docx" : "DESIGNACION_SUPERVISOR_SIN_APOYO.docx";
+        }
+
+        Map<String, String> replacements = getFullReplacements(request, contratistaId, docType, templateName);
         if (replacements == null)
             return null;
 
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
         Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
-
-        // Template Logic (Old logic mostly preserved in purpose, delegated to
-        // getCommonReplacements)
-        String templateName;
-        if ("estructuradores".equals(docType)) {
-            templateName = "DESIGNACION_RESPONSABLES_PARA_ESTRUCTURAR.docx";
-        } else {
-            boolean conApoyo = contrato.getApoyoSupervision() != null
-                    && !contrato.getApoyoSupervision().trim().isEmpty();
-            templateName = conApoyo ? "DESIGNACION_SUPERVISOR_CON APOYO.docx" : "DESIGNACION_SUPERVISOR_SIN_APOYO.docx";
-        }
 
         return generateBytes(templateName, replacements);
     }
@@ -1184,17 +1221,16 @@ public class CombinacionServlet extends HttpServlet {
 
             if (esAdicion) {
                 // Generar Documentos de Modificacion
-                Map<String, String> replacements = getFullReplacements(contratistaId, "modificacion");
-                if (replacements != null) {
-                    String[][] plantillas = {
-                        {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
-                        {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
-                    };
-                    for (String[] par : plantillas) {
-                        byte[] docxBytes = generateBytes(par[0], replacements);
-                        if (docxBytes != null) {
-                            addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
-                        }
+                String[][] plantillas = {
+                    {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
+                    {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
+                };
+                for (String[] par : plantillas) {
+                    Map<String, String> replacements = getFullReplacements(request, contratistaId, "modificacion", par[0]);
+                    if (replacements == null) continue;
+                    byte[] docxBytes = generateBytes(par[0], replacements);
+                    if (docxBytes != null) {
+                        addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
                     }
                 }
             } else {
@@ -1252,17 +1288,16 @@ public class CombinacionServlet extends HttpServlet {
 
                     if (esAdicion) {
                         // Generar Documentos de Modificacion
-                        Map<String, String> replacements = getFullReplacements(id, "modificacion");
-                        if (replacements != null) {
-                            String[][] plantillas = {
-                                {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
-                                {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
-                            };
-                            for (String[] par : plantillas) {
-                                byte[] docxBytes = generateBytes(par[0], replacements);
-                                if (docxBytes != null) {
-                                    addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
-                                }
+                        String[][] plantillas = {
+                            {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
+                            {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
+                        };
+                        for (String[] par : plantillas) {
+                            Map<String, String> replacements = getFullReplacements(request, id, "modificacion", par[0]);
+                            if (replacements == null) continue;
+                            byte[] docxBytes = generateBytes(par[0], replacements);
+                            if (docxBytes != null) {
+                                addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
                             }
                         }
                     } else {

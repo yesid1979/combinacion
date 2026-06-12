@@ -79,10 +79,10 @@ public class RevisorDocumentoDAO {
     }
 
     public RevisorDocumento obtenerPorTipoDocumento(String tipoDocumento) {
-        String sql = "SELECT * FROM revisores_documento WHERE tipo_documento = ?";
+        String sql = "SELECT * FROM revisores_documento WHERE tipo_documento LIKE ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, tipoDocumento);
+            ps.setString(1, "%" + tipoDocumento + "%");
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     RevisorDocumento r = new RevisorDocumento();
