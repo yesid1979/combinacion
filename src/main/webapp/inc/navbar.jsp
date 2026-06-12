@@ -50,6 +50,8 @@
                             <c:if test="${sessionScope.usuario.tienePermiso('ORDENADORES_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/ordenadores"><i class="bi bi-briefcase me-2"></i>Ordenadores</a></li>
                             </c:if>
+                            <!-- Agregado: Revisores de Documentos -->
+                            <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/revisores"><i class="bi bi-person-check me-2"></i>Revisores de Documentos</a></li>
                             <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/presupuesto"><i class="bi bi-graph-up me-2"></i>Presupuesto</a></li>
                             </c:if>
