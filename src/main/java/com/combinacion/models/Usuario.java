@@ -18,6 +18,7 @@ public class Usuario implements Serializable {
     private String cedula;
     private String celular;
     private String sexo;
+    private String cargo;
     private String vinculacion;
     private java.sql.Date fechaInicioContrato;
     private java.sql.Date fechaFinContrato;
@@ -62,6 +63,9 @@ public class Usuario implements Serializable {
 
     public String getSexo() { return sexo; }
     public void setSexo(String sexo) { this.sexo = sexo; }
+
+    public String getCargo() { return cargo; }
+    public void setCargo(String cargo) { this.cargo = cargo; }
 
     public String getVinculacion() { return vinculacion; }
     public void setVinculacion(String vinculacion) { this.vinculacion = vinculacion; }

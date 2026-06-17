@@ -22,7 +22,7 @@ public class UsuarioDAO {
     public List<Usuario> listarTodos() {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
                    + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
@@ -44,7 +44,7 @@ public class UsuarioDAO {
      */
     public Usuario obtenerPorId(int id) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
                    + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
@@ -73,7 +73,7 @@ public class UsuarioDAO {
      */
     public Usuario obtenerPorUsername(String username) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
                    + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
@@ -102,8 +102,8 @@ public class UsuarioDAO {
      */
     public int insertar(Usuario usuario) {
         String sql = "INSERT INTO usuarios (username, password_hash, salt, nombre_completo, correo, "
-                   + "cedula, celular, sexo, vinculacion, fecha_inicio_contrato, fecha_fin_contrato, activo, rol_id) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+                   + "cedula, celular, sexo, cargo, vinculacion, fecha_inicio_contrato, fecha_fin_contrato, activo, rol_id) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, usuario.getUsername());
@@ -114,11 +114,12 @@ public class UsuarioDAO {
             ps.setString(6, usuario.getCedula());
             ps.setString(7, usuario.getCelular());
             ps.setString(8, usuario.getSexo());
-            ps.setString(9, usuario.getVinculacion());
-            ps.setDate(10, usuario.getFechaInicioContrato());
-            ps.setDate(11, usuario.getFechaFinContrato());
-            ps.setBoolean(12, usuario.isActivo());
-            ps.setInt(13, usuario.getRolId());
+            ps.setString(9, usuario.getCargo());
+            ps.setString(10, usuario.getVinculacion());
+            ps.setDate(11, usuario.getFechaInicioContrato());
+            ps.setDate(12, usuario.getFechaFinContrato());
+            ps.setBoolean(13, usuario.isActivo());
+            ps.setInt(14, usuario.getRolId());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -133,7 +134,7 @@ public class UsuarioDAO {
      */
     public boolean actualizar(Usuario usuario) {
         String sql = "UPDATE usuarios SET username = ?, nombre_completo = ?, correo = ?, "
-                   + "cedula = ?, celular = ?, sexo = ?, vinculacion = ?, "
+                   + "cedula = ?, celular = ?, sexo = ?, cargo = ?, vinculacion = ?, "
                    + "fecha_inicio_contrato = ?, fecha_fin_contrato = ?, activo = ?, rol_id = ?, foto_url = ? "
                    + "WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -144,13 +145,14 @@ public class UsuarioDAO {
             ps.setString(4, usuario.getCedula());
             ps.setString(5, usuario.getCelular());
             ps.setString(6, usuario.getSexo());
-            ps.setString(7, usuario.getVinculacion()); 
-            ps.setDate(8, usuario.getFechaInicioContrato());
-            ps.setDate(9, usuario.getFechaFinContrato());
-            ps.setBoolean(10, usuario.isActivo());
-            ps.setInt(11, usuario.getRolId());
-            ps.setString(12, usuario.getFotoUrl());
-            ps.setInt(13, usuario.getId());
+            ps.setString(7, usuario.getCargo());
+            ps.setString(8, usuario.getVinculacion()); 
+            ps.setDate(9, usuario.getFechaInicioContrato());
+            ps.setDate(10, usuario.getFechaFinContrato());
+            ps.setBoolean(11, usuario.isActivo());
+            ps.setInt(12, usuario.getRolId());
+            ps.setString(13, usuario.getFotoUrl());
+            ps.setInt(14, usuario.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -342,7 +344,7 @@ public class UsuarioDAO {
         String dir = "ASC".equalsIgnoreCase(orderDir) ? "ASC" : "DESC";
 
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
-                   + "u.correo, u.cedula, u.celular, u.sexo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
                    + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
@@ -381,6 +383,7 @@ public class UsuarioDAO {
         u.setCedula(rs.getString("cedula"));
         u.setCelular(rs.getString("celular"));
         u.setSexo(rs.getString("sexo"));
+        try { u.setCargo(rs.getString("cargo")); } catch (Exception e) {}
         u.setVinculacion(rs.getString("vinculacion")); 
         u.setFechaInicioContrato(rs.getDate("fecha_inicio_contrato"));
         u.setFechaFinContrato(rs.getDate("fecha_fin_contrato"));

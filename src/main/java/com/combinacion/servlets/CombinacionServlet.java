@@ -44,6 +44,8 @@ public class CombinacionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        com.combinacion.util.DatabasePatcher.ensureSchema();
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
         System.out.println("CombinacionServlet Action: " + action);
@@ -1061,14 +1063,17 @@ public class CombinacionServlet extends HttpServlet {
         // ===== ELABORÓ / PROYECTÓ Y REVISÓ =====
         Usuario usuarioLogueado = (Usuario) request.getSession().getAttribute("usuario");
         if (usuarioLogueado != null) {
-            replacements.put("${NOMBRE_PROYECTO}", usuarioLogueado.getNombre() != null ? usuarioLogueado.getNombre().toUpperCase() : "");
-            replacements.put("${CARGO_PROYECTO}", usuarioLogueado.getCargo() != null ? usuarioLogueado.getCargo() : "");
-            replacements.put("{{NOMBRE_ELABORO}}", usuarioLogueado.getNombre() != null ? usuarioLogueado.getNombre().toUpperCase() : "");
-            replacements.put("{{CARGO_ELABORO}}", usuarioLogueado.getCargo() != null ? usuarioLogueado.getCargo() : "");
+            String nombreTitleCase = toTitleCase(usuarioLogueado.getNombreCompleto());
+            String vinculacionTitleCase = toTitleCase(usuarioLogueado.getCargo());
+            
+            replacements.put("${NOMBRE_PROYECTO}", nombreTitleCase);
+            replacements.put("${CARGO_PROYECTO}", vinculacionTitleCase);
+            replacements.put("{{NOMBRE_ELABORO}}", nombreTitleCase);
+            replacements.put("{{CARGO_ELABORO}}", vinculacionTitleCase);
         } else {
-            replacements.put("${NOMBRE_PROYECTO}", "SIN DESIGNAR");
+            replacements.put("${NOMBRE_PROYECTO}", "Sin Designar");
             replacements.put("${CARGO_PROYECTO}", "");
-            replacements.put("{{NOMBRE_ELABORO}}", "SIN DESIGNAR");
+            replacements.put("{{NOMBRE_ELABORO}}", "Sin Designar");
             replacements.put("{{CARGO_ELABORO}}", "");
         }
 
@@ -1076,20 +1081,22 @@ public class CombinacionServlet extends HttpServlet {
             String searchTpl = realTemplateName.replace(".docx", "").trim();
             RevisorDocumento revisor = revisorDAO.obtenerPorTipoDocumento(searchTpl);
             if (revisor != null) {
-                replacements.put("${NOMBRE_REVISO}", revisor.getNombreCompleto() != null ? revisor.getNombreCompleto().toUpperCase() : "");
-                replacements.put("${CARGO_REVISO}", revisor.getCargo() != null ? revisor.getCargo() : "");
-                replacements.put("{{NOMBRE_REVISO}}", revisor.getNombreCompleto() != null ? revisor.getNombreCompleto().toUpperCase() : "");
-                replacements.put("{{CARGO_REVISO}}", revisor.getCargo() != null ? revisor.getCargo() : "");
+                String revisorNombre = toTitleCase(revisor.getNombreCompleto());
+                String revisorCargo = toTitleCase(revisor.getCargo());
+                replacements.put("${NOMBRE_REVISO}", revisorNombre);
+                replacements.put("${CARGO_REVISO}", revisorCargo);
+                replacements.put("{{NOMBRE_REVISO}}", revisorNombre);
+                replacements.put("{{CARGO_REVISO}}", revisorCargo);
             } else {
-                replacements.put("${NOMBRE_REVISO}", "SIN DESIGNAR");
+                replacements.put("${NOMBRE_REVISO}", "Sin Designar");
                 replacements.put("${CARGO_REVISO}", "");
-                replacements.put("{{NOMBRE_REVISO}}", "SIN DESIGNAR");
+                replacements.put("{{NOMBRE_REVISO}}", "Sin Designar");
                 replacements.put("{{CARGO_REVISO}}", "");
             }
         } else {
-            replacements.put("${NOMBRE_REVISO}", "SIN DESIGNAR");
+            replacements.put("${NOMBRE_REVISO}", "Sin Designar");
             replacements.put("${CARGO_REVISO}", "");
-            replacements.put("{{NOMBRE_REVISO}}", "SIN DESIGNAR");
+            replacements.put("{{NOMBRE_REVISO}}", "Sin Designar");
             replacements.put("{{CARGO_REVISO}}", "");
         }
 
@@ -1330,6 +1337,23 @@ public class CombinacionServlet extends HttpServlet {
         if (input == null || input.trim().isEmpty()) return "";
         String low = input.toLowerCase().trim();
         return Character.toUpperCase(low.charAt(0)) + low.substring(1);
+    }
+
+    /**
+     * Convierte un texto a Title Case (Primera letra de cada palabra en mayúscula).
+     */
+    private String toTitleCase(String input) {
+        if (input == null || input.trim().isEmpty()) return "";
+        String[] words = input.toLowerCase().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            if (words[i].length() > 0) {
+                sb.append(Character.toUpperCase(words[i].charAt(0)))
+                  .append(words[i].substring(1));
+            }
+            if (i < words.length - 1) sb.append(" ");
+        }
+        return sb.toString();
     }
 
     /**
