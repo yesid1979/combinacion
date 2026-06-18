@@ -17,8 +17,8 @@ public class ContratoDAO {
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop, iva_si_no) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -91,6 +91,7 @@ public class ContratoDAO {
             ps.setString(51, c.getValorContratoMasAdicionLetras());
             ps.setBigDecimal(52, c.getValorContratoMasAdicion());
             ps.setString(53, c.getEnlaceSecop());
+            ps.setString(54, c.getIvaSiNo());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -311,6 +312,7 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    c.setIvaSiNo(rs.getString("iva_si_no"));
                     return c;
                 }
             }
@@ -332,7 +334,7 @@ public class ContratoDAO {
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
                 "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
                 "fecha_idoneidad=?, fecha_estructurador=?, adicion_si_no=?, numero_cuotas_adicion=?, valor_total_adicion_letras=?, " +
-                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=? " +
+                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -405,7 +407,8 @@ public class ContratoDAO {
             ps.setString(50, c.getValorContratoMasAdicionLetras());
             ps.setBigDecimal(51, c.getValorContratoMasAdicion());
             ps.setString(52, c.getEnlaceSecop());
-            ps.setInt(53, c.getId());
+            ps.setString(53, c.getIvaSiNo());
+            ps.setInt(54, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -476,6 +479,7 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    c.setIvaSiNo(rs.getString("iva_si_no"));
                     return c;
                 }
             }
@@ -547,6 +551,7 @@ public class ContratoDAO {
                     c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    c.setIvaSiNo(rs.getString("iva_si_no"));
                     return c;
                 }
             }

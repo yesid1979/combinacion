@@ -27,6 +27,15 @@ public class DatabasePatcher {
                 System.out.println("✅ La columna 'apoyo_supervision' ya existe.");
             }
 
+            ResultSet rsIva = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                            "WHERE table_name='contratos' AND column_name='iva_si_no'");
+            if (!rsIva.next()) {
+                System.out.println("⚠️ Columna 'iva_si_no' no encontrada. Agregándola automáticamente...");
+                stmt.executeUpdate("ALTER TABLE contratos ADD COLUMN iva_si_no VARCHAR(10)");
+                System.out.println("✅ Columna 'iva_si_no' agregada exitosamente.");
+            }
+
             // --- NUEVOS CAMPOS PARA ADICION EN PRESUPUESTO_DETALLES ---
             String[] columnasPresupuesto = {
                 "cdp_adicion TEXT", 

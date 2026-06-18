@@ -133,7 +133,11 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Inversion Docs
             if (esInversion && contrato != null) {
-                for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
+                boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
+                String complementoDoc = tieneIva ? "INVERSION_5_COMPLEMENTO_CONTRATO_IVA.docx" : "INVERSION_4_COMPLEMENTO_CONTRATO.docx";
+
+                for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", complementoDoc}) {
                     String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
                     Map<String, String> replacements = getFullReplacements(request, contratistaId, docContext, tpl);
                     if (replacements != null) {
@@ -146,7 +150,7 @@ public class CombinacionServlet extends HttpServlet {
                                 baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
                             } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
                                 baseName = "CERTIFICADO DE IDONEIDAD";
-                            } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                            } else if (tpl.equals(complementoDoc)) {
                                 baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                             }
                             addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
@@ -157,7 +161,11 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Funcionamiento Docs
             if (!esInversion && esFuncionamiento && contrato != null) {
-                for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
+                boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
+                String complementoDoc = tieneIva ? "INVERSION_5_COMPLEMENTO_CONTRATO_IVA.docx" : "INVERSION_4_COMPLEMENTO_CONTRATO.docx";
+
+                for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", complementoDoc}) {
                     String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
                     Map<String, String> replacements = getFullReplacements(request, contratistaId, docContext, tpl);
                     if (replacements != null) {
@@ -170,7 +178,7 @@ public class CombinacionServlet extends HttpServlet {
                                 baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
                             } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
                                 baseName = "CERTIFICADO DE IDONEIDAD";
-                            } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                            } else if (tpl.equals(complementoDoc)) {
                                 baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                             }
                             addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
@@ -273,7 +281,11 @@ public class CombinacionServlet extends HttpServlet {
 
                     // Inversion Docs
                     if (esInversion) {
-                        for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                        String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
+                        boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
+                        String complementoDoc = tieneIva ? "INVERSION_5_COMPLEMENTO_CONTRATO_IVA.docx" : "INVERSION_4_COMPLEMENTO_CONTRATO.docx";
+
+                        for (String tpl : new String[]{"INVERSION_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", complementoDoc}) {
                             String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "inversion";
                             Map<String, String> replacements = getFullReplacements(request, id, docContext, tpl);
                             if (replacements != null) {
@@ -286,7 +298,7 @@ public class CombinacionServlet extends HttpServlet {
                                         baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
                                     } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
                                         baseName = "CERTIFICADO DE IDONEIDAD";
-                                    } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                    } else if (tpl.equals(complementoDoc)) {
                                         baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                                     }
                                     addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
@@ -297,7 +309,11 @@ public class CombinacionServlet extends HttpServlet {
 
                     // Funcionamiento Docs
                     if (!esInversion && esFuncionamiento && contrato != null) {
-                        for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", "INVERSION_4_COMPLEMENTO_CONTRATO.docx"}) {
+                        String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
+                        boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
+                        String complementoDoc = tieneIva ? "INVERSION_5_COMPLEMENTO_CONTRATO_IVA.docx" : "INVERSION_4_COMPLEMENTO_CONTRATO.docx";
+
+                        for (String tpl : new String[]{"FUNCIONAMIENTO_1_ESTUDIOS_PREVIOS.docx", "INVERSION_2_VERIFICACION_CUMPLIMIENTO.docx", "INVERSION_3_CERTIFICADO_IDONEIDAD.docx", complementoDoc}) {
                             String docContext = tpl.contains("IDONEIDAD") ? "idoneidad" : "funcionamiento";
                             Map<String, String> replacements = getFullReplacements(request, id, docContext, tpl);
                             if (replacements != null) {
@@ -310,7 +326,7 @@ public class CombinacionServlet extends HttpServlet {
                                         baseName = "VERIFICACI\u00D3N CUMPLIMIENTO REQUISITOS";
                                     } else if (tpl.equals("INVERSION_3_CERTIFICADO_IDONEIDAD.docx")) {
                                         baseName = "CERTIFICADO DE IDONEIDAD";
-                                    } else if (tpl.equals("INVERSION_4_COMPLEMENTO_CONTRATO.docx")) {
+                                    } else if (tpl.equals(complementoDoc)) {
                                         baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                                     }
                                     addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
@@ -609,6 +625,7 @@ public class CombinacionServlet extends HttpServlet {
                 contrato.getPlazoMeses() > 0 ? String.valueOf(contrato.getPlazoMeses()) : "PENDIENTE");
 
         // Nuevos campos: Adición y SECOP
+        replacements.put("{{IVA_SI_NO}}", contrato.getIvaSiNo() != null ? contrato.getIvaSiNo() : "");
         replacements.put("{{ADICION_SI_NO}}", contrato.getAdicionSiNo() != null ? contrato.getAdicionSiNo() : "");
         replacements.put("{{NUMERO_CUOTAS_ADICION}}", contrato.getNumeroCuotasAdicion() > 0 ? String.valueOf(contrato.getNumeroCuotasAdicion()) : "");
         if (contrato.getNumeroCuotasAdicion() > 0) {

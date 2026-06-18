@@ -353,6 +353,7 @@ public class CargaMasivaService {
             }
             else if (h.contains("numero") && h.contains("cuotas") && h.contains("adicion")) { map.put("numero_cuotas_adicion", i); }
             else if (h.contains("adicion") && h.contains("si") && h.contains("no"))         { map.put("adicion_si_no", i); }
+            else if (h.contains("iva") && h.contains("si") && h.contains("no"))             { map.put("iva_si_no", i); }
         }
         return map;
     }
@@ -600,6 +601,7 @@ public class CargaMasivaService {
             contrato.setValorCuotaLetras(get(row, map, "valor_cuota_letras"));
             contrato.setValorMediaCuotaLetras(get(row, map, "valor_media_cuota_letras"));
             contrato.setAdicionSiNo(parsearBoolean(get(row, map, "adicion_si_no")));
+            contrato.setIvaSiNo(parsearBoolean(get(row, map, "iva_si_no")));
             contrato.setValorTotalAdicionLetras(get(row, map, "valor_total_adicion_letras"));
             contrato.setValorContratoMasAdicionLetras(get(row, map, "valor_contrato_mas_adicion_letras"));
             contrato.setEnlaceSecop(get(row, map, "enlace_secop"));

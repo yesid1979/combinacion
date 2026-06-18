@@ -76,9 +76,9 @@ public class RevisorDocumentoServlet extends HttpServlet {
     private void insertar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         RevisorDocumento r = new RevisorDocumento();
-        r.setTipoDocumento(request.getParameter("tipoDocumento"));
-        r.setNombreCompleto(request.getParameter("nombreCompleto"));
-        r.setCargo(request.getParameter("cargo"));
+        r.setTipoDocumento(decode(request.getParameter("tipoDocumento")));
+        r.setNombreCompleto(decode(request.getParameter("nombreCompleto")));
+        r.setCargo(decode(request.getParameter("cargo")));
 
         if (revisorDAO.insertar(r)) {
             response.sendRedirect("revisores?status=created");
@@ -93,9 +93,9 @@ public class RevisorDocumentoServlet extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             RevisorDocumento r = new RevisorDocumento();
             r.setId(id);
-            r.setTipoDocumento(request.getParameter("tipoDocumento"));
-            r.setNombreCompleto(request.getParameter("nombreCompleto"));
-            r.setCargo(request.getParameter("cargo"));
+            r.setTipoDocumento(decode(request.getParameter("tipoDocumento")));
+            r.setNombreCompleto(decode(request.getParameter("nombreCompleto")));
+            r.setCargo(decode(request.getParameter("cargo")));
 
             if (revisorDAO.actualizar(r)) {
                 response.sendRedirect("revisores?status=updated");
@@ -119,6 +119,16 @@ public class RevisorDocumentoServlet extends HttpServlet {
             }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+
+    private String decode(String val) {
+        if (val == null) return null;
+        try {
+            // Convierte de ISO-8859-1 a UTF-8 por si el servidor no respeta el setCharacterEncoding
+            return new String(val.getBytes("ISO-8859-1"), "UTF-8");
+        } catch (Exception e) {
+            return val;
         }
     }
 }

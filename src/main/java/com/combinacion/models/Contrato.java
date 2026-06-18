@@ -51,6 +51,7 @@ public class Contrato {
     private String valorContratoMasAdicionLetras;
     private BigDecimal valorContratoMasAdicion;
     private String enlaceSecop;
+    private String ivaSiNo;
 
     private String actividadesEntregables;
 
@@ -159,6 +160,8 @@ public class Contrato {
     public void setValorContratoMasAdicion(BigDecimal valorContratoMasAdicion) { this.valorContratoMasAdicion = valorContratoMasAdicion; }
     public String getEnlaceSecop() { return enlaceSecop; }
     public void setEnlaceSecop(String enlaceSecop) { this.enlaceSecop = enlaceSecop; }
+    public String getIvaSiNo() { return ivaSiNo; }
+    public void setIvaSiNo(String ivaSiNo) { this.ivaSiNo = ivaSiNo; }
     public String getActividadesEntregables() { return actividadesEntregables; }
     public void setActividadesEntregables(String actividadesEntregables) { this.actividadesEntregables = actividadesEntregables; }
     public String getLiquidacionAcuerdo() { return liquidacionAcuerdo; }
