@@ -428,6 +428,7 @@ public class TemplateGenerator {
         }
 
         if (replaced) {
+            newText = newText.replace("$$", "$");
             // Remove completely if instructed
             if (newText.contains("{{REMOVE_PARAGRAPH}}")) {
                 return true;

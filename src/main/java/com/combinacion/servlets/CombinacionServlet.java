@@ -635,7 +635,9 @@ public class CombinacionServlet extends HttpServlet {
         }
 
         replacements.put("{{NUMERO_CUOTAS_NUMERO}}", contrato.getNumCuotasNumero() > 0 ? String.valueOf(contrato.getNumCuotasNumero()) : "");
+        replacements.put("{{NUM_CUOTAS_NUMERO}}", contrato.getNumCuotasNumero() > 0 ? String.valueOf(contrato.getNumCuotasNumero()) : "");
         replacements.put("{{NUMERO_CUOTAS_LETRAS}}", contrato.getNumCuotasLetras() != null ? contrato.getNumCuotasLetras() : "");
+        replacements.put("{{NUM_CUOTAS_LETRAS}}", contrato.getNumCuotasLetras() != null ? contrato.getNumCuotasLetras() : "");
 
         replacements.put("{{VALOR_TOTAL_ADICION_LETRAS}}", contrato.getValorTotalAdicionLetras() != null ? contrato.getValorTotalAdicionLetras() : "");
         replacements.put("{{VALOR_TOTAL_ADICION}}", contrato.getValorTotalAdicion() != null ? formatearMoneda(contrato.getValorTotalAdicion()) : "");

@@ -1,0 +1,24 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.combinacion:combinacion >---------------------
+[INFO] Building combinacion 1.0
+[INFO] --------------------------------[ war ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ combinacion ---
+[INFO] Deleting C:\Users\yesid.piedrahita\Documents\NetBeansProjects\combinacion\target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ combinacion ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ combinacion ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 67 source files to C:\Users\yesid.piedrahita\Documents\NetBeansProjects\combinacion\target\classes
+[WARNING] /C:/Users/yesid.piedrahita/Documents/NetBeansProjects/combinacion/src/main/java/com/combinacion/util/TemplateGenerator.java: C:\Users\yesid.piedrahita\Documents\NetBeansProjects\combinacion\src\main\java\com\combinacion\util\TemplateGenerator.java uses or overrides a deprecated API.
+[WARNING] /C:/Users/yesid.piedrahita/Documents/NetBeansProjects/combinacion/src/main/java/com/combinacion/util/TemplateGenerator.java: Recompile with -Xlint:deprecation for details.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  24.528 s
+[INFO] Finished at: 2026-06-19T13:20:28-05:00
+[INFO] ------------------------------------------------------------------------

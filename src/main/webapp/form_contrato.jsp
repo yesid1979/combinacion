@@ -184,6 +184,26 @@
                                                 <input type="text" class="form-control" name="valor_total_letras"
                                                     value="${contrato.valorTotalLetras}" ${readonly ? 'readonly' : '' }>
                                             </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Valor Antes IVA</label>
+                                                <input type="number" step="0.01" class="form-control" name="valor_antes_iva"
+                                                    value="${contrato.valorAntesIva}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Valor Antes IVA (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_antes_iva_letras"
+                                                    value="${contrato.valorAntesIvaLetras}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Valor IVA</label>
+                                                <input type="number" step="0.01" class="form-control" name="valor_iva"
+                                                    value="${contrato.valorIva}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Valor IVA (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_iva_letras"
+                                                    value="${contrato.valorIvaLetras}" ${readonly ? 'readonly' : '' }>
+                                            </div>
 
                                             <div class="section-title mt-4">Detalle de Pagos</div>
                                             <div class="col-md-3">
@@ -209,6 +229,39 @@
                                                 <input type="text" class="form-control" name="valor_media_cuota_letras"
                                                     value="${contrato.valorMediaCuotaLetras}" ${readonly ? 'readonly'
                                                     : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cuota Antes IVA (Num)</label>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    name="valor_cuota_antes_iva" value="${contrato.valorCuotaAntesIva}"
+                                                    ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cuota Antes IVA (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_cuota_antes_iva_letras"
+                                                    value="${contrato.valorCuotaAntesIvaLetras}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cuota IVA (Num)</label>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    name="valor_cuota_iva" value="${contrato.valorCuotaIva}"
+                                                    ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Cuota IVA (Letras)</label>
+                                                <input type="text" class="form-control" name="valor_cuota_iva_letras"
+                                                    value="${contrato.valorCuotaIvaLetras}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">N° Cuotas (Num)</label>
+                                                <input type="number" class="form-control"
+                                                    name="num_cuotas_numero" value="${contrato.numCuotasNumero}"
+                                                    ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">N° Cuotas (Letras)</label>
+                                                <input type="text" class="form-control" name="num_cuotas_letras"
+                                                    value="${contrato.numCuotasLetras}" ${readonly ? 'readonly' : '' }>
                                             </div>
 
                                             <div class="section-title mt-4">Adición (Otrosí) y SECOP</div>
