@@ -26,24 +26,24 @@
             <div class="container mt-4 mb-5 flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
                         <select id="filterPeriodo" class="form-select w-auto" onchange="$('#contratistasTable').DataTable().ajax.reload();">
                             <option value="">Todos los periodos</option>
                             <c:forEach var="p" items="${periodos}">
                                 <option value="${p}">${p}</option>
                             </c:forEach>
                         </select>
-                        <button id="btnFilterAdicion" class="btn btn-outline-warning">
+                        <button id="btnFilterAdicion" class="btn btn-outline-warning text-nowrap">
                             <i class="bi bi-filter"></i> Ver solo otrosí
                         </button>
-                        <button class="btn btn-warning" onclick="descargarMasivoModificacion()">
-                            <i class="bi bi-file-zip me-2"></i>Modificaciones (ZIP)
+                        <button class="btn btn-warning text-nowrap" onclick="descargarMasivoModificacion()">
+                            <i class="bi bi-file-earmark-text me-1"></i> Modificaciones (ZIP)
                         </button>
-                        <button class="btn btn-success" onclick="descargarMasivo()">
-                            <i class="bi bi-file-zip me-2"></i>Descargar Normal (ZIP)
+                        <button class="btn btn-success text-nowrap" onclick="descargarMasivo()">
+                            <i class="bi bi-download me-1"></i> Descarga Normal (ZIP)
                         </button>
-                        <button class="btn btn-info text-white" onclick="descargarMasivoEstructuradores()">
-                            <i class="bi bi-file-word me-2"></i>Responsables Estructurar (ZIP)
+                        <button class="btn btn-info text-white text-nowrap" onclick="descargarMasivoEstructuradores()">
+                            <i class="bi bi-file-earmark-person me-1"></i> Responsables Estructurar (ZIP)
                         </button>
                     </div>
                 </div>
