@@ -113,8 +113,9 @@ public class Usuario implements Serializable {
 
         String target = codigoPermiso.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
  
-        // --- 2. VERIFICAR PERMISOS ESPECIALES (SUMATORIO) ---
-        if (permisosEspeciales != null) {
+        // --- 1. VERIFICAR PERMISOS ESPECIALES (SOBREESCRITURA ABSOLUTA) ---
+        // Si un usuario tiene permisos especiales, estos reemplazan por completo los de su Rol (y la llave maestra)
+        if (permisosEspeciales != null && !permisosEspeciales.isEmpty()) {
             for (Permiso p : permisosEspeciales) {
                 String cod = p.getCodigo();
                 if (cod == null) continue;
@@ -128,7 +129,13 @@ public class Usuario implements Serializable {
                     if (normalized.startsWith(moduloBase)) return true;
                 }
             }
+            // Si tiene permisos especiales y no se encontró, se deniega el acceso. NO se consulta el Rol.
+            return false;
         }
+
+        // --- 2. LLAVE MAESTRA: Administrador ---
+        // Si no tiene permisos especiales manuales, el admin tiene acceso a todo por defecto
+        if (this.rolId == 1 || esAdministrador()) return true;
  
         // --- 3. VERIFICAR PERMISOS POR ROL (BASE) ---
         if (rol != null) {
@@ -138,7 +145,7 @@ public class Usuario implements Serializable {
             }
             if (tieneRol) return true;
         }
-
+ 
         return false;
     }
 
