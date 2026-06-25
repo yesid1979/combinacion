@@ -271,6 +271,17 @@ public class UsuarioServlet extends HttpServlet {
                 }
             }
             usuarioService.actualizarPermisosEspeciales(id, ids);
+            
+            // Sincronizar sesión si se están actualizando los propios permisos
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Usuario logged = (Usuario) session.getAttribute("usuario");
+                if (logged != null && logged.getId() == id) {
+                    Usuario actualizado = usuarioService.obtenerPorId(id);
+                    session.setAttribute("usuario", actualizado);
+                }
+            }
+            
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
         } catch (Exception e) {
             e.printStackTrace();
