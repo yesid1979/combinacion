@@ -110,9 +110,6 @@ public class Usuario implements Serializable {
      */
     public boolean tienePermiso(String codigoPermiso) {
         if (codigoPermiso == null) return false;
-        
-        // --- 1. LLAVE MAESTRA: Administrador (Dinámico) ---
-        if (this.rolId == 1 || esAdministrador()) return true;
 
         String target = codigoPermiso.toUpperCase().replace("_ACTUALIZAR", "_EDITAR");
  

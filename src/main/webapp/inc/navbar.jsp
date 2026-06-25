@@ -74,7 +74,7 @@
                     </c:if>
 
 
-                    <c:if test="${sessionScope.usuario.tienePermiso('ADMINISTRACION_VER')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('USUARIOS_VER') || sessionScope.usuario.tienePermiso('ROLES_VER')}">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                                style="color: #004884; font-size: 0.9rem;"
