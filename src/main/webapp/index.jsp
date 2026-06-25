@@ -136,7 +136,7 @@
                     </c:if>
 
                     <!-- Administración -->
-                    <c:if test="${sessionScope.usuario.tienePermiso('USUARIOS_VER') || sessionScope.usuario.tienePermiso('ROLES_VER')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='admin/usuarios'">
                             <div class="card-body text-center">
