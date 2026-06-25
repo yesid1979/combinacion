@@ -160,6 +160,8 @@
                                             btns += '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>';
                                         }
                                         
+                                        btns += '<a href="informes?contrato_id=' + data + '" class="btn btn-sm btn-outline-success ms-1" title="Cuentas/Informes"><i class="bi bi-wallet2"></i></a>';
+                                        
                                         btns += '</div>';
                                         return btns;
                                     }

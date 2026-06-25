@@ -49,6 +49,22 @@ public class InformeSupervisionService {
         }
     }
 
+    public String actualizar(int id, InformeFormData form) {
+        try {
+            InformeSupervision info = mapFormToModel(form);
+            info.setId(id);
+            String daoResult = informeDAO.actualizar(info);
+            if (daoResult == null) {
+                return null; // Éxito
+            } else {
+                return "No se pudo actualizar el informe en la base de datos: " + daoResult;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error al procesar la actualización del informe: " + e.getMessage();
+        }
+    }
+
     private InformeSupervision mapFormToModel(InformeFormData f) {
         InformeSupervision info = new InformeSupervision();
         info.setContratoId(f.contratoId);

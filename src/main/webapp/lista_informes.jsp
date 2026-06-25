@@ -26,13 +26,21 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Informes de Supervisión</h3>
-                <c:if test="${not empty contrato}">
-                    <p class="text-muted small">Contrato: ${contrato.numeroContrato} - ${contrato.contratistaNombre}</p>
-                </c:if>
             </div>
-            <a href="informes?action=new&contrato_id=${contrato.id}" class="btn btn-success px-4 fw-bold shadow-sm">
-                <i class="bi bi-plus-circle me-2"></i>Nuevo Informe
-            </a>
+            <c:choose>
+                <c:when test="${not empty contrato}">
+                    <a href="informes?action=new&contrato_id=${contrato.id}" class="btn btn-success px-4 fw-bold shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Nuevo Informe
+                    </a>
+                </c:when>
+                <c:otherwise>
+                    <div class="text-end">
+                        <a href="contratos" class="btn btn-outline-secondary px-4 fw-bold shadow-sm">
+                            <i class="bi bi-search me-2"></i>Seleccionar contrato para registrar la cuenta de cobro
+                        </a>
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <div class="card border">
@@ -62,11 +70,14 @@
                                     </span>
                                 </td>
                                 <td>${info.numeroCuota}</td>
-                                <td><fmt:formatDate value="${info.fechaCreacion}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                <td><fmt:formatNumber value="${info.valorCuotaPagar}" type="currency" currencySymbol="$ "/></td>
+                                <td><fmt:formatDate value="${info.fechaCreacion}" pattern="dd/MM/yyyy hh:mm a"/></td>
+                                <td><fmt:formatNumber value="${info.valorCuotaPagar}" type="currency" currencySymbol="$ " maxFractionDigits="0" minFractionDigits="0"/></td>
                                 <td class="text-center">
-                                    <a href="informes?action=view&id=${info.id}" class="btn btn-sm btn-outline-primary" title="Ver Detalle">
+                                    <a href="informes?action=view&id=${info.id}" class="btn btn-sm btn-outline-info" title="Ver Detalle">
                                         <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="informes?action=edit&id=${info.id}" class="btn btn-sm btn-outline-primary ms-1" title="Editar Informe">
+                                        <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <a href="informes?action=download&id=${info.id}" class="btn btn-sm btn-outline-success ms-1" title="Descargar DOCX">
                                         <i class="bi bi-file-earmark-word"></i>

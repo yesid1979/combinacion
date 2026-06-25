@@ -27,6 +27,12 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex gap-2">
+                        <select id="filterPeriodo" class="form-select w-auto" onchange="$('#contratistasTable').DataTable().ajax.reload();">
+                            <option value="">Todos los periodos</option>
+                            <c:forEach var="p" items="${periodos}">
+                                <option value="${p}">${p}</option>
+                            </c:forEach>
+                        </select>
                         <button id="btnFilterAdicion" class="btn btn-outline-warning">
                             <i class="bi bi-filter"></i> Ver solo otrosí
                         </button>
@@ -35,6 +41,9 @@
                         </button>
                         <button class="btn btn-success" onclick="descargarMasivo()">
                             <i class="bi bi-file-zip me-2"></i>Descargar Normal (ZIP)
+                        </button>
+                        <button class="btn btn-info text-white" onclick="descargarMasivoEstructuradores()">
+                            <i class="bi bi-file-word me-2"></i>Responsables Estructurar (ZIP)
                         </button>
                     </div>
                 </div>
@@ -98,6 +107,7 @@
                                 d.source = "combinacion";
                                 d.t = new Date().getTime();
                                 d.filterAdicion = $('#btnFilterAdicion').hasClass('active');
+                                d.periodo = $('#filterPeriodo').val();
                             },
                             "error": function (xhr, error, thrown) {
                                 console.error("Error AJAX Status:", xhr.status);
@@ -182,11 +192,13 @@
                 });
 
                 function descargarIndividual(id) {
-                    window.location.href = 'combinacion?action=generate&id=' + id;
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=generate&id=' + id + '&periodo=' + encodeURIComponent(periodo);
                 }
                 
                 function descargarIndividualModificacion(id) {
-                    window.location.href = 'combinacion?action=generateModificacion&id=' + id;
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=generateModificacion&id=' + id + '&periodo=' + encodeURIComponent(periodo);
                 }
 
                 function descargarMasivo() {
@@ -201,7 +213,8 @@
                     }
 
                     // Trigger extraction
-                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',');
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
                 }
                 
                 function descargarMasivoModificacion() {
@@ -216,7 +229,24 @@
                     }
 
                     // Trigger extraction
-                    window.location.href = 'combinacion?action=downloadZipModificacion&ids=' + selected.join(',');
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=downloadZipModificacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                }
+
+                function descargarMasivoEstructuradores() {
+                    let selected = [];
+                    $('.row-select:checked').each(function () {
+                        selected.push($(this).val());
+                    });
+
+                    if (selected.length === 0) {
+                        Swal.fire('Atención', 'Por favor seleccione al menos un contratista.', 'warning');
+                        return;
+                    }
+
+                    // Trigger extraction
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=downloadZipEstructuradores&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
                 }
             </script>
         </body>

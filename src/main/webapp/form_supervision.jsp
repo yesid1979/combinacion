@@ -75,8 +75,11 @@
                 </div>
 
                 <form action="informes" method="POST" id="informeForm">
-                    <input type="hidden" name="action" value="insert">
+                    <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
+                    <c:if test="${action == 'update'}">
+                        <input type="hidden" name="id" value="${informe.id}">
+                    </c:if>
 
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
@@ -242,7 +245,7 @@
                             <div class="row g-3">
                                 <div class="col-md-12">
                                     <label class="form-label">Concepto Supervisor (Obligaciones y Actividades)</label>
-                                    <input type="hidden" name="obligaciones_count" value="${listaObligaciones.size()}">
+                                    <input type="hidden" name="obligaciones_count" value="${fn:length(listaObligaciones)}">
                                     <div class="table-responsive">
                                         <table class="table table-bordered align-middle">
                                             <thead class="table-light">
@@ -259,7 +262,13 @@
                                                             <small class="text-muted d-block" style="white-space: pre-wrap;">${item.obligacion}</small>
                                                         </td>
                                                         <td>
-                                                            <textarea class="form-control border-0" name="actividad_${status.index}" rows="3" placeholder="Describa las actividades realizadas..." required ${readonly ? 'readonly' : ''}>${item.actividad}</textarea>
+                                                            <textarea id="raw_actividad_${status.index}" style="display:none;">${item.actividad}</textarea>
+                                                            <div id="actividades_container_${status.index}"></div>
+                                                            <c:if test="${not readonly}">
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(${status.index})">
+                                                                    <i class="bi bi-plus-circle"></i> Agregar
+                                                                </button>
+                                                            </c:if>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
@@ -296,7 +305,7 @@
                         </a>
                         <c:if test="${not readonly}">
                             <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
-                                <i class="bi bi-save me-2"></i>Guardar Informe y Generar Formato
+                                <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe y Generar Formato'}
                             </button>
                         </c:if>
                         <c:if test="${readonly}">
@@ -323,7 +332,56 @@
                 e.preventDefault();
                 $(this).tab('show');
             });
+
+            // Cargar actividades dinámicamente
+            var isReadonly = ${readonly == true ? 'true' : 'false'};
+            var obligacionesCount = ${fn:length(listaObligaciones) > 0 ? fn:length(listaObligaciones) : 0};
+            for(var i=0; i<obligacionesCount; i++) {
+                var rawText = document.getElementById("raw_actividad_" + i).value;
+                var acts = rawText ? rawText.split('\n') : [''];
+                if (acts.length === 0) acts = [''];
+                for(var j=0; j<acts.length; j++) {
+                    agregarActividadConValor(i, acts[j], isReadonly);
+                }
+            }
         });
+
+        function agregarActividadConValor(index, valor, isReadonly) {
+            var container = document.getElementById("actividades_container_" + index);
+            var div = document.createElement("div");
+            div.className = "d-flex mb-2 align-items-start";
+            
+            var textarea = document.createElement("textarea");
+            textarea.className = "form-control";
+            textarea.name = "actividad_" + index;
+            textarea.rows = 2;
+            textarea.placeholder = "Describa la actividad realizada...";
+            textarea.value = valor;
+            if (isReadonly) textarea.readOnly = true;
+            else textarea.required = true;
+            
+            div.appendChild(textarea);
+            
+            if (!isReadonly) {
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "btn btn-outline-danger ms-2";
+                btn.innerHTML = '<i class="bi bi-trash"></i>';
+                btn.onclick = function() {
+                    if (container.children.length > 1) {
+                        div.remove();
+                    } else {
+                        textarea.value = '';
+                    }
+                };
+                div.appendChild(btn);
+            }
+            container.appendChild(div);
+        }
+
+        window.agregarActividad = function(index) {
+            agregarActividadConValor(index, "", false);
+        };
     </script>
 </body>
 </html>

@@ -41,6 +41,14 @@ public class CombinacionServlet extends HttpServlet {
     private OrdenadorGastoDAO ordenadorDAO = new OrdenadorGastoDAO();
     private RevisorDocumentoDAO revisorDAO = new RevisorDocumentoDAO();
 
+    private Contrato obtenerContratoParaGeneracion(int contratistaId, HttpServletRequest request) {
+        String periodo = request.getParameter("periodo");
+        if (periodo != null && !periodo.isEmpty()) {
+            return contratoDAO.obtenerPorContratistaYPeriodo(contratistaId, periodo);
+        }
+        return contratoDAO.obtenerPorContratistaId(contratistaId);
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -58,7 +66,11 @@ public class CombinacionServlet extends HttpServlet {
             generarModificacionIndividual(request, response);
         } else if ("downloadZipModificacion".equals(action)) {
             generarModificacionMasivoZip(request, response);
+        } else if ("downloadZipEstructuradores".equals(action)) {
+            generarEstructuradoresMasivoZip(request, response);
         } else {
+            java.util.List<String> periodos = contratoDAO.obtenerPeriodosDisponibles();
+            request.setAttribute("periodos", periodos);
             // Default view: Show list of contractors for merge
             request.getRequestDispatcher("combinacion_contratistas.jsp").forward(request, response);
         }
@@ -78,7 +90,7 @@ public class CombinacionServlet extends HttpServlet {
             String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
 
             // Load all data to check Inversion status
-            Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+            Contrato contrato = obtenerContratoParaGeneracion(contratistaId, request);
             PresupuestoDetalle presupuesto = null;
             if (contrato != null && contrato.getPresupuestoId() > 0) {
                 presupuesto = presupuestoDAO.obtenerPorId(contrato.getPresupuestoId());
@@ -236,7 +248,7 @@ public class CombinacionServlet extends HttpServlet {
                     String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
 
                     // Determinar tipo de contrato: Inversión o Funcionamiento
-                    Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
+                    Contrato contrato = obtenerContratoParaGeneracion(id, request);
 
                     // Nombre de carpeta: 4121-014-NombreContratista
                     // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
@@ -353,6 +365,76 @@ public class CombinacionServlet extends HttpServlet {
         }
     }
 
+    private void generarEstructuradoresMasivoZip(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String idsParam = request.getParameter("ids");
+
+        if (idsParam == null || idsParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No se seleccionaron contratistas");
+            return;
+        }
+
+        String[] ids = idsParam.split(",");
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
+
+        try {
+            java.util.Set<String> usedNames = new java.util.HashSet<>();
+            for (String idStr : ids) {
+                try {
+                    int id = Integer.parseInt(idStr.trim());
+                    Contrato contrato = obtenerContratoParaGeneracion(id, request);
+                    if (contrato == null) continue;
+
+                    String anioContrato = "";
+                    if (contrato.getFechaTerminacion() != null) {
+                        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
+                        anioContrato = yearFormat.format(contrato.getFechaTerminacion());
+                    }
+                    String trdProceso = contrato.getTrdProceso() != null ? contrato.getTrdProceso().trim() : "";
+                    if (trdProceso.isEmpty()) {
+                        trdProceso = "SIN_PROCESO_" + id;
+                    } else if (!anioContrato.isEmpty() && !trdProceso.endsWith(anioContrato)) {
+                        trdProceso = trdProceso + "-" + anioContrato;
+                    }
+
+                    String safeName = normalizeFileName(trdProceso);
+
+                    // Deduplicate
+                    String originalName = safeName;
+                    int counter = 1;
+                    while (usedNames.contains(safeName)) {
+                        safeName = originalName + "_" + counter;
+                        counter++;
+                    }
+                    usedNames.add(safeName);
+
+                    byte[] estructuradoresBytes = generarBytesDocumento(request, id, "estructuradores");
+                    if (estructuradoresBytes != null) {
+                        String entryPath = safeName + ".docx";
+                        java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
+                        zos.putNextEntry(entry);
+                        zos.write(estructuradoresBytes);
+                        zos.closeEntry();
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            zos.close();
+
+            byte[] zipBytes = baos.toByteArray();
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"Estructuradores_" + System.currentTimeMillis() + ".zip\"");
+            response.getOutputStream().write(zipBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando ZIP");
+        }
+    }
+
     // Inject DAO
     private com.combinacion.dao.EstructuradorDAO estructuradorDAO = new com.combinacion.dao.EstructuradorDAO();
 
@@ -360,7 +442,7 @@ public class CombinacionServlet extends HttpServlet {
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
         if (contratista == null)
             return null;
-        Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+        Contrato contrato = obtenerContratoParaGeneracion(contratistaId, request);
         if (contrato == null)
             return null;
 

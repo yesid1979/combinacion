@@ -39,6 +39,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "download":
                 descargarInforme(request, response);
                 break;
+            case "edit":
+                mostrarFormularioEdicion(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -52,6 +55,8 @@ public class InformeSupervisionServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("insert".equals(action)) {
             insertar(request, response);
+        } else if ("update".equals(action)) {
+            actualizar(request, response);
         } else {
             listar(request, response);
         }
@@ -78,6 +83,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             int contratoId = ParseUtils.parseInt(contratoIdStr);
             Contrato contrato = informeService.obtenerContrato(contratoId);
             request.setAttribute("contrato", contrato);
+            if (contrato != null) {
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
+            }
         }
         request.setAttribute("action", "insert");
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
@@ -89,10 +97,34 @@ public class InformeSupervisionServlet extends HttpServlet {
         InformeSupervision informe = informeService.obtenerPorId(id);
         request.setAttribute("informe", informe);
         if (informe != null && informe.getContratoId() != null) {
-            request.setAttribute("contrato", informeService.obtenerContrato(informe.getContratoId()));
+            Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
+            request.setAttribute("contrato", contrato);
+            if (contrato != null) {
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
+            }
         }
         request.setAttribute("readonly", true);
         request.setAttribute("action", "view");
+        request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
+    }
+
+    private void mostrarFormularioEdicion(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int id = ParseUtils.parseInt(request.getParameter("id"));
+        InformeSupervision informe = informeService.obtenerPorId(id);
+        if (informe == null) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Informe no encontrado");
+            return;
+        }
+        request.setAttribute("informe", informe);
+        if (informe.getContratoId() != null) {
+            Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
+            request.setAttribute("contrato", contrato);
+            if (contrato != null) {
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
+            }
+        }
+        request.setAttribute("action", "update");
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
@@ -141,6 +173,20 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
     }
 
+    private void actualizar(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        int id = ParseUtils.parseInt(request.getParameter("id"));
+        InformeFormData form = construirFormData(request);
+        String error = informeService.actualizar(id, form);
+        if (error != null) {
+            request.setAttribute("error", error);
+            mostrarFormularioEdicion(request, response);
+        } else {
+            request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
+            response.sendRedirect("informes?contrato_id=" + form.contratoId);
+        }
+    }
+
     private InformeFormData construirFormData(HttpServletRequest r) {
         InformeFormData f = new InformeFormData();
         f.contratoId = ParseUtils.parseInt(r.getParameter("contrato_id"));
@@ -173,7 +219,12 @@ public class InformeSupervisionServlet extends HttpServlet {
             for (int i = 0; i < count; i++) {
                 org.json.JSONObject obj = new org.json.JSONObject();
                 obj.put("obligacion", r.getParameter("obligacion_" + i));
-                obj.put("actividad", r.getParameter("actividad_" + i));
+                String[] acts = r.getParameterValues("actividad_" + i);
+                String joinedAct = "";
+                if (acts != null) {
+                    joinedAct = String.join("\n", acts);
+                }
+                obj.put("actividad", joinedAct);
                 arr.put(obj);
             }
             f.conceptoSupervisor = arr.toString();

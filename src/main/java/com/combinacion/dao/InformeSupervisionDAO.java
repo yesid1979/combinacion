@@ -174,6 +174,58 @@ public class InformeSupervisionDAO {
         return info;
     }
 
+    public String actualizar(InformeSupervision info) {
+        String sql = "UPDATE informes_supervision SET " +
+                "periodo_informe = ?, tipo_informe = ?, numero_cuota = ?, " +
+                "fecha_inicio_periodo = ?, fecha_fin_periodo = ?, modificaciones = ?, suspensiones = ?, " +
+                "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
+                "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
+                "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
+                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ? " +
+                "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, info.getPeriodoInforme());
+            ps.setString(2, info.getTipoInforme());
+            ps.setString(3, info.getNumeroCuota());
+            ps.setDate(4, info.getFechaInicioPeriodo() != null ? new java.sql.Date(info.getFechaInicioPeriodo().getTime()) : null);
+            ps.setDate(5, info.getFechaFinPeriodo() != null ? new java.sql.Date(info.getFechaFinPeriodo().getTime()) : null);
+            ps.setString(6, info.getModificaciones());
+            ps.setString(7, info.getSuspensiones());
+            ps.setString(8, info.getReanudaciones());
+            ps.setString(9, info.getCesiones());
+            ps.setString(10, info.getTerminacionAnticipada());
+            ps.setString(11, info.getAdiciones());
+            ps.setString(12, info.getProrrogas());
+            ps.setString(13, info.getReciboSatisfaccion());
+            ps.setString(14, info.getConstanciaPazSalvo());
+            ps.setBigDecimal(15, info.getValorCuotaPagar());
+            ps.setBigDecimal(16, info.getValorAccumuladoPagado());
+            ps.setBigDecimal(17, info.getSaldoPorCancelar());
+            ps.setString(18, info.getPlanillaNumero());
+            ps.setString(19, info.getPlanillaPin());
+            ps.setString(20, info.getPlanillaOperador());
+            ps.setDate(21, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
+            ps.setString(22, info.getPlanillaPeriodo());
+            ps.setString(23, info.getConceptoSupervisor());
+            ps.setString(24, info.getObservacionesTecnicas());
+            ps.setString(25, info.getRecomendaciones());
+            ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setInt(27, info.getId());
+
+            if (ps.executeUpdate() > 0) {
+                return null;
+            } else {
+                return "No se actualizó ninguna fila.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error SQL: " + e.getMessage();
+        }
+    }
+
     private void crearTablaSiNoExiste() {
         String sql = "CREATE TABLE IF NOT EXISTS informes_supervision (" +
             "id SERIAL PRIMARY KEY, " +
