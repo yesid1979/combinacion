@@ -29,7 +29,7 @@
                 <div class="row g-4 justify-content-center">
 
                     <!-- Carga Masiva (RESTAURADA) -->
-                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_EJECUTAR')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('CARGA_MASIVA_EJECUTAR') || sessionScope.usuario.tienePermiso('CARGA_MASIVA_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='carga_masiva.jsp'">
                             <div class="card-body text-center">
@@ -80,10 +80,25 @@
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='supervisores'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto">
-                                    <i class="bi bi-person-check fs-2"></i>
+                                    <i class="bi bi-person-badge fs-2"></i>
                                 </div>
                                 <h5 class="card-title fw-bold">Supervisores</h5>
                                 <p class="card-text text-muted small">Gestionar supervisores e interventores.</p>
+                            </div>
+                        </div>
+                    </div>
+                    </c:if>
+
+                    <!-- Revisores de Documentos -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('REVISORES_VER')}">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='revisores'">
+                            <div class="card-body text-center">
+                                <div class="icon-box bg-secondary bg-opacity-10 text-secondary mx-auto">
+                                    <i class="bi bi-person-check fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Revisores de Documentos</h5>
+                                <p class="card-text text-muted small">Gestión de revisores.</p>
                             </div>
                         </div>
                     </div>
