@@ -140,6 +140,10 @@
                                         <c:set var="label" value="Supervisores" />
                                         <c:set var="icon" value="bi-person-vcard text-dark" />
                                     </c:when>
+                                    <c:when test="${moduloItem == 'REVISORES'}">
+                                        <c:set var="label" value="Revisores de Documentos" />
+                                        <c:set var="icon" value="bi-person-check text-warning" />
+                                    </c:when>
                                 </c:choose>
 
                                 <tr>
