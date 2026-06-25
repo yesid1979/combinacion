@@ -104,9 +104,9 @@
                                              alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; border: 2px solid #fff; display: block;">
                                     </c:otherwise>
                                 </c:choose>
-                                <div class="d-flex flex-column justify-content-center me-1" style="height: 100%;">
-                                    <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;">${sessionScope.nombreUsuario}</div>
-                                    <div class="text-muted" style="font-size: 0.7rem; line-height: 1;">${sessionScope.rolNombre}</div>
+                                <div class="d-flex flex-column justify-content-center me-1" style="height: 100%; max-width: 150px;">
+                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem; line-height: 1.2;" title="${sessionScope.nombreUsuario}">${sessionScope.nombreUsuario}</div>
+                                    <div class="text-muted text-truncate" style="font-size: 0.7rem; line-height: 1;" title="${sessionScope.rolNombre}">${sessionScope.rolNombre}</div>
                                 </div>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2 p-2">
