@@ -505,6 +505,34 @@ public class ContratoDAO {
         return periodos;
     }
 
+    public List<Contrato> listarPorContratistaId(int contratistaId) {
+        List<Contrato> list = new ArrayList<>();
+        String sql = "SELECT * FROM contratos WHERE contratista_id = ? ORDER BY id DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratistaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Contrato c = new Contrato();
+                    c.setId(rs.getInt("id"));
+                    c.setTrdProceso(rs.getString("trd_proceso"));
+                    c.setNumeroContrato(rs.getString("numero_contrato"));
+                    c.setTipoContrato(rs.getString("tipo_contrato"));
+                    c.setNivel(rs.getString("nivel"));
+                    c.setObjeto(rs.getString("objeto"));
+                    c.setValorTotalLetras(rs.getString("valor_total_letras"));
+                    c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
+                    c.setFechaInicio(rs.getDate("fecha_inicio"));
+                    c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
+                    list.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public Contrato obtenerPorContratistaId(int contratistaId) {
         String sql = "SELECT * FROM contratos WHERE contratista_id = ? ORDER BY id DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();

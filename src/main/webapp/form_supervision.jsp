@@ -8,6 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${action == 'view' ? 'Ver' : 'Nuevo'} Informe de Supervisión - Gestión de Prestadores</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -74,7 +75,7 @@
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
 
-                <form action="informes" method="POST" id="informeForm">
+                <form action="informes" method="POST" id="informeForm" class="needs-validation" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
@@ -137,14 +138,26 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Cuota Número</label>
-                                    <input type="text" class="form-control" name="numero_cuota" value="${informe.numeroCuota}" placeholder="Ej: 01" required ${readonly ? 'readonly' : ''}>
+                                    <c:choose>
+                                        <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
+                                            <select class="form-select" name="numero_cuota" required>
+                                                <option value="" disabled ${empty informe.numeroCuota && empty siguienteCuota ? 'selected' : ''}>Seleccione...</option>
+                                                <c:forEach var="i" begin="1" end="${contrato.numCuotasNumero}">
+                                                    <option value="${i}" ${(not empty informe.numeroCuota && informe.numeroCuota == i) || (empty informe.id && siguienteCuota == i) ? 'selected' : ''}>Cuota ${i}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <input type="text" class="form-control" name="numero_cuota" value="${informe.numeroCuota}" placeholder="Ej: 1" required ${readonly ? 'readonly' : ''}>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Fecha Inicio Periodo</label>
+                                    <label class="form-label">Fecha de inicio</label>
                                     <input type="date" class="form-control" name="fecha_inicio_periodo" value="<fmt:formatDate value='${informe.fechaInicioPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Fecha Fin Periodo</label>
+                                    <label class="form-label">Fecha terminación</label>
                                     <input type="date" class="form-control" name="fecha_fin_periodo" value="<fmt:formatDate value='${informe.fechaFinPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
@@ -156,39 +169,31 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Modificación al contrato</label>
-                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${informe.modificaciones}</textarea>
+                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.modificaciones ? 'N/A' : informe.modificaciones}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Suspensión</label>
-                                    <textarea class="form-control" name="suspensiones" rows="2" ${readonly ? 'readonly' : ''}>${informe.suspensiones}</textarea>
+                                    <textarea class="form-control" name="suspensiones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.suspensiones ? 'N/A' : informe.suspensiones}</textarea>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Reanudación</label>
-                                    <input type="text" class="form-control" name="reanudaciones" value="${informe.reanudaciones}" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="reanudaciones" value="${empty informe.reanudaciones ? 'N/A' : informe.reanudaciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Cesión</label>
-                                    <input type="text" class="form-control" name="cesiones" value="${informe.cesiones}" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="cesiones" value="${empty informe.cesiones ? 'N/A' : informe.cesiones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Terminación anticipada</label>
-                                    <input type="text" class="form-control" name="terminacion_anticipada" value="${informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="terminacion_anticipada" value="${empty informe.terminacionAnticipada ? 'N/A' : informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Adición</label>
                                     <input type="text" class="form-control" name="adiciones" value="${empty informe.adiciones ? 'N/A' : informe.adiciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label">Prórroga</label>
                                     <input type="text" class="form-control" name="prorrogas" value="${empty informe.prorrogas ? 'N/A' : informe.prorrogas}" ${readonly ? 'readonly' : ''}>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Recibo a Satisfacción de Servicios</label>
-                                    <input type="text" class="form-control" name="recibo_satisfaccion" value="${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}" ${readonly ? 'readonly' : ''}>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Constancia de Paz y Salvo</label>
-                                    <input type="text" class="form-control" name="constancia_paz_salvo" value="${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
                         </div>
@@ -197,17 +202,22 @@
                         <div class="tab-pane fade" id="financiero" role="tabpanel">
                             <div class="section-title">Informe Contable y Financiero</div>
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Valor Total del Contrato ($)</label>
+                                    <input type="text" id="valor_total" class="form-control bg-light text-muted fw-bold money-mask" value="${contrato.valorTotalNumeros}" readonly>
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-label">Valor Cuota a Cancelar ($)</label>
-                                    <input type="number" step="0.01" class="form-control" name="valor_cuota_pagar" value="${not empty informe.valorCuotaPagar ? informe.valorCuotaPagar : contrato.valorCuotaNumero}" required ${readonly ? 'readonly' : ''}>
+                                    <input type="text" id="valor_cuota" class="form-control money-mask" name="valor_cuota_pagar" value="${not empty informe.valorCuotaPagar ? informe.valorCuotaPagar : contrato.valorCuotaNumero}" required ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Valor Acumulado Cancelado ($)</label>
-                                    <input type="number" step="0.01" class="form-control" name="valor_acumulado_pagado" value="${informe.valorAccumuladoPagado}" placeholder="0.00" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" id="valor_acumulado" class="form-control bg-light text-muted money-mask" name="valor_acumulado_pagado" 
+                                           value="${empty informe.id ? acumuladoPrevio : informe.valorAccumuladoPagado}" placeholder="0" readonly>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Saldo por Cancelar ($)</label>
-                                    <input type="number" step="0.01" class="form-control" name="saldo_por_cancelar" value="${informe.saldoPorCancelar}" placeholder="0.00" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" id="saldo_cancelar" class="form-control bg-light money-mask fw-bold" name="saldo_por_cancelar" value="${informe.saldoPorCancelar}" placeholder="0" readonly>
                                 </div>
                             </div>
                         </div>
@@ -243,6 +253,14 @@
                         <div class="tab-pane fade" id="tecnico" role="tabpanel">
                             <div class="section-title">Informe Técnico y Recomendaciones</div>
                             <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Recibo a Satisfacción de Servicios</label>
+                                    <textarea class="form-control" name="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Constancia de Paz y Salvo</label>
+                                    <textarea class="form-control" name="constancia_paz_salvo" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}</textarea>
+                                </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Concepto Supervisor (Obligaciones y Actividades)</label>
                                     <input type="hidden" name="obligaciones_count" value="${fn:length(listaObligaciones)}">
@@ -282,7 +300,7 @@
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Recomendaciones para el Contratista</label>
-                                    <textarea class="form-control" name="recomendaciones" rows="2" ${readonly ? 'readonly' : ''}>${informe.recomendaciones}</textarea>
+                                    <textarea class="form-control" name="recomendaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.id ? 'No se reportan recomendaciones para este periodo' : informe.recomendaciones}</textarea>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Fecha de Suscripción del Informe</label>
@@ -305,7 +323,7 @@
                         </a>
                         <c:if test="${not readonly}">
                             <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
-                                <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe y Generar Formato'}
+                                <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe'}
                             </button>
                         </c:if>
                         <c:if test="${readonly}">
@@ -325,6 +343,7 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             // Activar pestañas con clic
@@ -382,6 +401,100 @@
         window.agregarActividad = function(index) {
             agregarActividadConValor(index, "", false);
         };
+        
+        // Formato de Dinero (Puntos para miles, sin decimales)
+        function formatMoney(n) {
+            if(!n) return "";
+            let str = n.toString();
+            // Si viene de la base de datos con .00 (ej: 33978000.00), quitamos los decimales
+            if (str.includes(".")) {
+                str = str.split(".")[0];
+            }
+            // Removemos todo lo que no sea número
+            str = str.replace(/[^0-9]/g, '');
+            if(!str) return "";
+            // Agregamos el punto como separador de miles
+            return str.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        $('.money-mask').each(function() {
+            $(this).val(formatMoney($(this).val()));
+            $(this).on('input', function() {
+                var pos = this.selectionStart;
+                var oldVal = $(this).val();
+                var newVal = formatMoney(oldVal);
+                $(this).val(newVal);
+                // Adjust cursor position roughly
+                var offset = newVal.length - oldVal.length;
+                this.setSelectionRange(pos + offset, pos + offset);
+            });
+        });
+        
+        // Validación personalizada con SweetAlert
+        $('#informeForm').on('submit', function(e) {
+            let isValid = true;
+            let firstInvalid = null;
+            
+            $(this).find('[required]').each(function() {
+                if (!$(this).val() || $(this).val().trim() === '') {
+                    isValid = false;
+                    if (!firstInvalid) firstInvalid = $(this);
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Mover a la pestaña donde está el campo vacío
+                let tabPane = firstInvalid.closest('.tab-pane');
+                if (tabPane.length) {
+                    let tabId = tabPane.attr('id');
+                    let tabTrigger = new bootstrap.Tab($('button[data-bs-target="#' + tabId + '"]')[0]);
+                    tabTrigger.show();
+                }
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Faltan datos!',
+                    text: 'Por favor, diligencia todos los campos obligatorios antes de guardar el informe.',
+                    confirmButtonColor: '#007bff'
+                }).then(() => {
+                    setTimeout(() => firstInvalid.focus(), 300);
+                });
+                
+                return false;
+            }
+            
+            // Quitar puntos antes de enviar el formulario para que Java (BigDecimal) no se rompa
+            $('.money-mask').each(function() {
+                var clean = $(this).val().replace(/\./g, '');
+                $(this).val(clean);
+            });
+        });
+        
+        // Auto-calcular el Saldo por Cancelar
+        function calcularSaldo() {
+            var totalStr = $('#valor_total').val().replace(/\./g, '');
+            var cuotaStr = $('#valor_cuota').val().replace(/\./g, '');
+            var acumuladoStr = $('#valor_acumulado').val().replace(/\./g, '');
+            
+            var total = parseFloat(totalStr) || 0;
+            var cuota = parseFloat(cuotaStr) || 0;
+            var acumulado = parseFloat(acumuladoStr) || 0;
+            
+            var saldo = total - (cuota + acumulado);
+            if(saldo < 0) saldo = 0; // Evitar saldos negativos si se equivocan
+            
+            $('#saldo_cancelar').val(formatMoney(saldo));
+        }
+        
+        $('#valor_cuota, #valor_acumulado').on('input', calcularSaldo);
+        // Calcular al cargar la pagina por si ya hay valores
+        $(document).ready(function() {
+            if(!'${readonly}') {
+                calcularSaldo();
+            }
+        });
     </script>
 </body>
 </html>

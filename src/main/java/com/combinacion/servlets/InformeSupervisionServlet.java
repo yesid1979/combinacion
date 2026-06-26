@@ -64,15 +64,68 @@ public class InformeSupervisionServlet extends HttpServlet {
 
     private void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Por ahora listamos informes de un contrato específico o general
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+        boolean esContratista = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
+
         String contratoIdStr = request.getParameter("contrato_id");
-        if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-            int contratoId = ParseUtils.parseInt(contratoIdStr);
-            request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
-            request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
+        
+        if (esContratista) {
+            // Lógica para el Contratista: Buscar su contrato automáticamente
+            com.combinacion.dao.ContratistaDAO cdao = new com.combinacion.dao.ContratistaDAO();
+            
+            // Buscar contratista ignorando puntos y letras en la base de datos
+            java.util.List<com.combinacion.models.Contratista> todos = cdao.listarTodos();
+            com.combinacion.models.Contratista c = null;
+            for (com.combinacion.models.Contratista cont : todos) {
+                if (cont.getCedula() != null) {
+                    String limpiaDB = cont.getCedula().replaceAll("[^0-9]", "");
+                    if (limpiaDB.equals(u.getCedula())) {
+                        c = cont;
+                        break;
+                    }
+                }
+            }
+
+            if (c != null) {
+                com.combinacion.dao.ContratoDAO codao = new com.combinacion.dao.ContratoDAO();
+                java.util.List<Contrato> misContratos = codao.listarPorContratistaId(c.getId());
+                
+                if (!misContratos.isEmpty()) {
+                    request.setAttribute("misContratos", misContratos);
+                    
+                    if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
+                        int contratoId = ParseUtils.parseInt(contratoIdStr);
+                        request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
+                        request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
+                    } else {
+                        // Si tiene varios contratos pero no seleccionó uno, le mostramos todos sus informes y le asignamos su contrato más reciente por defecto para "Nuevo Informe" si solo tiene 1
+                        request.setAttribute("contrato", misContratos.get(0));
+                        
+                        java.util.List<InformeSupervision> todosMisInformes = new java.util.ArrayList<>();
+                        for(Contrato con : misContratos) {
+                            todosMisInformes.addAll(informeService.listarPorContrato(con.getId()));
+                        }
+                        request.setAttribute("listaInformes", todosMisInformes);
+                    }
+                } else {
+                    request.setAttribute("listaInformes", new java.util.ArrayList<>());
+                    request.setAttribute("error", "No tienes ningún contrato activo asignado en el sistema.");
+                }
+            } else {
+                request.setAttribute("listaInformes", new java.util.ArrayList<>());
+                request.setAttribute("error", "No se encontraron tus datos como contratista.");
+            }
         } else {
-            request.setAttribute("listaInformes", informeService.listarTodos());
+            // Lógica para Admin/Supervisor: Buscar por ID de contrato específico, o listar todos
+            if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
+                int contratoId = ParseUtils.parseInt(contratoIdStr);
+                request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
+                request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
+            } else {
+                request.setAttribute("listaInformes", informeService.listarTodos());
+            }
         }
+        
         request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
     }
 
@@ -85,6 +138,19 @@ public class InformeSupervisionServlet extends HttpServlet {
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
+                
+                // Calcular acumulado previo y número de cuota sugerido
+                java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(contratoId);
+                java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
+                if(previos != null && !previos.isEmpty()){
+                    for(com.combinacion.models.InformeSupervision prev : previos){
+                        if(prev.getValorCuotaPagar() != null){
+                            acumulado = acumulado.add(prev.getValorCuotaPagar());
+                        }
+                    }
+                }
+                request.setAttribute("acumuladoPrevio", acumulado);
+                request.setAttribute("siguienteCuota", previos != null ? previos.size() + 1 : 1);
             }
         }
         request.setAttribute("action", "insert");

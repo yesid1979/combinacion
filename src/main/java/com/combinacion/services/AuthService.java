@@ -78,6 +78,14 @@ public class AuthService {
             return esRutaBase;
         }
 
+        // PERMISO ESPECIAL PARA CONTRATISTAS EN INFORMES/CUENTAS DE COBRO
+        boolean esContratista = usuario.getRolId() == 3 || 
+                                (usuario.getRol() != null && "Contratista".equalsIgnoreCase(usuario.getRol().getNombre()));
+                                
+        if (lowerPath.equals("/informes") && esContratista) {
+            return true;
+        }
+
         // Validación de método para acciones críticas
         if (action.equals("delete") && !"POST".equalsIgnoreCase(method)) {
             System.out.println("[AUTH] Método no permitido para acción 'delete'. Debe ser POST.");
@@ -112,6 +120,9 @@ public class AuthService {
             case "view":
             case "data":
             case "search":
+            case "download":
+            case "export":
+            case "print":
                 return modulo + "_VER";
             case "new":
             case "insert":

@@ -30,11 +30,16 @@
     <div class="container mt-4 mb-5 flex-grow-1">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
-            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_CREAR')}">
-                <a href="${pageContext.request.contextPath}/contratistas?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
-                    <i class="bi bi-person-plus-fill me-1"></i>Nuevo contratista
+            <div>
+                <a href="${pageContext.request.contextPath}/masivo-usuarios" class="btn text-white fw-bold me-2" style="background-color: #004884;">
+                    <i class="bi bi-people-fill me-1"></i>Generar Usuarios
                 </a>
-            </c:if>
+                <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_CREAR')}">
+                    <a href="${pageContext.request.contextPath}/contratistas?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                        <i class="bi bi-person-plus-fill me-1"></i>Nuevo contratista
+                    </a>
+                </c:if>
+            </div>
         </div>
 
         <div class="card border-0 shadow-sm">

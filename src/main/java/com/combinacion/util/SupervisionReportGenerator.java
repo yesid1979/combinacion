@@ -82,7 +82,8 @@ public class SupervisionReportGenerator {
         File outputDir = new File(OUTPUT_DIR);
         if (!outputDir.exists()) outputDir.mkdirs();
 
-        String outputFileName = "Informe_" + contrato.getNumeroContrato().replace("/", "-") + "_Cuota_" + info.getNumeroCuota() + ".docx";
+        String contratista = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().toUpperCase() : "CONTRATISTA";
+        String outputFileName = "3. INFORME SUPERVISION No. " + info.getNumeroCuota() + " -" + contratista + ".docx";
         File outputFile = new File(outputDir, outputFileName);
 
         Map<String, String> reps = new HashMap<>();
@@ -197,7 +198,7 @@ public class SupervisionReportGenerator {
                         tablaXml.append("</w:tblPr>");
                         
                         // Header
-                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
+                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
                         
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
@@ -211,12 +212,12 @@ public class SupervisionReportGenerator {
                             tablaXml.append("<w:tr>");
                             
                             // Cell Obligacion
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/></w:tcPr><w:p><w:r><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
                             // Cell Actividad
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr><w:p><w:r><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
                                     .append(ac)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
