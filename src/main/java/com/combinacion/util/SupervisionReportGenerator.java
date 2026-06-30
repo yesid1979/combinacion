@@ -69,17 +69,34 @@ public class SupervisionReportGenerator {
     private static final String OUTPUT_DIR = "generados/informes";
 
     public static String generarDocx(InformeSupervision info, Contrato contrato) throws IOException {
-        File templateFile = new File(TEMPLATE_PATH);
+        return generarDocx(info, contrato, null);
+    }
+
+    public static String generarDocx(InformeSupervision info, Contrato contrato, String realPath) throws IOException {
+        File templateFile = null;
+        if (realPath != null) {
+            templateFile = new File(realPath, TEMPLATE_PATH);
+        }
+        
+        if (templateFile == null || !templateFile.exists()) {
+            templateFile = new File(TEMPLATE_PATH);
+        }
+
         if (!templateFile.exists()) {
             // Fallback for different environments
             templateFile = new File("c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\" + TEMPLATE_PATH);
         }
 
         if (!templateFile.exists()) {
-            throw new IOException("Plantilla no encontrada en: " + TEMPLATE_PATH);
+            throw new IOException("Plantilla no encontrada en: " + (realPath != null ? new File(realPath, TEMPLATE_PATH).getPath() : TEMPLATE_PATH));
         }
 
-        File outputDir = new File(OUTPUT_DIR);
+        File outputDir = null;
+        if (realPath != null) {
+            outputDir = new File(realPath, OUTPUT_DIR);
+        } else {
+            outputDir = new File(OUTPUT_DIR);
+        }
         if (!outputDir.exists()) outputDir.mkdirs();
 
         String contratista = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().toUpperCase() : "CONTRATISTA";
@@ -96,6 +113,8 @@ public class SupervisionReportGenerator {
         reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
         reps.put("${ORGANISMO}", contrato.getOrdenadorGasto() != null && contrato.getOrdenadorGasto().getOrganismo() != null ? contrato.getOrdenadorGasto().getOrganismo() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
+        reps.put("${TIPO_CONTRATO}", contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "");
+
         
         NumberFormat nf = NumberFormat.getInstance(new Locale("es", "CO"));
         if (nf instanceof DecimalFormat) {

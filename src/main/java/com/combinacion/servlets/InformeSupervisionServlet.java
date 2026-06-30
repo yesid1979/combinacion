@@ -205,7 +205,8 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
 
             Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
-            String filePath = SupervisionReportGenerator.generarDocx(informe, contrato);
+            String realPath = request.getServletContext().getRealPath("/");
+            String filePath = SupervisionReportGenerator.generarDocx(informe, contrato, realPath);
             File downloadFile = new File(filePath);
 
             response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
