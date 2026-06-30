@@ -922,14 +922,11 @@ public class CombinacionServlet extends HttpServlet {
         String tipoC = contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "";
         String nivelC = contrato.getNivel() != null ? contrato.getNivel().toUpperCase() : "";
         
-        // Formato para el documento (Tipo frase: Prestación de servicios...)
+        // Formato para el documento (Uppercase como solicitó el usuario)
         String tipoC_Frase = tipoC;
-        if (!tipoC_Frase.isEmpty()) {
-            tipoC_Frase = tipoC_Frase.toLowerCase();
-            tipoC_Frase = Character.toUpperCase(tipoC_Frase.charAt(0)) + tipoC_Frase.substring(1);
-        }
+        
         replacements.put("{{TIPO_CONTRATO}}", tipoC_Frase);
-
+        replacements.put("${TIPO_CONTRATO}", tipoC_Frase); // Soporte para formato con $
         
         boolean esProfesional = tipoC.contains("PROFESIONAL") || nivelC.contains("PROFESIONAL");
         boolean esApoyo = tipoC.contains("APOYO") || nivelC.contains("APOYO");
