@@ -149,6 +149,11 @@ public class SupervisionReportGenerator {
             "Santiago de Cali, " + formatearFechaLarga(info.getFechaSuscripcion()) : "";
         reps.put("${FECHA_SUSCRIPCION}", fechaSuscripcionFormateada);
 
+        boolean tieneApoyo = contrato.getApoyoSupervision() != null && !contrato.getApoyoSupervision().trim().isEmpty();
+        reps.put("${LINEA_APOYO}", tieneApoyo ? "______________________________________________________" : "{{REMOVE_PARAGRAPH}}");
+        reps.put("${NOMBRE_APOYO}", tieneApoyo ? contrato.getApoyoSupervision().toUpperCase() : "{{REMOVE_PARAGRAPH}}");
+        reps.put("${TEXTO_APOYO}", tieneApoyo ? "Nombre y firma del Apoyo a la Supervisión (Incluir cuando aplique)" : "{{REMOVE_PARAGRAPH}}");
+
         try (FileInputStream fis = new FileInputStream(templateFile);
              FileOutputStream fos = new FileOutputStream(outputFile)) {
             TemplateGenerator.generate(fis, reps, fos);
@@ -202,8 +207,30 @@ public class SupervisionReportGenerator {
                         
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
-                            String ob = item.obligacion.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                            String ac = item.actividad.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            String obRaw = item.obligacion != null ? item.obligacion.trim() : "";
+                            String acRaw = item.actividad != null ? item.actividad.trim() : "";
+                            
+                            if (!acRaw.isEmpty()) {
+                                String[] lineas = acRaw.split("\n");
+                                StringBuilder acModificado = new StringBuilder();
+                                for (int i = 0; i < lineas.length; i++) {
+                                    String linea = lineas[i].trim();
+                                    if (!linea.isEmpty()) {
+                                        java.util.regex.Matcher mLinea = java.util.regex.Pattern.compile("^(\\d+[.-]?|[\\-\\*\\•\\●\\○\\▪])\\s*").matcher(linea);
+                                        if (!mLinea.find()) {
+                                            linea = "● " + linea;
+                                        }
+                                    }
+                                    acModificado.append(linea);
+                                    if (i < lineas.length - 1) {
+                                        acModificado.append("\n");
+                                    }
+                                }
+                                acRaw = acModificado.toString().trim();
+                            }
+
+                            String ob = obRaw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            String ac = acRaw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                             
                             // Reemplazar saltos de línea por <w:br/>
                             ob = ob.replace("\n", "</w:t><w:br/><w:t>");
