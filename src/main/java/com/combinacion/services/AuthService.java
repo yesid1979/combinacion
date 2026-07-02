@@ -111,7 +111,7 @@ public class AuthService {
 
         // Casos especiales
         if (modulo.equals("CARGA_MASIVA")) {
-            return "CARGA_MASIVA_EJECUTAR";
+            return "CARGA_MASIVA_VER";
         }
 
         // Mapear acción a permiso
