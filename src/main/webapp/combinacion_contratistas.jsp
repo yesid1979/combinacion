@@ -45,6 +45,9 @@
                         <button class="btn btn-info text-white text-nowrap" onclick="descargarMasivoEstructuradores()">
                             <i class="bi bi-file-earmark-person me-1"></i> Responsables Estructurar (ZIP)
                         </button>
+                        <button class="btn btn-secondary text-white text-nowrap" onclick="descargarMasivoDesignacion()">
+                            <i class="bi bi-file-earmark-check me-1"></i> Designación Supervisor (ZIP)
+                        </button>
                     </div>
                 </div>
 
@@ -247,6 +250,22 @@
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
                     window.location.href = 'combinacion?action=downloadZipEstructuradores&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                }
+
+                function descargarMasivoDesignacion() {
+                    let selected = [];
+                    $('.row-select:checked').each(function () {
+                        selected.push($(this).val());
+                    });
+
+                    if (selected.length === 0) {
+                        Swal.fire('Atención', 'Por favor seleccione al menos un contratista.', 'warning');
+                        return;
+                    }
+
+                    // Trigger extraction
+                    var periodo = $('#filterPeriodo').val();
+                    window.location.href = 'combinacion?action=downloadZipDesignacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
                 }
             </script>
         </body>

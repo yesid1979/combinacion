@@ -39,7 +39,11 @@ public class CombinacionServlet extends HttpServlet {
     private PresupuestoDetalleDAO presupuestoDAO = new PresupuestoDetalleDAO();
     private SupervisorDAO supervisorDAO = new SupervisorDAO();
     private OrdenadorGastoDAO ordenadorDAO = new OrdenadorGastoDAO();
+    private EstructuradorDAO estructuradorDAO = new EstructuradorDAO();
     private RevisorDocumentoDAO revisorDAO = new RevisorDocumentoDAO();
+
+    // Caché de plantillas en memoria
+    private java.util.Map<String, byte[]> templateCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private Contrato obtenerContratoParaGeneracion(int contratistaId, HttpServletRequest request) {
         String periodo = request.getParameter("periodo");
@@ -68,6 +72,8 @@ public class CombinacionServlet extends HttpServlet {
             generarModificacionMasivoZip(request, response);
         } else if ("downloadZipEstructuradores".equals(action)) {
             generarEstructuradoresMasivoZip(request, response);
+        } else if ("downloadZipDesignacion".equals(action)) {
+            generarDesignacionMasivoZip(request, response);
         } else {
             java.util.List<String> periodos = contratoDAO.obtenerPeriodosDisponibles();
             request.setAttribute("periodos", periodos);
@@ -128,6 +134,7 @@ public class CombinacionServlet extends HttpServlet {
             // Create ZIP
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
+            java.util.List<DocxEntry> pendingDocs = new java.util.ArrayList<>();
 
             // Nombre de carpeta: 4121-014-NombreContratista
             // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
@@ -137,10 +144,10 @@ public class CombinacionServlet extends HttpServlet {
 
             // Add Standard Docs
             if (supervisorBytes != null) {
-                addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes);
+                pendingDocs.add(new DocxEntry(folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes));
             }
             if (estructuradoresBytes != null) {
-                addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS", estructuradoresBytes);
+                pendingDocs.add(new DocxEntry(folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS", estructuradoresBytes));
             }
 
             // Add Inversion Docs
@@ -165,7 +172,7 @@ public class CombinacionServlet extends HttpServlet {
                             } else if (tpl.equals(complementoDoc)) {
                                 baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                             }
-                            addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                            pendingDocs.add(new DocxEntry(folderName, baseName, fileBytes));
                         }
                     }
                 }
@@ -193,12 +200,13 @@ public class CombinacionServlet extends HttpServlet {
                             } else if (tpl.equals(complementoDoc)) {
                                 baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                             }
-                            addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                            pendingDocs.add(new DocxEntry(folderName, baseName, fileBytes));
                         }
                     }
                 }
             }
 
+            empaquetarYConvertirZip(pendingDocs, zos);
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
@@ -236,6 +244,7 @@ public class CombinacionServlet extends HttpServlet {
         String[] ids = idsParam.split(",");
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
+        java.util.List<DocxEntry> pendingDocs = new java.util.ArrayList<>();
 
         try {
             for (String idStr : ids) {
@@ -246,12 +255,7 @@ public class CombinacionServlet extends HttpServlet {
                         continue;
 
                     String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
-
-                    // Determinar tipo de contrato: Inversión o Funcionamiento
                     Contrato contrato = obtenerContratoParaGeneracion(id, request);
-
-                    // Nombre de carpeta: 4121-014-NombreContratista
-                    // Se extrae solo el consecutivo del numero de contrato (ej: 4121.010.26.1.014 -> 014)
                     String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
                     String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + id;
                     String folderName = normalizeFileName("4121-" + consecutivo + "-" + nombreFolder);
@@ -267,31 +271,20 @@ public class CombinacionServlet extends HttpServlet {
                     if (presupuesto != null) {
                         String inversionFlag = presupuesto.getInversion();
                         String funcionamientoFlag = presupuesto.getFuncionamiento();
-
-                        // Verificar si es Inversión (columna inversion = "Si" o "Sí")
-                        esInversion = (inversionFlag != null &&
-                                (inversionFlag.trim().equalsIgnoreCase("Si") ||
-                                        inversionFlag.trim().equalsIgnoreCase("Sí")));
-
-                        // Verificar si es Funcionamiento (columna funcionamiento = "Si" o "Sí")
-                        esFuncionamiento = (funcionamientoFlag != null &&
-                                (funcionamientoFlag.trim().equalsIgnoreCase("Si") ||
-                                        funcionamientoFlag.trim().equalsIgnoreCase("Sí")));
+                        esInversion = (inversionFlag != null && (inversionFlag.trim().equalsIgnoreCase("Si") || inversionFlag.trim().equalsIgnoreCase("Sí")));
+                        esFuncionamiento = (funcionamientoFlag != null && (funcionamientoFlag.trim().equalsIgnoreCase("Si") || funcionamientoFlag.trim().equalsIgnoreCase("Sí")));
                     }
 
-                    // Standard Docs
                     byte[] supervisorBytes = generarBytesDocumento(request, id, "supervisor");
                     if (supervisorBytes != null) {
-                        addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes);
+                        pendingDocs.add(new DocxEntry(folderName, "DESIGNACI\u00D3N SUPERVISOR", supervisorBytes));
                     }
 
                     byte[] estructuradoresBytes = generarBytesDocumento(request, id, "estructuradores");
                     if (estructuradoresBytes != null) {
-                        addDocxAndPdfToZip(zos, folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS",
-                                estructuradoresBytes);
+                        pendingDocs.add(new DocxEntry(folderName, "DESIGNACI\u00D3N ESTRUCTURADOR PS", estructuradoresBytes));
                     }
 
-                    // Inversion Docs
                     if (esInversion) {
                         String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
                         boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
@@ -313,13 +306,12 @@ public class CombinacionServlet extends HttpServlet {
                                     } else if (tpl.equals(complementoDoc)) {
                                         baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                                     }
-                                    addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                                    pendingDocs.add(new DocxEntry(folderName, baseName, fileBytes));
                                 }
                             }
                         }
                     }
 
-                    // Funcionamiento Docs
                     if (!esInversion && esFuncionamiento && contrato != null) {
                         String ivaStr = contrato.getIvaSiNo() != null ? contrato.getIvaSiNo().trim().toLowerCase() : "";
                         boolean tieneIva = ivaStr.equals("si") || ivaStr.equals("sí");
@@ -341,7 +333,7 @@ public class CombinacionServlet extends HttpServlet {
                                     } else if (tpl.equals(complementoDoc)) {
                                         baseName = "COMPLEMENTO AL CONTRATO ELECTR\u00D3NICO";
                                     }
-                                    addDocxAndPdfToZip(zos, folderName, baseName, fileBytes);
+                                    pendingDocs.add(new DocxEntry(folderName, baseName, fileBytes));
                                 }
                             }
                         }
@@ -351,6 +343,7 @@ public class CombinacionServlet extends HttpServlet {
                     ex.printStackTrace();
                 }
             }
+            empaquetarYConvertirZip(pendingDocs, zos);
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
@@ -435,8 +428,75 @@ public class CombinacionServlet extends HttpServlet {
         }
     }
 
-    // Inject DAO
-    private com.combinacion.dao.EstructuradorDAO estructuradorDAO = new com.combinacion.dao.EstructuradorDAO();
+    private void generarDesignacionMasivoZip(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String idsParam = request.getParameter("ids");
+
+        if (idsParam == null || idsParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No se seleccionaron contratistas");
+            return;
+        }
+
+        String[] ids = idsParam.split(",");
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
+
+        try {
+            java.util.Set<String> usedNames = new java.util.HashSet<>();
+            for (String idStr : ids) {
+                try {
+                    int id = Integer.parseInt(idStr.trim());
+                    Contrato contrato = obtenerContratoParaGeneracion(id, request);
+                    if (contrato == null) continue;
+
+                    String anioContrato = "";
+                    if (contrato.getFechaTerminacion() != null) {
+                        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", new Locale("es", "CO"));
+                        anioContrato = yearFormat.format(contrato.getFechaTerminacion());
+                    }
+                    String trdProceso = contrato.getTrdProceso() != null ? contrato.getTrdProceso().trim() : "";
+                    if (trdProceso.isEmpty()) {
+                        trdProceso = "SIN_PROCESO_" + id;
+                    } else if (!anioContrato.isEmpty() && !trdProceso.endsWith(anioContrato)) {
+                        trdProceso = trdProceso + "-" + anioContrato;
+                    }
+
+                    String safeName = normalizeFileName(trdProceso);
+
+                    // Deduplicate
+                    String originalName = safeName;
+                    int counter = 1;
+                    while (usedNames.contains(safeName)) {
+                        safeName = originalName + "_" + counter;
+                        counter++;
+                    }
+                    usedNames.add(safeName);
+
+                    byte[] designacionBytes = generarBytesDocumento(request, id, "supervisor");
+                    if (designacionBytes != null) {
+                        String entryPath = safeName + ".docx";
+                        java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
+                        zos.putNextEntry(entry);
+                        zos.write(designacionBytes);
+                        zos.closeEntry();
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            zos.close();
+
+            byte[] zipBytes = baos.toByteArray();
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"DesignacionSupervisor_" + System.currentTimeMillis() + ".zip\"");
+            response.getOutputStream().write(zipBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando ZIP");
+        }
+    }
 
     private Map<String, String> getFullReplacements(HttpServletRequest request, int contratistaId, String docType, String realTemplateName) throws Exception {
         Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
@@ -466,34 +526,31 @@ public class CombinacionServlet extends HttpServlet {
     }
 
     private byte[] generateBytes(String templateName, Map<String, String> replacements) throws IOException {
-        // 1. Buscar dentro del WAR desplegado (ruta correcta y portable)
-        String realPath = getServletContext().getRealPath("/plantillas/" + templateName);
-        File templateFile = (realPath != null) ? new File(realPath) : null;
+        byte[] templateBytes = templateCache.get(templateName);
 
-        // 2. Fallback: ruta de desarrollo de proyecto (NetBeans sin despliegue)
-        if (templateFile == null || !templateFile.exists()) {
-            templateFile = new File(
-                "c:\\Users\\Soporte y Desarrollo\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
-                + templateName);
+        if (templateBytes == null) {
+            String realPath = getServletContext().getRealPath("/plantillas/" + templateName);
+            File templateFile = (realPath != null) ? new File(realPath) : null;
+
+            if (templateFile == null || !templateFile.exists()) {
+                templateFile = new File("c:\\Users\\Soporte y Desarrollo\\Documents\\NetBeansProjects\\combinacion\\plantillas\\" + templateName);
+            }
+            if (!templateFile.exists()) {
+                templateFile = new File("c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\" + templateName);
+            }
+
+            if (!templateFile.exists()) {
+                System.err.println("⚠️ Archivo de plantilla no encontrado: " + templateName);
+                return null;
+            }
+
+            templateBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+            templateCache.put(templateName, templateBytes);
         }
 
-        // 3. Fallback legado (usuario anterior)
-        if (!templateFile.exists()) {
-            templateFile = new File(
-                "c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\plantillas\\"
-                + templateName);
-        }
-
-        if (!templateFile.exists()) {
-            System.err.println("⚠️ Plantilla NO encontrada: " + templateName
-                + " | realPath=" + realPath);
-            return null;
-        }
-
-        System.out.println("✅ Plantilla encontrada: " + templateFile.getAbsolutePath());
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (FileInputStream fis = new FileInputStream(templateFile)) {
-            TemplateGenerator.generate(fis, replacements, baos);
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(templateBytes)) {
+            TemplateGenerator.generate(bais, replacements, baos);
         }
         return baos.toByteArray();
     }
@@ -1202,7 +1259,7 @@ public class CombinacionServlet extends HttpServlet {
     }
 
     private byte[] generarBytesDocumento(HttpServletRequest request, int contratistaId, String docType) throws Exception {
-        Contrato contratoCheck = contratoDAO.obtenerPorContratistaId(contratistaId);
+        Contrato contratoCheck = obtenerContratoParaGeneracion(contratistaId, request);
         String templateName;
         if ("estructuradores".equals(docType)) {
             templateName = "DESIGNACION_RESPONSABLES_PARA_ESTRUCTURAR.docx";
@@ -1214,9 +1271,6 @@ public class CombinacionServlet extends HttpServlet {
         Map<String, String> replacements = getFullReplacements(request, contratistaId, docType, templateName);
         if (replacements == null)
             return null;
-
-        Contratista contratista = contratistaDAO.obtenerPorId(contratistaId);
-        Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
 
         return generateBytes(templateName, replacements);
     }
@@ -1308,7 +1362,7 @@ public class CombinacionServlet extends HttpServlet {
             Contratista c = contratistaDAO.obtenerPorId(contratistaId);
             String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
 
-            Contrato contrato = contratoDAO.obtenerPorContratistaId(contratistaId);
+            Contrato contrato = obtenerContratoParaGeneracion(contratistaId, request);
 
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
@@ -1324,8 +1378,9 @@ public class CombinacionServlet extends HttpServlet {
                 esAdicion = adNorm.equals("si") || adNorm.equals("x");
             }
 
+            java.util.List<DocxEntry> pendingDocs = new java.util.ArrayList<>();
+
             if (esAdicion) {
-                // Generar Documentos de Modificacion
                 String[][] plantillas = {
                     {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
                     {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
@@ -1335,9 +1390,10 @@ public class CombinacionServlet extends HttpServlet {
                     if (replacements == null) continue;
                     byte[] docxBytes = generateBytes(par[0], replacements);
                     if (docxBytes != null) {
-                        addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
+                        pendingDocs.add(new DocxEntry(folderName, par[1], docxBytes));
                     }
                 }
+                empaquetarYConvertirZip(pendingDocs, zos);
             } else {
                 String alertaTexto = "El contrato para " + (c != null ? c.getNombre() : "el contratista seleccionado") + 
                                      " no tiene registrada una ADICIÓN en el sistema.\n" +
@@ -1369,6 +1425,7 @@ public class CombinacionServlet extends HttpServlet {
         String[] ids = idsParam.split(",");
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos, java.nio.charset.StandardCharsets.UTF_8);
+        java.util.List<DocxEntry> pendingDocs = new java.util.ArrayList<>();
 
         try {
             for (String idStr : ids) {
@@ -1378,7 +1435,7 @@ public class CombinacionServlet extends HttpServlet {
                     if (c == null) continue;
 
                     String cedula = (c.getCedula() != null ? c.getCedula() : "Doc");
-                    Contrato contrato = contratoDAO.obtenerPorContratistaId(id);
+                    Contrato contrato = obtenerContratoParaGeneracion(id, request);
 
                     String consecutivo = extraerConsecutivo(contrato != null ? contrato.getNumeroContrato() : null);
                     String nombreFolder = c.getNombre() != null ? c.getNombre() : "Contratista_" + id;
@@ -1392,7 +1449,6 @@ public class CombinacionServlet extends HttpServlet {
                     }
 
                     if (esAdicion) {
-                        // Generar Documentos de Modificacion
                         String[][] plantillas = {
                             {"MODIFICACION_1_JUSTIFICACION.docx", "JUSTIFICACI\u00D3N No. 001"},
                             {"MODIFICACION_2_ACEPTACION.docx", "MODIFICACI\u00D3N No. 001"}
@@ -1402,7 +1458,7 @@ public class CombinacionServlet extends HttpServlet {
                             if (replacements == null) continue;
                             byte[] docxBytes = generateBytes(par[0], replacements);
                             if (docxBytes != null) {
-                                addDocxAndPdfToZip(zos, folderName, par[1], docxBytes);
+                                pendingDocs.add(new DocxEntry(folderName, par[1], docxBytes));
                             }
                         }
                     } else {
@@ -1415,6 +1471,7 @@ public class CombinacionServlet extends HttpServlet {
                     ex.printStackTrace();
                 }
             }
+            empaquetarYConvertirZip(pendingDocs, zos);
             zos.close();
 
             byte[] zipBytes = baos.toByteArray();
@@ -1526,26 +1583,75 @@ public class CombinacionServlet extends HttpServlet {
     }
 
     private void addDocxAndPdfToZip(java.util.zip.ZipOutputStream zos, String folderName, String baseNameWithoutExt, byte[] docxBytes) throws IOException {
-        // 1. Agregar el Word al ZIP
         addToZip(zos, folderName, baseNameWithoutExt + ".docx", docxBytes);
-        
-        // 2. Intentar generar y agregar el PDF
         try {
             File tempDocx = File.createTempFile("pdfgen_", ".docx");
             File tempPdf = new File(tempDocx.getAbsolutePath().replace(".docx", ".pdf"));
-            
             java.nio.file.Files.write(tempDocx.toPath(), docxBytes);
             
             if (com.combinacion.util.PdfGenerator.convertToPdf(tempDocx, tempPdf)) {
                 byte[] pdfBytes = java.nio.file.Files.readAllBytes(tempPdf.toPath());
                 addToZip(zos, folderName, baseNameWithoutExt + ".pdf", pdfBytes);
             }
-            
-            // Limpiar temporales
             tempDocx.delete();
             tempPdf.delete();
         } catch (Exception ex) {
             System.err.println("⚠️ No se pudo generar el PDF para " + baseNameWithoutExt + ": " + ex.getMessage());
+        }
+    }
+
+    private static class DocxEntry {
+        String folderName;
+        String baseNameWithoutExt;
+        byte[] docxBytes;
+        public DocxEntry(String folderName, String baseNameWithoutExt, byte[] docxBytes) {
+            this.folderName = folderName;
+            this.baseNameWithoutExt = baseNameWithoutExt;
+            this.docxBytes = docxBytes;
+        }
+    }
+
+    private void empaquetarYConvertirZip(java.util.List<DocxEntry> pendingDocs, java.util.zip.ZipOutputStream zos) throws IOException {
+        if (pendingDocs == null || pendingDocs.isEmpty()) return;
+
+        File tempDir = java.nio.file.Files.createTempDirectory("batch_pdf_").toFile();
+        try {
+            // Escribir DOCX con nombres numerados seguros
+            for (int i = 0; i < pendingDocs.size(); i++) {
+                DocxEntry doc = pendingDocs.get(i);
+                File tempDocx = new File(tempDir, "doc_" + i + ".docx");
+                java.nio.file.Files.write(tempDocx.toPath(), doc.docxBytes);
+            }
+
+            // Convertir por lotes de una sola vez
+            com.combinacion.util.PdfGenerator.convertBatchToPdf(tempDir, tempDir);
+
+            // Leer de vuelta y empacar
+            for (int i = 0; i < pendingDocs.size(); i++) {
+                DocxEntry doc = pendingDocs.get(i);
+                addToZip(zos, doc.folderName, doc.baseNameWithoutExt + ".docx", doc.docxBytes);
+                
+                File expectedPdf = new File(tempDir, "doc_" + i + ".pdf");
+                if (expectedPdf.exists()) {
+                    byte[] pdfBytes = java.nio.file.Files.readAllBytes(expectedPdf.toPath());
+                    addToZip(zos, doc.folderName, doc.baseNameWithoutExt + ".pdf", pdfBytes);
+                }
+            }
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    private void deleteDirectory(File dir) {
+        if (dir != null && dir.exists()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory()) deleteDirectory(f);
+                    else f.delete();
+                }
+            }
+            dir.delete();
         }
     }
 

@@ -12,6 +12,87 @@ import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
 public class PdfGenerator {
 
     /**
+     * Genera PDF por lotes en una carpeta específica.
+     */
+    public static boolean convertBatchToPdf(File inputDir, File outputDir) {
+        if (inputDir == null || !inputDir.exists() || !inputDir.isDirectory()) {
+            return false;
+        }
+        
+        String os = System.getProperty("os.name").toLowerCase();
+        
+        if (os.contains("win")) {
+            return convertBatchWithWordWindows(inputDir, outputDir != null ? outputDir : inputDir);
+        } else {
+            if (convertBatchWithLibreOfficeLinux(inputDir, outputDir != null ? outputDir : inputDir)) {
+                return true;
+            }
+            return convertBatchWithJavaLibrary(inputDir, outputDir != null ? outputDir : inputDir);
+        }
+    }
+
+    private static boolean convertBatchWithWordWindows(File inputDir, File outputDir) {
+        try {
+            String psCommand = String.format(
+                "$word = New-Object -ComObject Word.Application; " +
+                "$word.Visible = $false; " +
+                "$word.DisplayAlerts = 'wdAlertsNone'; " +
+                "$files = Get-ChildItem -Path '%s' -Filter *.docx; " +
+                "foreach ($file in $files) { " +
+                "  try { " +
+                "    $doc = $word.Documents.Open($file.FullName, $false, $true); " +
+                "    $pdfName = Join-Path -Path '%s' -ChildPath ($file.BaseName + '.pdf'); " +
+                "    $doc.SaveAs([ref]$pdfName, [ref]17); " +
+                "    $doc.Close([ref]0); " +
+                "  } catch { Write-Host $_.Exception.Message } " +
+                "} " +
+                "$word.Quit(); [System.Runtime.Interopservices.Marshal]::ReleaseComObject($word);",
+                inputDir.getAbsolutePath(), outputDir.getAbsolutePath()
+            );
+
+            ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
+            Process p = pb.start();
+            p.waitFor();
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("⚠️ Falló motor Word Windows por lotes, intentando fallback Java...");
+            return convertBatchWithJavaLibrary(inputDir, outputDir);
+        }
+    }
+
+    private static boolean convertBatchWithLibreOfficeLinux(File inputDir, File outputDir) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                "sh", "-c", "soffice --headless --convert-to pdf --outdir \"" + outputDir.getAbsolutePath() + "\" \"" + inputDir.getAbsolutePath() + "\"/*.docx"
+            );
+            
+            Process p = pb.start();
+            p.waitFor();
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("⚠️ Falló LibreOffice por lotes en Linux.");
+            return false;
+        }
+    }
+
+    private static boolean convertBatchWithJavaLibrary(File inputDir, File outputDir) {
+        try {
+            File[] files = inputDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".docx"));
+            if (files != null) {
+                for (File docxFile : files) {
+                    File pdfFile = new File(outputDir, docxFile.getName().replaceAll("(?i)\\.docx$", ".pdf"));
+                    convertWithJavaLibrary(docxFile, pdfFile);
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
      * Genera PDF detectando el sistema operativo para usar el mejor motor disponible.
      */
     public static boolean convertToPdf(File docxFile, File pdfFile) {
