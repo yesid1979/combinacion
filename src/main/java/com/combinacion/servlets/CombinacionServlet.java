@@ -13,6 +13,7 @@ import com.combinacion.models.Supervisor;
 import com.combinacion.models.Usuario;
 import com.combinacion.models.RevisorDocumento;
 import com.combinacion.dao.RevisorDocumentoDAO;
+import com.combinacion.dao.EstructuradorDAO;
 import com.combinacion.util.TemplateGenerator;
 import java.io.File;
 import java.io.FileInputStream;
