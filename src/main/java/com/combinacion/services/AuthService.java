@@ -121,6 +121,12 @@ public class AuthService {
             case "data":
             case "search":
             case "download":
+            case "downloadzip":
+            case "generate":
+            case "generatemodificacion":
+            case "downloadzipmodificacion":
+            case "downloadzipestructuradores":
+            case "downloadzipdesignacion":
             case "export":
             case "print":
                 return modulo + "_VER";
