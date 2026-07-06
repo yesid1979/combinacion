@@ -244,8 +244,15 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "plazo_dias", "Plazo Días");
                 logMapping(log, map, "valor_total_letras", "Valor Total (Letras)");
                 logMapping(log, map, "valor_total_numeros", "Valor Total (Números)");
+                logMapping(log, map, "iva_si_no", "IVA SI/NO");
+                logMapping(log, map, "valor_antes_iva_letras", "Valor Antes IVA (Letras)");
                 logMapping(log, map, "valor_antes_iva", "Valor Antes IVA");
+                logMapping(log, map, "valor_iva_letras", "Valor IVA (Letras)");
                 logMapping(log, map, "valor_iva", "Valor IVA");
+                logMapping(log, map, "valor_cuota_antes_iva_letras", "Valor Cuota Antes IVA (Letras)");
+                logMapping(log, map, "valor_cuota_antes_iva", "Valor Cuota Antes IVA");
+                logMapping(log, map, "valor_cuota_iva_letras", "Valor Cuota IVA (Letras)");
+                logMapping(log, map, "valor_cuota_iva", "Valor Cuota IVA");
                 logMapping(log, map, "valor_cuota_letras", "Valor Cuota (Letras)");
                 logMapping(log, map, "valor_cuota_numero", "Valor Cuota (Número)");
                 logMapping(log, map, "num_cuotas_letras", "Num Cuotas (Letras)");
@@ -819,18 +826,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 map.put("valor_total_letras", i);
             } else if (h.contains("valor") && h.contains("total") && h.contains("numeros") && !h.contains("adicion")) {
                 map.put("valor_total_numeros", i);
-            } else if (h.contains("antes") && h.contains("iva")) {
-                if (h.contains("letras")) {
-                    map.put("valor_antes_iva_letras", i);
-                } else {
-                    map.put("valor_antes_iva", i);
-                }
-            } else if (h.contains("iva") && !h.contains("antes")) {
-                if (h.contains("letras")) {
-                    map.put("valor_iva_letras", i);
-                } else {
-                    map.put("valor_iva", i);
-                }
+            } else if (h.contains("iva") && h.contains("si") && h.contains("no")) {
+                map.put("iva_si_no", i);
             } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
                 map.put("valor_cuota_letras", i);
             } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
@@ -846,6 +843,18 @@ public class CargaMasivaServlet extends HttpServlet {
                     map.put("valor_cuota_iva_letras", i);
                 } else {
                     map.put("valor_cuota_iva", i);
+                }
+            } else if (h.contains("antes") && h.contains("iva")) {
+                if (h.contains("letras")) {
+                    map.put("valor_antes_iva_letras", i);
+                } else {
+                    map.put("valor_antes_iva", i);
+                }
+            } else if (h.contains("iva") && !h.contains("antes")) {
+                if (h.contains("letras")) {
+                    map.put("valor_iva_letras", i);
+                } else {
+                    map.put("valor_iva", i);
                 }
             } else if (h.contains("numero") && h.contains("cuotas") && h.contains("letras") && !h.contains("adicion")) {
                 map.put("num_cuotas_letras", i);

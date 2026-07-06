@@ -598,7 +598,11 @@ public class CargaMasivaService {
             } catch (Exception ignored) {}
 
             contrato.setValorTotalLetras(get(row, map, "valor_total_letras"));
+            contrato.setValorAntesIvaLetras(get(row, map, "valor_antes_iva_letras"));
+            contrato.setValorIvaLetras(get(row, map, "valor_iva_letras"));
             contrato.setValorCuotaLetras(get(row, map, "valor_cuota_letras"));
+            contrato.setValorCuotaAntesIvaLetras(get(row, map, "valor_cuota_antes_iva_letras"));
+            contrato.setValorCuotaIvaLetras(get(row, map, "valor_cuota_iva_letras"));
             contrato.setValorMediaCuotaLetras(get(row, map, "valor_media_cuota_letras"));
             contrato.setAdicionSiNo(parsearBoolean(get(row, map, "adicion_si_no")));
             contrato.setIvaSiNo(parsearBoolean(get(row, map, "iva_si_no")));
@@ -608,7 +612,11 @@ public class CargaMasivaService {
 
             try {
                 String vtn = limpiarMoneda(get(row, map, "valor_total_numeros")); if (!vtn.isEmpty()) contrato.setValorTotalNumeros(new java.math.BigDecimal(vtn));
+                String vai = limpiarMoneda(get(row, map, "valor_antes_iva")); if (!vai.isEmpty()) contrato.setValorAntesIva(new java.math.BigDecimal(vai));
+                String vi = limpiarMoneda(get(row, map, "valor_iva")); if (!vi.isEmpty()) contrato.setValorIva(new java.math.BigDecimal(vi));
                 String vcn = limpiarMoneda(get(row, map, "valor_cuota_numero")); if (!vcn.isEmpty()) contrato.setValorCuotaNumero(new java.math.BigDecimal(vcn));
+                String vcai = limpiarMoneda(get(row, map, "valor_cuota_antes_iva")); if (!vcai.isEmpty()) contrato.setValorCuotaAntesIva(new java.math.BigDecimal(vcai));
+                String vci = limpiarMoneda(get(row, map, "valor_cuota_iva")); if (!vci.isEmpty()) contrato.setValorCuotaIva(new java.math.BigDecimal(vci));
                 String vmcn= limpiarMoneda(get(row, map, "valor_media_cuota_numero")); if (!vmcn.isEmpty()) contrato.setValorMediaCuotaNumero(new java.math.BigDecimal(vmcn));
                 String ncn = get(row, map, "num_cuotas_numero"); if (!ncn.isEmpty()) contrato.setNumCuotasNumero((int) Double.parseDouble(ncn.replace(",",".")));
                 String vta = limpiarMoneda(get(row, map, "valor_total_adicion")); if (!vta.isEmpty()) contrato.setValorTotalAdicion(new java.math.BigDecimal(vta));
