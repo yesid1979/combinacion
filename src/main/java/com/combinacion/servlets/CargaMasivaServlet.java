@@ -1399,11 +1399,17 @@ public class CargaMasivaServlet extends HttpServlet {
             val = get(row, map, "codigo_dane");
             if (!val.isEmpty()) { p.setCodigoDane(val); hasNewData = true; }
 
-            val = get(row, map, "inversion");
-            if (!val.isEmpty()) { p.setInversion(parseBooleanCheck(val)); hasNewData = true; }
+            if (map.containsKey("inversion")) {
+                val = get(row, map, "inversion");
+                p.setInversion(parseBooleanCheck(val)); 
+                hasNewData = true; 
+            }
 
-            val = get(row, map, "funcionamiento");
-            if (!val.isEmpty()) { p.setFuncionamiento(parseBooleanCheck(val)); hasNewData = true; }
+            if (map.containsKey("funcionamiento")) {
+                val = get(row, map, "funcionamiento");
+                p.setFuncionamiento(parseBooleanCheck(val)); 
+                hasNewData = true; 
+            }
 
             val = get(row, map, "ficha_ebi_nombre");
             if (!val.isEmpty()) { p.setFichaEbiNombre(val); hasNewData = true; }
@@ -1595,6 +1601,7 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setValorTotalAdicionLetras(get(row, map, "valor_total_adicion_letras"));
             contrato.setValorContratoMasAdicionLetras(get(row, map, "valor_contrato_mas_adicion_letras"));
             contrato.setEnlaceSecop(get(row, map, "enlace_secop"));
+            contrato.setIvaSiNo(parseBooleanCheck(get(row, map, "iva_si_no")));
 
             try {
                 String vtn = cleanCurrency(get(row, map, "valor_total_numeros"));

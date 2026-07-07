@@ -921,6 +921,33 @@ public class CombinacionServlet extends HttpServlet {
         else
             replacements.put("${VALOR_MENSUAL}", "0");
 
+        // Nuevos placeholders para valores de IVA
+        if (contrato.getValorAntesIva() != null)
+            replacements.put("{{VALOR_ANTES_IVA}}", formatearMoneda(contrato.getValorAntesIva()));
+        else
+            replacements.put("{{VALOR_ANTES_IVA}}", "0");
+
+        if (contrato.getValorIva() != null)
+            replacements.put("{{VALOR_IVA}}", formatearMoneda(contrato.getValorIva()));
+        else
+            replacements.put("{{VALOR_IVA}}", "0");
+
+        if (contrato.getValorCuotaAntesIva() != null)
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA}}", formatearMoneda(contrato.getValorCuotaAntesIva()));
+        else
+            replacements.put("{{VALOR_CUOTA_ANTES_IVA}}", "0");
+
+        if (contrato.getValorCuotaIva() != null)
+            replacements.put("{{VALOR_CUOTA_IVA}}", formatearMoneda(contrato.getValorCuotaIva()));
+        else
+            replacements.put("{{VALOR_CUOTA_IVA}}", "0");
+
+        replacements.put("{{VALOR_ANTES_IVA_LETRAS}}", contrato.getValorAntesIvaLetras() != null ? contrato.getValorAntesIvaLetras() : "");
+        replacements.put("{{VALOR_IVA_LETRAS}}", contrato.getValorIvaLetras() != null ? contrato.getValorIvaLetras() : "");
+        replacements.put("{{VALOR_CUOTA_ANTES_IVA_LETRAS}}", contrato.getValorCuotaAntesIvaLetras() != null ? contrato.getValorCuotaAntesIvaLetras() : "");
+        replacements.put("{{VALOR_CUOTA_IVA_LETRAS}}", contrato.getValorCuotaIvaLetras() != null ? contrato.getValorCuotaIvaLetras() : "");
+
+
         // Ordenador
         if (ordenador != null) {
             replacements.put("${NOMBRE_ORDENADOR}",
