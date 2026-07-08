@@ -1107,6 +1107,8 @@ public class CombinacionServlet extends HttpServlet {
                     ordenador.getCargoOrdenador() != null ? ordenador.getCargoOrdenador() : "");
             replacements.put("{{ORGANISMO}}",
                     ordenador.getOrganismo() != null ? ordenador.getOrganismo() : "");
+            replacements.put("${ORGANISMO_ORDENADOR}",
+                    ordenador.getOrganismo() != null ? toTitleCase(ordenador.getOrganismo()) : "");
             replacements.put("{{DECRETO_NOMBRAMIENTO}}",
                     ordenador.getDecretoNombramiento() != null ? ordenador.getDecretoNombramiento() : "");
             replacements.put("{{ACTA_POSESION}}",
@@ -1116,6 +1118,7 @@ public class CombinacionServlet extends HttpServlet {
             replacements.put("{{CEDULA_ORDENADOR}}", "");
             replacements.put("{{CARGO_ORDENADOR_GASTO}}", "");
             replacements.put("{{ORGANISMO}}", "");
+            replacements.put("${ORGANISMO_ORDENADOR}", "");
             replacements.put("{{DECRETO_NOMBRAMIENTO}}", "");
             replacements.put("{{ACTA_POSESION}}", "");
         }
@@ -1190,15 +1193,19 @@ public class CombinacionServlet extends HttpServlet {
         SimpleDateFormat sdfDoc = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
         String fechaStr = sdfDoc.format(fechaBase);
         
+        String fechaEjecucionStr = contrato.getFechaEjecucion() != null ? sdfDoc.format(contrato.getFechaEjecucion()) : "";
+
         if ("supervisor".equals(docType) || "estructuradores".equals(docType)) {
             String fechaGeneracion = sdfDoc.format(new java.util.Date());
             replacements.put("${FECHA_DOCUMENTO}", fechaGeneracion);
-            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaGeneracion);
+            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaEjecucionStr.isEmpty() ? fechaGeneracion : fechaEjecucionStr);
+            replacements.put("${FECHA_EJECUCION_CONTRATO}", fechaEjecucionStr);
             replacements.put("${FECHA_RPC_APOYO}", fechaGeneracion);
             replacements.put("${RPC_FECHA}", fechaStr); // Esta se mantiene como la fecha del RP
         } else {
             replacements.put("${FECHA_DOCUMENTO}", fechaStr);
-            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaStr);
+            replacements.put("${FECHA_RPC_SUPERVISOR}", fechaEjecucionStr.isEmpty() ? fechaStr : fechaEjecucionStr);
+            replacements.put("${FECHA_EJECUCION_CONTRATO}", fechaEjecucionStr);
             replacements.put("${FECHA_RPC_APOYO}", fechaStr);
             replacements.put("${RPC_FECHA}", fechaStr);
         }
