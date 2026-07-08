@@ -42,6 +42,9 @@ public class InformeSupervision implements Serializable {
     private String observacionesTecnicas;
     private String recomendaciones;
     
+    // Drive
+    private String urlDriveEvidencias;
+    
     // Metadatos
     private Date fechaCreacion;
     private Date fechaSuscripcion;
@@ -132,6 +135,9 @@ public class InformeSupervision implements Serializable {
 
     public String getRecomendaciones() { return recomendaciones; }
     public void setRecomendaciones(String recomendaciones) { this.recomendaciones = recomendaciones; }
+
+    public String getUrlDriveEvidencias() { return urlDriveEvidencias; }
+    public void setUrlDriveEvidencias(String urlDriveEvidencias) { this.urlDriveEvidencias = urlDriveEvidencias; }
 
     public Date getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(Date fechaCreacion) { this.fechaCreacion = fechaCreacion; }

@@ -98,6 +98,7 @@ public class InformeSupervisionService {
         info.setObservacionesTecnicas(f.observacionesTecnicas);
         info.setRecomendaciones(f.recomendaciones);
         info.setFechaSuscripcion(ParseUtils.parseDate(f.fechaSuscripcion));
+        info.setUrlDriveEvidencias(f.urlDriveEvidencias);
         
         return info;
     }
@@ -130,6 +131,7 @@ public class InformeSupervisionService {
         public String observacionesTecnicas;
         public String recomendaciones;
         public String fechaSuscripcion;
+        public String urlDriveEvidencias;
     }
 
     public Contrato obtenerContrato(int id) {

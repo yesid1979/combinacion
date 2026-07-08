@@ -271,6 +271,23 @@ public class SupervisionReportGenerator {
                         }
                         
                         tablaXml.append("</w:tbl>");
+                        
+                        // Inyectar enlace de Drive si existe
+                        String urlDrive = info.getUrlDriveEvidencias();
+                        if (urlDrive != null && !urlDrive.trim().isEmpty()) {
+                            urlDrive = urlDrive.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            
+                            // Párrafo de texto introductorio
+                            tablaXml.append("<w:p><w:pPr><w:spacing w:before=\"240\" w:after=\"120\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>En el siguiente link se encuentra las evidencias cuota ");
+                            tablaXml.append(info.getNumeroCuota() != null ? info.getNumeroCuota() : "");
+                            tablaXml.append(":</w:t></w:r></w:p>");
+                            
+                            // Párrafo con la URL simulando un hipervínculo azul
+                            tablaXml.append("<w:p><w:pPr><w:spacing w:after=\"240\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/></w:rPr><w:t>");
+                            tablaXml.append(urlDrive);
+                            tablaXml.append("</w:t></w:r></w:p>");
+                        }
+                        
                         tablaXml.append("<w:p><w:r><w:t>"); // Reabrir para balancear el tag original
                         
                         xml = xml.replace("${CONCEPTO_SUPERVISOR}", tablaXml.toString());

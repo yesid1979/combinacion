@@ -75,7 +75,7 @@
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
 
-                <form action="informes" method="POST" id="informeForm" class="needs-validation" novalidate>
+                <form action="informes" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
@@ -109,6 +109,9 @@
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="tecnico-tab" data-bs-toggle="tab" data-bs-target="#tecnico" type="button">Técnico</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="soportes-tab" data-bs-toggle="tab" data-bs-target="#soportes" type="button">Evidencias / Soportes</button>
                         </li>
                     </ul>
 
@@ -315,6 +318,37 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Tab 6: Soportes -->
+                        <div class="tab-pane fade" id="soportes" role="tabpanel">
+                            <div class="section-title">Soportes y Evidencias (Documentos PDF)</div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i> Los documentos requeridos cambian dependiendo de si es la Cuota 1 o una cuota posterior.
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">RUT</label>
+                                    <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Cédula</label>
+                                    <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Constancia SECOP</label>
+                                    <input type="file" class="form-control" name="file_secop" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-todas">
+                                    <label class="form-label">Seguridad Social</label>
+                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-todas">
+                                    <label class="form-label">RPC (Registro Presupuestal)</label>
+                                    <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="mt-5 pt-3 border-top d-flex justify-content-end gap-2">
@@ -363,12 +397,32 @@
                     agregarActividadConValor(i, acts[j], isReadonly);
                 }
             }
+
+            // Lógica para mostrar/ocultar soportes según la cuota
+            function actualizarCamposSoportes() {
+                var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                if (cuotaStr == "1") {
+                    $('.req-cuota-1').show();
+                } else {
+                    $('.req-cuota-1').hide();
+                    // Limpiar el input si se oculta para no enviar cosas innecesarias
+                    $('.req-cuota-1 input[type="file"]').val('');
+                }
+            }
+
+            $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
+            actualizarCamposSoportes(); // Ejecutar al cargar la página
         });
 
         function agregarActividadConValor(index, valor, isReadonly) {
             var container = document.getElementById("actividades_container_" + index);
-            var div = document.createElement("div");
-            div.className = "d-flex mb-2 align-items-start";
+            var actIndex = container.children.length; // Para identificar cada actividad de forma única
+            
+            var wrapper = document.createElement("div");
+            wrapper.className = "mb-3 p-2 border rounded bg-white shadow-sm";
+            
+            var divText = document.createElement("div");
+            divText.className = "d-flex align-items-start";
             
             var textarea = document.createElement("textarea");
             textarea.className = "form-control";
@@ -379,7 +433,7 @@
             if (isReadonly) textarea.readOnly = true;
             else textarea.required = true;
             
-            div.appendChild(textarea);
+            divText.appendChild(textarea);
             
             if (!isReadonly) {
                 var btn = document.createElement("button");
@@ -388,14 +442,36 @@
                 btn.innerHTML = '<i class="bi bi-trash"></i>';
                 btn.onclick = function() {
                     if (container.children.length > 1) {
-                        div.remove();
+                        wrapper.remove();
                     } else {
                         textarea.value = '';
                     }
                 };
-                div.appendChild(btn);
+                divText.appendChild(btn);
             }
-            container.appendChild(div);
+            wrapper.appendChild(divText);
+
+            if (!isReadonly) {
+                var divFile = document.createElement("div");
+                divFile.className = "mt-2";
+                
+                var fileLabel = document.createElement("small");
+                fileLabel.className = "text-muted d-block fw-bold mb-1";
+                fileLabel.innerHTML = '<i class="bi bi-paperclip"></i> Evidencias de esta actividad:';
+                
+                var fileInput = document.createElement("input");
+                fileInput.type = "file";
+                fileInput.className = "form-control form-control-sm";
+                fileInput.name = "evidencia_" + index + "_" + actIndex;
+                fileInput.multiple = true; // Permite seleccionar varias fotos o PDFs
+                fileInput.accept = "application/pdf, image/*";
+                
+                divFile.appendChild(fileLabel);
+                divFile.appendChild(fileInput);
+                wrapper.appendChild(divFile);
+            }
+            
+            container.appendChild(wrapper);
         }
 
         window.agregarActividad = function(index) {

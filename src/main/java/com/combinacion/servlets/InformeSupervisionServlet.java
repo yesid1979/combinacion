@@ -18,6 +18,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @WebServlet(name = "InformeSupervisionServlet", urlPatterns = { "/informes" })
+@javax.servlet.annotation.MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
+    maxFileSize = 1024 * 1024 * 10,       // 10MB
+    maxRequestSize = 1024 * 1024 * 50     // 50MB
+)
 public class InformeSupervisionServlet extends HttpServlet {
 
     private final InformeSupervisionService informeService = new InformeSupervisionService();

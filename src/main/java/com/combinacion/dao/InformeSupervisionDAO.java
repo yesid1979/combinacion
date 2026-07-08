@@ -16,8 +16,8 @@ public class InformeSupervisionDAO {
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, " +
-                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -50,6 +50,7 @@ public class InformeSupervisionDAO {
             ps.setString(25, info.getObservacionesTecnicas());
             ps.setString(26, info.getRecomendaciones());
             ps.setDate(27, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(28, info.getUrlDriveEvidencias());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -156,6 +157,7 @@ public class InformeSupervisionDAO {
         info.setRecomendaciones(rs.getString("recomendaciones"));
         info.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
         info.setFechaSuscripcion(rs.getDate("fecha_suscripcion"));
+        info.setUrlDriveEvidencias(rs.getString("url_drive_evidencias"));
 
         // Map contract info if available in the result set
         try {
@@ -181,7 +183,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
-                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ? " +
+                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -213,7 +215,8 @@ public class InformeSupervisionDAO {
             ps.setString(24, info.getObservacionesTecnicas());
             ps.setString(25, info.getRecomendaciones());
             ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
-            ps.setInt(27, info.getId());
+            ps.setString(27, info.getUrlDriveEvidencias());
+            ps.setInt(28, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -268,6 +271,7 @@ public class InformeSupervisionDAO {
                 stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS recibo_satisfaccion TEXT");
                 stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS constancia_paz_salvo TEXT");
                 stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS concepto_supervisor TEXT");
+                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS url_drive_evidencias VARCHAR(500)");
             } catch (SQLException ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
