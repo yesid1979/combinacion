@@ -16,8 +16,8 @@ public class InformeSupervisionDAO {
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, " +
-                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -51,6 +51,7 @@ public class InformeSupervisionDAO {
             ps.setString(26, info.getRecomendaciones());
             ps.setDate(27, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
             ps.setString(28, info.getUrlDriveEvidencias());
+            ps.setString(29, info.getConsecutivoCobro());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -133,6 +134,7 @@ public class InformeSupervisionDAO {
         info.setPeriodoInforme(rs.getString("periodo_informe"));
         info.setTipoInforme(rs.getString("tipo_informe"));
         info.setNumeroCuota(rs.getString("numero_cuota"));
+        try { info.setConsecutivoCobro(rs.getString("consecutivo_cobro")); } catch(SQLException ignore){}
         info.setFechaInicioPeriodo(rs.getDate("fecha_inicio_periodo"));
         info.setFechaFinPeriodo(rs.getDate("fecha_fin_periodo"));
         info.setModificaciones(rs.getString("modificaciones"));
@@ -183,7 +185,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
-                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ? " +
+                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -216,7 +218,8 @@ public class InformeSupervisionDAO {
             ps.setString(25, info.getRecomendaciones());
             ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
             ps.setString(27, info.getUrlDriveEvidencias());
-            ps.setInt(28, info.getId());
+            ps.setString(28, info.getConsecutivoCobro());
+            ps.setInt(29, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -265,14 +268,13 @@ public class InformeSupervisionDAO {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            try {
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS adiciones TEXT");
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS prorrogas TEXT");
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS recibo_satisfaccion TEXT");
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS constancia_paz_salvo TEXT");
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS concepto_supervisor TEXT");
-                stmt.execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS url_drive_evidencias VARCHAR(500)");
-            } catch (SQLException ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN adiciones TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN prorrogas TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN recibo_satisfaccion TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN constancia_paz_salvo TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN concepto_supervisor TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN url_drive_evidencias VARCHAR(1000)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN consecutivo_cobro VARCHAR(50)"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

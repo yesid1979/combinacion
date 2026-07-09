@@ -71,6 +71,7 @@ public class InformeSupervisionService {
         info.setPeriodoInforme(f.periodoInforme);
         info.setTipoInforme(f.tipoInforme);
         info.setNumeroCuota(f.numeroCuota);
+        info.setConsecutivoCobro(f.consecutivoCobro);
         
         info.setFechaInicioPeriodo(ParseUtils.parseDate(f.fechaInicioPeriodo));
         info.setFechaFinPeriodo(ParseUtils.parseDate(f.fechaFinPeriodo));
@@ -108,6 +109,7 @@ public class InformeSupervisionService {
         public String periodoInforme;
         public String tipoInforme;
         public String numeroCuota;
+        public String consecutivoCobro;
         public String fechaInicioPeriodo;
         public String fechaFinPeriodo;
         public String modificaciones;
@@ -148,6 +150,10 @@ public class InformeSupervisionService {
             }
             if (c.getOrdenadorId() > 0) {
                 c.setOrdenadorGasto(ordenadorGastoDAO.obtenerPorId(c.getOrdenadorId()));
+            }
+            if (c.getPresupuestoId() > 0) {
+                com.combinacion.dao.PresupuestoDetalleDAO presupuestoDAO = new com.combinacion.dao.PresupuestoDetalleDAO();
+                c.setPresupuestoDetalle(presupuestoDAO.obtenerPorId(c.getPresupuestoId()));
             }
         }
         return c;

@@ -210,20 +210,90 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
 
             Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
-            String realPath = request.getServletContext().getRealPath("/");
-            String filePath = SupervisionReportGenerator.generarDocx(informe, contrato, realPath);
-            File downloadFile = new File(filePath);
+            
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            String nombreCorto = nombreCompleto;
+            String[] parts = nombreCompleto.split("\\s+");
+            if (parts.length >= 3) {
+                nombreCorto = parts[0] + " " + parts[2];
+            } else if (parts.length == 2) {
+                nombreCorto = parts[0] + " " + parts[1];
+            }
 
-            response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" + downloadFile.getName() + "\"");
-            response.setContentLength((int) downloadFile.length());
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
+            String docxName = "5. INFORME SUPERVISION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
+            
+            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
+            String xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " Cuota " + informe.getNumeroCuota() + " -" + nombreCorto + ".xlsx";
+            
+            // Archivo DOCX temporal
+            String filePathDocx = SupervisionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
+            File docxFile = new File(filePathDocx);
+            
+            // Archivo XLSX temporal
+            File xlsxFile = null;
+            try {
+                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, getServletContext().getRealPath("/"));
+                xlsxFile = new File(xlsxPath);
+            } catch (Exception e) {
+                System.out.println("No se pudo generar el Excel: " + e.getMessage());
+            }
 
-            try (FileInputStream inStream = new FileInputStream(downloadFile);
-                 OutputStream outStream = response.getOutputStream()) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = inStream.read(buffer)) != -1) {
-                    outStream.write(buffer, 0, bytesRead);
+            // Si ambos existen, generar ZIP
+            if (xlsxFile != null && xlsxFile.exists()) {
+                String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
+                String primerBloque = "";
+                String ultimoBloque = "";
+                if (numContrato.contains(".")) {
+                    String[] numParts = numContrato.split("\\.");
+                    primerBloque = numParts[0];
+                    ultimoBloque = numParts[numParts.length - 1];
+                } else {
+                    primerBloque = numContrato;
+                }
+                
+                String safeName = nombreCorto.replaceAll("[^a-zA-Z0-9.\\- ]", "");
+                String zipFileName = primerBloque + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " " + safeName + ".zip";
+                
+                response.setContentType("application/zip");
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFileName + "\"");
+                
+                try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
+                    // Agregar DOCX
+                    zos.putNextEntry(new java.util.zip.ZipEntry(docxName));
+                    try (FileInputStream fis = new FileInputStream(docxFile)) {
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        while ((length = fis.read(buffer)) >= 0) {
+                            zos.write(buffer, 0, length);
+                        }
+                    }
+                    zos.closeEntry();
+                    
+                    // Agregar XLSX
+                    zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
+                    try (FileInputStream fis = new FileInputStream(xlsxFile)) {
+                        byte[] buffer = new byte[4096];
+                        int length;
+                        while ((length = fis.read(buffer)) >= 0) {
+                            zos.write(buffer, 0, length);
+                        }
+                    }
+                    zos.closeEntry();
+                }
+            } else {
+                // Si no hay Excel, descargar solo el DOCX
+                response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + docxFile.getName() + "\"");
+                response.setContentLength((int) docxFile.length());
+
+                try (FileInputStream inStream = new FileInputStream(docxFile);
+                     OutputStream outStream = response.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = inStream.read(buffer)) != -1) {
+                        outStream.write(buffer, 0, bytesRead);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -241,7 +311,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             mostrarFormularioNuevo(request, response);
         } else {
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
-            response.sendRedirect("informes?contrato_id=" + form.contratoId);
+            response.sendRedirect("informes");
         }
     }
 
@@ -249,13 +319,19 @@ public class InformeSupervisionServlet extends HttpServlet {
             throws IOException, ServletException {
         int id = ParseUtils.parseInt(request.getParameter("id"));
         InformeFormData form = construirFormData(request);
+        
+        System.out.println("====== DEBUG ACTUALIZAR ======");
+        System.out.println("ID: " + id);
+        System.out.println("Consecutivo Formulario: " + form.consecutivoCobro);
+        System.out.println("==============================");
+        
         String error = informeService.actualizar(id, form);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
-            response.sendRedirect("informes?contrato_id=" + form.contratoId);
+            response.sendRedirect("informes");
         }
     }
 
@@ -265,6 +341,7 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.periodoInforme = r.getParameter("periodo_informe");
         f.tipoInforme = r.getParameter("tipo_informe");
         f.numeroCuota = r.getParameter("numero_cuota");
+        f.consecutivoCobro = r.getParameter("consecutivo_cobro");
         f.fechaInicioPeriodo = r.getParameter("fecha_inicio_periodo");
         f.fechaFinPeriodo = r.getParameter("fecha_fin_periodo");
         f.modificaciones = r.getParameter("modificaciones");

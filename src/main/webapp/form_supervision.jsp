@@ -75,7 +75,7 @@
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
 
-                <form action="informes" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
+                <form action="informes?action=${action}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
@@ -132,14 +132,14 @@
                                     <label class="form-label">Periodo del Informe (Mes y Año)</label>
                                     <input type="text" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" placeholder="Ej: Enero 2026" required ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label class="form-label">Tipo de Informe</label>
                                     <select class="form-select" name="tipo_informe" required ${readonly ? 'disabled' : ''}>
                                         <option value="PARCIAL" ${informe.tipoInforme == 'PARCIAL' ? 'selected' : ''}>INFORME PARCIAL</option>
                                         <option value="FINAL" ${informe.tipoInforme == 'FINAL' ? 'selected' : ''}>INFORME FINAL</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label class="form-label">Cuota Número</label>
                                     <c:choose>
                                         <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
@@ -154,6 +154,10 @@
                                             <input type="text" class="form-control" name="numero_cuota" value="${informe.numeroCuota}" placeholder="Ej: 1" required ${readonly ? 'readonly' : ''}>
                                         </c:otherwise>
                                     </c:choose>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" title="Para la cuenta de cobro">Consecutivo</label>
+                                    <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha de inicio</label>

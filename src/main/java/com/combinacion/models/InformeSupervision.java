@@ -10,6 +10,7 @@ public class InformeSupervision implements Serializable {
     private String periodoInforme;
     private String tipoInforme;
     private String numeroCuota;
+    private String consecutivoCobro;
     
     // Informe Jurídico
     private Date fechaInicioPeriodo;
@@ -69,6 +70,9 @@ public class InformeSupervision implements Serializable {
 
     public String getNumeroCuota() { return numeroCuota; }
     public void setNumeroCuota(String numeroCuota) { this.numeroCuota = numeroCuota; }
+
+    public String getConsecutivoCobro() { return consecutivoCobro; }
+    public void setConsecutivoCobro(String consecutivoCobro) { this.consecutivoCobro = consecutivoCobro; }
 
     public Date getFechaInicioPeriodo() { return fechaInicioPeriodo; }
     public void setFechaInicioPeriodo(Date fechaInicioPeriodo) { this.fechaInicioPeriodo = fechaInicioPeriodo; }
