@@ -160,6 +160,7 @@ public class InformeSupervisionDAO {
         info.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
         info.setFechaSuscripcion(rs.getDate("fecha_suscripcion"));
         info.setUrlDriveEvidencias(rs.getString("url_drive_evidencias"));
+        try { info.setSoportesJson(rs.getString("soportes_json")); } catch (SQLException e) {}
 
         // Map contract info if available in the result set
         try {
@@ -185,7 +186,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
-                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ? " +
+                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, soportes_json = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -219,7 +220,8 @@ public class InformeSupervisionDAO {
             ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
             ps.setString(27, info.getUrlDriveEvidencias());
             ps.setString(28, info.getConsecutivoCobro());
-            ps.setInt(29, info.getId());
+            ps.setString(29, info.getSoportesJson());
+            ps.setInt(30, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -229,6 +231,30 @@ public class InformeSupervisionDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return "Error SQL: " + e.getMessage();
+        }
+    }
+
+    public void actualizarUrlDrive(int id, String url) {
+        String sql = "UPDATE informes_supervision SET url_drive_evidencias = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, url);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void actualizarSoportesJson(int id, String json) {
+        String sql = "UPDATE informes_supervision SET soportes_json = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, json);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -275,6 +301,7 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN concepto_supervisor TEXT"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN url_drive_evidencias VARCHAR(1000)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN consecutivo_cobro VARCHAR(50)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN soportes_json TEXT"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

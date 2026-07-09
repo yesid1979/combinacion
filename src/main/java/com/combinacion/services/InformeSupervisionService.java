@@ -100,6 +100,7 @@ public class InformeSupervisionService {
         info.setRecomendaciones(f.recomendaciones);
         info.setFechaSuscripcion(ParseUtils.parseDate(f.fechaSuscripcion));
         info.setUrlDriveEvidencias(f.urlDriveEvidencias);
+        info.setSoportesJson(f.soportesJson);
         
         return info;
     }
@@ -134,6 +135,7 @@ public class InformeSupervisionService {
         public String recomendaciones;
         public String fechaSuscripcion;
         public String urlDriveEvidencias;
+        public String soportesJson;
     }
 
     public Contrato obtenerContrato(int id) {

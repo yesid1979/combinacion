@@ -16,6 +16,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 @WebServlet(name = "InformeSupervisionServlet", urlPatterns = { "/informes" })
 @javax.servlet.annotation.MultipartConfig(
@@ -302,6 +303,115 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
     }
 
+    private void procesarArchivosDrive(int informeId, HttpServletRequest request) {
+        try {
+            System.out.println("Iniciando subida automatica a Drive para informe ID: " + informeId);
+            InformeSupervision informe = informeService.obtenerPorId(informeId);
+            if (informe == null) return;
+            Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
+            if (contrato == null) return;
+            
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            String nombreCorto = nombreCompleto;
+            String[] parts = nombreCompleto.split("\\s+");
+            if (parts.length >= 3) {
+                nombreCorto = parts[0] + " " + parts[2];
+            } else if (parts.length == 2) {
+                nombreCorto = parts[0] + " " + parts[1];
+            }
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
+            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
+            
+            String folderNamePrincipal = shortContrato + " - " + consecutivoStr + " " + nombreCorto;
+            String folderNameCuota = "Cuota " + informe.getNumeroCuota();
+            
+            // 1. Obtener/crear "pruebas cuenta de cobro"
+            String pruebasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("pruebas cuenta de cobro", null);
+            // 2. Obtener/crear carpeta principal
+            String principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, pruebasFolderId);
+            // 3. Obtener/crear cuota
+            String cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
+            // 4. Obtener/crear evidencias
+            com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
+            
+            // 4.5. Guardar la URL en la base de datos
+            String driveUrl = "https://drive.google.com/drive/folders/" + cuotaFolderId;
+            informe.setUrlDriveEvidencias(driveUrl);
+            new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
+            
+            // 5. Generar archivos localmente
+            String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+            String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+            
+            File docxFile = new File(docxPath);
+            File xlsxFile = new File(xlsxPath);
+            
+            String docxName = "5. INFORME SUPERVISION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
+            String xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " Cuota " + informe.getNumeroCuota() + " -" + nombreCorto + ".xlsx";
+            
+            // 6. Subir archivos a Drive (Docs y Excel)
+            if (docxFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+            }
+            if (xlsxFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId);
+            }
+            
+            // 7. Subir todos los documentos soporte
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
+            org.json.JSONObject soportes = new org.json.JSONObject();
+            if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
+                try { soportes = new org.json.JSONObject(informe.getSoportesJson()); } catch (Exception ignore) {}
+            }
+            
+            System.out.println("Iniciando escaneo de partes (archivos adjuntos)...");
+            for (Part part : request.getParts()) {
+                String submittedFileName = getFileName(part);
+                if (submittedFileName != null && !submittedFileName.trim().isEmpty() && part.getSize() > 0) {
+                    String partName = part.getName();
+                    
+                    // Si el nombre del campo empieza con "evidencia_", va en la subcarpeta EVIDENCIAS
+                    // Si es file_rut, file_cedula, file_secop, etc., va en la carpeta Cuota X
+                    String targetFolderId = (partName != null && partName.startsWith("evidencia_")) ? evidenciasFolderId : cuotaFolderId;
+                    
+                    System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
+                    String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";
+                    try (java.io.InputStream is = part.getInputStream()) {
+                        String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                        
+                        org.json.JSONObject fileData = new org.json.JSONObject();
+                        fileData.put("name", submittedFileName);
+                        fileData.put("id", fileId);
+                        fileData.put("url", "https://drive.google.com/file/d/" + fileId + "/view");
+                        soportes.put(partName, fileData);
+                    } catch (Exception ex) {
+                        System.err.println("Error subiendo archivo " + submittedFileName + ": " + ex.getMessage());
+                    }
+                }
+            }
+            informe.setSoportesJson(soportes.toString());
+            new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
+            
+            System.out.println("Subida a Drive completada con exito.");
+        } catch (Exception e) {
+            System.err.println("Error subiendo archivos a Drive:");
+            e.printStackTrace();
+        }
+    }
+
+    private String getFileName(Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        if (contentDisp != null) {
+            for (String cd : contentDisp.split(";")) {
+                if (cd.trim().startsWith("filename")) {
+                    return cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+                }
+            }
+        }
+        return null;
+    }
+
     private void insertar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         InformeFormData form = construirFormData(request);
@@ -310,6 +420,11 @@ public class InformeSupervisionServlet extends HttpServlet {
             request.setAttribute("error", error);
             mostrarFormularioNuevo(request, response);
         } else {
+            // Procesar Drive después de guardar exitosamente
+            java.util.List<InformeSupervision> lista = informeService.listarPorContrato(form.contratoId);
+            if (lista != null && !lista.isEmpty()) {
+                procesarArchivosDrive(lista.get(0).getId(), request);
+            }
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
             response.sendRedirect("informes");
         }
@@ -320,16 +435,13 @@ public class InformeSupervisionServlet extends HttpServlet {
         int id = ParseUtils.parseInt(request.getParameter("id"));
         InformeFormData form = construirFormData(request);
         
-        System.out.println("====== DEBUG ACTUALIZAR ======");
-        System.out.println("ID: " + id);
-        System.out.println("Consecutivo Formulario: " + form.consecutivoCobro);
-        System.out.println("==============================");
-        
         String error = informeService.actualizar(id, form);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
+            // Procesar Drive después de actualizar exitosamente
+            procesarArchivosDrive(id, request);
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
             response.sendRedirect("informes");
         }
@@ -362,28 +474,34 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.planillaFechaPago = r.getParameter("planilla_fecha_pago");
         f.planillaPeriodo = r.getParameter("planilla_periodo");
         
-        int count = ParseUtils.parseInt(r.getParameter("obligaciones_count"));
-        if (count > 0) {
-            org.json.JSONArray arr = new org.json.JSONArray();
-            for (int i = 0; i < count; i++) {
-                org.json.JSONObject obj = new org.json.JSONObject();
-                obj.put("obligacion", r.getParameter("obligacion_" + i));
-                String[] acts = r.getParameterValues("actividad_" + i);
-                String joinedAct = "";
-                if (acts != null) {
-                    joinedAct = String.join("\n", acts);
-                }
-                obj.put("actividad", joinedAct);
-                arr.put(obj);
-            }
-            f.conceptoSupervisor = arr.toString();
+        String conceptoJson = r.getParameter("concepto_supervisor_json");
+        if (conceptoJson != null && !conceptoJson.isEmpty()) {
+            f.conceptoSupervisor = conceptoJson;
         } else {
-            f.conceptoSupervisor = r.getParameter("concepto_supervisor");
+            int count = ParseUtils.parseInt(r.getParameter("obligaciones_count"));
+            if (count > 0) {
+                org.json.JSONArray arr = new org.json.JSONArray();
+                for (int i = 0; i < count; i++) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    obj.put("obligacion", r.getParameter("obligacion_" + i));
+                    String[] acts = r.getParameterValues("actividad_" + i);
+                    String joinedAct = "";
+                    if (acts != null) {
+                        joinedAct = String.join("\n", acts);
+                    }
+                    obj.put("actividad", joinedAct);
+                    arr.put(obj);
+                }
+                f.conceptoSupervisor = arr.toString();
+            } else {
+                f.conceptoSupervisor = r.getParameter("concepto_supervisor");
+            }
         }
         
         f.observacionesTecnicas = r.getParameter("observaciones_tecnicas");
         f.recomendaciones = r.getParameter("recomendaciones");
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
+        f.soportesJson = r.getParameter("soportes_json");
         return f;
     }
 }

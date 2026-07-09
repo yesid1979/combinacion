@@ -75,11 +75,12 @@
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
 
-                <form action="informes?action=${action}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" novalidate>
+                <form action="informes?action=${action}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
                         <input type="hidden" name="id" value="${informe.id}">
+                        <input type="hidden" name="soportes_json" value="${fn:escapeXml(informe.soportesJson)}">
                     </c:if>
 
                     <c:if test="${not empty error}">
@@ -416,6 +417,37 @@
 
             $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
             actualizarCamposSoportes(); // Ejecutar al cargar la página
+            
+            // Renderizar archivos previamente subidos (la interfaz que pediste)
+            var soportesJsonStr = '${fn:escapeXml(informe.soportesJson)}';
+            if (soportesJsonStr && soportesJsonStr.trim() !== '') {
+                try {
+                    // Reemplazamos entidades xml en caso de que fn:escapeXml las haya codificado
+                    var decodedStr = $('<textarea/>').html(soportesJsonStr).text();
+                    var soportesObj = JSON.parse(decodedStr);
+                    
+                    for (var key in soportesObj) {
+                        var fileData = soportesObj[key];
+                        var $input = $('input[name="' + key + '"]');
+                        if ($input.length) {
+                            var ui = '<div class="alert alert-secondary py-2 mt-2 mb-2 d-flex justify-content-between align-items-center shadow-sm" style="border-left: 4px solid #0d6efd;">' +
+                                     '<div><i class="bi bi-file-earmark-check-fill text-success me-2 fs-5"></i>' +
+                                     '<a href="' + fileData.url + '" target="_blank" class="text-decoration-none fw-bold text-dark">' + fileData.name + '</a></div>' +
+                                     '</div>';
+                            $input.before(ui);
+                            $input.after('<small class="text-muted d-block mt-1"><i class="bi bi-info-circle"></i> Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se reemplazará.</small>');
+                            
+                            // Cambiar el label del input para indicar que reemplazará el archivo
+                            var $label = $input.prevAll('.form-label, small.fw-bold').first();
+                            if ($label.length) {
+                                $label.append(' <span class="badge bg-success ms-2">Cargado</span>');
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.log('Error parseando soportesJson', e);
+                }
+            }
         });
 
         function agregarActividadConValor(index, valor, isReadonly) {
@@ -486,9 +518,11 @@
         function formatMoney(n) {
             if(!n) return "";
             let str = n.toString();
-            // Si viene de la base de datos con .00 (ej: 33978000.00), quitamos los decimales
-            if (str.includes(".")) {
-                str = str.split(".")[0];
+            // Si viene de la base de datos con .00 (ej: 33978000.00), quitamos los decimales exactos
+            if (str.endsWith(".00")) {
+                str = str.substring(0, str.length - 3);
+            } else if (str.endsWith(".0")) {
+                str = str.substring(0, str.length - 2);
             }
             // Removemos todo lo que no sea número
             str = str.replace(/[^0-9]/g, '');
@@ -544,6 +578,37 @@
                 
                 return false;
             }
+            
+            // Recopilar obligaciones en un solo JSON para evitar el límite de 50 campos de Tomcat
+            var obligacionesJson = [];
+            var count = parseInt($('input[name="obligaciones_count"]').val()) || 0;
+            
+            for (var i = 0; i < count; i++) {
+                var obj = {};
+                var $obligacion = $('input[name="obligacion_' + i + '"]');
+                if ($obligacion.length) {
+                    obj.obligacion = $obligacion.val();
+                    $obligacion.removeAttr('name'); // Evitar que se envíe como parte individual
+                }
+                
+                var acts = [];
+                $('textarea[name="actividad_' + i + '"]').each(function() {
+                    acts.push($(this).val());
+                    $(this).removeAttr('name'); // Evitar que se envíe como parte individual
+                });
+                obj.actividad = acts.join("\n");
+                
+                obligacionesJson.push(obj);
+            }
+            $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
+            $('input[name="obligaciones_count"]').removeAttr('name'); // Tampoco enviar este
+            
+            // Eliminar los nombres de TODOS los inputs de tipo file que estén vacíos
+            $('input[type="file"]').each(function() {
+                if (!$(this).val()) {
+                    $(this).removeAttr('name');
+                }
+            });
             
             // Quitar puntos antes de enviar el formulario para que Java (BigDecimal) no se rompa
             $('.money-mask').each(function() {

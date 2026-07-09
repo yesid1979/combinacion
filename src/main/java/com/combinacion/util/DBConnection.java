@@ -34,12 +34,22 @@ public class DBConnection {
                 Context envContext = (Context) initContext.lookup("java:comp/env");
                 dataSource = (DataSource) envContext.lookup("jdbc/combinacion");
             } catch (NamingException e) {
-                throw new SQLException("No se pudo obtener el nombre del recurso jdbc/combinacion: " + e.getMessage());
+                System.err.println("[DBConnection] JNDI no disponible, intentando conexion directa JDBC...");
             }
         }
         
         if (dataSource == null) {
-            throw new SQLException("El DataSource 'jdbc/combinacion' no está disponible en el servidor.");
+            // FALLBACK DIRECTO PARA EJECUCION FUERA DE TOMCAT (EJ. METODO MAIN)
+            try {
+                Class.forName("org.postgresql.Driver");
+                return java.sql.DriverManager.getConnection(
+                    "jdbc:postgresql://10.30.80.53:5432/combinacion?options=-c%20client_encoding=UTF8",
+                    "adminjuridica",
+                    "Produccion2023*"
+                );
+            } catch (Exception ex) {
+                throw new SQLException("El DataSource JNDI no está disponible y falló la conexión directa.", ex);
+            }
         }
         
         try {

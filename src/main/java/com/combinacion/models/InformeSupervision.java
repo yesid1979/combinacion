@@ -45,6 +45,7 @@ public class InformeSupervision implements Serializable {
     
     // Drive
     private String urlDriveEvidencias;
+    private String soportesJson;
     
     // Metadatos
     private Date fechaCreacion;
@@ -54,6 +55,9 @@ public class InformeSupervision implements Serializable {
     private Contrato contrato;
 
     public InformeSupervision() {}
+
+    public String getSoportesJson() { return soportesJson; }
+    public void setSoportesJson(String soportesJson) { this.soportesJson = soportesJson; }
 
     // Getters and Setters
     public Integer getId() { return id; }
