@@ -281,6 +281,33 @@ public class InformeSupervisionServlet extends HttpServlet {
                         }
                     }
                     zos.closeEntry();
+                    
+                    // Agregar anexos
+                    if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
+                        try {
+                            org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                            for (String key : soportes.keySet()) {
+                                org.json.JSONObject fileData = soportes.getJSONObject(key);
+                                String fileId = fileData.optString("id");
+                                String fileName = fileData.optString("name");
+                                if (fileId != null && !fileId.isEmpty() && fileName != null && !fileName.isEmpty()) {
+                                    zos.putNextEntry(new java.util.zip.ZipEntry(fileName));
+                                    try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                                        byte[] buffer = new byte[4096];
+                                        int length;
+                                        while ((length = in.read(buffer)) >= 0) {
+                                            zos.write(buffer, 0, length);
+                                        }
+                                    } catch (Exception ex) {
+                                        System.err.println("No se pudo descargar anexo " + fileName + " de Drive: " + ex.getMessage());
+                                    }
+                                    zos.closeEntry();
+                                }
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("Error procesando anexos: " + ex.getMessage());
+                        }
+                    }
                 }
             } else {
                 // Si no hay Excel, descargar solo el DOCX

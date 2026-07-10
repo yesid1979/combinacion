@@ -154,4 +154,9 @@ public class GoogleDriveService {
             return newFile.getId();
         }
     }
+
+    public static InputStream downloadFile(String fileId) throws Exception {
+        Drive driveService = getDriveService();
+        return driveService.files().get(fileId).executeMediaAsInputStream();
+    }
 }
