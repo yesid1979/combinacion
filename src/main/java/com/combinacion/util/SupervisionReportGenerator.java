@@ -108,7 +108,9 @@ public class SupervisionReportGenerator {
         // Datos del Contrato
         reps.put("${NUMERO_CONTRATO}", contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "");
         reps.put("${CONTRATISTA_NOMBRE}", contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "");
-        reps.put("${CONTRATISTA_CEDULA}", contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "");
+        String cedula = contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
+        reps.put("${CONTRATISTA_CEDULA}", cedula.replace(",", "."));
+        reps.put("${CONTRATISTA_DV}", contrato.getContratista() != null && contrato.getContratista().getDv() != null ? contrato.getContratista().getDv() : "0");
         reps.put("${TELEFONO}", contrato.getContratista() != null && contrato.getContratista().getTelefono() != null ? contrato.getContratista().getTelefono() : "");
         reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
         reps.put("${ORGANISMO}", contrato.getOrdenadorGasto() != null && contrato.getOrdenadorGasto().getOrganismo() != null ? contrato.getOrdenadorGasto().getOrganismo() : "");

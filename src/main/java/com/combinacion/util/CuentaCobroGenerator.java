@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Date;
 import java.util.Locale;
 
@@ -42,6 +44,11 @@ public class CuentaCobroGenerator {
         Cell cellI12 = row12.getCell(8); if(cellI12 == null) cellI12 = row12.createCell(8);
         cellI12.setCellValue(informe.getConsecutivoCobro() != null ? informe.getConsecutivoCobro() : "");
 
+        // Forzar NIT del organismo con puntos en H13 para evitar el formateo automático de Excel con comas
+        Row row13 = sheet.getRow(12); if(row13 == null) row13 = sheet.createRow(12);
+        Cell cellH13 = row13.getCell(7); if(cellH13 == null) cellH13 = row13.createCell(7);
+        cellH13.setCellValue("890.399.011");
+
         // 3. Organismo (D14)
         if (contrato.getOrdenadorGasto() != null) {
             Row row14 = sheet.getRow(13); if(row14 == null) row14 = sheet.createRow(13);
@@ -49,12 +56,13 @@ public class CuentaCobroGenerator {
             cellD14.setCellValue(toTitleCase(contrato.getOrdenadorGasto().getOrganismo()));
         }
         
-        // Periodo de pago (D15)
-        Row row15 = sheet.getRow(14); if(row15 == null) row15 = sheet.createRow(14);
-        Cell cellD15 = row15.getCell(3); if(cellD15 == null) cellD15 = row15.createCell(3);
-        String periodo = (informe.getFechaInicioPeriodo() != null ? sdf.format(informe.getFechaInicioPeriodo()) : "") + " AL " +
-                         (informe.getFechaFinPeriodo() != null ? sdf.format(informe.getFechaFinPeriodo()) : "");
-        cellD15.setCellValue(periodo);
+        // Dirección - Organismo (D15)
+        if (contrato.getOrdenadorGasto() != null) {
+            Row row15 = sheet.getRow(14); if(row15 == null) row15 = sheet.createRow(14);
+            Cell cellD15 = row15.getCell(3); if(cellD15 == null) cellD15 = row15.createCell(3);
+            String direccionOrganismo = contrato.getOrdenadorGasto().getDireccionOrganismo();
+            cellD15.setCellValue(direccionOrganismo != null ? direccionOrganismo : "");
+        }
 
         // DATOS CONTRATISTA
         if (contrato.getContratista() != null) {
@@ -64,12 +72,14 @@ public class CuentaCobroGenerator {
             
             Cell cellH17 = row17.getCell(7); if(cellH17 == null) cellH17 = row17.createCell(7);
             String cedulaStr = contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
-            cedulaStr = cedulaStr.replaceAll("[^0-9.]", "");
+            // Remover cualquier texto adicional como " de Jamundí"
+            cedulaStr = cedulaStr.split("(?i)\\s+de\\s+")[0].trim();
+            cedulaStr = cedulaStr.replace(",", ".");
             cellH17.setCellValue(cedulaStr);
             
-            Cell cellL17 = row17.getCell(11); if(cellL17 == null) cellL17 = row17.createCell(11);
+            Cell cellI17 = row17.getCell(8); if(cellI17 == null) cellI17 = row17.createCell(8);
             String dvStr = contrato.getContratista().getDv() != null ? contrato.getContratista().getDv() : "0";
-            cellL17.setCellValue(dvStr);
+            cellI17.setCellValue(dvStr);
             
             Row row18 = sheet.getRow(17); if(row18 == null) row18 = sheet.createRow(17);
             Cell cellD18 = row18.getCell(3); if(cellD18 == null) cellD18 = row18.createCell(3);
@@ -103,7 +113,7 @@ public class CuentaCobroGenerator {
         Cell cellD23 = row23.getCell(3); if(cellD23 == null) cellD23 = row23.createCell(3);
         Cell cellF23 = row23.getCell(5); if(cellF23 == null) cellF23 = row23.createCell(5);
         if (informe.getValorCuotaPagar() != null) {
-            cellD23.setCellValue(informe.getValorCuotaPagar().doubleValue());
+            cellD23.setCellValue(formatearMoneda(informe.getValorCuotaPagar()));
             cellF23.setCellValue(convertirNumeroALetras(informe.getValorCuotaPagar().longValue()).toUpperCase() + " PESOS M/CTE");
         }
 
@@ -124,13 +134,24 @@ public class CuentaCobroGenerator {
 
         Row row27 = sheet.getRow(26); if(row27 == null) row27 = sheet.createRow(26);
         Cell cellD27 = row27.getCell(3); if(cellD27 == null) cellD27 = row27.createCell(3);
-        cellD27.setCellValue(contrato.getObjeto());
+        String objeto = contrato.getObjeto() != null ? contrato.getObjeto().trim() : "";
+        // Eliminar saltos de línea justo antes de una comilla final (para evitar la comilla sola en otra línea)
+        objeto = objeto.replaceAll("[\\r\\n]+(?=\"$)", "");
+        cellD27.setCellValue(objeto);
+        try {
+            org.apache.poi.ss.usermodel.CellStyle style = wb.createCellStyle();
+            style.cloneStyleFrom(cellD27.getCellStyle());
+            style.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.JUSTIFY);
+            style.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.TOP);
+            style.setWrapText(true);
+            cellD27.setCellStyle(style);
+        } catch (Exception e) {}
 
         Row row28 = sheet.getRow(27); if(row28 == null) row28 = sheet.createRow(27);
         Cell cellD28 = row28.getCell(3); if(cellD28 == null) cellD28 = row28.createCell(3);
         Cell cellF28 = row28.getCell(5); if(cellF28 == null) cellF28 = row28.createCell(5);
         if (contrato.getValorTotalNumeros() != null) {
-            cellD28.setCellValue(contrato.getValorTotalNumeros().doubleValue());
+            cellD28.setCellValue(formatearMoneda(contrato.getValorTotalNumeros()));
             cellF28.setCellValue(convertirNumeroALetras(contrato.getValorTotalNumeros().longValue()).toUpperCase() + " PESOS M/CTE");
         }
 
@@ -148,6 +169,17 @@ public class CuentaCobroGenerator {
         wb.close();
 
         return outFile.getAbsolutePath();
+    }
+
+    private static String formatearMoneda(Number valor) {
+        if (valor == null) {
+            return "";
+        }
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("es", "CO"));
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        DecimalFormat formatter = new DecimalFormat("$ #,##0", symbols);
+        return formatter.format(valor);
     }
 
     private static String toTitleCase(String text) {

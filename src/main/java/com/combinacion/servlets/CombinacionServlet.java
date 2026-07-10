@@ -572,7 +572,9 @@ public class CombinacionServlet extends HttpServlet {
         // ===== PLACEHOLDERS ANTIGUOS (formato ${}) para compatibilidad =====
         replacements.put("${NOMBRE_CONTRATISTA}",
                 contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
-        replacements.put("${CEDULA}", contratista.getCedula() != null ? contratista.getCedula() : "");
+        String oldCedula = contratista.getCedula() != null ? contratista.getCedula() : "";
+        replacements.put("${CEDULA}", oldCedula.replace(",", "."));
+        replacements.put("${CONTRATISTA_DV}", contratista.getDv() != null ? contratista.getDv() : "0");
 
         // Número de contrato con año
         String numeroContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
@@ -1094,8 +1096,10 @@ public class CombinacionServlet extends HttpServlet {
         // 7. Información del Contratista (para plantillas INVERSION_2, 3, 4)
         replacements.put("{{CONTRATISTA_NOMBRE}}",
                 contratista.getNombre() != null ? contratista.getNombre().toUpperCase() : "");
-        replacements.put("{{CONTRATISTA_CEDULA}}",
-                contratista.getCedula() != null ? contratista.getCedula() : "");
+        String cedula = contratista.getCedula() != null ? contratista.getCedula() : "";
+        replacements.put("{{CONTRATISTA_CEDULA}}", cedula.replace(",", "."));
+        replacements.put("{{CONTRATISTA_DV}}",
+                contratista.getDv() != null ? contratista.getDv() : "0");
 
         // 8. Ordenador del Gasto (para plantillas INVERSION)
         if (ordenador != null) {
