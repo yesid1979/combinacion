@@ -340,8 +340,20 @@
                                     <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Constancia SECOP</label>
+                                    <label class="form-label">Contrato Secop II</label>
                                     <input type="file" class="form-control" name="file_secop" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Certificación Corrección Monetaria</label>
+                                    <input type="file" class="form-control" name="file_correccion_monetaria" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Certificado Medicina Prepagada</label>
+                                    <input type="file" class="form-control" name="file_medicina_prepagada" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Certificado Dependientes</label>
+                                    <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">Seguridad Social</label>
