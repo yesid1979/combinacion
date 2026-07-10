@@ -355,6 +355,10 @@
                                     <label class="form-label">Certificado Dependientes</label>
                                     <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
+                                <div class="col-md-6 req-cuota-1">
+                                    <label class="form-label">Ficha Técnica</label>
+                                    <input type="file" class="form-control" name="file_ficha_tecnica" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">Seguridad Social</label>
                                     <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
