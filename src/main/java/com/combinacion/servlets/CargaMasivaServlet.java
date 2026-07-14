@@ -1705,7 +1705,7 @@ public class CargaMasivaServlet extends HttpServlet {
                         ContratistaDAO daoC = new ContratistaDAO();
                         Contratista ant = daoC.obtenerPorId(existente.getContratistaId());
                         if (ant != null) nombreAnterior = ant.getNombre();
-                    } catch (Exception e) {}
+                    } catch (Exception ex) {}
                     
                     log.append("\n  ⚠️ ADVERTENCIA CRÍTICA: El contrato ").append(contrato.getNumeroContrato())
                        .append(" estaba asignado a '").append(nombreAnterior)
