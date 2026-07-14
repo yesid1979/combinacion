@@ -149,30 +149,50 @@ public class ContratoDAO {
 
     public int countFiltered(String search) {
         String sql = "SELECT COUNT(*) FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
-        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
+        
+        java.util.List<String> words = new java.util.ArrayList<>();
+        java.util.List<String> wordsDigits = new java.util.ArrayList<>();
         
         if (search != null && !search.isEmpty()) {
             search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
-            sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
-            if (!searchDigits.isEmpty()) {
-                sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+            String[] tokens = search.split("\\s+");
+            for (String token : tokens) {
+                if (!token.trim().isEmpty()) {
+                    sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
+                    
+                    String tokenDigits = token.replaceAll("[^0-9]", "");
+                    if (!tokenDigits.isEmpty()) {
+                        sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+                        sql += " OR regexp_replace(c.numero_contrato, '[^0-9]', '', 'g') LIKE ?";
+                    }
+                    sql += ")";
+                    words.add("%" + token + "%");
+                    wordsDigits.add("%" + tokenDigits + "%");
+                }
             }
-            sql += ")";
         }
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (search != null && !search.isEmpty()) {
-                String like = "%" + search + "%";
-                String likeDigits = "%" + searchDigits + "%";
-                int idx = 1;
+            
+            int idx = 1;
+            for (int i = 0; i < words.size(); i++) {
+                String like = words.get(i);
+                String likeDigits = wordsDigits.get(i);
+                
                 ps.setString(idx++, like);
                 ps.setString(idx++, like);
                 ps.setString(idx++, like);
                 ps.setString(idx++, like);
-                if (!searchDigits.isEmpty()) {
+                
+                if (!likeDigits.equals("%%")) {
+                    ps.setString(idx++, likeDigits);
                     ps.setString(idx++, likeDigits);
                 }
             }
+            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return rs.getInt(1);
@@ -186,15 +206,30 @@ public class ContratoDAO {
     public List<Contrato> findWithPagination(int start, int length, String search, int orderCol, String orderDir) {
         List<Contrato> lista = new ArrayList<>();
         String sql = "SELECT c.*, ct.nombre as contratista_nombre FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE 1=1 ";
-        String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
-
+        
+        java.util.List<String> words = new java.util.ArrayList<>();
+        java.util.List<String> wordsDigits = new java.util.ArrayList<>();
+        
         if (search != null && !search.isEmpty()) {
             search = search.toLowerCase().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u");
-            sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ? OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
-            if (!searchDigits.isEmpty()) {
-                sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+            String[] tokens = search.split("\\s+");
+            for (String token : tokens) {
+                if (!token.trim().isEmpty()) {
+                    sql += " AND (translate(LOWER(c.numero_contrato), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(ct.nombre), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(c.objeto), 'áéíóú', 'aeiou') LIKE ?";
+                    sql += " OR translate(LOWER(ct.cedula), 'áéíóú', 'aeiou') LIKE ?";
+                    
+                    String tokenDigits = token.replaceAll("[^0-9]", "");
+                    if (!tokenDigits.isEmpty()) {
+                        sql += " OR regexp_replace(ct.cedula, '[^0-9]', '', 'g') LIKE ?";
+                        sql += " OR regexp_replace(c.numero_contrato, '[^0-9]', '', 'g') LIKE ?";
+                    }
+                    sql += ")";
+                    words.add("%" + token + "%");
+                    wordsDigits.add("%" + tokenDigits + "%");
+                }
             }
-            sql += ")";
         }
 
         // Mapping DataTables column index to DB column name for sorting
@@ -214,17 +249,21 @@ public class ContratoDAO {
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             int index = 1;
-            if (search != null && !search.isEmpty()) {
-                String like = "%" + search + "%";
-                String likeDigits = "%" + searchDigits + "%";
+            for (int i = 0; i < words.size(); i++) {
+                String like = words.get(i);
+                String likeDigits = wordsDigits.get(i);
+                
                 ps.setString(index++, like);
                 ps.setString(index++, like);
                 ps.setString(index++, like);
                 ps.setString(index++, like);
-                if (!searchDigits.isEmpty()) {
+                
+                if (!likeDigits.equals("%%")) {
+                    ps.setString(index++, likeDigits);
                     ps.setString(index++, likeDigits);
                 }
             }
+            
             ps.setInt(index++, length);
             ps.setInt(index++, start);
 
