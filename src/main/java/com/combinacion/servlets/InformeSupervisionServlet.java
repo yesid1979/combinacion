@@ -438,9 +438,19 @@ public class InformeSupervisionServlet extends HttpServlet {
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
             // 5. Generar archivos localmente
+            // BYPASS WORD'S UNSUPPORTED BROWSER BUG:
+            // We pass a local redirect URL to the generators, which outputs a JS-based redirect page.
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+            String redirectUrl = baseUrl + "/redirect?url=" + java.net.URLEncoder.encode(driveUrl, "UTF-8");
+            
+            // Temporarily set it so the generators pick up the redirect URL instead of direct Drive URL
+            informe.setUrlDriveEvidencias(redirectUrl);
             String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
             String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
             String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+            
+            // Restore the original Drive URL for the rest of the application
+            informe.setUrlDriveEvidencias(driveUrl);
             
             File docxFile = new File(docxPath);
             File xlsxFile = new File(xlsxPath);
