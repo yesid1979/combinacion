@@ -291,10 +291,16 @@ public class SupervisionReportGenerator {
                             tablaXml.append(info.getNumeroCuota() != null ? info.getNumeroCuota() : "");
                             tablaXml.append(":</w:t></w:r></w:p>");
                             
-                            // Párrafo con la URL simulando un hipervínculo azul
-                            tablaXml.append("<w:p><w:pPr><w:spacing w:after=\"240\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/></w:rPr><w:t>");
+                            // Párrafo con la URL como un hipervínculo real de Word
+                            tablaXml.append("<w:p><w:pPr><w:spacing w:after=\"240\"/></w:pPr>");
+                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r>");
+                            tablaXml.append("<w:r><w:instrText xml:space=\"preserve\"> HYPERLINK \"").append(urlDrive).append("\" </w:instrText></w:r>");
+                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>");
+                            tablaXml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/></w:rPr><w:t>");
                             tablaXml.append(urlDrive);
-                            tablaXml.append("</w:t></w:r></w:p>");
+                            tablaXml.append("</w:t></w:r>");
+                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>");
+                            tablaXml.append("</w:p>");
                         }
                         
                         tablaXml.append("<w:p><w:r><w:t>"); // Reabrir para balancear el tag original
