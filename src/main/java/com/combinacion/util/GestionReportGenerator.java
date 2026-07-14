@@ -1,0 +1,256 @@
+package com.combinacion.util;
+
+import com.combinacion.models.InformeSupervision;
+import com.combinacion.models.Contrato;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+
+public class GestionReportGenerator {
+    
+    private static String formatearFechaEspecial(java.util.Date fecha) {
+        if (fecha == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM/yyyy", new Locale("es", "CO"));
+        String f = sdf.format(fecha);
+        String[] parts = f.split("/");
+        if (parts.length == 3) {
+            String month = parts[1];
+            if (month.length() > 0) {
+                month = month.replace(".", "");
+                month = month.substring(0, 1).toUpperCase() + month.substring(1).toLowerCase();
+            }
+            return parts[0] + "/" + month + "/" + parts[2];
+        }
+        return f;
+    }
+
+    private static String formatearFechaLarga(java.util.Date fecha) {
+        if (fecha == null) return "";
+        SimpleDateFormat sdf = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("es", "CO"));
+        return sdf.format(fecha);
+    }
+    
+    private static String formatearPeriodo(String periodo) {
+        if (periodo == null || periodo.trim().isEmpty()) return "";
+        try {
+            String[] parts = periodo.split("-");
+            if (parts.length == 2) {
+                int year = Integer.parseInt(parts[0]);
+                int month = Integer.parseInt(parts[1]);
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.set(java.util.Calendar.YEAR, year);
+                cal.set(java.util.Calendar.MONTH, month - 1);
+                cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", new Locale("es", "CO"));
+                String formatted = sdf.format(cal.getTime());
+                return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
+            }
+        } catch (Exception e) {}
+        return periodo;
+    }
+
+    private static final String TEMPLATE_PATH = "plantillas/INFORME_GESTION_TEMPLATE.docx";
+    private static final String OUTPUT_DIR = "generados/informes";
+
+    public static String generarDocx(InformeSupervision info, Contrato contrato, String realPath) throws IOException {
+        File templateFile = null;
+        if (realPath != null) {
+            templateFile = new File(realPath, TEMPLATE_PATH);
+        }
+        
+        if (templateFile == null || !templateFile.exists()) {
+            templateFile = new File(TEMPLATE_PATH);
+        }
+        if (!templateFile.exists()) {
+            templateFile = new File("c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\" + TEMPLATE_PATH);
+        }
+        if (!templateFile.exists()) {
+            throw new IOException("Plantilla no encontrada en: " + (realPath != null ? new File(realPath, TEMPLATE_PATH).getPath() : TEMPLATE_PATH));
+        }
+
+        File outputDir = null;
+        if (realPath != null) {
+            outputDir = new File(realPath, OUTPUT_DIR);
+        } else {
+            outputDir = new File(OUTPUT_DIR);
+        }
+        if (!outputDir.exists()) outputDir.mkdirs();
+
+        String contratista = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().toUpperCase() : "CONTRATISTA";
+        String outputFileName = "4. INFORME GESTION No. " + info.getNumeroCuota() + " -" + contratista + ".docx";
+        File outputFile = new File(outputDir, outputFileName);
+
+        Map<String, String> reps = new HashMap<>();
+
+        // Datos del Contrato
+        reps.put("${NUMERO_CONTRATO}", contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "");
+        reps.put("${CONTRATISTA_NOMBRE}", contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "");
+        String cedula = contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
+        reps.put("${CONTRATISTA_CEDULA}", cedula.replace(",", "."));
+        reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
+        reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
+        
+        // Datos del Informe
+        String cuotaNum = info.getNumeroCuota() != null ? info.getNumeroCuota().trim() : "";
+        String cuotaLetras = cuotaNum;
+        try {
+            int c = Integer.parseInt(cuotaNum);
+            String[] letras = {"Cero", "Uno", "Dos", "Tres", "Cuatro", "Cinco", "Seis", "Siete", "Ocho", "Nueve", "Diez", 
+                               "Once", "Doce", "Trece", "Catorce", "Quince", "Dieciséis", "Diecisiete", "Dieciocho", "Diecinueve", "Veinte",
+                               "Veintiuno", "Veintidós", "Veintitrés", "Veinticuatro"};
+            if (c >= 0 && c < letras.length) {
+                cuotaLetras = letras[c] + " (" + c + ")";
+            }
+        } catch (Exception e) {}
+        
+        reps.put("${NUMERO_CUOTA}", cuotaLetras);
+        reps.put("${FECHA_INFORME}", formatearFechaLarga(info.getFechaFinPeriodo()));
+        
+        // Planilla
+        reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero() != null ? info.getPlanillaNumero() : "");
+        reps.put("${PLANILLA_PIN}", info.getPlanillaPin() != null ? info.getPlanillaPin() : "");
+        reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador() != null ? info.getPlanillaOperador() : "");
+        reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaLarga(info.getPlanillaFechaPago()));
+        reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
+        
+        String concepto = info.getConceptoSupervisor();
+        if (concepto == null || concepto.trim().isEmpty()) {
+            concepto = contrato.getActividadesEntregables();
+        }
+        final String finalConceptoSup = concepto != null ? concepto : "";
+
+        try (FileInputStream fis = new FileInputStream(templateFile);
+             FileOutputStream fos = new FileOutputStream(outputFile)) {
+            TemplateGenerator.generate(fis, reps, fos);
+        }
+        
+        // Post-processing to replace ${ACTIVIDADES_GESTION} with the generated XML
+        File tempFile = new File(outputFile.getAbsolutePath() + ".tmp");
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(outputFile));
+             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(tempFile))) {
+             
+            ZipEntry entry = zis.getNextEntry();
+            while (entry != null) {
+                zos.putNextEntry(new ZipEntry(entry.getName()));
+                if (entry.getName().equals("word/document.xml")) {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    byte[] data = new byte[1024];
+                    int count;
+                    while ((count = zis.read(data, 0, 1024)) != -1) {
+                        buffer.write(data, 0, count);
+                    }
+                    String xml = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+                    
+                    if (finalConceptoSup != null && xml.contains("${ACTIVIDADES_GESTION}")) {
+                        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = 
+                            com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
+                            
+                        StringBuilder actividadesXml = new StringBuilder();
+                        actividadesXml.append("</w:t></w:r></w:p>"); // Close current paragraph containing ${ACTIVIDADES_GESTION}
+                        
+                        // Render list of obligations and activities
+                        for (int i = 0; i < lista.size(); i++) {
+                            com.combinacion.util.ObligacionesParser.ObligacionActividad item = lista.get(i);
+                            String ob = item.obligacion != null ? item.obligacion.trim() : "";
+                            String ac = item.actividad != null ? item.actividad.trim() : "";
+                            
+                            // Paragraph for the obligation (Numbered, bold)
+                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"120\" w:after=\"120\"/><w:ind w:left=\"360\" w:hanging=\"360\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>")
+                                          .append(ob.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+                                          .append("</w:t></w:r></w:p>");
+
+                            // Paragraphs for the activities
+                            if (!ac.isEmpty()) {
+                                String[] lineas = ac.split("\n");
+                                for (String linea : lineas) {
+                                    linea = linea.trim();
+                                    if (!linea.isEmpty()) {
+                                        java.util.regex.Matcher mLinea = java.util.regex.Pattern.compile("^(\\d+[.-]?|[\\-\\*\\•\\●\\○\\▪])\\s*").matcher(linea);
+                                        if (mLinea.find()) {
+                                            linea = linea.substring(mLinea.end()).trim();
+                                        }
+                                        
+                                        // Auto-conjugación de verbos comunes (de 3ra a 1ra persona)
+                                        linea = linea.replaceAll("\\bRealizó\\b", "Realicé")
+                                                     .replaceAll("\\brealizó\\b", "realicé")
+                                                     .replaceAll("\\bBrindó\\b", "Brindé")
+                                                     .replaceAll("\\bbrindó\\b", "brindé")
+                                                     .replaceAll("\\bApoyó\\b", "Apoyé")
+                                                     .replaceAll("\\bapoyó\\b", "apoyé")
+                                                     .replaceAll("\\bConsolidó\\b", "Consolidé")
+                                                     .replaceAll("\\bconsolidó\\b", "consolidé")
+                                                     .replaceAll("\\bElaboró\\b", "Elaboré")
+                                                     .replaceAll("\\belaboró\\b", "elaboré")
+                                                     .replaceAll("\\bParticipó\\b", "Participé")
+                                                     .replaceAll("\\bparticipó\\b", "participé")
+                                                     .replaceAll("\\bVerificó\\b", "Verifiqué")
+                                                     .replaceAll("\\bverificó\\b", "verifiqué")
+                                                     .replaceAll("\\bEntregó\\b", "Entregué")
+                                                     .replaceAll("\\bentregó\\b", "entregué")
+                                                     .replaceAll("\\bRevisó\\b", "Revisé")
+                                                     .replaceAll("\\brevisó\\b", "revisé")
+                                                     .replaceAll("\\bEfectuó\\b", "Efectué")
+                                                     .replaceAll("\\befectuó\\b", "efectué")
+                                                     .replaceAll("\\bValidó\\b", "Validé")
+                                                     .replaceAll("\\bvalidó\\b", "validé")
+                                                     .replaceAll("\\bActualizó\\b", "Actualicé")
+                                                     .replaceAll("\\bactualizó\\b", "actualicé")
+                                                     .replaceAll("\\bGeneró\\b", "Generé")
+                                                     .replaceAll("\\bgeneró\\b", "generé")
+                                                     .replaceAll("\\bAnalizó\\b", "Analicé")
+                                                     .replaceAll("\\banalizó\\b", "analicé");
+
+                                        actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:after=\"120\"/><w:ind w:left=\"720\" w:hanging=\"360\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>● ")
+                                                      .append(linea.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+                                                      .append("</w:t></w:r></w:p>");
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Inject Drive Link at the end
+                        String urlDrive = info.getUrlDriveEvidencias();
+                        if (urlDrive != null && !urlDrive.trim().isEmpty()) {
+                            urlDrive = urlDrive.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"240\" w:after=\"120\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>NOTA: Las evidencias detalladas y capturas de pantalla de estas actividades se encuentran anexas en el siguiente enlace de Google Drive:</w:t></w:r></w:p>");
+                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:after=\"240\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/></w:rPr><w:t>")
+                                          .append(urlDrive)
+                                          .append("</w:t></w:r></w:p>");
+                        }
+                        
+                        actividadesXml.append("<w:p><w:r><w:t>"); // Reopen paragraph tag to balance
+                        
+                        xml = xml.replace("${ACTIVIDADES_GESTION}", actividadesXml.toString());
+                    }
+                    
+                    byte[] newXmlData = xml.getBytes(StandardCharsets.UTF_8);
+                    zos.write(newXmlData, 0, newXmlData.length);
+                } else {
+                    byte[] data = new byte[1024];
+                    int count;
+                    while ((count = zis.read(data, 0, 1024)) != -1) {
+                        zos.write(data, 0, count);
+                    }
+                }
+                zos.closeEntry();
+                entry = zis.getNextEntry();
+            }
+        }
+        
+        if (outputFile.delete()) {
+            tempFile.renameTo(outputFile);
+        }
+
+        return outputFile.getAbsolutePath();
+    }
+}

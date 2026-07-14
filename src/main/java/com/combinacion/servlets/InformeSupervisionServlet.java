@@ -240,7 +240,17 @@ public class InformeSupervisionServlet extends HttpServlet {
                 System.out.println("No se pudo generar el Excel: " + e.getMessage());
             }
 
-            // Si ambos existen, generar ZIP
+            // Archivo de Gestion temporal
+            File gestionFile = null;
+            String gestionName = "4. INFORME GESTION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
+            try {
+                String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
+                gestionFile = new File(gestionPath);
+            } catch (Exception e) {
+                System.out.println("No se pudo generar el Informe de Gestion: " + e.getMessage());
+            }
+
+            // Si existen, generar ZIP
             if (xlsxFile != null && xlsxFile.exists()) {
                 String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
                 String primerBloque = "";
@@ -260,7 +270,44 @@ public class InformeSupervisionServlet extends HttpServlet {
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFileName + "\"");
                 
                 try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
-                    // Agregar DOCX
+                    
+                    // Agregar Evidencias desde la carpeta de Drive
+                    boolean hasEvidencias = false;
+                    if (informe.getUrlDriveEvidencias() != null && !informe.getUrlDriveEvidencias().trim().isEmpty()) {
+                        String folderId = com.combinacion.services.GoogleDriveService.extractIdFromUrl(informe.getUrlDriveEvidencias());
+                        if (folderId != null) {
+                            try {
+                                com.google.api.services.drive.model.FileList files = com.combinacion.services.GoogleDriveService.getFilesInFolder(folderId);
+                                if (files != null && files.getFiles() != null && !files.getFiles().isEmpty()) {
+                                    for (com.google.api.services.drive.model.File gFile : files.getFiles()) {
+                                        if (!"application/vnd.google-apps.folder".equals(gFile.getMimeType())) {
+                                            hasEvidencias = true;
+                                            zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/" + gFile.getName()));
+                                            try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(gFile.getId())) {
+                                                byte[] buffer = new byte[4096];
+                                                int length;
+                                                while ((length = in.read(buffer)) >= 0) {
+                                                    zos.write(buffer, 0, length);
+                                                }
+                                            } catch (Exception ex) {
+                                                System.err.println("No se pudo descargar evidencia " + gFile.getName() + ": " + ex.getMessage());
+                                            }
+                                            zos.closeEntry();
+                                        }
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                System.err.println("Error al listar archivos de evidencias: " + ex.getMessage());
+                            }
+                        }
+                    }
+                    if (!hasEvidencias) {
+                        // Agregar carpeta Evidencias vacía si no hay archivos
+                        zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/"));
+                        zos.closeEntry();
+                    }
+                    
+                    // Agregar DOCX (Supervision)
                     zos.putNextEntry(new java.util.zip.ZipEntry(docxName));
                     try (FileInputStream fis = new FileInputStream(docxFile)) {
                         byte[] buffer = new byte[4096];
@@ -271,7 +318,20 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                     zos.closeEntry();
                     
-                    // Agregar XLSX
+                    // Agregar DOCX (Gestion)
+                    if (gestionFile != null && gestionFile.exists()) {
+                        zos.putNextEntry(new java.util.zip.ZipEntry(gestionName));
+                        try (FileInputStream fis = new FileInputStream(gestionFile)) {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zos.write(buffer, 0, length);
+                            }
+                        }
+                        zos.closeEntry();
+                    }
+                    
+                    // Agregar XLSX (Cuenta Cobro)
                     zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
                     try (FileInputStream fis = new FileInputStream(xlsxFile)) {
                         byte[] buffer = new byte[4096];
@@ -287,6 +347,9 @@ public class InformeSupervisionServlet extends HttpServlet {
                         try {
                             org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
                             for (String key : soportes.keySet()) {
+                                if (key.startsWith("evidencia_")) {
+                                    continue; // Ya se descarga en la carpeta Evidencias desde Drive
+                                }
                                 org.json.JSONObject fileData = soportes.getJSONObject(key);
                                 String fileId = fileData.optString("id");
                                 String fileName = fileData.optString("name");
@@ -360,22 +423,32 @@ public class InformeSupervisionServlet extends HttpServlet {
             // 3. Obtener/crear cuota
             String cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
             // 4. Obtener/crear evidencias
-            com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
             
-            // 4.5. Guardar la URL en la base de datos
-            String driveUrl = "https://drive.google.com/drive/folders/" + cuotaFolderId;
+            // 4.1. Dar permisos públicos de lectura a la carpeta EVIDENCIAS
+            try {
+                com.combinacion.services.GoogleDriveService.setPublicViewPermission(evidenciasFolderId);
+            } catch (Exception ignore) {
+                System.err.println("Aviso: No se pudo asignar permisos publicos a la carpeta EVIDENCIAS: " + ignore.getMessage());
+            }
+            
+            // 4.5. Guardar la URL en la base de datos (apuntando a la carpeta EVIDENCIAS)
+            String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId;
             informe.setUrlDriveEvidencias(driveUrl);
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
             // 5. Generar archivos localmente
             String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
             String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+            String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
             
             File docxFile = new File(docxPath);
             File xlsxFile = new File(xlsxPath);
+            File gestionFile = new File(gestionPath);
             
             String docxName = "5. INFORME SUPERVISION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
             String xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " Cuota " + informe.getNumeroCuota() + " -" + nombreCorto + ".xlsx";
+            String gestionName = "4. INFORME GESTION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
             
             // 6. Subir archivos a Drive (Docs y Excel)
             if (docxFile.exists()) {
@@ -384,9 +457,11 @@ public class InformeSupervisionServlet extends HttpServlet {
             if (xlsxFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId);
             }
+            if (gestionFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+            }
             
             // 7. Subir todos los documentos soporte
-            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
             org.json.JSONObject soportes = new org.json.JSONObject();
             if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                 try { soportes = new org.json.JSONObject(informe.getSoportesJson()); } catch (Exception ignore) {}

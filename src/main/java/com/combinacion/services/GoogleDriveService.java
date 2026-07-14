@@ -15,6 +15,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.Permission;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -158,5 +159,35 @@ public class GoogleDriveService {
     public static InputStream downloadFile(String fileId) throws Exception {
         Drive driveService = getDriveService();
         return driveService.files().get(fileId).executeMediaAsInputStream();
+    }
+
+    public static void setPublicViewPermission(String fileId) throws Exception {
+        Drive driveService = getDriveService();
+        Permission permission = new Permission()
+                .setType("anyone")
+                .setRole("reader");
+        driveService.permissions().create(fileId, permission).execute();
+    }
+
+    public static FileList getFilesInFolder(String folderId) throws Exception {
+        Drive driveService = getDriveService();
+        String query = "'" + folderId + "' in parents and trashed=false";
+        return driveService.files().list()
+                .setQ(query)
+                .setSpaces("drive")
+                .setFields("files(id, name, mimeType)")
+                .execute();
+    }
+
+    public static String extractIdFromUrl(String url) {
+        if (url == null || url.trim().isEmpty()) return null;
+        if (url.contains("id=")) {
+            return url.split("id=")[1].split("&")[0];
+        } else if (url.contains("/folders/")) {
+            return url.split("/folders/")[1].split("\\?")[0].split("/")[0];
+        } else if (url.contains("/file/d/")) {
+            return url.split("/file/d/")[1].split("/")[0];
+        }
+        return null;
     }
 }

@@ -53,6 +53,18 @@ public class InformeSupervisionService {
         try {
             InformeSupervision info = mapFormToModel(form);
             info.setId(id);
+            
+            // Preserve fields that might not come in the form
+            InformeSupervision existente = informeDAO.obtenerPorId(id);
+            if (existente != null) {
+                if (info.getUrlDriveEvidencias() == null || info.getUrlDriveEvidencias().isEmpty()) {
+                    info.setUrlDriveEvidencias(existente.getUrlDriveEvidencias());
+                }
+                if (info.getSoportesJson() == null || info.getSoportesJson().isEmpty()) {
+                    info.setSoportesJson(existente.getSoportesJson());
+                }
+            }
+            
             String daoResult = informeDAO.actualizar(info);
             if (daoResult == null) {
                 return null; // Éxito

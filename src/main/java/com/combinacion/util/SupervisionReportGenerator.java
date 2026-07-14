@@ -129,7 +129,14 @@ public class SupervisionReportGenerator {
         // Datos del Informe
         reps.put("${PERIODO_INFORME}", info.getPeriodoInforme() != null ? info.getPeriodoInforme() : "");
         reps.put("${TIPO_INFORME}", info.getTipoInforme() != null ? info.getTipoInforme() : "");
-        reps.put("${NUMERO_CUOTA}", info.getNumeroCuota() != null ? info.getNumeroCuota() : "");
+        
+        String cuotaOriginal = info.getNumeroCuota() != null ? info.getNumeroCuota().trim() : "";
+        String cuotaPadded = cuotaOriginal;
+        try {
+            int c = Integer.parseInt(cuotaOriginal);
+            cuotaPadded = String.format("%02d", c);
+        } catch(Exception e) {}
+        reps.put("${NUMERO_CUOTA}", cuotaPadded);
         
         reps.put("${X_PARCIAL}", info.getTipoInforme() != null && info.getTipoInforme().toUpperCase().contains("PARCIAL") ? "X" : "  ");
         reps.put("${X_FINAL}", info.getTipoInforme() != null && info.getTipoInforme().toUpperCase().contains("FINAL") ? "X" : "  ");
