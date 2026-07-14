@@ -227,10 +227,12 @@ public class OrdenadorGastoDAO {
     }
 
     public OrdenadorGasto obtenerPorCedula(String cedula) {
-        String sql = "SELECT * FROM ordenadores_gasto WHERE cedula_ordenador = ? LIMIT 1";
+        if (cedula == null || cedula.trim().isEmpty()) return null;
+        String cedulaDigits = cedula.replaceAll("[^0-9]", "");
+        String sql = "SELECT * FROM ordenadores_gasto WHERE regexp_replace(cedula_ordenador, '[^0-9]', '', 'g') = ? LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedula);
+            ps.setString(1, cedulaDigits);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     OrdenadorGasto o = new OrdenadorGasto();

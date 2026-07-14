@@ -1697,6 +1697,22 @@ public class CargaMasivaServlet extends HttpServlet {
                     contrato.setPresupuestoId(existente.getPresupuestoId());
                 }
 
+                // CHECK FOR CONTRACTOR CHANGE WARNING
+                if (contrato.getContratistaId() > 0 && existente.getContratistaId() > 0 
+                    && contrato.getContratistaId() != existente.getContratistaId()) {
+                    String nombreAnterior = "Desconocido";
+                    try {
+                        ContratistaDAO daoC = new ContratistaDAO();
+                        Contratista ant = daoC.obtenerPorId(existente.getContratistaId());
+                        if (ant != null) nombreAnterior = ant.getNombre();
+                    } catch (Exception e) {}
+                    
+                    log.append("\n  ⚠️ ADVERTENCIA CRÍTICA: El contrato ").append(contrato.getNumeroContrato())
+                       .append(" estaba asignado a '").append(nombreAnterior)
+                       .append("' y acaba de ser REASIGNADO a '").append(c != null ? c.getNombre() : "Otro")
+                       .append("'. Verifica en tu Excel que esto sea correcto.\n");
+                }
+
                 if (contratoDAO.actualizar(contrato)) {
                     log.append("  ↻ Contrato actualizado: ").append(contrato.getNumeroContrato()).append("\n");
                     return contrato;

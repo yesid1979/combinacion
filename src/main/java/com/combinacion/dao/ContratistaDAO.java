@@ -113,15 +113,13 @@ public class ContratistaDAO {
     }
 
     public Contratista obtenerPorCedula(String cedula) {
-        String sql = "SELECT * FROM contratistas WHERE cedula = ? ";
-        if (cedula != null && !cedula.trim().isEmpty()) {
-            // No usamos regexp_replace para evitar errores de entorno
-        }
-        sql += " LIMIT 1 ";
+        if (cedula == null || cedula.trim().isEmpty()) return null;
+        String cedulaDigits = cedula.replaceAll("[^0-9]", "");
+        String sql = "SELECT * FROM contratistas WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ? LIMIT 1 ";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedula);
+            ps.setString(1, cedulaDigits);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Contratista c = new Contratista();

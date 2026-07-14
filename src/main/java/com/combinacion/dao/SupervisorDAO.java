@@ -56,10 +56,12 @@ public class SupervisorDAO {
     }
 
     public Supervisor obtenerPorCedula(String cedula) {
-        String sql = "SELECT * FROM supervisores WHERE cedula = ?";
+        if (cedula == null || cedula.trim().isEmpty()) return null;
+        String cedulaDigits = cedula.replaceAll("[^0-9]", "");
+        String sql = "SELECT * FROM supervisores WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ? LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedula);
+            ps.setString(1, cedulaDigits);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Supervisor s = new Supervisor();
@@ -77,13 +79,21 @@ public class SupervisorDAO {
     }
 
     public Supervisor obtenerPorCedulaYNombre(String cedulaBase, String nombre) {
-        // Search for EXACT match of name within the scope of this cedula (including
-        // DUPs)
-        String sql = "SELECT * FROM supervisores WHERE (cedula = ? OR cedula LIKE ?) AND LOWER(nombre) = LOWER(?) LIMIT 1";
+        // Search for EXACT match of name within the scope of this cedula (including DUPs)
+        if (cedulaBase == null || cedulaBase.trim().isEmpty()) return null;
+        String cedulaDigits = cedulaBase.replaceAll("[^0-9]", "");
+        
+        String sql = "SELECT * FROM supervisores WHERE (regexp_replace(cedula, '[^0-9]', '', 'g') = ? OR regexp_replace(cedula, '[^0-9]', '', 'g') LIKE ?) AND LOWER(nombre) = LOWER(?) LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedulaBase);
-            ps.setString(2, cedulaBase + "-DUP-%");
+            ps.setString(1, cedulaDigits);
+            ps.setString(2, cedulaDigits + "dup%"); // If it had -DUP-, digits would just be concatenated, wait, "123dup456" doesn't have digits only. 
+            // DUPs have "-DUP-" inside, regexp_replace removes it! So cedula "123-DUP-456" becomes "123456" digits! 
+            // Wait, this is bad for DUP matching.
+            // Let's just use the DUP suffix differently, or let's just keep the LIKE on the raw string for DUPs.
+            // But we can just use the LIKE on the raw string.
+            // Actually, if we just use `ps.setString(2, cedulaDigits + "%");` it will match any cedula that starts with those digits. That's fine for DUPs because they append nanoTime digits.
+            ps.setString(2, cedulaDigits + "%");
             ps.setString(3, nombre);
 
             try (ResultSet rs = ps.executeQuery()) {
