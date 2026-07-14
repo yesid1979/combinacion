@@ -433,7 +433,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
             
             // 4.5. Guardar la URL en la base de datos (apuntando a la carpeta EVIDENCIAS)
-            String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId;
+            String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
             informe.setUrlDriveEvidencias(driveUrl);
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
