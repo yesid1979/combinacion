@@ -38,7 +38,7 @@
                             <li><h6 class="dropdown-header">Selecciona el contrato:</h6></li>
                             <c:forEach items="${misContratos}" var="c">
                                 <li><a class="dropdown-item py-2" href="informes?action=new&contrato_id=${c.id}">
-                                    <strong>${c.numeroContrato}</strong> - ${c.objeto != null && c.objeto.length() > 40 ? c.objeto.substring(0,40).concat('...') : c.objeto}
+                                    <strong>${c.numeroContrato}</strong> - Periodo: ${c.periodo != null ? c.periodo : ''}
                                 </a></li>
                             </c:forEach>
                         </ul>
