@@ -106,7 +106,10 @@ public class CuentaCobroGenerator {
         Row row21 = sheet.getRow(20); if(row21 == null) row21 = sheet.createRow(20);
         Cell cellD21 = row21.getCell(3); if(cellD21 == null) cellD21 = row21.createCell(3);
         String numeroCuotaStr = informe.getNumeroCuota() != null ? informe.getNumeroCuota() : "";
-        cellD21.setCellValue("Prestación de Servicios Profesionales Cuota " + convertirNumeroALetras(com.combinacion.util.ParseUtils.parseInt(numeroCuotaStr)).toLowerCase() + " (" + numeroCuotaStr + ")");
+        String tipoContrato = (contrato.getTipoContrato() != null && !contrato.getTipoContrato().trim().isEmpty()) 
+                                ? contrato.getTipoContrato().trim() 
+                                : "Prestación de Servicios Profesionales";
+        cellD21.setCellValue(tipoContrato + " Cuota " + convertirNumeroALetras(com.combinacion.util.ParseUtils.parseInt(numeroCuotaStr)).toLowerCase() + " (" + numeroCuotaStr + ")");
 
         // Valor a pagar (D23 y F23)
         Row row23 = sheet.getRow(22); if(row23 == null) row23 = sheet.createRow(22);
