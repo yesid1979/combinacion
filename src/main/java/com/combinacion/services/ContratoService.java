@@ -241,6 +241,7 @@ public class ContratoService {
 
     private Contrato poblarContrato(Contrato contrato, ContratoFormData f) {
         contrato.setNumeroContrato(f.numeroContrato);
+        contrato.setPeriodo(f.periodo);
         contrato.setTipoContrato(f.tipoContrato);
         contrato.setNivel(f.nivel);
         contrato.setObjeto(f.objeto);
@@ -309,6 +310,7 @@ public class ContratoService {
         public int ordenadorId;
         // Contrato principal
         public String numeroContrato;
+        public String periodo;
         public String tipoContrato;
         public String nivel;
         public String objeto;

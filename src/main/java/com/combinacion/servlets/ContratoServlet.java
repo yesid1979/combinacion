@@ -191,6 +191,7 @@ public class ContratoServlet extends HttpServlet {
         f.supervisorId                 = ParseUtils.parseInt(r.getParameter("id_supervisor"));
         f.ordenadorId                  = ParseUtils.parseInt(r.getParameter("id_ordenador"));
         f.numeroContrato               = r.getParameter("numero_contrato");
+        f.periodo                      = r.getParameter("periodo");
         f.tipoContrato                 = r.getParameter("tipo_contrato");
         f.nivel                        = r.getParameter("nivel");
         f.objeto                       = r.getParameter("objeto");

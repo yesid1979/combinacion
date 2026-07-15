@@ -138,18 +138,23 @@
                                     <div class="tab-pane fade" id="contrato" role="tabpanel">
                                         <div class="section-title">Información Contractual</div>
                                         <div class="row g-3">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Número Contrato</label>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Número de Contrato</label>
                                                 <input type="text" class="form-control" name="numero_contrato"
                                                     value="${contrato.numeroContrato}" required ${readonly ? 'readonly'
                                                     : '' }>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Periodo</label>
+                                                <input type="text" class="form-control" name="periodo"
+                                                    value="${contrato.periodo}" ${readonly ? 'readonly' : '' }>
+                                            </div>
+                                            <div class="col-md-3">
                                                 <label class="form-label">Tipo de Contrato</label>
                                                 <input type="text" class="form-control" name="tipo_contrato"
                                                     value="${contrato.tipoContrato}" ${readonly ? 'readonly' : '' }>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label class="form-label">Nivel</label>
                                                 <input type="text" class="form-control" name="nivel"
                                                     value="${contrato.nivel}" ${readonly ? 'readonly' : '' }>

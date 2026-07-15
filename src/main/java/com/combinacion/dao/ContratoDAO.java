@@ -563,6 +563,7 @@ public class ContratoDAO {
                     c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                     c.setFechaInicio(rs.getDate("fecha_inicio"));
                     c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
+                    c.setPeriodo(rs.getString("periodo"));
                     list.add(c);
                 }
             }
