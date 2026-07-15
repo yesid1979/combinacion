@@ -222,27 +222,42 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
 
             String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
-            String docxName = "5. INFORME SUPERVISION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
-            
             String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
-            String xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " Cuota " + informe.getNumeroCuota() + " -" + nombreCorto + ".xlsx";
+            
+            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
+            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+            
+            String docxName;
+            String xlsxName;
+            String gestionName;
+            
+            if (esCuota1) {
+                docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
+                xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
+                gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
+            } else {
+                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+            }
             
             // Archivo DOCX temporal
             String filePathDocx = SupervisionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
             File docxFile = new File(filePathDocx);
             
-            // Archivo XLSX temporal
+            // Archivo XLSX temporal (solo si no tiene IVA)
             File xlsxFile = null;
-            try {
-                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, getServletContext().getRealPath("/"));
-                xlsxFile = new File(xlsxPath);
-            } catch (Exception e) {
-                System.out.println("No se pudo generar el Excel: " + e.getMessage());
+            if (!tieneIva) {
+                try {
+                    String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, getServletContext().getRealPath("/"));
+                    xlsxFile = new File(xlsxPath);
+                } catch (Exception e) {
+                    System.out.println("No se pudo generar el Excel: " + e.getMessage());
+                }
             }
-
+            
             // Archivo de Gestion temporal
             File gestionFile = null;
-            String gestionName = "4. INFORME GESTION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
             try {
                 String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
                 gestionFile = new File(gestionPath);
@@ -251,7 +266,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
 
             // Si existen, generar ZIP
-            if (xlsxFile != null && xlsxFile.exists()) {
+            if (docxFile != null && docxFile.exists()) {
                 String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
                 String primerBloque = "";
                 String ultimoBloque = "";
@@ -332,15 +347,17 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                     
                     // Agregar XLSX (Cuenta Cobro)
-                    zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
-                    try (FileInputStream fis = new FileInputStream(xlsxFile)) {
-                        byte[] buffer = new byte[4096];
-                        int length;
-                        while ((length = fis.read(buffer)) >= 0) {
-                            zos.write(buffer, 0, length);
+                    if (xlsxFile != null && xlsxFile.exists()) {
+                        zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
+                        try (FileInputStream fis = new FileInputStream(xlsxFile)) {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zos.write(buffer, 0, length);
+                            }
                         }
+                        zos.closeEntry();
                     }
-                    zos.closeEntry();
                     
                     // Agregar anexos
                     if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
@@ -373,19 +390,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                 }
             } else {
-                // Si no hay Excel, descargar solo el DOCX
-                response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-                response.setHeader("Content-Disposition", "attachment; filename=\"" + docxFile.getName() + "\"");
-                response.setContentLength((int) docxFile.length());
-
-                try (FileInputStream inStream = new FileInputStream(docxFile);
-                     OutputStream outStream = response.getOutputStream()) {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = inStream.read(buffer)) != -1) {
-                        outStream.write(buffer, 0, bytesRead);
-                    }
-                }
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No se pudo generar el informe de supervision principal.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -438,36 +443,43 @@ public class InformeSupervisionServlet extends HttpServlet {
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
             // 5. Generar archivos localmente
-            // BYPASS WORD'S UNSUPPORTED BROWSER BUG:
-            // We pass a local redirect URL to the generators, which outputs a JS-based redirect page.
-            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-            String redirectUrl = baseUrl + "/redirect?url=" + java.net.URLEncoder.encode(driveUrl, "UTF-8");
+            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
+            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
             
-            // Temporarily set it so the generators pick up the redirect URL instead of direct Drive URL
-            informe.setUrlDriveEvidencias(redirectUrl);
+            String docxName;
+            String xlsxName;
+            String gestionName;
+            
+            if (esCuota1) {
+                docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
+                xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
+                gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
+            } else {
+                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+            }
+
             String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-            String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
-            String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-            
-            // Restore the original Drive URL for the rest of the application
-            informe.setUrlDriveEvidencias(driveUrl);
-            
             File docxFile = new File(docxPath);
-            File xlsxFile = new File(xlsxPath);
+            
+            File xlsxFile = null;
+            if (!tieneIva) {
+                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+                xlsxFile = new File(xlsxPath);
+            }
+            
+            String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
             File gestionFile = new File(gestionPath);
             
-            String docxName = "5. INFORME SUPERVISION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
-            String xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " Cuota " + informe.getNumeroCuota() + " -" + nombreCorto + ".xlsx";
-            String gestionName = "4. INFORME GESTION No. " + informe.getNumeroCuota() + " -" + nombreCorto + ".docx";
-            
             // 6. Subir archivos a Drive (Docs y Excel)
-            if (docxFile.exists()) {
+            if (docxFile != null && docxFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
             }
-            if (xlsxFile.exists()) {
+            if (xlsxFile != null && xlsxFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId);
             }
-            if (gestionFile.exists()) {
+            if (gestionFile != null && gestionFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
             }
             
@@ -483,9 +495,38 @@ public class InformeSupervisionServlet extends HttpServlet {
                 if (submittedFileName != null && !submittedFileName.trim().isEmpty() && part.getSize() > 0) {
                     String partName = part.getName();
                     
-                    // Si el nombre del campo empieza con "evidencia_", va en la subcarpeta EVIDENCIAS
-                    // Si es file_rut, file_cedula, file_secop, etc., va en la carpeta Cuota X
                     String targetFolderId = (partName != null && partName.startsWith("evidencia_")) ? evidenciasFolderId : cuotaFolderId;
+                    
+                    // Renombrar los archivos obligatorios segun la nomenclatura
+                    if (partName != null && !partName.startsWith("evidencia_")) {
+                        String ext = submittedFileName.contains(".") ? submittedFileName.substring(submittedFileName.lastIndexOf(".")) : ".pdf";
+                        String baseName = submittedFileName;
+                        String cuotaNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota() : "";
+                        
+                        if ("file_rpc".equals(partName)) {
+                            baseName = "1. RPC - " + nombreCorto;
+                        } else if ("file_factura".equals(partName)) {
+                            baseName = (esCuota1 ? "3." : "2.") + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
+                        } else if ("file_secop".equals(partName)) {
+                            baseName = "2. CONTRATO SECOP II - " + nombreCorto;
+                        } else if ("file_ficha_tecnica".equals(partName)) {
+                            baseName = "4. FICHA TECNICA - " + nombreCorto;
+                        } else if ("file_cedula".equals(partName)) {
+                            baseName = "6. CEDULA - " + nombreCorto;
+                        } else if ("file_rut".equals(partName)) {
+                            baseName = "7. RUT - " + nombreCorto;
+                        } else if ("file_seguridad_social".equals(partName)) {
+                            baseName = (esCuota1 ? "8." : "4.") + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
+                        } else if ("file_correccion_monetaria".equals(partName)) {
+                            baseName = "9. CERTIFICACION CORRECCION MONETARIA - " + nombreCorto;
+                        } else if ("file_medicina_prepagada".equals(partName)) {
+                            baseName = "10. CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto;
+                        } else if ("file_certificado_dependientes".equals(partName)) {
+                            baseName = "11. CERTIFICADO DEPENDIENTES - " + nombreCorto;
+                        }
+                        
+                        submittedFileName = baseName + ext;
+                    }
                     
                     System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
                     String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";

@@ -331,6 +331,18 @@
                                 <i class="bi bi-info-circle-fill me-2"></i> Los documentos requeridos cambian dependiendo de si es la Cuota 1 o una cuota posterior.
                             </div>
                             <div class="row g-3">
+                                <c:if test="${contrato.ivaSiNo == 'SI' || contrato.ivaSiNo == 'Si' || contrato.ivaSiNo == 'si'}">
+                                    <div class="col-md-12 mb-2">
+                                        <div class="alert alert-warning mb-0 border-start border-warning border-4 shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i>
+                                            <strong>Atención:</strong> El contratista es <strong>Responsable de IVA</strong>. En lugar de generar el formato de cuenta de cobro en Excel (DS), debe cargar su factura electrónica a continuación.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 req-cuota-todas">
+                                        <label class="form-label text-primary fw-bold"><i class="bi bi-receipt"></i> Factura Electrónica (Reemplaza Cuenta de Cobro)</label>
+                                        <input type="file" class="form-control border-primary" name="file_factura" accept="application/pdf, text/xml" ${readonly ? 'disabled' : ''}>
+                                    </div>
+                                </c:if>
                                 <div class="col-md-6 req-cuota-1">
                                     <label class="form-label">RUT</label>
                                     <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
