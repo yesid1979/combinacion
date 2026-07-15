@@ -12,6 +12,9 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Summernote Lite CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #004884;
@@ -290,11 +293,6 @@
                                                         <td>
                                                             <textarea id="raw_actividad_${status.index}" style="display:none;">${item.actividad}</textarea>
                                                             <div id="actividades_container_${status.index}"></div>
-                                                            <c:if test="${not readonly}">
-                                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarActividad(${status.index})">
-                                                                    <i class="bi bi-plus-circle"></i> Agregar
-                                                                </button>
-                                                            </c:if>
                                                         </td>
                                                     </tr>
                                                 </c:forEach>
@@ -410,6 +408,7 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
@@ -424,11 +423,11 @@
             var obligacionesCount = ${fn:length(listaObligaciones) > 0 ? fn:length(listaObligaciones) : 0};
             for(var i=0; i<obligacionesCount; i++) {
                 var rawText = document.getElementById("raw_actividad_" + i).value;
-                var acts = rawText ? rawText.split('\n') : [''];
-                if (acts.length === 0) acts = [''];
-                for(var j=0; j<acts.length; j++) {
-                    agregarActividadConValor(i, acts[j], isReadonly);
+                if (rawText && !rawText.includes('<p>') && !rawText.includes('<table') && !rawText.includes('<ul')) {
+                    // Si es texto plano antiguo, reemplazar saltos de línea por <br> para que Summernote lo entienda
+                    rawText = rawText.replace(/\n/g, '<br>');
                 }
+                agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
             // Lógica para mostrar/ocultar soportes según la cuota
@@ -489,10 +488,10 @@
             divText.className = "d-flex align-items-start";
             
             var textarea = document.createElement("textarea");
-            textarea.className = "form-control";
+            textarea.className = "form-control summernote-editor";
             textarea.name = "actividad_" + index;
             textarea.rows = 2;
-            textarea.placeholder = "Describa la actividad realizada...";
+            textarea.placeholder = "Describa la actividad realizada e inserte tablas o imágenes (copiar y pegar)...";
             textarea.value = valor;
             if (isReadonly) textarea.readOnly = true;
             else textarea.required = true;
@@ -505,11 +504,7 @@
                 btn.className = "btn btn-outline-danger ms-2";
                 btn.innerHTML = '<i class="bi bi-trash"></i>';
                 btn.onclick = function() {
-                    if (container.children.length > 1) {
-                        wrapper.remove();
-                    } else {
-                        textarea.value = '';
-                    }
+                    $(textarea).summernote('code', '');
                 };
                 divText.appendChild(btn);
             }
@@ -528,7 +523,6 @@
                 fileInput.className = "form-control form-control-sm";
                 fileInput.name = "evidencia_" + index + "_" + actIndex;
                 fileInput.multiple = true; // Permite seleccionar varias fotos o PDFs u otros archivos
-                // fileInput.accept = "application/pdf, image/*"; // Se elimina restriccion para permitir cualquier archivo
                 
                 divFile.appendChild(fileLabel);
                 divFile.appendChild(fileInput);
@@ -536,6 +530,28 @@
             }
             
             container.appendChild(wrapper);
+
+            // Iniciar Summernote si no es de solo lectura
+            if (!isReadonly) {
+                $(textarea).summernote({
+                    height: 120,
+                    toolbar: [
+                        ['style', ['bold', 'italic', 'underline', 'clear']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['table', ['table']],
+                        ['insert', ['picture', 'link']],
+                        ['view', ['fullscreen']]
+                    ],
+                    placeholder: 'Escriba la actividad o pegue aquí una imagen/tabla...'
+                });
+            } else {
+                // En modo solo lectura, ocultar el textarea y mostrar el HTML renderizado
+                $(textarea).hide();
+                var viewer = document.createElement("div");
+                viewer.className = "p-3 border rounded bg-light w-100";
+                viewer.innerHTML = valor;
+                divText.insertBefore(viewer, textarea);
+            }
         }
 
         window.agregarActividad = function(index) {

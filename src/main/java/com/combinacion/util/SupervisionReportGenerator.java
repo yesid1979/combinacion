@@ -182,9 +182,28 @@ public class SupervisionReportGenerator {
         reps.put("${NOMBRE_APOYO}", tieneApoyo ? contrato.getApoyoSupervision().toUpperCase() : "{{REMOVE_PARAGRAPH}}");
         reps.put("${TEXTO_APOYO}", tieneApoyo ? "Nombre y firma del Apoyo a la Supervisión (Incluir cuando aplique)" : "{{REMOVE_PARAGRAPH}}");
 
+        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = null;
+        if (finalConceptoSup != null) {
+            lista = com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
+        }
+        
         try (FileInputStream fis = new FileInputStream(templateFile);
-             FileOutputStream fos = new FileOutputStream(outputFile)) {
-            TemplateGenerator.generate(fis, reps, fos);
+             org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(fis)) {
+            
+            TemplateGenerator.replacePlaceholders(doc, reps);
+            
+            // Reemplazar la tabla XML (se generan las imágenes en doc)
+            if (lista != null) {
+                for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
+                    if (item.actividad != null && !item.actividad.isEmpty()) {
+                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(item.actividad, doc);
+                    }
+                }
+            }
+            
+            try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+                doc.write(fos);
+            }
         }
         
         // Post-processing to replace textbox variables directly in XML
@@ -210,10 +229,7 @@ public class SupervisionReportGenerator {
                     xml = xml.replace("${X_PARCIAL}", xParcial != null ? xParcial : "  ");
                     xml = xml.replace("${X_FINAL}", xFinal != null ? xFinal : "  ");
                     
-                    if (finalConceptoSup != null) {
-                        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = 
-                            com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
-                            
+                    if (lista != null) {
                         StringBuilder tablaXml = new StringBuilder();
                         tablaXml.append("</w:t></w:r></w:p>"); // Cerrar el párrafo actual de ${CONCEPTO_SUPERVISOR}
                         
@@ -236,33 +252,10 @@ public class SupervisionReportGenerator {
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                             String obRaw = item.obligacion != null ? item.obligacion.trim() : "";
-                            String acRaw = item.actividad != null ? item.actividad.trim() : "";
+                            String acXml = item.actividad != null ? item.actividad : "<w:p><w:r><w:t></w:t></w:r></w:p>";
                             
-                            if (!acRaw.isEmpty()) {
-                                String[] lineas = acRaw.split("\n");
-                                StringBuilder acModificado = new StringBuilder();
-                                for (int i = 0; i < lineas.length; i++) {
-                                    String linea = lineas[i].trim();
-                                    if (!linea.isEmpty()) {
-                                        java.util.regex.Matcher mLinea = java.util.regex.Pattern.compile("^(\\d+[.-]?|[\\-\\*\\•\\●\\○\\▪])\\s*").matcher(linea);
-                                        if (!mLinea.find()) {
-                                            linea = "● " + linea;
-                                        }
-                                    }
-                                    acModificado.append(linea);
-                                    if (i < lineas.length - 1) {
-                                        acModificado.append("\n");
-                                    }
-                                }
-                                acRaw = acModificado.toString().trim();
-                            }
-
                             String ob = obRaw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                            String ac = acRaw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-                            
-                            // Reemplazar saltos de línea por <w:br/>
                             ob = ob.replace("\n", "</w:t><w:br/><w:t>");
-                            ac = ac.replace("\n", "</w:t><w:br/><w:t>");
                             
                             tablaXml.append("<w:tr>");
                             
@@ -271,10 +264,10 @@ public class SupervisionReportGenerator {
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
-                            // Cell Actividad
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
-                                    .append(ac)
-                                    .append("</w:t></w:r></w:p></w:tc>");
+                            // Cell Actividad (ya es Word XML)
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr>")
+                                    .append(acXml)
+                                    .append("</w:tc>");
                                     
                             tablaXml.append("</w:tr>");
                         }

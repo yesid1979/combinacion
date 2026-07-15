@@ -129,9 +129,56 @@ public class GestionReportGenerator {
         }
         final String finalConceptoSup = concepto != null ? concepto : "";
 
+        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = null;
+        if (finalConceptoSup != null) {
+            lista = com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
+        }
+
         try (FileInputStream fis = new FileInputStream(templateFile);
-             FileOutputStream fos = new FileOutputStream(outputFile)) {
-            TemplateGenerator.generate(fis, reps, fos);
+             org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(fis)) {
+            
+            TemplateGenerator.replacePlaceholders(doc, reps);
+            
+            if (lista != null) {
+                for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
+                    if (item.actividad != null && !item.actividad.isEmpty()) {
+                        String ac = item.actividad;
+                        ac = ac.replaceAll("\\bRealizó\\b", "Realicé")
+                               .replaceAll("\\brealizó\\b", "realicé")
+                               .replaceAll("\\bBrindó\\b", "Brindé")
+                               .replaceAll("\\bbrindó\\b", "brindé")
+                               .replaceAll("\\bApoyó\\b", "Apoyé")
+                               .replaceAll("\\bapoyó\\b", "apoyé")
+                               .replaceAll("\\bConsolidó\\b", "Consolidé")
+                               .replaceAll("\\bconsolidó\\b", "consolidé")
+                               .replaceAll("\\bElaboró\\b", "Elaboré")
+                               .replaceAll("\\belaboró\\b", "elaboré")
+                               .replaceAll("\\bParticipó\\b", "Participé")
+                               .replaceAll("\\bparticipó\\b", "participé")
+                               .replaceAll("\\bVerificó\\b", "Verifiqué")
+                               .replaceAll("\\bverificó\\b", "verifiqué")
+                               .replaceAll("\\bEntregó\\b", "Entregué")
+                               .replaceAll("\\bentregó\\b", "entregué")
+                               .replaceAll("\\bRevisó\\b", "Revisé")
+                               .replaceAll("\\brevisó\\b", "revisé")
+                               .replaceAll("\\bEfectuó\\b", "Efectué")
+                               .replaceAll("\\befectuó\\b", "efectué")
+                               .replaceAll("\\bValidó\\b", "Validé")
+                               .replaceAll("\\bvalidó\\b", "validé")
+                               .replaceAll("\\bActualizó\\b", "Actualicé")
+                               .replaceAll("\\bactualizó\\b", "actualicé")
+                               .replaceAll("\\bGeneró\\b", "Generé")
+                               .replaceAll("\\bgeneró\\b", "generé")
+                               .replaceAll("\\bAnalizó\\b", "Analicé")
+                               .replaceAll("\\banalizó\\b", "analicé");
+                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(ac, doc);
+                    }
+                }
+            }
+            
+            try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+                doc.write(fos);
+            }
         }
         
         // Post-processing to replace ${ACTIVIDADES_GESTION} with the generated XML
@@ -152,68 +199,22 @@ public class GestionReportGenerator {
                     String xml = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
                     
                     if (finalConceptoSup != null && xml.contains("${ACTIVIDADES_GESTION}")) {
-                        java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = 
-                            com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
-                            
                         StringBuilder actividadesXml = new StringBuilder();
                         actividadesXml.append("</w:t></w:r></w:p>"); // Close current paragraph containing ${ACTIVIDADES_GESTION}
                         
-                        // Render list of obligations and activities
-                        for (int i = 0; i < lista.size(); i++) {
-                            com.combinacion.util.ObligacionesParser.ObligacionActividad item = lista.get(i);
-                            String ob = item.obligacion != null ? item.obligacion.trim() : "";
-                            String ac = item.actividad != null ? item.actividad.trim() : "";
-                            
-                            // Paragraph for the obligation (Numbered, bold)
-                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"120\" w:after=\"120\"/><w:ind w:left=\"360\" w:hanging=\"360\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>")
-                                          .append(ob.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-                                          .append("</w:t></w:r></w:p>");
-
-                            // Paragraphs for the activities
-                            if (!ac.isEmpty()) {
-                                String[] lineas = ac.split("\n");
-                                for (String linea : lineas) {
-                                    linea = linea.trim();
-                                    if (!linea.isEmpty()) {
-                                        java.util.regex.Matcher mLinea = java.util.regex.Pattern.compile("^(\\d+[.-]?|[\\-\\*\\•\\●\\○\\▪])\\s*").matcher(linea);
-                                        if (mLinea.find()) {
-                                            linea = linea.substring(mLinea.end()).trim();
-                                        }
-                                        
-                                        // Auto-conjugación de verbos comunes (de 3ra a 1ra persona)
-                                        linea = linea.replaceAll("\\bRealizó\\b", "Realicé")
-                                                     .replaceAll("\\brealizó\\b", "realicé")
-                                                     .replaceAll("\\bBrindó\\b", "Brindé")
-                                                     .replaceAll("\\bbrindó\\b", "brindé")
-                                                     .replaceAll("\\bApoyó\\b", "Apoyé")
-                                                     .replaceAll("\\bapoyó\\b", "apoyé")
-                                                     .replaceAll("\\bConsolidó\\b", "Consolidé")
-                                                     .replaceAll("\\bconsolidó\\b", "consolidé")
-                                                     .replaceAll("\\bElaboró\\b", "Elaboré")
-                                                     .replaceAll("\\belaboró\\b", "elaboré")
-                                                     .replaceAll("\\bParticipó\\b", "Participé")
-                                                     .replaceAll("\\bparticipó\\b", "participé")
-                                                     .replaceAll("\\bVerificó\\b", "Verifiqué")
-                                                     .replaceAll("\\bverificó\\b", "verifiqué")
-                                                     .replaceAll("\\bEntregó\\b", "Entregué")
-                                                     .replaceAll("\\bentregó\\b", "entregué")
-                                                     .replaceAll("\\bRevisó\\b", "Revisé")
-                                                     .replaceAll("\\brevisó\\b", "revisé")
-                                                     .replaceAll("\\bEfectuó\\b", "Efectué")
-                                                     .replaceAll("\\befectuó\\b", "efectué")
-                                                     .replaceAll("\\bValidó\\b", "Validé")
-                                                     .replaceAll("\\bvalidó\\b", "validé")
-                                                     .replaceAll("\\bActualizó\\b", "Actualicé")
-                                                     .replaceAll("\\bactualizó\\b", "actualicé")
-                                                     .replaceAll("\\bGeneró\\b", "Generé")
-                                                     .replaceAll("\\bgeneró\\b", "generé")
-                                                     .replaceAll("\\bAnalizó\\b", "Analicé")
-                                                     .replaceAll("\\banalizó\\b", "analicé");
-
-                                        actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:after=\"120\"/><w:ind w:left=\"720\" w:hanging=\"360\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>● ")
-                                                      .append(linea.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-                                                      .append("</w:t></w:r></w:p>");
-                                    }
+                        if (lista != null) {
+                            for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
+                                String ob = item.obligacion != null ? item.obligacion.trim() : "";
+                                String acXml = item.actividad != null ? item.actividad : "";
+                                
+                                // Paragraph for the obligation (Numbered, bold)
+                                actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"120\" w:after=\"120\"/><w:ind w:left=\"360\" w:hanging=\"360\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>")
+                                              .append(ob.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+                                              .append("</w:t></w:r></w:p>");
+    
+                                // Paragraphs for the activities (already Word XML generated by converter)
+                                if (!acXml.isEmpty()) {
+                                    actividadesXml.append(acXml);
                                 }
                             }
                         }

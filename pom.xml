@@ -98,6 +98,13 @@
             <artifactId>fr.opensagres.xdocreport.itext.extension</artifactId>
             <version>2.0.4</version>
         </dependency>
+        
+        <!-- Jsoup for parsing HTML from WYSIWYG editor -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.17.2</version>
+        </dependency>
         <!-- iText Core necesario para XDocReport -->
         <dependency>
             <groupId>com.lowagie</groupId>

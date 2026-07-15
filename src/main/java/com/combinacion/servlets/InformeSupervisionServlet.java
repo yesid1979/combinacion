@@ -537,7 +537,14 @@ public class InformeSupervisionServlet extends HttpServlet {
                         fileData.put("name", submittedFileName);
                         fileData.put("id", fileId);
                         fileData.put("url", "https://drive.google.com/file/d/" + fileId + "/view");
-                        soportes.put(partName, fileData);
+                        
+                        String soportesKey = partName;
+                        if (soportes.has(soportesKey)) {
+                            int k = 1;
+                            while (soportes.has(partName + "_" + k)) k++;
+                            soportesKey = partName + "_" + k;
+                        }
+                        soportes.put(soportesKey, fileData);
                     } catch (Exception ex) {
                         System.err.println("Error subiendo archivo " + submittedFileName + ": " + ex.getMessage());
                     }

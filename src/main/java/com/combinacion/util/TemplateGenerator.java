@@ -313,21 +313,23 @@ public class TemplateGenerator {
     public static void generate(InputStream templateInputStream, Map<String, String> replacements,
             OutputStream outputStream) throws IOException {
         try (XWPFDocument document = new XWPFDocument(templateInputStream)) {
-
-            // Process everything recursively
-            processBodyElements(document.getBodyElements(), replacements);
-
-            // Process Headers/Footers
-            XWPFHeaderFooterPolicy policy = document.getHeaderFooterPolicy();
-            if (policy != null) {
-                if (policy.getDefaultHeader() != null) processBodyElements(policy.getDefaultHeader().getBodyElements(), replacements);
-                if (policy.getFirstPageHeader() != null) processBodyElements(policy.getFirstPageHeader().getBodyElements(), replacements);
-                if (policy.getEvenPageHeader() != null) processBodyElements(policy.getEvenPageHeader().getBodyElements(), replacements);
-                
-                if (policy.getDefaultFooter() != null) processBodyElements(policy.getDefaultFooter().getBodyElements(), replacements);
-            }
-
+            replacePlaceholders(document, replacements);
             document.write(outputStream);
+        }
+    }
+    
+    public static void replacePlaceholders(XWPFDocument document, Map<String, String> replacements) {
+        // Process everything recursively
+        processBodyElements(document.getBodyElements(), replacements);
+
+        // Process Headers/Footers
+        XWPFHeaderFooterPolicy policy = document.getHeaderFooterPolicy();
+        if (policy != null) {
+            if (policy.getDefaultHeader() != null) processBodyElements(policy.getDefaultHeader().getBodyElements(), replacements);
+            if (policy.getFirstPageHeader() != null) processBodyElements(policy.getFirstPageHeader().getBodyElements(), replacements);
+            if (policy.getEvenPageHeader() != null) processBodyElements(policy.getEvenPageHeader().getBodyElements(), replacements);
+            
+            if (policy.getDefaultFooter() != null) processBodyElements(policy.getDefaultFooter().getBodyElements(), replacements);
         }
     }
 
