@@ -527,8 +527,8 @@
                 fileInput.type = "file";
                 fileInput.className = "form-control form-control-sm";
                 fileInput.name = "evidencia_" + index + "_" + actIndex;
-                fileInput.multiple = true; // Permite seleccionar varias fotos o PDFs
-                fileInput.accept = "application/pdf, image/*";
+                fileInput.multiple = true; // Permite seleccionar varias fotos o PDFs u otros archivos
+                // fileInput.accept = "application/pdf, image/*"; // Se elimina restriccion para permitir cualquier archivo
                 
                 divFile.appendChild(fileLabel);
                 divFile.appendChild(fileInput);
