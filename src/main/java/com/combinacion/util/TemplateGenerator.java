@@ -442,11 +442,22 @@ public class TemplateGenerator {
             }
             
             XWPFRun newRun = para.createRun();
-            newRun.setText(newText);
             newRun.setFontFamily(fontFamily);
             newRun.setFontSize(fontSize);
             newRun.setBold(isBold);
             if (color != null) newRun.setColor(color);
+            
+            if (newText.contains("\n")) {
+                String[] lines = newText.split("\n", -1);
+                for (int i = 0; i < lines.length; i++) {
+                    newRun.setText(lines[i]);
+                    if (i < lines.length - 1) {
+                        newRun.addBreak();
+                    }
+                }
+            } else {
+                newRun.setText(newText);
+            }
         }
         return false;
     }
