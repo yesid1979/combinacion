@@ -73,6 +73,15 @@ public class HtmlToWordXmlConverter {
                 }
                 xml.append("</w:tbl>");
             } else if (tagName.equals("ul") || tagName.equals("ol")) {
+                String ulAlign = inheritedAlign;
+                String ulStyle = el.attr("style").toLowerCase();
+                String ulClazz = el.attr("class").toLowerCase();
+                if (ulStyle.contains("text-align: justify") || ulStyle.contains("text-align:justify") || ulClazz.contains("text-justify")) ulAlign = "both";
+                else if (ulStyle.contains("text-align: center") || ulStyle.contains("text-align:center") || ulClazz.contains("text-center")) ulAlign = "center";
+                else if (ulStyle.contains("text-align: right") || ulStyle.contains("text-align:right") || ulClazz.contains("text-right")) ulAlign = "right";
+                else if (ulStyle.contains("text-align: left") || ulStyle.contains("text-align:left") || ulClazz.contains("text-left")) ulAlign = "left";
+
+                int counter = 1;
                 for (Element li : el.children()) {
                     if (li.tagName().equals("li")) {
                         String align = "";
@@ -83,16 +92,26 @@ public class HtmlToWordXmlConverter {
                         else if (style.contains("text-align: right") || style.contains("text-align:right") || clazz.contains("text-right")) align = "right";
                         else if (style.contains("text-align: left") || style.contains("text-align:left") || clazz.contains("text-left")) align = "left";
 
-                        if (align.isEmpty()) align = inheritedAlign;
+                        if (align.isEmpty()) align = ulAlign;
 
                         xml.append("<w:p><w:pPr>");
                         if (!align.isEmpty()) {
                             xml.append("<w:jc w:val=\"").append(align).append("\"/>");
                         }
-                        xml.append("<w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"").append(tagName.equals("ul") ? "1" : "2").append("\"/></w:numPr>");
+                        xml.append("<w:ind w:left=\"720\" w:hanging=\"360\"/>");
                         xml.append("</w:pPr>");
+                        
+                        xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>");
+                        if (tagName.equals("ol")) {
+                            xml.append(counter).append(".");
+                        } else {
+                            xml.append("•");
+                        }
+                        xml.append("</w:t></w:r><w:r><w:tab/></w:r>");
+                        
                         processInlineChildren(li, xml, doc, false, false, false);
                         xml.append("</w:p>");
+                        counter++;
                     }
                 }
             } else if (tagName.equals("p") || tagName.equals("div") || tagName.equals("h1") || tagName.equals("h2") || tagName.equals("h3") || tagName.equals("h4") || tagName.equals("h5") || tagName.equals("h6")) {
