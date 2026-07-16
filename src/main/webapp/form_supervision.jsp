@@ -379,9 +379,20 @@
                                     <label class="form-label">Seguridad Social</label>
                                     <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-todas">
+                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">RPC (Registro Presupuestal)</label>
                                     <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                
+                                <div class="col-md-12 mt-4">
+                                    <h5 class="border-bottom pb-2 text-primary"><i class="bi bi-folder-plus me-2"></i>Otras Evidencias (Opcional)</h5>
+                                    <div class="alert alert-secondary border-0 bg-light d-flex align-items-center">
+                                        <i class="bi bi-cloud-arrow-up fs-3 text-secondary me-3"></i>
+                                        <div>
+                                            Puede seleccionar o arrastrar y soltar <strong>múltiples archivos</strong> a la vez en este campo (PDF, Imágenes, Word, Excel).
+                                        </div>
+                                    </div>
+                                    <input type="file" class="form-control form-control-lg border-primary shadow-sm" name="evidencia_multiple" multiple accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .zip" ${readonly ? 'disabled' : ''}>
                                 </div>
                             </div>
                         </div>
