@@ -50,6 +50,12 @@
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 0.25rem rgba(0, 72, 132, 0.1);
         }
+        .file-dragover {
+            border: 2px dashed var(--primary-blue) !important;
+            background-color: rgba(0, 72, 132, 0.05) !important;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
     </style>
 </head>
 <body class="bg-white d-flex flex-column min-vh-100">
@@ -721,6 +727,31 @@
             if(!'${readonly}') {
                 calcularSaldo();
             }
+            
+            // Lógica de arrastrar y soltar para inputs tipo file
+            $('input[type="file"]').each(function() {
+                var $input = $(this);
+                // Si el input está deshabilitado (solo lectura), no añadir eventos
+                if ($input.prop('disabled')) return;
+                
+                $input.on('dragover dragenter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $input.addClass('file-dragover');
+                })
+                .on('dragleave dragend drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $input.removeClass('file-dragover');
+                })
+                .on('drop', function(e) {
+                    // Cargar los archivos soltados al input
+                    var files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        $input.prop('files', files);
+                    }
+                });
+            });
         });
     </script>
 </body>
