@@ -95,10 +95,11 @@ public class HtmlToWordXmlConverter {
                         if (align.isEmpty()) align = ulAlign;
 
                         xml.append("<w:p><w:pPr>");
+                        xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"720\"/></w:tabs>");
+                        xml.append("<w:ind w:left=\"720\" w:hanging=\"360\"/>");
                         if (!align.isEmpty()) {
                             xml.append("<w:jc w:val=\"").append(align).append("\"/>");
                         }
-                        xml.append("<w:ind w:left=\"720\" w:hanging=\"360\"/>");
                         xml.append("</w:pPr>");
                         
                         xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>");
