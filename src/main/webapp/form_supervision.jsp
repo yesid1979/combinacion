@@ -534,19 +534,77 @@
 
             if (!isReadonly) {
                 var divFile = document.createElement("div");
-                divFile.className = "mt-2";
+                divFile.className = "mt-3";
                 
                 var fileLabel = document.createElement("small");
-                fileLabel.className = "text-muted d-block fw-bold mb-1";
+                fileLabel.className = "text-muted d-block fw-bold mb-2";
                 fileLabel.innerHTML = '<i class="bi bi-paperclip"></i> Evidencias de esta actividad:';
                 
                 var fileInput = document.createElement("input");
                 fileInput.type = "file";
-                fileInput.className = "form-control form-control-sm";
+                fileInput.className = "d-none"; // Oculto, se usa la dropZone
                 fileInput.name = "evidencia_" + index + "_" + actIndex;
-                fileInput.multiple = true; // Permite seleccionar varias fotos o PDFs u otros archivos
+                fileInput.multiple = true;
+                
+                var dropZone = document.createElement("div");
+                dropZone.className = "border rounded p-3 text-center transition-all";
+                dropZone.style.border = "2px dashed #0d6efd";
+                dropZone.style.cursor = "pointer";
+                dropZone.style.backgroundColor = "#f8f9fa";
+                dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
+                
+                // Al hacer clic en la zona, abre el selector de archivos
+                dropZone.onclick = function() {
+                    fileInput.click();
+                };
+                
+                // Funciones para actualizar el texto según los archivos seleccionados
+                var actualizarTexto = function() {
+                    if(fileInput.files.length > 0) {
+                        var names = [];
+                        for(var k=0; k<fileInput.files.length; k++) {
+                            names.push(fileInput.files[k].name);
+                        }
+                        dropZone.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i><br><span class="text-success fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s)</span><br><small class="text-muted d-block mt-1" style="word-break: break-all;">' + names.join(', ') + '</small>';
+                        dropZone.style.borderColor = "#198754";
+                        dropZone.style.backgroundColor = "#e8f5e9";
+                    } else {
+                        dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
+                        dropZone.style.borderColor = "#0d6efd";
+                        dropZone.style.backgroundColor = "#f8f9fa";
+                    }
+                };
+                
+                fileInput.addEventListener('change', actualizarTexto);
+                
+                // Eventos Drag and Drop
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.style.backgroundColor = "#e9ecef";
+                });
+                
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if(fileInput.files.length === 0) {
+                        dropZone.style.backgroundColor = "#f8f9fa";
+                    } else {
+                        dropZone.style.backgroundColor = "#e8f5e9";
+                    }
+                });
+                
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        actualizarTexto();
+                    }
+                });
                 
                 divFile.appendChild(fileLabel);
+                divFile.appendChild(dropZone);
                 divFile.appendChild(fileInput);
                 wrapper.appendChild(divFile);
             }
