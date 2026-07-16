@@ -84,6 +84,8 @@
                             <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-person-gear me-2"></i>Usuarios</a></li>
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/roles"><i class="bi bi-key-fill me-2"></i>Roles y permisos</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/verbos"><i class="bi bi-translate me-2"></i>Diccionario de Verbos</a></li>
                             </ul>
                         </li>
                     </c:if>

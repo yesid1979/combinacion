@@ -143,34 +143,25 @@ public class GestionReportGenerator {
                 for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                     if (item.actividad != null && !item.actividad.isEmpty()) {
                         String ac = item.actividad;
-                        ac = ac.replaceAll("\\bRealizó\\b", "Realicé")
-                               .replaceAll("\\brealizó\\b", "realicé")
-                               .replaceAll("\\bBrindó\\b", "Brindé")
-                               .replaceAll("\\bbrindó\\b", "brindé")
-                               .replaceAll("\\bApoyó\\b", "Apoyé")
-                               .replaceAll("\\bapoyó\\b", "apoyé")
-                               .replaceAll("\\bConsolidó\\b", "Consolidé")
-                               .replaceAll("\\bconsolidó\\b", "consolidé")
-                               .replaceAll("\\bElaboró\\b", "Elaboré")
-                               .replaceAll("\\belaboró\\b", "elaboré")
-                               .replaceAll("\\bParticipó\\b", "Participé")
-                               .replaceAll("\\bparticipó\\b", "participé")
-                               .replaceAll("\\bVerificó\\b", "Verifiqué")
-                               .replaceAll("\\bverificó\\b", "verifiqué")
-                               .replaceAll("\\bEntregó\\b", "Entregué")
-                               .replaceAll("\\bentregó\\b", "entregué")
-                               .replaceAll("\\bRevisó\\b", "Revisé")
-                               .replaceAll("\\brevisó\\b", "revisé")
-                               .replaceAll("\\bEfectuó\\b", "Efectué")
-                               .replaceAll("\\befectuó\\b", "efectué")
-                               .replaceAll("\\bValidó\\b", "Validé")
-                               .replaceAll("\\bvalidó\\b", "validé")
-                               .replaceAll("\\bActualizó\\b", "Actualicé")
-                               .replaceAll("\\bactualizó\\b", "actualicé")
-                               .replaceAll("\\bGeneró\\b", "Generé")
-                               .replaceAll("\\bgeneró\\b", "generé")
-                               .replaceAll("\\bAnalizó\\b", "Analicé")
-                               .replaceAll("\\banalizó\\b", "analicé");
+                        com.combinacion.dao.VerboConjugacionDAO verboDao = new com.combinacion.dao.VerboConjugacionDAO();
+                        java.util.List<com.combinacion.models.VerboConjugacion> verbos = verboDao.obtenerActivos();
+                        if (verbos != null) {
+                            for (com.combinacion.models.VerboConjugacion v : verbos) {
+                                String t = v.getTerceraPersona();
+                                String p = v.getPrimeraPersona();
+                                
+                                // Minúscula
+                                String tMin = t.toLowerCase();
+                                String pMin = p.toLowerCase();
+                                ac = ac.replaceAll("\\b" + tMin + "\\b", pMin);
+                                
+                                // Capitalizada (Primera letra mayúscula)
+                                String tCap = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
+                                String pCap = p.substring(0, 1).toUpperCase() + p.substring(1).toLowerCase();
+                                ac = ac.replaceAll("\\b" + tCap + "\\b", pCap);
+                            }
+                        }
+
                         item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(ac, doc);
                     }
                 }

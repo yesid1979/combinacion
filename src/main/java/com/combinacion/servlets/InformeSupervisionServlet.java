@@ -648,6 +648,25 @@ public class InformeSupervisionServlet extends HttpServlet {
                     String joinedAct = "";
                     if (acts != null) {
                         joinedAct = String.join("\n", acts);
+                        try {
+                            org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(joinedAct);
+                            for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
+                                String style = e.attr("style");
+                                if (style != null && !style.isEmpty()) {
+                                    style = style.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"]+;?", "");
+                                    style = style.replaceAll("(?i)font-family:[^;\"]+;?", "");
+                                    style = style.replaceAll("(?i)font-size:[^;\"]+;?", "");
+                                    if (style.trim().isEmpty()) e.removeAttr("style");
+                                    else e.attr("style", style);
+                                }
+                                e.removeAttr("class");
+                                e.removeAttr("lang");
+                            }
+                            joinedAct = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
+                            // Limpiar posible basura restante en texto plano (ej: mso-bidi-language:AR-SA">)
+                            joinedAct = joinedAct.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[a-zA-Z0-9\\-]+;?\"?>?", "");
+                            joinedAct = joinedAct.replaceAll("^\\s*\"?>\\s*", "");
+                        } catch (Exception ex) {}
                     }
                     obj.put("actividad", joinedAct);
                     arr.put(obj);

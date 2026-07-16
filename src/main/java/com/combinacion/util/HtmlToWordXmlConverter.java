@@ -24,7 +24,7 @@ public class HtmlToWordXmlConverter {
         StringBuilder xml = new StringBuilder();
         
         for (Node child : jsoupDoc.body().childNodes()) {
-            processNodeAsBlock(child, xml, doc, 0);
+            processNodeAsBlock(child, xml, doc, 0, "");
         }
         
         if (xml.length() == 0) {
@@ -33,7 +33,7 @@ public class HtmlToWordXmlConverter {
         return xml.toString();
     }
     
-    private static void processNodeAsBlock(Node node, StringBuilder xml, XWPFDocument doc, int listLevel) {
+    private static void processNodeAsBlock(Node node, StringBuilder xml, XWPFDocument doc, int listLevel, String inheritedAlign) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text().trim();
             if (!text.isEmpty()) {
@@ -58,7 +58,7 @@ public class HtmlToWordXmlConverter {
                         boolean hasBlock = false;
                         for (Node tdChild : td.childNodes()) {
                             if (isBlockNode(tdChild)) {
-                                processNodeAsBlock(tdChild, xml, doc, 0);
+                                processNodeAsBlock(tdChild, xml, doc, 0, "");
                                 hasBlock = true;
                             }
                         }
@@ -83,6 +83,8 @@ public class HtmlToWordXmlConverter {
                         else if (style.contains("text-align: right") || style.contains("text-align:right") || clazz.contains("text-right")) align = "right";
                         else if (style.contains("text-align: left") || style.contains("text-align:left") || clazz.contains("text-left")) align = "left";
 
+                        if (align.isEmpty()) align = inheritedAlign;
+
                         xml.append("<w:p><w:pPr>");
                         if (!align.isEmpty()) {
                             xml.append("<w:jc w:val=\"").append(align).append("\"/>");
@@ -100,8 +102,17 @@ public class HtmlToWordXmlConverter {
                 }
                 
                 if (containsBlock) {
+                    String align = "";
+                    String style = el.attr("style").toLowerCase();
+                    String clazz = el.attr("class").toLowerCase();
+                    if (style.contains("text-align: justify") || style.contains("text-align:justify") || clazz.contains("text-justify")) align = "both";
+                    else if (style.contains("text-align: center") || style.contains("text-align:center") || clazz.contains("text-center")) align = "center";
+                    else if (style.contains("text-align: right") || style.contains("text-align:right") || clazz.contains("text-right")) align = "right";
+                    else if (style.contains("text-align: left") || style.contains("text-align:left") || clazz.contains("text-left")) align = "left";
+                    if (align.isEmpty()) align = inheritedAlign;
+
                     for (Node n : el.childNodes()) {
-                        processNodeAsBlock(n, xml, doc, listLevel);
+                        processNodeAsBlock(n, xml, doc, listLevel, align);
                     }
                 } else {
                     String align = "";
@@ -111,6 +122,8 @@ public class HtmlToWordXmlConverter {
                     else if (style.contains("text-align: center") || style.contains("text-align:center") || clazz.contains("text-center")) align = "center";
                     else if (style.contains("text-align: right") || style.contains("text-align:right") || clazz.contains("text-right")) align = "right";
                     else if (style.contains("text-align: left") || style.contains("text-align:left") || clazz.contains("text-left")) align = "left";
+                    
+                    if (align.isEmpty()) align = inheritedAlign;
 
                     xml.append("<w:p>");
                     if (!align.isEmpty()) {
