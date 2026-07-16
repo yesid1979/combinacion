@@ -542,7 +542,45 @@
                         ['insert', ['picture', 'link']],
                         ['view', ['fullscreen']]
                     ],
-                    placeholder: 'Escriba la actividad o pegue aquí una imagen/tabla...'
+                    placeholder: 'Escriba la actividad o pegue aquí una imagen/tabla...',
+                    callbacks: {
+                        onImageUpload: function(files) {
+                            for (let i = 0; i < files.length; i++) {
+                                let file = files[i];
+                                let reader = new FileReader();
+                                reader.onload = function(e) {
+                                    let img = new Image();
+                                    img.onload = function() {
+                                        let canvas = document.createElement('canvas');
+                                        let MAX_WIDTH = 800;
+                                        let MAX_HEIGHT = 800;
+                                        let width = img.width;
+                                        let height = img.height;
+
+                                        if (width > height) {
+                                            if (width > MAX_WIDTH) {
+                                                height *= MAX_WIDTH / width;
+                                                width = MAX_WIDTH;
+                                            }
+                                        } else {
+                                            if (height > MAX_HEIGHT) {
+                                                width *= MAX_HEIGHT / height;
+                                                height = MAX_HEIGHT;
+                                            }
+                                        }
+                                        canvas.width = width;
+                                        canvas.height = height;
+                                        let ctx = canvas.getContext('2d');
+                                        ctx.drawImage(img, 0, 0, width, height);
+                                        let dataurl = canvas.toDataURL('image/jpeg', 0.7);
+                                        $(textarea).summernote('insertImage', dataurl);
+                                    }
+                                    img.src = e.target.result;
+                                }
+                                reader.readAsDataURL(file);
+                            }
+                        }
+                    }
                 });
             } else {
                 // En modo solo lectura, ocultar el textarea y mostrar el HTML renderizado
