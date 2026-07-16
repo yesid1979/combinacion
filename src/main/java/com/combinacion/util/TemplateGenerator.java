@@ -422,7 +422,16 @@ public class TemplateGenerator {
         // Perform all replacements on the full text
         String newText = text;
         boolean replaced = false;
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+        // Sort keys by length descending so longer patterns match first
+        java.util.List<Map.Entry<String, String>> entryList = new java.util.ArrayList<>(replacements.entrySet());
+        entryList.sort(new java.util.Comparator<Map.Entry<String, String>>() {
+            @Override
+            public int compare(Map.Entry<String, String> a, Map.Entry<String, String> b) {
+                return Integer.compare(b.getKey().length(), a.getKey().length());
+            }
+        });
+        
+        for (Map.Entry<String, String> entry : entryList) {
             if (newText.contains(entry.getKey())) {
                 newText = newText.replace(entry.getKey(), entry.getValue() != null ? entry.getValue() : "");
                 replaced = true;
