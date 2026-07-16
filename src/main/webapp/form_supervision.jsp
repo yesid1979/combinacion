@@ -461,18 +461,34 @@
                     
                     for (var key in soportesObj) {
                         var fileData = soportesObj[key];
-                        var $input = $('input[name="' + key + '"]');
+                        
+                        // Extraer el nombre base del input. Ej: 'evidencia_0_0_1' -> 'evidencia_0_0', 'file_rpc_2' -> 'file_rpc'
+                        var baseKey = key;
+                        if (key.match(/^evidencia_\d+_\d+/)) {
+                            baseKey = key.match(/^evidencia_\d+_\d+/)[0];
+                        } else if (key.match(/_[0-9]+$/)) {
+                            baseKey = key.replace(/_[0-9]+$/, '');
+                        }
+                        
+                        var $input = $('input[name="' + baseKey + '"]');
                         if ($input.length) {
                             var ui = '<div class="alert alert-secondary py-2 mt-2 mb-2 d-flex justify-content-between align-items-center shadow-sm" style="border-left: 4px solid #0d6efd;">' +
                                      '<div><i class="bi bi-file-earmark-check-fill text-success me-2 fs-5"></i>' +
                                      '<a href="' + fileData.url + '" target="_blank" class="text-decoration-none fw-bold text-dark">' + fileData.name + '</a></div>' +
                                      '</div>';
                             $input.before(ui);
-                            $input.after('<small class="text-muted d-block mt-1"><i class="bi bi-info-circle"></i> Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se reemplazará.</small>');
                             
-                            // Cambiar el label del input para indicar que reemplazará el archivo
+                            // Añadir el mensaje de reemplazo/adición solo una vez por input
+                            if (!$input.next('.info-append-msg').length) {
+                                var msgText = baseKey.startsWith("evidencia_") ? 
+                                    "Si selecciona nuevos archivos, se AGREGARÁN a los ya existentes." : 
+                                    "Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se agregará (o reemplazará).";
+                                $input.after('<small class="info-append-msg text-muted d-block mt-1"><i class="bi bi-info-circle"></i> ' + msgText + '</small>');
+                            }
+                            
+                            // Cambiar el label del input para indicar que ya hay cargados
                             var $label = $input.prevAll('.form-label, small.fw-bold').first();
-                            if ($label.length) {
+                            if ($label.length && $label.find('.badge').length === 0) {
                                 $label.append(' <span class="badge bg-success ms-2">Cargado</span>');
                             }
                         }
