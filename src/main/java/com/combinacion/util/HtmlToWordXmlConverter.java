@@ -82,6 +82,27 @@ public class HtmlToWordXmlConverter {
                 else if (ulStyle.contains("text-align: left") || ulStyle.contains("text-align:left") || ulClazz.contains("text-left")) ulAlign = "left";
 
                 int counter = 1;
+                
+                xml.append("<w:tbl>");
+                xml.append("<w:tblPr>");
+                xml.append("<w:tblW w:w=\"0\" w:type=\"auto\"/>");
+                xml.append("<w:tblBorders>");
+                xml.append("<w:top w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("<w:left w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("<w:bottom w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("<w:right w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("<w:insideH w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("<w:insideV w:val=\"none\" w:sz=\"0\" w:space=\"0\" w:color=\"auto\"/>");
+                xml.append("</w:tblBorders>");
+                xml.append("<w:tblCellMar>");
+                xml.append("<w:top w:w=\"0\" w:type=\"dxa\"/>");
+                xml.append("<w:left w:w=\"108\" w:type=\"dxa\"/>");
+                xml.append("<w:bottom w:w=\"0\" w:type=\"dxa\"/>");
+                xml.append("<w:right w:w=\"108\" w:type=\"dxa\"/>");
+                xml.append("</w:tblCellMar>");
+                xml.append("</w:tblPr>");
+                xml.append("<w:tblGrid><w:gridCol w:w=\"360\"/><w:gridCol w:w=\"8640\"/></w:tblGrid>");
+
                 for (Element li : el.children()) {
                     if (li.tagName().equals("li")) {
                         String align = "";
@@ -94,27 +115,33 @@ public class HtmlToWordXmlConverter {
 
                         if (align.isEmpty()) align = ulAlign;
 
-                        xml.append("<w:p><w:pPr>");
-                        xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"720\"/></w:tabs>");
-                        xml.append("<w:ind w:left=\"720\" w:hanging=\"360\"/>");
-                        if (!align.isEmpty()) {
-                            xml.append("<w:jc w:val=\"").append(align).append("\"/>");
-                        }
-                        xml.append("</w:pPr>");
+                        xml.append("<w:tr>");
                         
+                        // Celda de la viñeta/número
+                        xml.append("<w:tc><w:tcPr><w:tcW w:w=\"360\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr>");
+                        xml.append("<w:p><w:pPr><w:jc w:val=\"right\"/></w:pPr>");
                         xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>");
                         if (tagName.equals("ol")) {
                             xml.append(counter).append(".");
                         } else {
                             xml.append("•");
                         }
-                        xml.append("</w:t></w:r><w:r><w:tab/></w:r>");
+                        xml.append("</w:t></w:r><w:r><w:t xml:space=\"preserve\"> </w:t></w:r></w:p></w:tc>");
+                        
+                        // Celda del contenido
+                        xml.append("<w:tc><w:tcPr><w:tcW w:w=\"8640\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr>");
+                        xml.append("<w:p><w:pPr>");
+                        if (!align.isEmpty()) {
+                            xml.append("<w:jc w:val=\"").append(align).append("\"/>");
+                        }
+                        xml.append("</w:pPr>");
                         
                         processInlineChildren(li, xml, doc, false, false, false);
-                        xml.append("</w:p>");
+                        xml.append("</w:p></w:tc></w:tr>");
                         counter++;
                     }
                 }
+                xml.append("</w:tbl><w:p/>");
             } else if (tagName.equals("p") || tagName.equals("div") || tagName.equals("h1") || tagName.equals("h2") || tagName.equals("h3") || tagName.equals("h4") || tagName.equals("h5") || tagName.equals("h6")) {
                 boolean containsBlock = false;
                 for (Node n : el.childNodes()) {
