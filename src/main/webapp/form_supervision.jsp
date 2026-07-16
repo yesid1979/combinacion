@@ -383,17 +383,6 @@
                                     <label class="form-label">RPC (Registro Presupuestal)</label>
                                     <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                
-                                <div class="col-md-12 mt-4">
-                                    <h5 class="border-bottom pb-2 text-primary"><i class="bi bi-folder-plus me-2"></i>Otras Evidencias (Opcional)</h5>
-                                    <div class="alert alert-secondary border-0 bg-light d-flex align-items-center">
-                                        <i class="bi bi-cloud-arrow-up fs-3 text-secondary me-3"></i>
-                                        <div>
-                                            Puede seleccionar o arrastrar y soltar <strong>múltiples archivos</strong> a la vez en este campo (PDF, Imágenes, Word, Excel).
-                                        </div>
-                                    </div>
-                                    <input type="file" class="form-control form-control-lg border-primary shadow-sm" name="evidencia_multiple" multiple accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .zip" ${readonly ? 'disabled' : ''}>
-                                </div>
                             </div>
                         </div>
 
@@ -739,29 +728,25 @@
                 calcularSaldo();
             }
             
-            // Lógica de arrastrar y soltar para inputs tipo file
-            $('input[type="file"]').each(function() {
-                var $input = $(this);
-                // Si el input está deshabilitado (solo lectura), no añadir eventos
-                if ($input.prop('disabled')) return;
-                
-                $input.on('dragover dragenter', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    $input.addClass('file-dragover');
-                })
-                .on('dragleave dragend drop', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    $input.removeClass('file-dragover');
-                })
-                .on('drop', function(e) {
-                    // Cargar los archivos soltados al input
-                    var files = e.originalEvent.dataTransfer.files;
-                    if (files.length > 0) {
-                        $input.prop('files', files);
-                    }
-                });
+            // Lógica de arrastrar y soltar para inputs tipo file (delegación de eventos para inputs dinámicos)
+            $(document).on('dragover dragenter', 'input[type="file"]', function(e) {
+                if ($(this).prop('disabled')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('file-dragover');
+            })
+            .on('dragleave dragend drop', 'input[type="file"]', function(e) {
+                if ($(this).prop('disabled')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('file-dragover');
+            })
+            .on('drop', 'input[type="file"]', function(e) {
+                if ($(this).prop('disabled')) return;
+                var files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    $(this).prop('files', files);
+                }
             });
         });
     </script>
