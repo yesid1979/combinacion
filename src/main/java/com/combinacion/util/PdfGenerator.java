@@ -184,4 +184,69 @@ public class PdfGenerator {
             return false;
         }
     }
+
+    /**
+     * Convierte un archivo Excel a PDF.
+     */
+    public static boolean convertExcelToPdf(File excelFile, File pdfFile) {
+        if (excelFile == null || !excelFile.exists()) {
+            return false;
+        }
+
+        String os = System.getProperty("os.name").toLowerCase();
+        
+        if (os.contains("win")) {
+            return convertExcelWithWindows(excelFile, pdfFile);
+        } else {
+            return convertExcelWithLibreOfficeLinux(excelFile, pdfFile);
+        }
+    }
+
+    private static boolean convertExcelWithWindows(File excelFile, File pdfFile) {
+        try {
+            String psCommand = String.format(
+                "$excel = New-Object -ComObject Excel.Application; " +
+                "$excel.Visible = $false; " +
+                "$excel.DisplayAlerts = $false; " +
+                "$wb = $excel.Workbooks.Open('%s'); " +
+                "$wb.ExportAsFixedFormat(0, '%s'); " + 
+                "$wb.Close($false); " +
+                "$excel.Quit(); " +
+                "[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel);",
+                excelFile.getAbsolutePath(), pdfFile.getAbsolutePath()
+            );
+
+            ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
+            Process p = pb.start();
+            p.waitFor();
+            
+            return pdfFile.exists() && pdfFile.length() > 0;
+        } catch (Exception e) {
+            System.err.println("⚠️ Falló motor Excel Windows: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static boolean convertExcelWithLibreOfficeLinux(File excelFile, File pdfFile) {
+        try {
+            String outDir = pdfFile.getParent();
+            ProcessBuilder pb = new ProcessBuilder(
+                "soffice", "--headless", "--convert-to", "pdf", 
+                "--outdir", outDir, excelFile.getAbsolutePath()
+            );
+            
+            Process p = pb.start();
+            p.waitFor();
+            
+            File generatedPdf = new File(excelFile.getAbsolutePath().replaceAll("(?i)\\.xlsx?$", ".pdf"));
+            if (generatedPdf.exists() && !generatedPdf.getAbsolutePath().equals(pdfFile.getAbsolutePath())) {
+                generatedPdf.renameTo(pdfFile);
+            }
+            
+            return pdfFile.exists() && pdfFile.length() > 0;
+        } catch (Exception e) {
+            System.err.println("⚠️ LibreOffice no encontrado o falló en Linux para Excel.");
+            return false;
+        }
+    }
 }

@@ -247,12 +247,20 @@ public class InformeSupervisionServlet extends HttpServlet {
             
             // Archivo XLSX temporal (solo si no tiene IVA)
             File xlsxFile = null;
+            File xlsxPdfFile = null;
+            String xlsxPdfName = null;
             if (!tieneIva) {
                 try {
                     String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, getServletContext().getRealPath("/"));
                     xlsxFile = new File(xlsxPath);
+                    if (xlsxFile.exists()) {
+                        String pdfPath = xlsxPath.replaceAll("(?i)\\.xlsx$", ".pdf");
+                        xlsxPdfFile = new File(pdfPath);
+                        com.combinacion.util.PdfGenerator.convertExcelToPdf(xlsxFile, xlsxPdfFile);
+                        xlsxPdfName = xlsxName.replaceAll("(?i)\\.xlsx$", ".pdf");
+                    }
                 } catch (Exception e) {
-                    System.out.println("No se pudo generar el Excel: " + e.getMessage());
+                    System.out.println("No se pudo generar el Excel o PDF: " + e.getMessage());
                 }
             }
             
@@ -350,6 +358,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                     if (xlsxFile != null && xlsxFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
                         try (FileInputStream fis = new FileInputStream(xlsxFile)) {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zos.write(buffer, 0, length);
+                            }
+                        }
+                        zos.closeEntry();
+                    }
+                    
+                    // Agregar XLSX PDF (Cuenta Cobro en PDF)
+                    if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
+                        zos.putNextEntry(new java.util.zip.ZipEntry(xlsxPdfName));
+                        try (FileInputStream fis = new FileInputStream(xlsxPdfFile)) {
                             byte[] buffer = new byte[4096];
                             int length;
                             while ((length = fis.read(buffer)) >= 0) {
@@ -464,9 +485,17 @@ public class InformeSupervisionServlet extends HttpServlet {
             File docxFile = new File(docxPath);
             
             File xlsxFile = null;
+            File xlsxPdfFile = null;
+            String xlsxPdfName = null;
             if (!tieneIva) {
                 String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
                 xlsxFile = new File(xlsxPath);
+                if (xlsxFile.exists()) {
+                    String pdfPath = xlsxPath.replaceAll("(?i)\\.xlsx$", ".pdf");
+                    xlsxPdfFile = new File(pdfPath);
+                    com.combinacion.util.PdfGenerator.convertExcelToPdf(xlsxFile, xlsxPdfFile);
+                    xlsxPdfName = xlsxName.replaceAll("(?i)\\.xlsx$", ".pdf");
+                }
             }
             
             String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
@@ -478,6 +507,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
             if (xlsxFile != null && xlsxFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId);
+            }
+            if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId);
             }
             if (gestionFile != null && gestionFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
