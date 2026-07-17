@@ -190,10 +190,25 @@ public class HtmlToWordXmlConverter {
             
             if (tag.equals("img")) {
                 String src = el.attr("src");
-                if (src.startsWith("data:image")) {
-                    try {
+                try {
+                    byte[] imgBytes = null;
+                    if (src.startsWith("data:image")) {
                         String base64Data = src.substring(src.indexOf(",") + 1);
-                        byte[] imgBytes = Base64.getDecoder().decode(base64Data);
+                        imgBytes = Base64.getDecoder().decode(base64Data);
+                    } else if (src.contains("ImageServlet?id=")) {
+                        String fileId = src.split("id=")[1].split("&")[0];
+                        try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+                            int nRead;
+                            byte[] data = new byte[4096];
+                            while ((nRead = in.read(data, 0, data.length)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+                            imgBytes = buffer.toByteArray();
+                        }
+                    }
+                    
+                    if (imgBytes != null) {
                         
                         int format = Document.PICTURE_TYPE_PNG;
                         if (src.contains("jpeg") || src.contains("jpg")) format = Document.PICTURE_TYPE_JPEG;
@@ -261,10 +276,10 @@ public class HtmlToWordXmlConverter {
                            .append("<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr>")
                            .append("</pic:pic></a:graphicData></a:graphic>")
                            .append("</wp:inline></w:drawing></w:r>");
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
             } else {
                 processInlineChildren(el, xml, doc, bold, italic, underline);
             }

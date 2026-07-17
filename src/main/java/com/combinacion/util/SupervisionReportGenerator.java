@@ -112,6 +112,15 @@ public class SupervisionReportGenerator {
         reps.put("${CONTRATISTA_CEDULA}", cedula.replace(",", "."));
         reps.put("${CONTRATISTA_DV}", contrato.getContratista() != null && contrato.getContratista().getDv() != null ? contrato.getContratista().getDv() : "0");
         reps.put("${TELEFONO}", contrato.getContratista() != null && contrato.getContratista().getTelefono() != null ? contrato.getContratista().getTelefono() : "");
+        
+        // Firma del contratista
+        String firmaUrl = new com.combinacion.dao.UsuarioDAO().obtenerFirmaPorCedula(cedula);
+        if (firmaUrl != null) {
+            reps.put("${FIRMA_CONTRATISTA}", "__IMG__:" + firmaUrl);
+        } else {
+            reps.put("${FIRMA_CONTRATISTA}", ""); // Si no hay firma, se deja en blanco
+        }
+        
         reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
         reps.put("${ORGANISMO}", contrato.getOrdenadorGasto() != null && contrato.getOrdenadorGasto().getOrganismo() != null ? contrato.getOrdenadorGasto().getOrganismo() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");

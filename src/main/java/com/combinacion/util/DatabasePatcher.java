@@ -45,6 +45,16 @@ public class DatabasePatcher {
                 "id_paa_si_no VARCHAR(10)"
             };
 
+            // Verificar tabla usuarios
+            ResultSet rsFirma = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                            "WHERE table_name='usuarios' AND column_name='firma_url'");
+            if (!rsFirma.next()) {
+                System.out.println("⚠️ Columna 'firma_url' no encontrada en usuarios. Agregándola automáticamente...");
+                stmt.executeUpdate("ALTER TABLE usuarios ADD COLUMN firma_url VARCHAR(500)");
+                System.out.println("✅ Columna 'firma_url' agregada exitosamente.");
+            }
+
             for (String colInfo : columnasPresupuesto) {
                 String colName = colInfo.split(" ")[0];
                 ResultSet rsP = stmt.executeQuery(

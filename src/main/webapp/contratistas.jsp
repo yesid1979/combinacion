@@ -31,7 +31,7 @@
             <div class="container container-main mt-4 mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
-                    <a href="form_contratista.jsp" class="btn text-white fw-bold px-4" style="background-color: #198754;">
+                    <a href="contratistas?action=new" class="btn text-white fw-bold px-4" style="background-color: #198754;">
                         <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contratista
                     </a>
                 </div>
@@ -54,7 +54,7 @@
                                         <td><span class="text-primary fw-bold">${c.nombre}</span></td>
                                         <td>${c.correo}</td>
                                         <td class="text-center">
-                                            <a href="#" class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <a href="contratistas?action=edit&id=${c.id}" class="btn btn-sm btn-outline-primary" title="Editar">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
                                         </td>

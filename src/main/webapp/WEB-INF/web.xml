@@ -72,6 +72,11 @@
     <servlet>
         <servlet-name>UsuarioServlet</servlet-name>
         <servlet-class>com.combinacion.servlets.UsuarioServlet</servlet-class>
+        <multipart-config>
+            <max-file-size>20971520</max-file-size> <!-- 20MB -->
+            <max-request-size>26214400</max-request-size> <!-- 25MB -->
+            <file-size-threshold>1048576</file-size-threshold> <!-- 1MB -->
+        </multipart-config>
     </servlet>
     <servlet-mapping>
         <servlet-name>UsuarioServlet</servlet-name>

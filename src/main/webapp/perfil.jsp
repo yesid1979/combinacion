@@ -125,6 +125,41 @@
                 </div>
             </div>
 
+            <!-- Columna Inferior: Firma -->
+            <div class="row g-5 mt-2 border-top pt-2">
+                <div class="col-md-12">
+                    <div class="section-header text-success">
+                        <i class="bi bi-pen me-2"></i> Mi Firma para Documentos
+                    </div>
+                    <p class="text-muted small">Sube una imagen de tu firma (preferiblemente con fondo blanco o transparente) para que sea incrustada automáticamente al generar los informes de supervisión.</p>
+                    <div class="d-flex align-items-center">
+                        <div id="dropFirmaArea" class="me-4" style="width: 250px; height: 120px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa; position: relative; cursor: pointer;">
+                            <c:choose>
+                                <c:when test="${not empty sessionScope.usuario.firmaUrl}">
+                                    <img src="${pageContext.request.contextPath}/${sessionScope.usuario.firmaUrl}" alt="Mi Firma" style="max-width: 100%; max-height: 100%; pointer-events: none;">
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="text-muted" style="pointer-events: none;"><i class="bi bi-image me-1"></i> Arrastra tu firma aquí</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div>
+                            <form id="formUploadFirma" enctype="multipart/form-data">
+                                <label for="firmaImageInput" class="btn btn-outline-success mb-2" style="cursor: pointer;">
+                                    <i class="bi bi-upload me-1"></i> Subir / Cambiar Firma
+                                </label>
+                                <input type="file" id="firmaImageInput" name="firma" accept=".png,image/png" class="d-none" onchange="uploadFirma()">
+                            </form>
+                            <c:if test="${not empty sessionScope.usuario.firmaUrl}">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeFirma()">
+                                    <i class="bi bi-trash3 me-1"></i> Eliminar Firma
+                                </button>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="text-end mt-5 pt-3 border-top">
                 <a href="${pageContext.request.contextPath}/index.jsp" class="btn-close-custom text-decoration-none">
                     <i class="bi bi-x-lg me-2"></i> Cerrar
@@ -206,6 +241,128 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.post('${pageContext.request.contextPath}/usuarios?action=removePhoto', function(res) {
+                        if(res.success) {
+                            location.reload();
+                        }
+                    }, 'json');
+                }
+            });
+        }
+            $(document).ready(function() {
+            // Drag and drop events for signature
+            var dropZone = document.getElementById('dropFirmaArea');
+            if(dropZone) {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#198754';
+                    this.style.backgroundColor = '#e8f5e9';
+                });
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#fafafa';
+                });
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#fafafa';
+                    var files = e.dataTransfer.files;
+                    if(files.length > 0) {
+                        $('#firmaImageInput')[0].files = files;
+                        uploadFirma();
+                    }
+                });
+                dropZone.addEventListener('click', function() {
+                    $('#firmaImageInput').click();
+                });
+            }
+        });
+
+        // Subida de Firma
+        function uploadFirma() {
+            var fileInput = $('#firmaImageInput')[0];
+            if (fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                var fileSize = file.size;
+                
+                // Validate file type
+                if (file.type !== 'image/png' && !file.name.toLowerCase().endsWith('.png')) {
+                    Swal.fire('Error', 'Por favor, sube únicamente imágenes en formato PNG (fondo transparente).', 'error');
+                    fileInput.value = ''; // Limpiar el input
+                    return;
+                }
+                
+                // Validate file size
+                if (fileSize > 20 * 1024 * 1024) { // 20MB
+                    Swal.fire('Error', 'La imagen es demasiado grande. El tamaño máximo es 20MB.', 'error');
+                    fileInput.value = ''; // Limpiar el input
+                    return;
+                }
+            }
+
+            const formData = new FormData($('#formUploadFirma')[0]);
+            
+            // Show loading
+            Swal.fire({
+                title: 'Subiendo firma...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: '${pageContext.request.contextPath}/usuarios?action=uploadFirma',
+                type: 'POST', data: formData, processData: false, contentType: false,
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire({ icon: 'success', title: 'Firma guardada', timer: 1500, showConfirmButton: false }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message || 'Error al subir la firma.', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    var errorMsg = error || "La conexión se interrumpió o el archivo excede los límites permitidos.";
+                    if (xhr.status !== 0) {
+                        errorMsg += " (HTTP " + xhr.status + ")";
+                    }
+                    if (xhr.responseText) {
+                        // Intentar parsear si es JSON de Tomcat/AuthFilter, o mostrar texto raw
+                        try {
+                            var jsonRes = JSON.parse(xhr.responseText);
+                            if (jsonRes.error) errorMsg += "\nDetalle: " + jsonRes.error;
+                            else if (jsonRes.message) errorMsg += "\nDetalle: " + jsonRes.message;
+                        } catch (e) {
+                            // Limitar la longitud si es HTML (ej. página de error de NGINX)
+                            var rawText = xhr.responseText.substring(0, 150);
+                            errorMsg += "\nServidor: " + rawText;
+                        }
+                    }
+                    Swal.fire('Error', 'Error de conexión: ' + errorMsg, 'error');
+                },
+                dataType: 'json'
+            });
+        }
+
+        // Eliminar Firma
+        function removeFirma() {
+            Swal.fire({
+                title: '¿Quitar firma?',
+                text: "Ya no aparecerá en tus documentos generados.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('${pageContext.request.contextPath}/usuarios?action=removeFirma', function(res) {
                         if(res.success) {
                             location.reload();
                         }

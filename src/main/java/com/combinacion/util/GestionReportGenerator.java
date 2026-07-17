@@ -97,6 +97,15 @@ public class GestionReportGenerator {
         reps.put("${CONTRATISTA_NOMBRE}", contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "");
         String cedula = contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
         reps.put("${CONTRATISTA_CEDULA}", cedula.replace(",", "."));
+        
+        // Firma del contratista
+        String firmaUrl = new com.combinacion.dao.UsuarioDAO().obtenerFirmaPorCedula(cedula);
+        if (firmaUrl != null) {
+            reps.put("${FIRMA_CONTRATISTA}", "__IMG__:" + firmaUrl);
+        } else {
+            reps.put("${FIRMA_CONTRATISTA}", ""); // Si no hay firma, se deja en blanco
+        }
+        
         reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
         

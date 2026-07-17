@@ -74,7 +74,7 @@
                     </c:if>
 
 
-                    <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER') || sessionScope.usuario.tienePermiso('ADMIN_USUARIOS')}">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                                style="color: #004884; font-size: 0.9rem;"
@@ -82,8 +82,12 @@
                                 <i class="bi bi-shield-lock-fill me-2"></i>Administraci&oacute;n
                             </a>
                             <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
-                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-person-gear me-2"></i>Usuarios</a></li>
-                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/roles"><i class="bi bi-key-fill me-2"></i>Roles y permisos</a></li>
+                                <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_USUARIOS') || sessionScope.usuario.tienePermiso('ADMIN_CREAR') || sessionScope.usuario.tienePermiso('ADMIN_VER')}">
+                                    <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-person-gear me-2"></i>Usuarios</a></li>
+                                </c:if>
+                                <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER') || sessionScope.usuario.tienePermiso('ADMIN_ROLES')}">
+                                    <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/roles"><i class="bi bi-key-fill me-2"></i>Roles y permisos</a></li>
+                                </c:if>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/verbos"><i class="bi bi-translate me-2"></i>Diccionario de Verbos</a></li>
                             </ul>

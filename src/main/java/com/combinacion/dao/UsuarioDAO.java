@@ -188,6 +188,40 @@ public class UsuarioDAO {
         }
     }
 
+    public boolean actualizarFirma(int id, String firmaUrl) {
+        String sql = "UPDATE usuarios SET firma_url = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, firmaUrl);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public String obtenerFirmaPorCedula(String cedula) {
+        if (cedula == null || cedula.trim().isEmpty()) return null;
+        
+        String cleanCedula = cedula.replace(".", "").replace(",", "").trim();
+        String sql = "SELECT firma_url FROM usuarios WHERE cedula = ? OR cedula = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cedula);
+            ps.setString(2, cleanCedula);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("firma_url");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean actualizarPassword(int id, String passwordHash, String salt) {
         String sql = "UPDATE usuarios SET password_hash = ?, salt = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -396,6 +430,12 @@ public class UsuarioDAO {
             u.setFotoUrl(rs.getString("foto_url"));
         } catch (SQLException e) {
             // La columna no existe todavía, lo ignoramos
+        }
+        
+        try {
+            u.setFirmaUrl(rs.getString("firma_url"));
+        } catch (SQLException e) {
+            // La columna no existe todavía
         }
 
         try {

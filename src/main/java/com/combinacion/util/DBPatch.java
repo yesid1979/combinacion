@@ -13,8 +13,8 @@ public class DBPatch {
         try {
             Connection conn = DriverManager.getConnection(url, user, pass);
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("ALTER TABLE contratos ADD COLUMN iva_si_no VARCHAR(10)");
-            System.out.println("Columna iva_si_no agregada con éxito.");
+            stmt.executeUpdate("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS firma_url VARCHAR(500)");
+            System.out.println("Columna firma_url agregada con éxito.");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();

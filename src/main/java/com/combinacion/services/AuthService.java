@@ -92,6 +92,11 @@ public class AuthService {
             return false;
         }
 
+        // Soporte para el permiso legado 'ADMIN_USUARIOS' que se asigna manualmente a usuarios específicos (ej: en Contratacion)
+        if (lowerPath.contains("usuarios") && usuario.tienePermiso("ADMIN_USUARIOS")) {
+            return true;
+        }
+
         // 3. Verificar permiso en base de datos (Lógica robusta en Usuario.java)
         boolean tienePermiso = usuario.tienePermiso(permiso);
         

@@ -171,11 +171,11 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha de inicio</label>
-                                    <input type="date" class="form-control" name="fecha_inicio_periodo" value="<fmt:formatDate value='${informe.fechaInicioPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
+                                    <input type="date" class="form-control" name="fecha_inicio_periodo" value="<fmt:formatDate value='${empty informe.id ? contrato.fechaEjecucion : informe.fechaInicioPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha terminación</label>
-                                    <input type="date" class="form-control" name="fecha_fin_periodo" value="<fmt:formatDate value='${informe.fechaFinPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
+                                    <input type="date" class="form-control" name="fecha_fin_periodo" value="<fmt:formatDate value='${empty informe.id ? contrato.fechaTerminacion : informe.fechaFinPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
                         </div>
@@ -652,8 +652,29 @@
                                         canvas.height = height;
                                         let ctx = canvas.getContext('2d');
                                         ctx.drawImage(img, 0, 0, width, height);
-                                        let dataurl = canvas.toDataURL('image/jpeg', 0.7);
-                                        $(textarea).summernote('insertImage', dataurl);
+                                        
+                                        canvas.toBlob(function(blob) {
+                                            let formData = new FormData();
+                                            formData.append('file', blob, file.name || "imagen.jpg");
+                                            
+                                            $.ajax({
+                                                url: 'ImageUploadServlet',
+                                                method: 'POST',
+                                                data: formData,
+                                                processData: false,
+                                                contentType: false,
+                                                success: function(response) {
+                                                    if (response && response.success && response.url) {
+                                                        $(textarea).summernote('insertImage', response.url);
+                                                    } else {
+                                                        alert("Error del servidor al subir la imagen.");
+                                                    }
+                                                },
+                                                error: function() {
+                                                    alert("Error de conexión al subir la imagen.");
+                                                }
+                                            });
+                                        }, 'image/jpeg', 0.7);
                                     }
                                     img.src = e.target.result;
                                 }

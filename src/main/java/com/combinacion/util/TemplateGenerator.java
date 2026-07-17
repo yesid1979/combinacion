@@ -450,24 +450,91 @@ public class TemplateGenerator {
                 para.removeRun(0);
             }
             
-            XWPFRun newRun = para.createRun();
-            newRun.setFontFamily(fontFamily);
-            newRun.setFontSize(fontSize);
-            newRun.setBold(isBold);
-            if (color != null) newRun.setColor(color);
+            String imgToken = "__IMG__:ImageServlet?id=";
+            int imgIndex = newText.indexOf(imgToken);
             
-            if (newText.contains("\n")) {
-                String[] lines = newText.split("\n", -1);
-                for (int i = 0; i < lines.length; i++) {
-                    newRun.setText(lines[i]);
-                    if (i < lines.length - 1) {
-                        newRun.addBreak();
+            if (imgIndex != -1) {
+                // Determine boundaries of the fileId
+                int endOfId = newText.indexOf('\n', imgIndex);
+                if (endOfId == -1) endOfId = newText.indexOf(' ', imgIndex);
+                if (endOfId == -1) endOfId = newText.length();
+                
+                String fileId = newText.substring(imgIndex + imgToken.length(), endOfId).trim();
+                
+                // Add text BEFORE the image
+                String textBefore = newText.substring(0, imgIndex);
+                if (!textBefore.isEmpty()) {
+                    addTextToParagraph(para, textBefore, fontFamily, fontSize, isBold, color);
+                }
+                
+                // Insert the IMAGE
+                XWPFRun imgRun = para.createRun();
+                imgRun.setFontFamily(fontFamily);
+                try {
+                    try (java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                        if (is != null) {
+                            byte[] imgBytes;
+                            try (java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream()) {
+                                int nRead;
+                                byte[] data = new byte[4096];
+                                while ((nRead = is.read(data, 0, data.length)) != -1) {
+                                    buffer.write(data, 0, nRead);
+                                }
+                                imgBytes = buffer.toByteArray();
+                            }
+                            
+                            int format = XWPFDocument.PICTURE_TYPE_JPEG;
+                            String filename = "firma.jpg";
+                            if (imgBytes.length > 4 && imgBytes[0] == (byte) 0x89 && imgBytes[1] == (byte) 0x50 && imgBytes[2] == (byte) 0x4E && imgBytes[3] == (byte) 0x47) {
+                                format = XWPFDocument.PICTURE_TYPE_PNG;
+                                filename = "firma.png";
+                            }
+                            
+                            imgRun.addPicture(new java.io.ByteArrayInputStream(imgBytes), format, filename, org.apache.poi.util.Units.toEMU(150), org.apache.poi.util.Units.toEMU(60));
+                        } else {
+                            imgRun.setText("[Firma no encontrada en Drive]");
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    imgRun.setText("[Error al cargar firma]");
+                }
+                
+                // Add text AFTER the image
+                String textAfter = newText.substring(endOfId);
+                if (!textAfter.isEmpty()) {
+                    // Remove leading newline if it was matched as the boundary to avoid double newlines
+                    if (textAfter.startsWith("\n")) textAfter = textAfter.substring(1);
+                    if (!textAfter.isEmpty()) {
+                        // Insert a break after the image if there's text after
+                        imgRun.addBreak();
+                        addTextToParagraph(para, textAfter, fontFamily, fontSize, isBold, color);
                     }
                 }
             } else {
-                newRun.setText(newText);
+                addTextToParagraph(para, newText, fontFamily, fontSize, isBold, color);
             }
         }
         return false;
+    }
+
+    private static void addTextToParagraph(XWPFParagraph para, String text, String fontFamily, int fontSize, boolean isBold, String color) {
+        XWPFRun newRun = para.createRun();
+        newRun.setFontFamily(fontFamily);
+        newRun.setFontSize(fontSize);
+        newRun.setBold(isBold);
+        if (color != null) newRun.setColor(color);
+        
+        if (text.contains("\n")) {
+            String[] lines = text.split("\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                newRun.setText(lines[i]);
+                if (i < lines.length - 1) {
+                    newRun.addBreak();
+                }
+            }
+        } else {
+            newRun.setText(text);
+        }
     }
 }

@@ -24,7 +24,7 @@ import com.google.gson.Gson;
  * Controlador HTTP para la gestión de Usuarios.
  */
 // @WebServlet(name = "UsuarioServlet", urlPatterns = {"/admin/usuarios"})
-@MultipartConfig(maxFileSize = 1024 * 1024 * 5) // 5MB max
+@MultipartConfig(maxFileSize = 1024 * 1024 * 20, maxRequestSize = 1024 * 1024 * 25) // 20MB max file, 25MB max request
 public class UsuarioServlet extends HttpServlet {
 
     private final UsuarioService usuarioService = new UsuarioService();
@@ -95,6 +95,10 @@ public class UsuarioServlet extends HttpServlet {
                 subirFotoPerfil(request, response);
             } else if ("removePhoto".equals(action)) {
                 eliminarFotoPerfil(request, response);
+            } else if ("uploadFirma".equals(action)) {
+                subirFirmaPerfil(request, response);
+            } else if ("removeFirma".equals(action)) {
+                eliminarFirmaPerfil(request, response);
             } else if ("data".equals(action)) {
                 // Solo permitimos cargar datos si es por admin, pero lo movemos al doGet por uniformidad
                 doGet(request, response);
@@ -120,6 +124,10 @@ public class UsuarioServlet extends HttpServlet {
             subirFotoPerfil(request, response);
         } else if ("removePhoto".equals(action)) {
             eliminarFotoPerfil(request, response);
+        } else if ("uploadFirma".equals(action)) {
+            subirFirmaPerfil(request, response);
+        } else if ("removeFirma".equals(action)) {
+            eliminarFirmaPerfil(request, response);
         } else if ("data".equals(action)) {
             doGet(request, response);
         } else {
@@ -230,6 +238,71 @@ public class UsuarioServlet extends HttpServlet {
                 } else {
                     res.put("success", false);
                     res.put("message", "Error al guardar URL en BD");
+                }
+            }
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", e.getMessage());
+        }
+        response.setContentType("application/json");
+        response.getWriter().write(new Gson().toJson(res));
+    }
+
+    private void eliminarFirmaPerfil(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession();
+        Usuario logged = (Usuario) session.getAttribute("usuario");
+        Map<String, Object> res = new HashMap<>();
+        if (logged != null) {
+            // Se asume que UsuarioDAO tiene un método para actualizar la firma, por ejemplo, en base al id
+            if (new com.combinacion.dao.UsuarioDAO().actualizarFirma(logged.getId(), null)) {
+                logged.setFirmaUrl(null);
+                session.setAttribute("usuario", logged);
+                res.put("success", true);
+            } else {
+                res.put("success", false);
+                res.put("message", "Error en BD al quitar firma");
+            }
+        } else {
+            res.put("success", false);
+        }
+        response.setContentType("application/json");
+        response.getWriter().write(new Gson().toJson(res));
+    }
+
+    private void subirFirmaPerfil(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Usuario logged = (Usuario) session.getAttribute("usuario");
+        Map<String, Object> res = new HashMap<>();
+        if (logged == null) return;
+
+        try {
+            Part filePart = request.getPart("firma");
+            if (filePart != null && filePart.getSize() > 0) {
+                String submittedFileName = filePart.getSubmittedFileName();
+                if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
+                    submittedFileName = "firma_" + logged.getId() + ".jpg";
+                }
+                
+                String mimeType = filePart.getContentType() != null ? filePart.getContentType() : "image/jpeg";
+                
+                String masterFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("configuracion_SistemaContratacion", null);
+                String folderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("FIRMAS_CONTRATISTAS", masterFolderId);
+                
+                try (java.io.InputStream is = filePart.getInputStream()) {
+                    String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, filePart.getSize(), submittedFileName, mimeType, folderId);
+                    
+                    if (fileId != null && !fileId.isEmpty()) {
+                        String firmaUrl = "ImageServlet?id=" + fileId;
+                        if (new com.combinacion.dao.UsuarioDAO().actualizarFirma(logged.getId(), firmaUrl)) {
+                            logged.setFirmaUrl(firmaUrl);
+                            session.setAttribute("usuario", logged);
+                            res.put("success", true);
+                            res.put("url", firmaUrl);
+                        } else {
+                            res.put("success", false);
+                            res.put("message", "Error al guardar URL de la firma en BD");
+                        }
+                    }
                 }
             }
         } catch (Exception e) {

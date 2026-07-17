@@ -29,6 +29,7 @@ public class Usuario implements Serializable {
     private int rolId;
     private Rol rol;
     private String fotoUrl;
+    private String firmaUrl;
 
     public Usuario() {
         this.activo = true;
@@ -93,6 +94,9 @@ public class Usuario implements Serializable {
 
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getFirmaUrl() { return firmaUrl; }
+    public void setFirmaUrl(String firmaUrl) { this.firmaUrl = firmaUrl; }
 
     /**
      * Comprueba si el usuario tiene un permiso específico.

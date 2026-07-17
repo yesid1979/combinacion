@@ -500,6 +500,14 @@ public class InformeSupervisionServlet extends HttpServlet {
             
             String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
             File gestionFile = new File(gestionPath);
+            File gestionPdfFile = null;
+            String gestionPdfName = null;
+            if (gestionFile.exists()) {
+                String gestionPdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
+                gestionPdfFile = new File(gestionPdfPath);
+                com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
+                gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
+            }
             
             // 6. Subir archivos a Drive (Docs y Excel)
             if (docxFile != null && docxFile.exists()) {
@@ -513,6 +521,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
             if (gestionFile != null && gestionFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+            }
+            if (gestionPdfFile != null && gestionPdfFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
             }
             
             // 7. Subir todos los documentos soporte
