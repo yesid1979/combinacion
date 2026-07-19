@@ -221,11 +221,13 @@ public class InformeSupervisionServlet extends HttpServlet {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
-            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
-            
             boolean esCuota1 = "1".equals(informe.getNumeroCuota());
             boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
+                                        ? informe.getConsecutivoCobro().trim() 
+                                        : (tieneIva ? "FACTURA" : "XXXX");
+            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
             
             String docxName;
             String xlsxName;
@@ -266,9 +268,17 @@ public class InformeSupervisionServlet extends HttpServlet {
             
             // Archivo de Gestion temporal
             File gestionFile = null;
+            File gestionPdfFile = null;
+            String gestionPdfName = null;
             try {
                 String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
                 gestionFile = new File(gestionPath);
+                if (gestionFile.exists()) {
+                    String pdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
+                    gestionPdfFile = new File(pdfPath);
+                    com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
+                    gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
+                }
             } catch (Exception e) {
                 System.out.println("No se pudo generar el Informe de Gestion: " + e.getMessage());
             }
@@ -294,41 +304,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                 
                 try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
                     
-                    // Agregar Evidencias desde la carpeta de Drive
-                    boolean hasEvidencias = false;
-                    if (informe.getUrlDriveEvidencias() != null && !informe.getUrlDriveEvidencias().trim().isEmpty()) {
-                        String folderId = com.combinacion.services.GoogleDriveService.extractIdFromUrl(informe.getUrlDriveEvidencias());
-                        if (folderId != null) {
-                            try {
-                                com.google.api.services.drive.model.FileList files = com.combinacion.services.GoogleDriveService.getFilesInFolder(folderId);
-                                if (files != null && files.getFiles() != null && !files.getFiles().isEmpty()) {
-                                    for (com.google.api.services.drive.model.File gFile : files.getFiles()) {
-                                        if (!"application/vnd.google-apps.folder".equals(gFile.getMimeType())) {
-                                            hasEvidencias = true;
-                                            zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/" + gFile.getName()));
-                                            try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(gFile.getId())) {
-                                                byte[] buffer = new byte[4096];
-                                                int length;
-                                                while ((length = in.read(buffer)) >= 0) {
-                                                    zos.write(buffer, 0, length);
-                                                }
-                                            } catch (Exception ex) {
-                                                System.err.println("No se pudo descargar evidencia " + gFile.getName() + ": " + ex.getMessage());
-                                            }
-                                            zos.closeEntry();
-                                        }
-                                    }
-                                }
-                            } catch (Exception ex) {
-                                System.err.println("Error al listar archivos de evidencias: " + ex.getMessage());
-                            }
-                        }
-                    }
-                    if (!hasEvidencias) {
-                        // Agregar carpeta Evidencias vacía si no hay archivos
-                        zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/"));
-                        zos.closeEntry();
-                    }
+                    // Las evidencias ahora se descargan desde el JSON de soportes para mantener las subcarpetas.
                     
                     // Agregar DOCX (Supervision)
                     zos.putNextEntry(new java.util.zip.ZipEntry(docxName));
@@ -345,6 +321,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                     if (gestionFile != null && gestionFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(gestionName));
                         try (FileInputStream fis = new FileInputStream(gestionFile)) {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zos.write(buffer, 0, length);
+                            }
+                        }
+                        zos.closeEntry();
+                    }
+                    
+                    // Agregar PDF (Gestion)
+                    if (gestionPdfFile != null && gestionPdfFile.exists()) {
+                        zos.putNextEntry(new java.util.zip.ZipEntry(gestionPdfName));
+                        try (FileInputStream fis = new FileInputStream(gestionPdfFile)) {
                             byte[] buffer = new byte[4096];
                             int length;
                             while ((length = fis.read(buffer)) >= 0) {
@@ -381,33 +370,84 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                     
                     // Agregar anexos
+                    java.io.File tempSegSoc = null;
                     if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                            java.util.Set<String> addedEntries = new java.util.HashSet<>();
                             for (String key : soportes.keySet()) {
+                                String zipPath = "";
                                 if (key.startsWith("evidencia_")) {
-                                    continue; // Ya se descarga en la carpeta Evidencias desde Drive
+                                    try {
+                                        int actIndex = Integer.parseInt(key.split("_")[1]) + 1;
+                                        zipPath = "Evidencias/Actividad " + actIndex + "/";
+                                    } catch (Exception e) {
+                                        zipPath = "Evidencias/";
+                                    }
                                 }
                                 org.json.JSONObject fileData = soportes.getJSONObject(key);
                                 String fileId = fileData.optString("id");
                                 String fileName = fileData.optString("name");
                                 if (fileId != null && !fileId.isEmpty() && fileName != null && !fileName.isEmpty()) {
-                                    zos.putNextEntry(new java.util.zip.ZipEntry(fileName));
-                                    try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
-                                        byte[] buffer = new byte[4096];
-                                        int length;
-                                        while ((length = in.read(buffer)) >= 0) {
-                                            zos.write(buffer, 0, length);
+                                    try {
+                                        String entryName = zipPath + fileName;
+                                        int counter = 1;
+                                        while (addedEntries.contains(entryName)) {
+                                            int dotIndex = fileName.lastIndexOf('.');
+                                            if (dotIndex > 0) {
+                                                entryName = zipPath + fileName.substring(0, dotIndex) + " (" + counter + ")" + fileName.substring(dotIndex);
+                                            } else {
+                                                entryName = zipPath + fileName + " (" + counter + ")";
+                                            }
+                                            counter++;
                                         }
+                                        addedEntries.add(entryName);
+                                        
+                                        zos.putNextEntry(new java.util.zip.ZipEntry(entryName));
+                                        try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                                            byte[] buffer = new byte[4096];
+                                            int length;
+                                            if ("file_seguridad_social".equals(key)) {
+                                                tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                                                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                                    while ((length = in.read(buffer)) >= 0) {
+                                                        zos.write(buffer, 0, length);
+                                                        fos.write(buffer, 0, length);
+                                                    }
+                                                }
+                                            } else {
+                                                while ((length = in.read(buffer)) >= 0) {
+                                                    zos.write(buffer, 0, length);
+                                                }
+                                            }
+                                        }
+                                        zos.closeEntry();
                                     } catch (Exception ex) {
-                                        System.err.println("No se pudo descargar anexo " + fileName + " de Drive: " + ex.getMessage());
+                                        System.err.println("No se pudo descargar o agregar anexo " + fileName + " al ZIP: " + ex.getMessage());
                                     }
-                                    zos.closeEntry();
                                 }
                             }
                         } catch (Exception ex) {
                             System.err.println("Error procesando anexos: " + ex.getMessage());
                         }
+                    }
+                    
+                    if (gestionPdfFile != null && gestionPdfFile.exists() && tempSegSoc != null && tempSegSoc.exists()) {
+                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                        java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
+                        if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
+                            zos.putNextEntry(new java.util.zip.ZipEntry(mergedName));
+                            try (java.io.FileInputStream fis = new java.io.FileInputStream(mergedFile)) {
+                                byte[] buffer = new byte[4096];
+                                int length;
+                                while ((length = fis.read(buffer)) >= 0) {
+                                    zos.write(buffer, 0, length);
+                                }
+                            }
+                            zos.closeEntry();
+                        }
+                        mergedFile.delete();
+                        tempSegSoc.delete();
                     }
                 }
             } else {
@@ -436,10 +476,21 @@ public class InformeSupervisionServlet extends HttpServlet {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
+            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
+            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
+                                        ? informe.getConsecutivoCobro().trim() 
+                                        : (tieneIva ? "FACTURA" : "XXXX");
+
             String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
+            String ultimoBloque = "";
+            if (contrato.getNumeroContrato() != null && contrato.getNumeroContrato().contains(".")) {
+                String[] numParts = contrato.getNumeroContrato().split("\\.");
+                ultimoBloque = numParts[numParts.length - 1];
+            }
             
-            String folderNamePrincipal = shortContrato + " - " + consecutivoStr + " " + nombreCorto;
+            String folderNamePrincipal = shortContrato + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " " + nombreCorto;
             String folderNameCuota = "Cuota " + informe.getNumeroCuota();
             
             // 1. Obtener/crear "pruebas cuenta de cobro"
@@ -464,9 +515,6 @@ public class InformeSupervisionServlet extends HttpServlet {
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
             // 5. Generar archivos localmente
-            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
-            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
-            
             String docxName;
             String xlsxName;
             String gestionName;
@@ -532,13 +580,24 @@ public class InformeSupervisionServlet extends HttpServlet {
                 try { soportes = new org.json.JSONObject(informe.getSoportesJson()); } catch (Exception ignore) {}
             }
             
+            java.io.File tempSegSoc = null;
+            
             System.out.println("Iniciando escaneo de partes (archivos adjuntos)...");
             for (Part part : request.getParts()) {
                 String submittedFileName = getFileName(part);
                 if (submittedFileName != null && !submittedFileName.trim().isEmpty() && part.getSize() > 0) {
                     String partName = part.getName();
                     
-                    String targetFolderId = (partName != null && partName.startsWith("evidencia_")) ? evidenciasFolderId : cuotaFolderId;
+                    String targetFolderId = cuotaFolderId;
+                    if (partName != null && partName.startsWith("evidencia_")) {
+                        try {
+                            int actIndex = Integer.parseInt(partName.split("_")[1]) + 1;
+                            String subFolderName = "Actividad " + actIndex;
+                            targetFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(subFolderName, evidenciasFolderId);
+                        } catch (Exception e) {
+                            targetFolderId = evidenciasFolderId;
+                        }
+                    }
                     
                     // Renombrar los archivos obligatorios segun la nomenclatura
                     if (partName != null && !partName.startsWith("evidencia_")) {
@@ -574,7 +633,20 @@ public class InformeSupervisionServlet extends HttpServlet {
                     System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
                     String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";
                     try (java.io.InputStream is = part.getInputStream()) {
-                        String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                        String fileId;
+                        if ("file_seguridad_social".equals(partName) && submittedFileName.toLowerCase().endsWith(".pdf")) {
+                            tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                byte[] buf = new byte[8192];
+                                int bytesRead;
+                                while ((bytesRead = is.read(buf)) != -1) {
+                                    fos.write(buf, 0, bytesRead);
+                                }
+                            }
+                            fileId = com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(tempSegSoc, submittedFileName, mimeType, targetFolderId);
+                        } else {
+                            fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                        }
                         
                         org.json.JSONObject fileData = new org.json.JSONObject();
                         fileData.put("name", submittedFileName);
@@ -595,6 +667,40 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
             informe.setSoportesJson(soportes.toString());
             new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
+            
+            // Logica para merge si no subieron una nueva SS pero existe en JSON
+            if (tempSegSoc == null && soportes.has("file_seguridad_social")) {
+                org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
+                String fileId = ssObj.optString("id");
+                if (fileId != null && !fileId.isEmpty()) {
+                    try {
+                        java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId);
+                        tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                            byte[] buf = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = is.read(buf)) != -1) {
+                                fos.write(buf, 0, bytesRead);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        tempSegSoc = null;
+                    }
+                }
+            }
+            
+            if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
+                String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
+                if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
+                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                }
+                mergedFile.delete();
+            }
+            if (tempSegSoc != null) {
+                tempSegSoc.delete();
+            }
             
             System.out.println("Subida a Drive completada con exito.");
         } catch (Exception e) {

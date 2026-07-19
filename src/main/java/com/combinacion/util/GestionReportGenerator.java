@@ -62,6 +62,8 @@ public class GestionReportGenerator {
     private static final String TEMPLATE_PATH = "plantillas/INFORME_GESTION_TEMPLATE.docx";
     private static final String OUTPUT_DIR = "generados/informes";
 
+    private static byte[] templateCacheBytes = null;
+
     public static String generarDocx(InformeSupervision info, Contrato contrato, String realPath) throws IOException {
         File templateFile = null;
         if (realPath != null) {
@@ -143,8 +145,15 @@ public class GestionReportGenerator {
             lista = com.combinacion.util.ObligacionesParser.decodificarConcepto(finalConceptoSup, contrato.getActividadesEntregables());
         }
 
-        try (FileInputStream fis = new FileInputStream(templateFile);
-             org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(fis)) {
+        // 1. Cargar plantilla en cache de memoria
+        if (templateCacheBytes == null) {
+            templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+        }
+
+        ByteArrayOutputStream docxMemoryStream = new ByteArrayOutputStream();
+
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(templateCacheBytes);
+             org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(bais)) {
             
             TemplateGenerator.replacePlaceholders(doc, reps);
             
@@ -176,15 +185,13 @@ public class GestionReportGenerator {
                 }
             }
             
-            try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-                doc.write(fos);
-            }
+            doc.write(docxMemoryStream);
         }
         
-        // Post-processing to replace ${ACTIVIDADES_GESTION} with the generated XML
-        File tempFile = new File(outputFile.getAbsolutePath() + ".tmp");
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(outputFile));
-             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(tempFile))) {
+        // 2. Procesar ZIP en memoria
+        ByteArrayOutputStream finalMemoryStream = new ByteArrayOutputStream();
+        try (ZipInputStream zis = new ZipInputStream(new java.io.ByteArrayInputStream(docxMemoryStream.toByteArray()));
+             ZipOutputStream zos = new ZipOutputStream(finalMemoryStream)) {
              
             ZipEntry entry = zis.getNextEntry();
             while (entry != null) {
@@ -254,8 +261,9 @@ public class GestionReportGenerator {
             }
         }
         
-        if (outputFile.delete()) {
-            tempFile.renameTo(outputFile);
+        // 3. Escribir el resultado final al archivo fisico (necesario para el conversor PDF)
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            fos.write(finalMemoryStream.toByteArray());
         }
 
         return outputFile.getAbsolutePath();

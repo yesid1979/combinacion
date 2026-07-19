@@ -670,8 +670,18 @@
                                                         alert("Error del servidor al subir la imagen.");
                                                     }
                                                 },
-                                                error: function() {
-                                                    alert("Error de conexión al subir la imagen.");
+                                                error: function(xhr, status, error) {
+                                                    console.error("Upload error:", xhr, status, error);
+                                                    var msg = "Error al subir imagen (Status " + xhr.status + ").";
+                                                    if (xhr.responseText) {
+                                                        try {
+                                                            var json = JSON.parse(xhr.responseText);
+                                                            msg += " Detalle: " + (json.error || json.message || xhr.responseText);
+                                                        } catch (e) {
+                                                            msg += " " + xhr.responseText;
+                                                        }
+                                                    }
+                                                    alert(msg);
                                                 }
                                             });
                                         }, 'image/jpeg', 0.7);

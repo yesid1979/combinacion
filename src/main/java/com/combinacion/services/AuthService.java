@@ -86,6 +86,11 @@ public class AuthService {
             return true;
         }
 
+        // Permiso global para que cualquier usuario autenticado use los servlets del editor de texto
+        if (lowerPath.equals("/imageuploadservlet") || lowerPath.equals("/imageservlet")) {
+            return true;
+        }
+
         // Validación de método para acciones críticas
         if (action.equals("delete") && !"POST".equalsIgnoreCase(method)) {
             System.out.println("[AUTH] Método no permitido para acción 'delete'. Debe ser POST.");

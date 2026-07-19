@@ -54,7 +54,13 @@ public class PdfGenerator {
             Process p = pb.start();
             p.waitFor();
             
-            return true;
+            // Check if any PDF was generated
+            File[] pdfs = outputDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".pdf"));
+            if (pdfs != null && pdfs.length > 0) {
+                return true;
+            }
+            System.err.println("⚠️ Word Windows por lotes no generó PDFs, intentando fallback Java...");
+            return convertBatchWithJavaLibrary(inputDir, outputDir);
         } catch (Exception e) {
             System.err.println("⚠️ Falló motor Word Windows por lotes, intentando fallback Java...");
             return convertBatchWithJavaLibrary(inputDir, outputDir);
@@ -131,7 +137,11 @@ public class PdfGenerator {
             Process p = pb.start();
             p.waitFor();
             
-            return pdfFile.exists() && pdfFile.length() > 0;
+            if (pdfFile.exists() && pdfFile.length() > 0) {
+                return true;
+            }
+            System.err.println("⚠️ Motor Word Windows no generó el PDF, intentando fallback Java...");
+            return convertWithJavaLibrary(docxFile, pdfFile);
         } catch (Exception e) {
             System.err.println("⚠️ Falló motor Word Windows, intentando fallback Java...");
             return convertWithJavaLibrary(docxFile, pdfFile);
@@ -246,6 +256,39 @@ public class PdfGenerator {
             return pdfFile.exists() && pdfFile.length() > 0;
         } catch (Exception e) {
             System.err.println("⚠️ LibreOffice no encontrado o falló en Linux para Excel.");
+            return false;
+        }
+    }
+
+    /**
+     * Une dos archivos PDF en un único archivo PDF.
+     */
+    public static boolean mergePdfs(File pdf1, File pdf2, File output) {
+        if (pdf1 == null || !pdf1.exists() || pdf2 == null || !pdf2.exists()) {
+            return false;
+        }
+        try {
+            com.lowagie.text.Document document = new com.lowagie.text.Document();
+            com.lowagie.text.pdf.PdfCopy copy = new com.lowagie.text.pdf.PdfCopy(document, new java.io.FileOutputStream(output));
+            document.open();
+            
+            com.lowagie.text.pdf.PdfReader reader1 = new com.lowagie.text.pdf.PdfReader(new java.io.FileInputStream(pdf1));
+            for (int i = 1; i <= reader1.getNumberOfPages(); i++) {
+                copy.addPage(copy.getImportedPage(reader1, i));
+            }
+            reader1.close();
+            
+            com.lowagie.text.pdf.PdfReader reader2 = new com.lowagie.text.pdf.PdfReader(new java.io.FileInputStream(pdf2));
+            for (int i = 1; i <= reader2.getNumberOfPages(); i++) {
+                copy.addPage(copy.getImportedPage(reader2, i));
+            }
+            reader2.close();
+            
+            document.close();
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al unir PDFs: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

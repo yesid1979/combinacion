@@ -490,7 +490,25 @@ public class TemplateGenerator {
                                 filename = "firma.png";
                             }
                             
-                            imgRun.addPicture(new java.io.ByteArrayInputStream(imgBytes), format, filename, org.apache.poi.util.Units.toEMU(150), org.apache.poi.util.Units.toEMU(60));
+                            // Calcular proporciones originales para evitar que se vea aplastada o estirada
+                            java.awt.image.BufferedImage bimg = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(imgBytes));
+                            int width = 150;
+                            int height = 60;
+                            if (bimg != null) {
+                                int originalWidth = bimg.getWidth();
+                                int originalHeight = bimg.getHeight();
+                                
+                                int maxWidth = 200;
+                                int maxHeight = 80;
+                                
+                                double scale = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+                                if (scale > 1.0) scale = 1.0; // No hacerla más grande de lo original si es pequeña
+                                
+                                width = (int) (originalWidth * scale);
+                                height = (int) (originalHeight * scale);
+                            }
+                            
+                            imgRun.addPicture(new java.io.ByteArrayInputStream(imgBytes), format, filename, org.apache.poi.util.Units.toEMU(width), org.apache.poi.util.Units.toEMU(height));
                         } else {
                             imgRun.setText("[Firma no encontrada en Drive]");
                         }
