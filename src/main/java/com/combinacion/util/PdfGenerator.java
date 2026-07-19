@@ -219,6 +219,8 @@ public class PdfGenerator {
                 "$excel.Visible = $false; " +
                 "$excel.DisplayAlerts = $false; " +
                 "$wb = $excel.Workbooks.Open('%s'); " +
+                "$ws = $wb.Sheets.Item(1); " +
+                "try { $ws.PageSetup.Zoom = $false; $ws.PageSetup.FitToPagesWide = 1; $ws.PageSetup.FitToPagesTall = $false; } catch {} " +
                 "$wb.ExportAsFixedFormat(0, '%s'); " + 
                 "$wb.Close($false); " +
                 "$excel.Quit(); " +

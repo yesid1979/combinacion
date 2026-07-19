@@ -172,6 +172,12 @@ public class CuentaCobroGenerator {
         String finalFileName = "Cuenta_Cobro_" + informe.getNumeroCuota() + "_" + safeName + ".xlsx";
         File outFile = new File(tempDir, finalFileName);
 
+        sheet.setAutobreaks(true);
+        PrintSetup printSetup = sheet.getPrintSetup();
+        printSetup.setFitWidth((short)1);
+        printSetup.setFitHeight((short)0);
+        sheet.setFitToPage(true);
+
         try (FileOutputStream out = new FileOutputStream(outFile)) {
             wb.write(out);
         }
