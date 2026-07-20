@@ -1,0 +1,1 @@
+<%@ page import=" java.sql.*,com.combinacion.util.*\ %><% Connection c = DBConnection.getConnection(); ResultSet rs = c.createStatement().executeQuery(\SELECT id estado_radicacion FROM informes_supervision\); while(rs.next()){ out.print(rs.getInt(\id\) + " - \ + rs.getString(\estado_radicacion\) + \<br>\); } c.close(); %>

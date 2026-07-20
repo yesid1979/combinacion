@@ -33,7 +33,7 @@
                     </li>
                     </c:if>
                     
-                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER') || sessionScope.usuario.tienePermiso('REVISORES_VER') || sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER') || sessionScope.usuario.tienePermiso('REVISORES_VER') || sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS')}">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -56,7 +56,7 @@
                             <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/presupuesto"><i class="bi bi-graph-up me-2"></i>Presupuesto</a></li>
                             </c:if>
-                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER')}">
+                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/informes"><i class="bi bi-wallet2 me-2"></i>Cuentas</a></li>
                             </c:if>
                         </ul>

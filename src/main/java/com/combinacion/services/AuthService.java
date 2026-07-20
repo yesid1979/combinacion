@@ -73,7 +73,7 @@ public class AuthService {
 
         // Si no hay permiso definido, permitir acceso a rutas base
         if (permiso == null) {
-            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet");
+            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet") || lowerPath.contains("procesar_revision.jsp");
             System.out.println("[AUTH] Permiso no definido. Acceso a ruta base: " + esRutaBase);
             return esRutaBase;
         }

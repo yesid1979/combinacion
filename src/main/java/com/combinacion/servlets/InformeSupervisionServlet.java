@@ -71,15 +71,37 @@ public class InformeSupervisionServlet extends HttpServlet {
     private void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-        boolean esContratista = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
-
-        String contratoIdStr = request.getParameter("contrato_id");
         
-        if (esContratista) {
-            // Lógica para el Contratista: Buscar su contrato automáticamente
+        // Refrescar usuario desde BD para tener los permisos actualizados en caliente
+        if (u != null) {
+            com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(u.getId());
+            if (freshUser != null) {
+                request.getSession().setAttribute("usuario", freshUser);
+                u = freshUser;
+            }
+        }
+        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS"));
+        boolean esRevisor = u != null && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
+        boolean esContratistaBase = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
+        
+        String modo = request.getParameter("modo");
+        
+        // Asignar modo por defecto si entran sin parámetro (ej. desde un enlace manual o error)
+        if (modo == null || modo.trim().isEmpty()) {
+            if (esContratistaBase) {
+                modo = "mis_cuentas";
+            } else if (esAdmin || esRevisor) {
+                modo = "revision";
+            }
+        }
+        
+        String contratoIdStr = request.getParameter("contrato_id");
+        java.util.List<InformeSupervision> listaFinal = new java.util.ArrayList<>();
+        
+        // 1. Lógica para Contratistas: Buscar sus contratos y sus propios informes
+        java.util.List<Integer> misContratosIds = new java.util.ArrayList<>();
+        if (esContratistaBase && !"revision".equals(modo)) {
             com.combinacion.dao.ContratistaDAO cdao = new com.combinacion.dao.ContratistaDAO();
-            
-            // Buscar contratista ignorando puntos y letras en la base de datos
             java.util.List<com.combinacion.models.Contratista> todos = cdao.listarTodos();
             com.combinacion.models.Contratista c = null;
             for (com.combinacion.models.Contratista cont : todos) {
@@ -91,47 +113,75 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                 }
             }
-
             if (c != null) {
                 com.combinacion.dao.ContratoDAO codao = new com.combinacion.dao.ContratoDAO();
                 java.util.List<Contrato> misContratos = codao.listarPorContratistaId(c.getId());
-                
                 if (!misContratos.isEmpty()) {
                     request.setAttribute("misContratos", misContratos);
-                    
-                    if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-                        int contratoId = ParseUtils.parseInt(contratoIdStr);
-                        request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
-                        request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
-                    } else {
-                        // Si tiene varios contratos pero no seleccionó uno, le mostramos todos sus informes y le asignamos su contrato más reciente por defecto para "Nuevo Informe" si solo tiene 1
-                        request.setAttribute("contrato", misContratos.get(0));
-                        
-                        java.util.List<InformeSupervision> todosMisInformes = new java.util.ArrayList<>();
-                        for(Contrato con : misContratos) {
-                            todosMisInformes.addAll(informeService.listarPorContrato(con.getId()));
+                    request.setAttribute("contrato", misContratos.get(0)); // Default para botón "Nuevo"
+                    for(Contrato con : misContratos) {
+                        misContratosIds.add(con.getId());
+                        if (contratoIdStr == null || contratoIdStr.isEmpty() || ParseUtils.parseInt(contratoIdStr) == con.getId()) {
+                            listaFinal.addAll(informeService.listarPorContrato(con.getId()));
                         }
-                        request.setAttribute("listaInformes", todosMisInformes);
                     }
-                } else {
-                    request.setAttribute("listaInformes", new java.util.ArrayList<>());
+                } else if (!esAdmin && !esRevisor) {
                     request.setAttribute("error", "No tienes ningún contrato activo asignado en el sistema.");
                 }
-            } else {
-                request.setAttribute("listaInformes", new java.util.ArrayList<>());
+            } else if (!esAdmin && !esRevisor) {
                 request.setAttribute("error", "No se encontraron tus datos como contratista.");
-            }
-        } else {
-            // Lógica para Admin/Supervisor: Buscar por ID de contrato específico, o listar todos
-            if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-                int contratoId = ParseUtils.parseInt(contratoIdStr);
-                request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
-                request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
-            } else {
-                request.setAttribute("listaInformes", informeService.listarTodos());
             }
         }
         
+        // 2. Lógica para Admin / Revisor: Agregar informes que deben revisar
+        if ((esAdmin || esRevisor) && !"mis_cuentas".equals(modo)) {
+            java.util.List<InformeSupervision> todos = new java.util.ArrayList<>();
+            if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
+                int contratoIdParam = ParseUtils.parseInt(contratoIdStr);
+                todos = informeService.listarPorContrato(contratoIdParam);
+                // Cargar el contrato para que la JSP muestre el botón "Nuevo Informe"
+                if (esAdmin) {
+                    Contrato contratoSeleccionado = informeService.obtenerContrato(contratoIdParam);
+                    if (contratoSeleccionado != null) {
+                        request.setAttribute("contrato", contratoSeleccionado);
+                        modo = "contrato_admin"; // Permitir que la JSP muestre el botón Nuevo Informe
+                    }
+                }
+            } else {
+                todos = informeService.listarTodos();
+            }
+            
+            for (InformeSupervision info : todos) {
+                // Evitar duplicados si ya los cargó por ser su propio contrato
+                if (misContratosIds.contains(info.getContratoId())) {
+                    continue; 
+                }
+                
+                if (esAdmin) {
+                    listaFinal.add(info);
+                } else if (esRevisor) {
+                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas
+                    if (info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
+                            && !"BORRADOR".equals(info.getEstadoRadicacion()) 
+                            && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
+                        listaFinal.add(info);
+                    }
+                }
+            }
+        }
+        
+        // Ordenar por Fecha de Registro (antiguas primero)
+        listaFinal.sort((a, b) -> {
+            if (a.getFechaCreacion() == null && b.getFechaCreacion() == null) return 0;
+            if (a.getFechaCreacion() == null) return 1;
+            if (b.getFechaCreacion() == null) return -1;
+            return a.getFechaCreacion().compareTo(b.getFechaCreacion());
+        });
+        
+        request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
+        request.setAttribute("esAdminGlobal", esAdmin);
+        request.setAttribute("esRevisorGlobal", esRevisor);
+        request.setAttribute("listaInformes", listaFinal);
         request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
     }
 
@@ -159,6 +209,8 @@ public class InformeSupervisionServlet extends HttpServlet {
                 request.setAttribute("siguienteCuota", previos != null ? previos.size() + 1 : 1);
             }
         }
+        
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "insert");
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
@@ -177,6 +229,9 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
         request.setAttribute("readonly", true);
         request.setAttribute("action", "view");
+        request.setAttribute("modo", request.getParameter("modo"));
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
+        request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
@@ -196,7 +251,11 @@ public class InformeSupervisionServlet extends HttpServlet {
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }
+        
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "update");
+        request.setAttribute("modo", request.getParameter("modo"));
+        request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
@@ -732,7 +791,18 @@ public class InformeSupervisionServlet extends HttpServlet {
             // Procesar Drive después de guardar exitosamente
             java.util.List<InformeSupervision> lista = informeService.listarPorContrato(form.contratoId);
             if (lista != null && !lista.isEmpty()) {
-                procesarArchivosDrive(lista.get(0).getId(), request);
+                InformeSupervision guardado = lista.get(0);
+                if ("RADICADA".equals(guardado.getEstadoRadicacion())) {
+                    com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+                    com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
+                    hr.setIdInforme(guardado.getId());
+                    hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
+                    hr.setEstadoAnterior("BORRADOR");
+                    hr.setEstadoNuevo("RADICADA");
+                    hr.setObservaciones("Cuenta radicada por primera vez.");
+                    new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+                }
+                procesarArchivosDrive(guardado.getId(), request);
             }
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
             response.sendRedirect("informes");
@@ -744,11 +814,25 @@ public class InformeSupervisionServlet extends HttpServlet {
         int id = ParseUtils.parseInt(request.getParameter("id"));
         InformeFormData form = construirFormData(request);
         
+        com.combinacion.models.InformeSupervision existente = informeService.obtenerPorId(id);
+        String estadoAnterior = (existente != null) ? existente.getEstadoRadicacion() : "";
+        String obsAnterior = (existente != null && existente.getObservacionesRevision() != null) ? existente.getObservacionesRevision() : "";
+        
         String error = informeService.actualizar(id, form);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
+            if ("RADICADA".equals(form.estadoRadicacion) && !"RADICADA".equals(estadoAnterior)) {
+                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+                com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
+                hr.setIdInforme(id);
+                hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
+                hr.setEstadoAnterior(estadoAnterior);
+                hr.setEstadoNuevo("RADICADA");
+                hr.setObservaciones("DEVUELTA".equals(estadoAnterior) ? "Cuenta vuelta a radicar tras correcciones." : "Cuenta radicada para revisión.");
+                new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+            }
             // Procesar Drive después de actualizar exitosamente
             procesarArchivosDrive(id, request);
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
@@ -830,6 +914,20 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.recomendaciones = r.getParameter("recomendaciones");
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
         f.soportesJson = r.getParameter("soportes_json");
+        
+        // Manejo de radicacion
+        String radicar = r.getParameter("radicar");
+        if ("true".equals(radicar)) {
+            f.estadoRadicacion = "RADICADA";
+        } else {
+            f.estadoRadicacion = null;
+        }
+        String idRevisor = r.getParameter("id_revisor_asignado");
+        if (idRevisor != null && !idRevisor.trim().isEmpty()) {
+            f.idRevisorAsignado = ParseUtils.parseInt(idRevisor);
+        }
+        
         return f;
     }
 }
+// Trigger reload

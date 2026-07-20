@@ -2,9 +2,31 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+    // Recuperar observaciones_revision directamente de la BD para no tocar el backend Java
+    String obsRev = "";
+    try {
+        if (request.getAttribute("informe") != null) {
+            com.combinacion.models.InformeSupervision inf = (com.combinacion.models.InformeSupervision)request.getAttribute("informe");
+            if (inf.getId() > 0) {
+                try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT observaciones_revision FROM informes_supervision WHERE id = ?")) {
+                    ps.setInt(1, inf.getId());
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            obsRev = rs.getString(1);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (Exception ignore) {}
+    request.setAttribute("obsRevision", obsRev);
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <c:set var="esAdminCuentas" value="${sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.esAdministrador()}" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${action == 'view' ? 'Ver' : 'Nuevo'} Informe de Supervisión - Gestión de Prestadores</title>
@@ -67,7 +89,7 @@
             <div class="col-12">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="informes">Cuentas</a></li>
+                        <li class="breadcrumb-item"><a href="informes${not empty modo ? '?modo='.concat(modo) : ''}">Cuentas</a></li>
                         <li class="breadcrumb-item active">Informe de Supervisión</li>
                     </ol>
                 </nav>
@@ -388,20 +410,118 @@
 
                     </div>
 
+                    
+                    <!-- Sección de Radicación o Asignación -->
+                    <c:set var="esBorradorDevuelta" value="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}" />
+                    
+                    <c:if test="${not readonly && (esBorradorDevuelta || esAdminCuentas)}">
+                        <div class="card mt-4 border-primary bg-light">
+                            <div class="card-body">
+                                <c:choose>
+                                    <c:when test="${esBorradorDevuelta}">
+                                        <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
+                                        <p class="card-text text-muted small">Seleccione la persona encargada de revisar su cuenta y haga clic en Radicar.</p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <h5 class="card-title text-primary"><i class="bi bi-person-gear"></i> Asignar / Cambiar Revisor</h5>
+                                        <p class="card-text text-muted small">Como administrador, puedes reasignar esta cuenta a otro revisor sin cambiar su estado.</p>
+                                    </c:otherwise>
+                                </c:choose>
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Asignar a Revisor:</label>
+                                        <select class="form-select" name="id_revisor_asignado" id="revisor_select">
+                                            <option value="">-- Seleccione un Revisor --</option>
+                                            <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                            <c:forEach var="rev" items="${listaRevisores}">
+                                                <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="radicar" id="radicar_input" value="false">
+                            </div>
+                        </div>
+                    </c:if>
+                    
+                    <c:if test="${not empty informe.estadoRadicacion}">
+                        <div class="alert alert-info mt-4">
+                            <strong>Estado actual de la cuenta:</strong> ${informe.estadoRadicacion}
+                            <c:if test="${not empty informe.idRevisorAsignado}">
+                                <c:choose>
+                                    <c:when test="${informe.idRevisorAsignado == 0}">
+                                        <br><small><i class="bi bi-person-badge"></i> Revisor asignado: <strong>Contratación (Revisión Directa)</strong></small>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:set var="nombreRevisor" value="ID: ${informe.idRevisorAsignado}" />
+                                        <c:forEach var="r" items="${listaRevisores}">
+                                            <c:if test="${r.id == informe.idRevisorAsignado}">
+                                                <c:set var="nombreRevisor" value="${r.nombreCompleto}" />
+                                            </c:if>
+                                        </c:forEach>
+                                        <br><small><i class="bi bi-person-badge"></i> Revisor asignado: <strong>${nombreRevisor}</strong></small>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:if>
+                        </div>
+                    </c:if>
+                    
+                    <c:if test="${not empty listaHistorial}">
+                        <div class="alert alert-info mt-3 shadow-sm border-0 border-start border-info border-4 p-4">
+                            <h5 class="alert-heading fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Historial de Radicación y Revisiones</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered border-info mb-0 text-dark bg-white">
+                                    <thead class="table-info">
+                                        <tr>
+                                            <th style="width: 20%;"><i class="bi bi-calendar3"></i> Fecha</th>
+                                            <th style="width: 20%;"><i class="bi bi-person"></i> Usuario</th>
+                                            <th style="width: 20%;"><i class="bi bi-arrow-right-circle"></i> Acción</th>
+                                            <th style="width: 40%;"><i class="bi bi-chat-text"></i> Observación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="hr" items="${listaHistorial}">
+                                            <tr>
+                                                <td class="align-middle fw-semibold">
+                                                    <fmt:formatDate value="${hr.fechaCambio}" pattern="dd/MM/yyyy hh:mm a" />
+                                                </td>
+                                                <td class="align-middle">${fn:escapeXml(not empty hr.nombreUsuarioCambio ? hr.nombreUsuarioCambio : 'Sistema')}</td>
+                                                <td class="align-middle">
+                                                    <c:choose>
+                                                        <c:when test="${hr.estadoNuevo == 'RADICADA'}"><span class="badge bg-primary">RADICADA</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'DEVUELTA'}"><span class="badge bg-danger">DEVUELTA</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'APROBADA'}"><span class="badge bg-success">APROBADA</span></c:when>
+                                                        <c:otherwise><span class="badge bg-secondary">${fn:escapeXml(hr.estadoNuevo)}</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="align-middle" style="white-space: pre-wrap;">${fn:escapeXml(hr.observaciones)}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <c:if test="${informe.estadoRadicacion == 'DEVUELTA'}">
+                                <hr class="border-info">
+                                <small class="mb-0 fw-bold text-danger"><i class="bi bi-info-circle me-1"></i>La cuenta se encuentra DEVUELTA. Por favor corrige los detalles mencionados y vuelve a radicarla.</small>
+                            </c:if>
+                        </div>
+                    </c:if>
+                    
                     <div class="mt-5 pt-3 border-top d-flex justify-content-end gap-2">
-                        <a href="informes${not empty contrato.id ? '?contrato_id=' : ''}${contrato.id}" class="btn btn-light px-4 border">
+                        <a href="informes${not empty modo ? '?modo='.concat(modo) : ''}" class="btn btn-secondary px-4 shadow-sm">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                         <c:if test="${not readonly}">
                             <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
                                 <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe'}
                             </button>
+                            <c:if test="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}">
+                                <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
+                                    <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
+                                </button>
+                            </c:if>
                         </c:if>
-                        <c:if test="${readonly}">
-                            <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="window.print()">
-                                <i class="bi bi-printer me-2"></i>Imprimir
-                            </button>
-                        </c:if>
+                        <%-- El botón de imprimir ha sido removido a petición del usuario --%>
                     </div>
                 </form>
             </div>
@@ -478,24 +598,38 @@
                                      '</div>';
                             $input.before(ui);
                             
-                            // Añadir el mensaje de reemplazo/adición solo una vez por input
-                            if (!$input.next('.info-append-msg').length) {
-                                var msgText = baseKey.startsWith("evidencia_") ? 
-                                    "Si selecciona nuevos archivos, se AGREGARÁN a los ya existentes." : 
-                                    "Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se agregará (o reemplazará).";
-                                $input.after('<small class="info-append-msg text-muted d-block mt-1"><i class="bi bi-info-circle"></i> ' + msgText + '</small>');
-                            }
-                            
                             // Cambiar el label del input para indicar que ya hay cargados
                             var $label = $input.prevAll('.form-label, small.fw-bold').first();
                             if ($label.length && $label.find('.badge').length === 0) {
                                 $label.append(' <span class="badge bg-success ms-2">Cargado</span>');
+                            }
+                            
+                            if (isReadonly) {
+                                $input.hide();
+                            } else {
+                                if (!$input.next('.info-append-msg').length) {
+                                    var msgText = baseKey.startsWith("evidencia_") ? 
+                                        "Si selecciona nuevos archivos, se AGREGARÁN a los ya existentes." : 
+                                        "Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se agregará (o reemplazará).";
+                                    $input.after('<small class="info-append-msg text-muted d-block mt-1"><i class="bi bi-info-circle"></i> ' + msgText + '</small>');
+                                }
                             }
                         }
                     }
                 } catch(e) {
                     console.log('Error parseando soportesJson', e);
                 }
+            }
+            
+            // Si es solo lectura, limpiar visualmente la pestaña de soportes
+            if (isReadonly) {
+                $('input[type="file"]').each(function() {
+                    $(this).hide();
+                    var $label = $(this).prevAll('.form-label, small.fw-bold').first();
+                    if ($label.find('.badge.bg-success').length === 0) {
+                        $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargó documento</div>');
+                    }
+                });
             }
         });
 
@@ -532,33 +666,34 @@
             }
             wrapper.appendChild(divText);
 
-            if (!isReadonly) {
-                var divFile = document.createElement("div");
-                divFile.className = "mt-3";
-                
-                var fileLabel = document.createElement("small");
-                fileLabel.className = "text-muted d-block fw-bold mb-2";
-                fileLabel.innerHTML = '<i class="bi bi-paperclip"></i> Evidencias de esta actividad:';
-                
-                var fileInput = document.createElement("input");
-                fileInput.type = "file";
-                fileInput.className = "d-none"; // Oculto, se usa la dropZone
-                fileInput.name = "evidencia_" + index + "_" + actIndex;
-                fileInput.multiple = true;
-                
-                var dropZone = document.createElement("div");
-                dropZone.className = "border rounded p-3 text-center transition-all";
+            var divFile = document.createElement("div");
+            divFile.className = "mt-3 evidencias-container";
+            
+            var fileLabel = document.createElement("small");
+            fileLabel.className = "text-muted d-block fw-bold mb-2";
+            fileLabel.innerHTML = '<i class="bi bi-paperclip"></i> Evidencias de esta actividad:';
+            
+            var fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.className = "d-none file-input-evidencia";
+            fileInput.name = "evidencia_" + index + "_" + actIndex;
+            fileInput.multiple = true;
+            
+            var dropZone = document.createElement("div");
+            
+            if (isReadonly) {
+                dropZone.style.display = "none";
+            } else {
+                dropZone.className = "border rounded p-3 text-center transition-all dropzone-evidencia";
                 dropZone.style.border = "2px dashed #0d6efd";
                 dropZone.style.cursor = "pointer";
                 dropZone.style.backgroundColor = "#f8f9fa";
                 dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                 
-                // Al hacer clic en la zona, abre el selector de archivos
                 dropZone.onclick = function() {
                     fileInput.click();
                 };
                 
-                // Funciones para actualizar el texto según los archivos seleccionados
                 var actualizarTexto = function() {
                     if(fileInput.files.length > 0) {
                         var names = [];
@@ -577,7 +712,6 @@
                 
                 fileInput.addEventListener('change', actualizarTexto);
                 
-                // Eventos Drag and Drop
                 dropZone.addEventListener('dragover', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -602,12 +736,12 @@
                         actualizarTexto();
                     }
                 });
-                
-                divFile.appendChild(fileLabel);
-                divFile.appendChild(dropZone);
-                divFile.appendChild(fileInput);
-                wrapper.appendChild(divFile);
             }
+            
+            divFile.appendChild(fileLabel);
+            divFile.appendChild(dropZone);
+            divFile.appendChild(fileInput);
+            wrapper.appendChild(divFile);
             
             container.appendChild(wrapper);
 
@@ -855,5 +989,20 @@
             });
         });
     </script>
-</body>
+
+        <script>
+            function setRadicar() {
+                var rev = document.getElementById("revisor_select").value;
+                if (!rev && rev !== "0") {
+                    Swal.fire('Atención', 'Debe seleccionar un revisor (o la opción Sin Revisor) para poder radicar la cuenta.', 'warning');
+                    return false;
+                }
+                if (rev === "0") {
+                    document.getElementById("revisor_select").name = ""; // Remove name so it sends null to the backend
+                }
+                document.getElementById("radicar_input").value = "true";
+                return true;
+            }
+        </script>
+    </body>
 </html>
