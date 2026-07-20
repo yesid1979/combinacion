@@ -32,6 +32,13 @@
             <jsp:include page="/inc/navbar.jsp" />
 
             <div class="container mt-4 mb-5 flex-grow-1" data-context-path="${pageContext.request.contextPath}">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb breadcrumb-premium">
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                        <li class="breadcrumb-item active text-muted">Administración</li>
+                        <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-shield-lock-fill me-1"></i>Roles</li>
+                    </ol>
+                </nav>
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-dark">Roles registrados</h2>
                     <a href="${pageContext.request.contextPath}/admin/roles?action=new" class="btn btn-success fw-bold">

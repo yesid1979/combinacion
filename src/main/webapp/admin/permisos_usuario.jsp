@@ -123,6 +123,15 @@
     <jsp:include page="/inc/navbar.jsp" />
 <div class="flex-grow-1">
     <div class="container mt-5 mb-5 pb-5">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Administración</li>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-people-fill me-1"></i>Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Permisos Especiales</li>
+                </ol>
+            </nav>
         <div class="matrix-card">
             <h2 class="h3 mb-4 text-secondary d-flex align-items-center">
                 <i class="bi bi-shield-lock-fill me-3 text-primary fs-2"></i> 

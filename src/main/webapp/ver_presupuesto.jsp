@@ -20,6 +20,15 @@
                 <jsp:include page="inc/navbar.jsp" />
 
                     <div class="container mt-4 mb-5 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                    <li class="breadcrumb-item"><a href="presupuestos"><i class="bi bi-cash-stack me-1"></i>CDP / RP</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ver Presupuesto</li>
+                </ol>
+            </nav>
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h2><i class="bi bi-file-earmark-text me-2 text-primary"></i>Detalle del Registro Presupuestal de Compromiso (RPC)</h2>
                         </div>
