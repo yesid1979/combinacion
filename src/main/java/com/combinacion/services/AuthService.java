@@ -165,6 +165,8 @@ public class AuthService {
         if (path.contains("ordenador")) return "ORDENADORES";
         if (path.contains("combinacion") || path.contains("informes")) return "COMBINACION";
         if (path.contains("carga_masiva") || path.contains("upload")) return "CARGA_MASIVA";
+        if (path.contains("revisor")) return "REVISORES";
+        if (path.contains("verbo")) return "VERBOS";
         return null;
     }
 
