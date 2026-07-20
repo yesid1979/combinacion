@@ -103,5 +103,5 @@ h1, h2, h3, h4, h5, h6 {
 table.dataTable thead th.sorting, 
 table.dataTable thead th.sorting_asc, 
 table.dataTable thead th.sorting_desc { 
-    padding-right: 30px !important; 
+    padding-left: 30px !important; 
 }
