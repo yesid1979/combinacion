@@ -180,7 +180,8 @@ public class RevisorDocumentoServlet extends HttpServlet {
         jsonMap.put("recordsTotal", recordsTotal);
         jsonMap.put("recordsFiltered", recordsFiltered);
         
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
         List<Map<String, Object>> dataArray = new ArrayList<>();
         for (RevisorDocumento r : page) {
             Map<String, Object> row = new HashMap<>();

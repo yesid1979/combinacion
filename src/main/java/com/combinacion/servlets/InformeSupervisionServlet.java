@@ -260,6 +260,7 @@ public class InformeSupervisionServlet extends HttpServlet {
 
         com.google.gson.JsonArray dataArray = new com.google.gson.JsonArray();
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
         nf.setMaximumFractionDigits(0);
         
