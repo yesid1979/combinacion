@@ -36,7 +36,7 @@
              if (!foundConsecutivo) {
                  out.println("<p style='color:red;font-weight:bold'>Â¡LA COLUMNA consecutivo_cobro NO EXISTE!</p>");
              } else {
-                 out.println("<p style='color:green;font-weight:bold'>LA COLUMNA consecutivo_cobro SÃ EXISTE.</p>");
+                 out.println("<p style='color:green;font-weight:bold'>LA COLUMNA consecutivo_cobro SÍ EXISTE.</p>");
              }
              
         } catch (Exception e) {

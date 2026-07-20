@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÃ“N FORZADA DE YESID</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÓN FORZADA DE YESID</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2 style="color: #2c3e50;">Reparación Forzada de Permisos: Yesid</h2>
     <%
@@ -55,14 +55,14 @@
                                 ps.setInt(4, pId);
                                 int rows = ps.executeUpdate();
                                 if (rows > 0) out.println("<li style='color:green;'>INSERTADO: " + code + " (ID: "+pId+")</li>");
-                                else out.println("<li style='color:orange;'>YA EXISTÃA: " + code + " (Ignorado)</li>");
+                                else out.println("<li style='color:orange;'>YA EXISTÍA: " + code + " (Ignorado)</li>");
                             }
                         }
                     }
                     out.println("</ul>");
                     
-                    out.println("<h2 style='color:green;'>Â¡REPARACIÃ“N COMPLETADA!</h2>");
-                    out.println("<p><b>PASO FINAL:</b> Por favor, <b>CERRAR SESIÃ“N DE YESID</b> y volver a entrar ahora mismo.</p>");
+                    out.println("<h2 style='color:green;'>Â¡REPARACIÓN COMPLETADA!</h2>");
+                    out.println("<p><b>PASO FINAL:</b> Por favor, <b>CERRAR SESIÓN DE YESID</b> y volver a entrar ahora mismo.</p>");
                 }
             }
         } catch (Exception e) {

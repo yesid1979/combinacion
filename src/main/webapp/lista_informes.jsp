@@ -167,8 +167,8 @@
                         "render": function(data) {
                             if (data === 'BORRADOR') return '<span class="badge bg-secondary">BORRADOR</span>';
                             if (data === 'RADICADA') return '<span class="badge bg-primary">RADICADA</span>';
-                            if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÃ“N</span>';
-                            if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÃ“N FINAL</span>';
+                            if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÓN</span>';
+                            if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÓN FINAL</span>';
                             if (data === 'APROBADA PARA IMPRESION') return '<span class="badge bg-success">APROBADA (LISTA PARA FIRMA)</span>';
                             if (data === 'DEVUELTA') return '<span class="badge bg-danger">DEVUELTA</span>';
                             return '<span class="badge bg-secondary">' + data + '</span>';
@@ -240,7 +240,7 @@
                     "zeroRecords": "No se encontraron registros coincidentes",
                     "paginate": {
                         "first": "Primero",
-                        "last": "Ãšltimo",
+                        "last": "Último",
                         "next": "Siguiente",
                         "previous": "Anterior"
                     }

@@ -8,7 +8,7 @@
     <h2>Lista Maestra de Permisos en la DB</h2>
     <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
         <tr style="background-color: #34495e; color: #fff;">
-            <th>ID</th><th>CÃ“DIGO</th><th>NOMBRE</th><th>MÃ“DULO</th>
+            <th>ID</th><th>CÓDIGO</th><th>NOMBRE</th><th>MÓDULO</th>
         </tr>
         <%
             try {

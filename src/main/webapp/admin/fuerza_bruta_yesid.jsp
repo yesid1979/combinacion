@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>INYECCIÃ“N FINAL CARGA MASIVA</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>INYECCIÓN FINAL CARGA MASIVA</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2 style="color: #2c3e50;">Inyección de Permisos Especiales: IDs 22 y 631</h2>
     <%
@@ -33,8 +33,8 @@
                     }
                 }
                 out.println("</ul>");
-                out.println("<h2 style='color:green;'>Â¡INYECCIÃ“N COMPLETADA!</h2>");
-                out.println("<p><b>ÃšLTIMO PASO:</b> Refresca la página de Yesid ahora mismo.</p>");
+                out.println("<h2 style='color:green;'>Â¡INYECCIÓN COMPLETADA!</h2>");
+                out.println("<p><b>ÚLTIMO PASO:</b> Refresca la página de Yesid ahora mismo.</p>");
             }
         } catch (Exception e) {
             out.println("<h3 style='color:red;'>ERROR: " + e.getMessage() + "</h3>");

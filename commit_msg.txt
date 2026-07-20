@@ -1,1 +1,0 @@
-Feat: Sistema de navegacion global (Breadcrumbs) en todas las pantallas

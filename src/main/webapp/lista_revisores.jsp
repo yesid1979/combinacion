@@ -61,7 +61,7 @@
                             <th>Tipo de Documento</th>
                             <th>Nombre del Revisor</th>
                             <th>Cargo del Revisor</th>
-                            <th>Ãšltima Actualización</th>
+                            <th>Última Actualización</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -123,7 +123,7 @@
                     "zeroRecords": "No se encontraron registros coincidentes",
                     "paginate": {
                         "first": "Primero",
-                        "last": "Ãšltimo",
+                        "last": "Último",
                         "next": "Siguiente",
                         "previous": "Anterior"
                     },
