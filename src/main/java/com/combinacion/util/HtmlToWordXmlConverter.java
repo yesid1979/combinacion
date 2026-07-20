@@ -97,7 +97,7 @@ public class HtmlToWordXmlConverter {
 
                         xml.append("<w:p><w:pPr>");
                         xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
-                        xml.append("<w:ind w:left=\"360\" w:hanging=\"360\"/>");
+                        xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
                         if (!align.isEmpty()) {
                             xml.append("<w:jc w:val=\"").append(align).append("\"/>");
                         }
