@@ -22,6 +22,14 @@
     <jsp:include page="inc/navbar.jsp" />
 
     <div class="container-fluid mt-4 flex-grow-1 px-4">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-check-circle-fill me-1"></i>Revisores</li>
+                </ol>
+            </nav>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Revisores de Documentos</h3>

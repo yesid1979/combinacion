@@ -89,11 +89,12 @@
         <div class="row mb-3">
             <div class="col-12">
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="informes${not empty modo ? '?modo='.concat(modo) : ''}">Cuentas</a></li>
-                        <li class="breadcrumb-item active">Informe de Supervisión</li>
-                    </ol>
-                </nav>
+    <ol class="breadcrumb breadcrumb-premium">
+        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+        <li class="breadcrumb-item"><a href="informes${not empty modo ? '?modo='.concat(modo) : ''}"><i class="bi bi-wallet2 me-1"></i>Cuentas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">${action == 'view' ? 'Ver' : 'Editar'} Informe de Supervisión</li>
+    </ol>
+</nav>
             </div>
         </div>
 

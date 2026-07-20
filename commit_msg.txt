@@ -1,0 +1,1 @@
+Fix: Corregida codificacion de caracteres UTF-8 en todas las vistas JSP del proyecto

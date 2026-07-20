@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
@@ -16,6 +16,14 @@
     <%@ include file="inc/navbar.jsp" %>
 
     <div class="container py-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-premium">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                <li class="breadcrumb-item"><a href="verbos"><i class="bi bi-list-task me-1"></i>Verbos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Formulario Verbo</li>
+            </ol>
+        </nav>
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="card shadow-sm border-0">

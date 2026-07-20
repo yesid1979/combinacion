@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
@@ -17,6 +17,13 @@
     <%@ include file="inc/navbar.jsp" %>
 
     <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-premium">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-list-task me-1"></i>Verbos</li>
+            </ol>
+        </nav>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="bi bi-translate text-primary me-2"></i>Diccionario de Verbos (Conjugación Automática)
