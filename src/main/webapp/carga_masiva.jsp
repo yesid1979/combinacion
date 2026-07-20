@@ -1,8 +1,9 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <!DOCTYPE html>
     <html lang="es">
 
     <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Carga Masiva - Ordenadores y Contratistas</title>
@@ -21,14 +22,14 @@
                 <div class="card-body p-4">
                     <h2 class="mb-4 fw-bold">
                         <i class="bi bi-upload text-primary me-2"></i>
-                        Carga masiva - gestión integral
+                        Carga masiva - gestiÃ³n integral
                     </h2>
 
                     <div class="alert alert-info border-0 shadow-sm">
                         <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Instrucciones del Archivo
                         </h5>
                         <p>Suba un archivo <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong>. El sistema
-                            identificará automáticamente las columnas por nombre.</p>
+                            identificarÃ¡ automÃ¡ticamente las columnas por nombre.</p>
 
                         <div class="row g-3 mt-2">
                             <!-- Ordenadores -->
@@ -36,10 +37,10 @@
                                 <h6 class="fw-bold text-primary">
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
-                                <small class="d-block">• Nombre del Ordenador</small>
-                                <small class="d-block">• Cédula, Cargo</small>
-                                <small class="d-block">• Organismo, Dirección</small>
-                                <small class="d-block">• Decreto, Acta</small>
+                                <small class="d-block">â€¢ Nombre del Ordenador</small>
+                                <small class="d-block">â€¢ CÃ©dula, Cargo</small>
+                                <small class="d-block">â€¢ Organismo, DirecciÃ³n</small>
+                                <small class="d-block">â€¢ Decreto, Acta</small>
                             </div>
 
                             <!-- Contratistas -->
@@ -47,9 +48,9 @@
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
-                                <small class="d-block">• Cédula, Nombre, Correo</small>
-                                <small class="d-block">• Formación, Tarjeta Prof.</small>
-                                <small class="d-block">• Experiencia, Nacimiento</small>
+                                <small class="d-block">â€¢ CÃ©dula, Nombre, Correo</small>
+                                <small class="d-block">â€¢ FormaciÃ³n, Tarjeta Prof.</small>
+                                <small class="d-block">â€¢ Experiencia, Nacimiento</small>
                             </div>
 
                             <!-- Supervisores -->
@@ -57,9 +58,9 @@
                                 <h6 class="fw-bold text-info">
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
-                                <small class="d-block">• Nombre del Supervisor</small>
-                                <small class="d-block">• Cédula del Supervisor</small>
-                                <small class="d-block">• Cargo del Supervisor</small>
+                                <small class="d-block">â€¢ Nombre del Supervisor</small>
+                                <small class="d-block">â€¢ CÃ©dula del Supervisor</small>
+                                <small class="d-block">â€¢ Cargo del Supervisor</small>
                             </div>
 
                             <!-- Estructuradores -->
@@ -67,9 +68,9 @@
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
-                                <small class="d-block">• Profesional Jurídico y Cargo</small>
-                                <small class="d-block">• Profesional Técnico y Cargo</small>
-                                <small class="d-block">• Profesional Financiero y Cargo</small>
+                                <small class="d-block">â€¢ Profesional JurÃ­dico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional TÃ©cnico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Financiero y Cargo</small>
                             </div>
 
                             <!-- Presupuesto -->
@@ -77,9 +78,9 @@
                                 <h6 class="fw-bold text-danger">
                                     <i class="bi bi-cash-coin me-1"></i>Presupuesto:
                                 </h6>
-                                <small class="d-block">• CDP (Número, Fecha, Valor)</small>
-                                <small class="d-block">• RP (Número, Fecha)</small>
-                                <small class="d-block">• Ficha EBI, Rubro</small>
+                                <small class="d-block">â€¢ CDP (NÃºmero, Fecha, Valor)</small>
+                                <small class="d-block">â€¢ RP (NÃºmero, Fecha)</small>
+                                <small class="d-block">â€¢ Ficha EBI, Rubro</small>
                             </div>
 
                             <!-- Contratos -->
@@ -87,9 +88,9 @@
                                 <h6 class="fw-bold text-dark">
                                     <i class="bi bi-file-earmark-text me-1"></i>Contratos:
                                 </h6>
-                                <small class="d-block">• No. Contrato, Objeto</small>
-                                <small class="d-block">• Valores, Fechas (Inicio/Term.)</small>
-                                <small class="d-block">• Dependencia, Proceso</small>
+                                <small class="d-block">â€¢ No. Contrato, Objeto</small>
+                                <small class="d-block">â€¢ Valores, Fechas (Inicio/Term.)</small>
+                                <small class="d-block">â€¢ Dependencia, Proceso</small>
                             </div>
                         </div>
                         <hr>
@@ -135,7 +136,7 @@
                 <script>
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Carga Exitosa!',
+                        title: 'Â¡Carga Exitosa!',
                         html: '<%= msg %>',
                         confirmButtonText: 'Entendido',
                         confirmButtonColor: '#0d6efd'
@@ -162,7 +163,7 @@
 
                                     Swal.fire({
                                         title: 'Procesando solicitud',
-                                        html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la página.',
+                                        html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la pÃ¡gina.',
                                         allowOutsideClick: false,
                                         allowEscapeKey: false,
                                         didOpen: () => {

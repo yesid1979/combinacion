@@ -1,10 +1,11 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*, javax.sql.*, javax.naming.*" %>
 <!DOCTYPE html>
 <html>
-<head><title>INYECCIÓN FINAL CARGA MASIVA</title></head>
+<head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>INYECCIÃ“N FINAL CARGA MASIVA</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
-    <h2 style="color: #2c3e50;">Inyección de Permisos Especiales: IDs 22 y 631</h2>
+    <h2 style="color: #2c3e50;">InyecciÃ³n de Permisos Especiales: IDs 22 y 631</h2>
     <%
         try {
             Context initContext = new InitialContext();
@@ -32,8 +33,8 @@
                     }
                 }
                 out.println("</ul>");
-                out.println("<h2 style='color:green;'>¡INYECCIÓN COMPLETADA!</h2>");
-                out.println("<p><b>ÚLTIMO PASO:</b> Refresca la página de Yesid ahora mismo.</p>");
+                out.println("<h2 style='color:green;'>Â¡INYECCIÃ“N COMPLETADA!</h2>");
+                out.println("<p><b>ÃšLTIMO PASO:</b> Refresca la pÃ¡gina de Yesid ahora mismo.</p>");
             }
         } catch (Exception e) {
             out.println("<h3 style='color:red;'>ERROR: " + e.getMessage() + "</h3>");
@@ -41,3 +42,4 @@
     %>
 </body>
 </html>
+

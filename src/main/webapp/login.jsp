@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso al Sistema - DAGJP</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -107,7 +107,7 @@
         <div class="login-card">
             <div class="text-center mb-4">
                 <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png" alt="Logo" style="height: 60px;">
-                <h2 class="login-title mt-3">Sistema de Gestión Contractual del DAGJP</h2>
+                <h2 class="login-title mt-3">Sistema de GestiÃ³n Contractual del DAGJP</h2>
             </div>
             
             <form action="login" method="POST">
@@ -117,15 +117,15 @@
                 </div>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                    <input type="password" name="password" class="form-control" placeholder="ContraseÃ±a" required>
                 </div>
-                <button type="submit" class="btn-login">Iniciar Sesión</button>
+                <button type="submit" class="btn-login">Iniciar SesiÃ³n</button>
             </form>
 
             <c:if test="${not empty error}">
                 <c:choose>
                     <c:when test="${error.contains('expirado')}">
-                        <!-- Sesión expirada: se muestra con SweetAlert abajo -->
+                        <!-- SesiÃ³n expirada: se muestra con SweetAlert abajo -->
                     </c:when>
                     <c:otherwise>
                         <div class="alert alert-danger mt-3 py-2 small text-center" role="alert">
@@ -146,8 +146,8 @@
     <script>
         Swal.fire({
             icon: 'info',
-            title: 'Sesión Expirada',
-            text: 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión de nuevo.',
+            title: 'SesiÃ³n Expirada',
+            text: 'Tu sesiÃ³n ha expirado por inactividad. Por favor, inicia sesiÃ³n de nuevo.',
             confirmButtonColor: '#004884',
             confirmButtonText: 'Entendido'
         });
@@ -155,3 +155,4 @@
     </c:if>
 </body>
 </html>
+

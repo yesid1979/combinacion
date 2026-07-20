@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -26,11 +26,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <c:set var="esAdminCuentas" value="${sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.esAdministrador()}" />
+    <c:set var="esAdminCuentas" value="${sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || sessionScope.usuario.esAdministrador()}" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${action == 'view' ? 'Ver' : 'Nuevo'} Informe de Supervisión - Gestión de Prestadores</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>${action == 'view' ? 'Ver' : 'Nuevo'} Informe de SupervisiÃ³n - GestiÃ³n de Prestadores</title>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -90,7 +90,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="informes${not empty modo ? '?modo='.concat(modo) : ''}">Cuentas</a></li>
-                        <li class="breadcrumb-item active">Informe de Supervisión</li>
+                        <li class="breadcrumb-item active">Informe de SupervisiÃ³n</li>
                     </ol>
                 </nav>
             </div>
@@ -101,7 +101,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold m-0 text-dark">
                         <i class="bi bi-file-earmark-check me-2 text-primary"></i>
-                        ${action == 'view' ? 'Detalle de' : 'Nuevo'} Informe de Supervisión
+                        ${action == 'view' ? 'Detalle de' : 'Nuevo'} Informe de SupervisiÃ³n
                     </h2>
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
@@ -131,7 +131,7 @@
                             <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">General</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link" id="juridico-tab" data-bs-toggle="tab" data-bs-target="#juridico" type="button">Jurídico</button>
+                            <button class="nav-link" id="juridico-tab" data-bs-toggle="tab" data-bs-target="#juridico" type="button">JurÃ­dico</button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="financiero-tab" data-bs-toggle="tab" data-bs-target="#financiero" type="button">Financiero</button>
@@ -140,7 +140,7 @@
                             <button class="nav-link" id="seguridad-tab" data-bs-toggle="tab" data-bs-target="#seguridad" type="button">Seguridad Social</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link" id="tecnico-tab" data-bs-toggle="tab" data-bs-target="#tecnico" type="button">Técnico</button>
+                            <button class="nav-link" id="tecnico-tab" data-bs-toggle="tab" data-bs-target="#tecnico" type="button">TÃ©cnico</button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" id="soportes-tab" data-bs-toggle="tab" data-bs-target="#soportes" type="button">Evidencias / Soportes</button>
@@ -161,7 +161,7 @@
                                     <textarea class="form-control bg-light text-muted" rows="2" readonly>${contrato.objeto}</textarea>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Periodo del Informe (Mes y Año)</label>
+                                    <label class="form-label">Periodo del Informe (Mes y AÃ±o)</label>
                                     <input type="text" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" placeholder="Ej: Enero 2026" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-2">
@@ -172,7 +172,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">Cuota Número</label>
+                                    <label class="form-label">Cuota NÃºmero</label>
                                     <c:choose>
                                         <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
                                             <select class="form-select" name="numero_cuota" required>
@@ -196,42 +196,42 @@
                                     <input type="date" class="form-control" name="fecha_inicio_periodo" value="<fmt:formatDate value='${empty informe.id ? contrato.fechaEjecucion : informe.fechaInicioPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Fecha terminación</label>
+                                    <label class="form-label">Fecha terminaciÃ³n</label>
                                     <input type="date" class="form-control" name="fecha_fin_periodo" value="<fmt:formatDate value='${empty informe.id ? contrato.fechaTerminacion : informe.fechaFinPeriodo}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Tab 2: Jurídico -->
+                        <!-- Tab 2: JurÃ­dico -->
                         <div class="tab-pane fade" id="juridico" role="tabpanel">
-                            <div class="section-title">Informe Jurídico</div>
+                            <div class="section-title">Informe JurÃ­dico</div>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Modificación al contrato</label>
+                                    <label class="form-label">ModificaciÃ³n al contrato</label>
                                     <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.modificaciones ? 'N/A' : informe.modificaciones}</textarea>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Suspensión</label>
+                                    <label class="form-label">SuspensiÃ³n</label>
                                     <textarea class="form-control" name="suspensiones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.suspensiones ? 'N/A' : informe.suspensiones}</textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Reanudación</label>
+                                    <label class="form-label">ReanudaciÃ³n</label>
                                     <input type="text" class="form-control" name="reanudaciones" value="${empty informe.reanudaciones ? 'N/A' : informe.reanudaciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Cesión</label>
+                                    <label class="form-label">CesiÃ³n</label>
                                     <input type="text" class="form-control" name="cesiones" value="${empty informe.cesiones ? 'N/A' : informe.cesiones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Terminación anticipada</label>
+                                    <label class="form-label">TerminaciÃ³n anticipada</label>
                                     <input type="text" class="form-control" name="terminacion_anticipada" value="${empty informe.terminacionAnticipada ? 'N/A' : informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Adición</label>
+                                    <label class="form-label">AdiciÃ³n</label>
                                     <input type="text" class="form-control" name="adiciones" value="${empty informe.adiciones ? 'N/A' : informe.adiciones}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Prórroga</label>
+                                    <label class="form-label">PrÃ³rroga</label>
                                     <input type="text" class="form-control" name="prorrogas" value="${empty informe.prorrogas ? 'N/A' : informe.prorrogas}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
@@ -263,19 +263,19 @@
 
                         <!-- Tab 4: Seguridad Social -->
                         <div class="tab-pane fade" id="seguridad" role="tabpanel">
-                            <div class="section-title">Información del Pago de Seguridad Social</div>
+                            <div class="section-title">InformaciÃ³n del Pago de Seguridad Social</div>
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label">Número de Planilla</label>
+                                    <label class="form-label">NÃºmero de Planilla</label>
                                     <input type="text" class="form-control" name="planilla_numero" value="${informe.planillaNumero}" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">PIN / Autorización / Referencia</label>
+                                    <label class="form-label">PIN / AutorizaciÃ³n / Referencia</label>
                                     <input type="text" class="form-control" name="planilla_pin" value="${informe.planillaPin}" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Operador</label>
-                                    <input type="text" class="form-control" name="planilla_operador" value="${informe.planillaOperador}" placeholder="Ej: Aportes en Línea" required ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="planilla_operador" value="${informe.planillaOperador}" placeholder="Ej: Aportes en LÃ­nea" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha de Pago</label>
@@ -288,12 +288,12 @@
                             </div>
                         </div>
 
-                        <!-- Tab 5: Técnico -->
+                        <!-- Tab 5: TÃ©cnico -->
                         <div class="tab-pane fade" id="tecnico" role="tabpanel">
-                            <div class="section-title">Informe Técnico y Recomendaciones</div>
+                            <div class="section-title">Informe TÃ©cnico y Recomendaciones</div>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Recibo a Satisfacción de Servicios</label>
+                                    <label class="form-label">Recibo a SatisfacciÃ³n de Servicios</label>
                                     <textarea class="form-control" name="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</textarea>
                                 </div>
                                 <div class="col-md-6">
@@ -308,7 +308,7 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th style="width: 40%">Obligaciones del Contratista</th>
-                                                    <th style="width: 60%">Actividades (Use viñetas o guiones)</th>
+                                                    <th style="width: 60%">Actividades (Use viÃ±etas o guiones)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -329,7 +329,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-12">
-                                    <label class="form-label">Observaciones al Informe Técnico</label>
+                                    <label class="form-label">Observaciones al Informe TÃ©cnico</label>
                                     <textarea class="form-control" name="observaciones_tecnicas" rows="2" placeholder="Observaciones adicionales..." required ${readonly ? 'readonly' : ''}>${informe.observacionesTecnicas}</textarea>
                                 </div>
                                 <div class="col-md-12">
@@ -337,7 +337,7 @@
                                     <textarea class="form-control" name="recomendaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.id ? 'No se reportan recomendaciones para este periodo' : informe.recomendaciones}</textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Fecha de Suscripción del Informe</label>
+                                    <label class="form-label">Fecha de SuscripciÃ³n del Informe</label>
                                     <c:choose>
                                         <c:when test="${not empty informe.fechaSuscripcion}">
                                             <input type="date" class="form-control" name="fecha_suscripcion" value="<fmt:formatDate value='${informe.fechaSuscripcion}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
@@ -361,11 +361,11 @@
                                     <div class="col-md-12 mb-2">
                                         <div class="alert alert-warning mb-0 border-start border-warning border-4 shadow-sm">
                                             <i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i>
-                                            <strong>Atención:</strong> El contratista es <strong>Responsable de IVA</strong>. En lugar de generar el formato de cuenta de cobro en Excel (DS), debe cargar su factura electrónica a continuación.
+                                            <strong>AtenciÃ³n:</strong> El contratista es <strong>Responsable de IVA</strong>. En lugar de generar el formato de cuenta de cobro en Excel (DS), debe cargar su factura electrÃ³nica a continuaciÃ³n.
                                         </div>
                                     </div>
                                     <div class="col-md-6 req-cuota-todas">
-                                        <label class="form-label text-primary fw-bold"><i class="bi bi-receipt"></i> Factura Electrónica (Reemplaza Cuenta de Cobro)</label>
+                                        <label class="form-label text-primary fw-bold"><i class="bi bi-receipt"></i> Factura ElectrÃ³nica (Reemplaza Cuenta de Cobro)</label>
                                         <input type="file" class="form-control border-primary" name="file_factura" accept="application/pdf, text/xml" ${readonly ? 'disabled' : ''}>
                                     </div>
                                 </c:if>
@@ -374,7 +374,7 @@
                                     <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Cédula</label>
+                                    <label class="form-label">CÃ©dula</label>
                                     <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
@@ -382,7 +382,7 @@
                                     <input type="file" class="form-control" name="file_secop" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Certificación Corrección Monetaria</label>
+                                    <label class="form-label">CertificaciÃ³n CorrecciÃ³n Monetaria</label>
                                     <input type="file" class="form-control" name="file_correccion_monetaria" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
@@ -394,7 +394,7 @@
                                     <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Ficha Técnica</label>
+                                    <label class="form-label">Ficha TÃ©cnica</label>
                                     <input type="file" class="form-control" name="file_ficha_tecnica" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
@@ -411,7 +411,7 @@
                     </div>
 
                     
-                    <!-- Sección de Radicación o Asignación -->
+                    <!-- SecciÃ³n de RadicaciÃ³n o AsignaciÃ³n -->
                     <c:set var="esBorradorDevuelta" value="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}" />
                     
                     <c:if test="${not readonly && (esBorradorDevuelta || esAdminCuentas)}">
@@ -432,7 +432,7 @@
                                         <label class="form-label">Asignar a Revisor:</label>
                                         <select class="form-select" name="id_revisor_asignado" id="revisor_select">
                                             <option value="">-- Seleccione un Revisor --</option>
-                                            <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                            <option value="0">-- Sin Revisor (Pasar directo a ContrataciÃ³n) --</option>
                                             <c:forEach var="rev" items="${listaRevisores}">
                                                 <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
                                             </c:forEach>
@@ -450,7 +450,7 @@
                             <c:if test="${not empty informe.idRevisorAsignado}">
                                 <c:choose>
                                     <c:when test="${informe.idRevisorAsignado == 0}">
-                                        <br><small><i class="bi bi-person-badge"></i> Revisor asignado: <strong>Contratación (Revisión Directa)</strong></small>
+                                        <br><small><i class="bi bi-person-badge"></i> Revisor asignado: <strong>ContrataciÃ³n (RevisiÃ³n Directa)</strong></small>
                                     </c:when>
                                     <c:otherwise>
                                         <c:set var="nombreRevisor" value="ID: ${informe.idRevisorAsignado}" />
@@ -468,15 +468,15 @@
                     
                     <c:if test="${not empty listaHistorial}">
                         <div class="alert alert-info mt-3 shadow-sm border-0 border-start border-info border-4 p-4">
-                            <h5 class="alert-heading fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Historial de Radicación y Revisiones</h5>
+                            <h5 class="alert-heading fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Historial de RadicaciÃ³n y Revisiones</h5>
                             <div class="table-responsive">
                                 <table class="table table-sm table-bordered border-info mb-0 text-dark bg-white">
                                     <thead class="table-info">
                                         <tr>
                                             <th style="width: 20%;"><i class="bi bi-calendar3"></i> Fecha</th>
                                             <th style="width: 20%;"><i class="bi bi-person"></i> Usuario</th>
-                                            <th style="width: 20%;"><i class="bi bi-arrow-right-circle"></i> Acción</th>
-                                            <th style="width: 40%;"><i class="bi bi-chat-text"></i> Observación</th>
+                                            <th style="width: 20%;"><i class="bi bi-arrow-right-circle"></i> AcciÃ³n</th>
+                                            <th style="width: 40%;"><i class="bi bi-chat-text"></i> ObservaciÃ³n</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -521,7 +521,7 @@
                                 </button>
                             </c:if>
                         </c:if>
-                        <%-- El botón de imprimir ha sido removido a petición del usuario --%>
+                        <%-- El botÃ³n de imprimir ha sido removido a peticiÃ³n del usuario --%>
                     </div>
                 </form>
             </div>
@@ -538,25 +538,25 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            // Activar pestañas con clic
+            // Activar pestaÃ±as con clic
             $('#informeTabs button').on('click', function (e) {
                 e.preventDefault();
                 $(this).tab('show');
             });
 
-            // Cargar actividades dinámicamente
+            // Cargar actividades dinÃ¡micamente
             var isReadonly = ${readonly == true ? 'true' : 'false'};
             var obligacionesCount = ${fn:length(listaObligaciones) > 0 ? fn:length(listaObligaciones) : 0};
             for(var i=0; i<obligacionesCount; i++) {
                 var rawText = document.getElementById("raw_actividad_" + i).value;
                 if (rawText && !rawText.includes('<p>') && !rawText.includes('<table') && !rawText.includes('<ul')) {
-                    // Si es texto plano antiguo, reemplazar saltos de línea por <br> para que Summernote lo entienda
+                    // Si es texto plano antiguo, reemplazar saltos de lÃ­nea por <br> para que Summernote lo entienda
                     rawText = rawText.replace(/\n/g, '<br>');
                 }
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
-            // Lógica para mostrar/ocultar soportes según la cuota
+            // LÃ³gica para mostrar/ocultar soportes segÃºn la cuota
             function actualizarCamposSoportes() {
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
                 if (cuotaStr == "1") {
@@ -569,7 +569,7 @@
             }
 
             $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
-            actualizarCamposSoportes(); // Ejecutar al cargar la página
+            actualizarCamposSoportes(); // Ejecutar al cargar la pÃ¡gina
             
             // Renderizar archivos previamente subidos (la interfaz que pediste)
             var soportesJsonStr = '${fn:escapeXml(informe.soportesJson)}';
@@ -609,8 +609,8 @@
                             } else {
                                 if (!$input.next('.info-append-msg').length) {
                                     var msgText = baseKey.startsWith("evidencia_") ? 
-                                        "Si selecciona nuevos archivos, se AGREGARÁN a los ya existentes." : 
-                                        "Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se agregará (o reemplazará).";
+                                        "Si selecciona nuevos archivos, se AGREGARÃN a los ya existentes." : 
+                                        "Dejar en blanco para mantener el archivo actual. Si selecciona uno nuevo, se agregarÃ¡ (o reemplazarÃ¡).";
                                     $input.after('<small class="info-append-msg text-muted d-block mt-1"><i class="bi bi-info-circle"></i> ' + msgText + '</small>');
                                 }
                             }
@@ -621,13 +621,13 @@
                 }
             }
             
-            // Si es solo lectura, limpiar visualmente la pestaña de soportes
+            // Si es solo lectura, limpiar visualmente la pestaÃ±a de soportes
             if (isReadonly) {
                 $('input[type="file"]').each(function() {
                     $(this).hide();
                     var $label = $(this).prevAll('.form-label, small.fw-bold').first();
                     if ($label.find('.badge.bg-success').length === 0) {
-                        $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargó documento</div>');
+                        $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargÃ³ documento</div>');
                     }
                 });
             }
@@ -635,7 +635,7 @@
 
         function agregarActividadConValor(index, valor, isReadonly) {
             var container = document.getElementById("actividades_container_" + index);
-            var actIndex = container.children.length; // Para identificar cada actividad de forma única
+            var actIndex = container.children.length; // Para identificar cada actividad de forma Ãºnica
             
             var wrapper = document.createElement("div");
             wrapper.className = "mb-3 p-2 border rounded bg-white shadow-sm";
@@ -647,7 +647,7 @@
             textarea.className = "form-control summernote-editor";
             textarea.name = "actividad_" + index;
             textarea.rows = 2;
-            textarea.placeholder = "Describa la actividad realizada e inserte tablas o imágenes (copiar y pegar)...";
+            textarea.placeholder = "Describa la actividad realizada e inserte tablas o imÃ¡genes (copiar y pegar)...";
             textarea.value = valor;
             if (isReadonly) textarea.readOnly = true;
             else textarea.required = true;
@@ -688,7 +688,7 @@
                 dropZone.style.border = "2px dashed #0d6efd";
                 dropZone.style.cursor = "pointer";
                 dropZone.style.backgroundColor = "#f8f9fa";
-                dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
+                dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquÃ­ o arrastra los archivos (puedes subir varios)</span>';
                 
                 dropZone.onclick = function() {
                     fileInput.click();
@@ -704,7 +704,7 @@
                         dropZone.style.borderColor = "#198754";
                         dropZone.style.backgroundColor = "#e8f5e9";
                     } else {
-                        dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
+                        dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquÃ­ o arrastra los archivos (puedes subir varios)</span>';
                         dropZone.style.borderColor = "#0d6efd";
                         dropZone.style.backgroundColor = "#f8f9fa";
                     }
@@ -756,7 +756,7 @@
                         ['insert', ['picture', 'link']],
                         ['view', ['fullscreen']]
                     ],
-                    placeholder: 'Escriba la actividad o pegue aquí una imagen/tabla...',
+                    placeholder: 'Escriba la actividad o pegue aquÃ­ una imagen/tabla...',
                     callbacks: {
                         onImageUpload: function(files) {
                             for (let i = 0; i < files.length; i++) {
@@ -851,7 +851,7 @@
             } else if (str.endsWith(".0")) {
                 str = str.substring(0, str.length - 2);
             }
-            // Removemos todo lo que no sea número
+            // Removemos todo lo que no sea nÃºmero
             str = str.replace(/[^0-9]/g, '');
             if(!str) return "";
             // Agregamos el punto como separador de miles
@@ -871,7 +871,7 @@
             });
         });
         
-        // Validación personalizada con SweetAlert
+        // ValidaciÃ³n personalizada con SweetAlert
         $('#informeForm').on('submit', function(e) {
             let isValid = true;
             let firstInvalid = null;
@@ -886,7 +886,7 @@
             if (!isValid) {
                 e.preventDefault();
                 
-                // Mover a la pestaña donde está el campo vacío
+                // Mover a la pestaÃ±a donde estÃ¡ el campo vacÃ­o
                 let tabPane = firstInvalid.closest('.tab-pane');
                 if (tabPane.length) {
                     let tabId = tabPane.attr('id');
@@ -896,7 +896,7 @@
                 
                 Swal.fire({
                     icon: 'warning',
-                    title: '¡Faltan datos!',
+                    title: 'Â¡Faltan datos!',
                     text: 'Por favor, diligencia todos los campos obligatorios antes de guardar el informe.',
                     confirmButtonColor: '#007bff'
                 }).then(() => {
@@ -906,7 +906,7 @@
                 return false;
             }
             
-            // Recopilar obligaciones en un solo JSON para evitar el límite de 50 campos de Tomcat
+            // Recopilar obligaciones en un solo JSON para evitar el lÃ­mite de 50 campos de Tomcat
             var obligacionesJson = [];
             var count = parseInt($('input[name="obligaciones_count"]').val()) || 0;
             
@@ -915,13 +915,13 @@
                 var $obligacion = $('input[name="obligacion_' + i + '"]');
                 if ($obligacion.length) {
                     obj.obligacion = $obligacion.val();
-                    $obligacion.removeAttr('name'); // Evitar que se envíe como parte individual
+                    $obligacion.removeAttr('name'); // Evitar que se envÃ­e como parte individual
                 }
                 
                 var acts = [];
                 $('textarea[name="actividad_' + i + '"]').each(function() {
                     acts.push($(this).val());
-                    $(this).removeAttr('name'); // Evitar que se envíe como parte individual
+                    $(this).removeAttr('name'); // Evitar que se envÃ­e como parte individual
                 });
                 obj.actividad = acts.join("\n");
                 
@@ -930,7 +930,7 @@
             $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
             $('input[name="obligaciones_count"]').removeAttr('name'); // Tampoco enviar este
             
-            // Eliminar los nombres de TODOS los inputs de tipo file que estén vacíos
+            // Eliminar los nombres de TODOS los inputs de tipo file que estÃ©n vacÃ­os
             $('input[type="file"]').each(function() {
                 if (!$(this).val()) {
                     $(this).removeAttr('name');
@@ -967,7 +967,7 @@
                 calcularSaldo();
             }
             
-            // Lógica de arrastrar y soltar para inputs tipo file (delegación de eventos para inputs dinámicos)
+            // LÃ³gica de arrastrar y soltar para inputs tipo file (delegaciÃ³n de eventos para inputs dinÃ¡micos)
             $(document).on('dragover dragenter', 'input[type="file"]', function(e) {
                 if ($(this).prop('disabled')) return;
                 e.preventDefault();
@@ -994,7 +994,7 @@
             function setRadicar() {
                 var rev = document.getElementById("revisor_select").value;
                 if (!rev && rev !== "0") {
-                    Swal.fire('Atención', 'Debe seleccionar un revisor (o la opción Sin Revisor) para poder radicar la cuenta.', 'warning');
+                    Swal.fire('AtenciÃ³n', 'Debe seleccionar un revisor (o la opciÃ³n Sin Revisor) para poder radicar la cuenta.', 'warning');
                     return false;
                 }
                 if (rev === "0") {
@@ -1006,3 +1006,4 @@
         </script>
     </body>
 </html>
+

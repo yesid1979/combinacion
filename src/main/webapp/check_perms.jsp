@@ -1,13 +1,14 @@
-<%@ page import="com.combinacion.models.Usuario, com.combinacion.models.Permiso, java.util.List" %>
+﻿<%@ page import="com.combinacion.models.Usuario, com.combinacion.models.Permiso, java.util.List" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html>
-<head><title>Inspector de Permisos</title></head>
+<head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>Inspector de Permisos</title></head>
 <body>
 <%
     Usuario u = (Usuario) session.getAttribute("usuario");
     if (u == null) {
-        out.println("No hay usuario en sesión.");
+        out.println("No hay usuario en sesiÃ³n.");
     } else {
         out.println("<h2>Usuario: " + u.getNombreCompleto() + " (ID: " + u.getId() + ")</h2>");
         out.println("<h3>Rol: " + (u.getRol() != null ? u.getRol().getNombre() : "SIN ROL") + "</h3>");
@@ -22,3 +23,4 @@
 %>
 </body>
 </html>
+

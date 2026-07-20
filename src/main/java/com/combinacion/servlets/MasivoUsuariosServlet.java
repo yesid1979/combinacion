@@ -34,6 +34,18 @@ public class MasivoUsuariosServlet extends HttpServlet {
         List<Contratista> todos = contratistaDAO.listarTodos();
         List<Contratista> sinUsuario = new ArrayList<>();
         
+        // Optimización: Cargar todos los usuarios en memoria para evitar N consultas a la base de datos
+        List<Usuario> todosUsuarios = usuarioDAO.listarTodos();
+        java.util.Set<String> cedulasExistentes = new java.util.HashSet<>();
+        java.util.Set<String> usernamesExistentes = new java.util.HashSet<>();
+        
+        if (todosUsuarios != null) {
+            for (Usuario u : todosUsuarios) {
+                if (u.getCedula() != null) cedulasExistentes.add(u.getCedula());
+                if (u.getUsername() != null) usernamesExistentes.add(u.getUsername());
+            }
+        }
+        
         // Análisis de datos: Verificamos qué contratistas NO tienen usuario
         for (Contratista c : todos) {
             String cedulaOriginal = c.getCedula();
@@ -45,8 +57,8 @@ public class MasivoUsuariosServlet extends HttpServlet {
                     continue; // No procesar si no tiene números
                 }
                 
-                boolean existeComoUsername = (usuarioDAO.obtenerPorUsername(cedulaLimpia) != null);
-                boolean existeComoCedula = usuarioDAO.existeCedula(cedulaLimpia, 0);
+                boolean existeComoUsername = usernamesExistentes.contains(cedulaLimpia);
+                boolean existeComoCedula = cedulasExistentes.contains(cedulaLimpia);
                 
                 if (!existeComoUsername && !existeComoCedula) {
                     sinUsuario.add(c);
@@ -75,96 +87,84 @@ public class MasivoUsuariosServlet extends HttpServlet {
             rolContratista = rolDAO.obtenerPorNombre("CONTRATISTA");
         }
         
-        int rolId = 3; // Fallback por defecto según diseño previo
+        int tempRolId = 3;
         if (rolContratista != null) {
-            rolId = rolContratista.getId();
+            tempRolId = rolContratista.getId();
         } else {
-            // Intentar crearlo, si falla la BD (ej. restricción única por mayúsculas) usaremos 3
             Rol nuevoRol = new Rol();
             nuevoRol.setNombre("Contratista");
             nuevoRol.setDescripcion("Rol automático para contratistas");
             nuevoRol.setActivo(true);
             int newRolId = rolDAO.insertar(nuevoRol);
             if (newRolId > 0) {
-                rolId = newRolId;
+                tempRolId = newRolId;
             }
         }
+        final int rolId = tempRolId;
 
-        int creados = 0;
-        int omitidos = 0;
-        StringBuilder errorMsg = new StringBuilder();
+        // EJECUTAR EN SEGUNDO PLANO PARA NO BLOQUEAR LA PANTALLA
+        new Thread(() -> {
+            int creados = 0;
+            int omitidos = 0;
 
-        for (String idStr : idsSeleccionados) {
-            try {
-                int cId = Integer.parseInt(idStr);
-                Contratista c = contratistaDAO.obtenerPorId(cId);
-                
-                if (c != null && c.getCedula() != null && !c.getCedula().trim().isEmpty()) {
-                    String cedulaOriginal = c.getCedula().trim();
-                    // Limpiar cédula: quitar puntos, letras, espacios (ej: "31.449.649 de Jamundí" -> "31449649")
-                    String cedulaLimpia = cedulaOriginal.replaceAll("[^0-9]", "");
+            for (String idStr : idsSeleccionados) {
+                try {
+                    int cId = Integer.parseInt(idStr);
+                    Contratista c = contratistaDAO.obtenerPorId(cId);
                     
-                    if (cedulaLimpia.isEmpty()) {
-                        omitidos++;
-                        errorMsg.append("Cédula inválida (sin números): ").append(cedulaOriginal).append(". ");
-                        continue;
-                    }
-                    
-                    // Doble validación por seguridad usando la cédula limpia
-                    boolean existe = usuarioDAO.existeCedula(cedulaLimpia, 0) || (usuarioDAO.obtenerPorUsername(cedulaLimpia) != null);
-                    
-                    if (!existe) {
-                        String password = cedulaLimpia; // Contraseña por defecto
-                        String salt = PasswordUtils.generateSalt();
-                        String hash = PasswordUtils.hashPassword(password, salt);
-
-                        Usuario u = new Usuario();
-                        u.setUsername(cedulaLimpia);
-                        u.setPasswordHash(hash);
-                        u.setSalt(salt);
-                        u.setNombreCompleto(c.getNombre());
-                        u.setCorreo(c.getCorreo() != null ? c.getCorreo() : "");
-                        u.setCedula(cedulaLimpia);
-                        u.setCelular(c.getTelefono() != null ? c.getTelefono() : "");
-                        u.setVinculacion("CONTRATISTA");
+                    if (c != null && c.getCedula() != null && !c.getCedula().trim().isEmpty()) {
+                        String cedulaOriginal = c.getCedula().trim();
+                        String cedulaLimpia = cedulaOriginal.replaceAll("[^0-9]", "");
                         
-                        // Intentar obtener las fechas de su contrato si tiene uno asignado
-                        Contrato contrato = contratoDAO.obtenerPorContratistaId(c.getId());
-                        if (contrato != null) {
-                            if (contrato.getFechaInicio() != null) {
-                                u.setFechaInicioContrato(contrato.getFechaInicio());
-                            }
-                            if (contrato.getFechaTerminacion() != null) {
-                                u.setFechaFinContrato(contrato.getFechaTerminacion());
-                            }
+                        if (cedulaLimpia.isEmpty()) {
+                            omitidos++;
+                            continue;
                         }
                         
-                        u.setActivo(true);
-                        u.setRolId(rolId);
+                        boolean existe = usuarioDAO.existeCedula(cedulaLimpia, 0) || (usuarioDAO.obtenerPorUsername(cedulaLimpia) != null);
                         
-                        int newId = usuarioDAO.insertar(u);
-                        if (newId > 0) {
-                            creados++;
+                        if (!existe) {
+                            String password = cedulaLimpia;
+                            String salt = PasswordUtils.generateSalt();
+                            String hash = PasswordUtils.hashPassword(password, salt);
+
+                            Usuario u = new Usuario();
+                            u.setUsername(cedulaLimpia);
+                            u.setPasswordHash(hash);
+                            u.setSalt(salt);
+                            u.setNombreCompleto(c.getNombre());
+                            u.setCorreo(c.getCorreo() != null ? c.getCorreo() : "");
+                            u.setCedula(cedulaLimpia);
+                            u.setCelular(c.getTelefono() != null ? c.getTelefono() : "");
+                            u.setVinculacion("CONTRATISTA");
+                            
+                            Contrato contrato = contratoDAO.obtenerPorContratistaId(c.getId());
+                            if (contrato != null) {
+                                if (contrato.getFechaInicio() != null) u.setFechaInicioContrato(contrato.getFechaInicio());
+                                if (contrato.getFechaTerminacion() != null) u.setFechaFinContrato(contrato.getFechaTerminacion());
+                            }
+                            
+                            u.setActivo(true);
+                            u.setRolId(rolId);
+                            
+                            int newId = usuarioDAO.insertar(u);
+                            if (newId > 0) {
+                                creados++;
+                            } else {
+                                omitidos++;
+                            }
                         } else {
                             omitidos++;
-                            errorMsg.append("Error DB en cédula ").append(cedulaLimpia).append(". ");
                         }
-                    } else {
-                        omitidos++; // Ya existía, se omitió para proteger el perfil actual
-                        errorMsg.append("Ya existía la cédula ").append(cedulaLimpia).append(". ");
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                omitidos++;
-                errorMsg.append("Excepción en ID ").append(idStr).append(": ").append(e.getMessage()).append(". ");
             }
-        }
+            System.out.println("[MasivoUsuarios] Tarea asíncrona completada: Creados=" + creados + " | Omitidos=" + omitidos);
+        }).start();
         
-        String finalMsg = "Se crearon " + creados + " usuarios. Omitidos/Existentes/Fallos: " + omitidos;
-        if (errorMsg.length() > 0) {
-            finalMsg += " | Detalle: " + errorMsg.toString();
-        }
-        
+        String finalMsg = "Se ha iniciado la creación de usuarios en segundo plano. Esto evitará que la pantalla se congele. ¡Puedes seguir trabajando! Los perfiles estarán listos en unos momentos.";
         response.sendRedirect(request.getContextPath() + "/masivo-usuarios?success=" + java.net.URLEncoder.encode(finalMsg, "UTF-8"));
     }
 }

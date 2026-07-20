@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -6,8 +6,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Informes - Gestión de Prestadores</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Historial de Informes - GestiÃ³n de Prestadores</title>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -26,7 +26,7 @@
     <div class="container-fluid mt-4 flex-grow-1 px-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-dark mb-0">Informes de Supervisión</h3>
+                <h3 class="fw-bold text-dark mb-0">Informes de SupervisiÃ³n</h3>
             </div>
             <c:if test="${param.modo != 'revision'}">
                 <c:choose>
@@ -84,7 +84,7 @@
                         <select id="filtroEstado" class="form-select w-auto shadow-sm border-primary">
                             <option value="">Todos los estados</option>
                             <option value="RADICADA">Radicadas (Pendientes)</option>
-                            <option value="EN REVISION FINAL">En Revisión Final</option>
+                            <option value="EN REVISION FINAL">En RevisiÃ³n Final</option>
                             <option value="APROBADA PARA IMPRESION">Aprobadas</option>
                             <option value="DEVUELTA">Devueltas</option>
                             <option value="BORRADOR">Borradores</option>
@@ -110,102 +110,9 @@
                         <c:set var="esRevisor" value="${esRevisorGlobal}" />
                         <c:set var="esContratista" value="${!esAdminGlobal && !esRevisorGlobal}" />
                         
-                        <c:forEach items="${listaInformes}" var="info">
-                            <tr>
-                                <td class="fw-bold text-primary">${info.contrato.numeroContrato}</td>
-                                <td>${info.contrato.contratistaNombre}</td>
-                                <td>${info.periodoInforme}</td>
-                                <td>
-                                    <span class="badge ${info.tipoInforme == 'FINAL' ? 'bg-info' : 'bg-secondary'}">
-                                        ${info.tipoInforme}
-                                    </span>
-                                </td>
-                                <td>${info.numeroCuota}</td>
-                                <td data-sort="${info.fechaCreacion.time}"><fmt:formatDate value="${info.fechaCreacion}" pattern="dd/MM/yyyy hh:mm a"/></td>
-                                <td><fmt:formatNumber value="${info.valorCuotaPagar}" type="currency" currencySymbol="$ " maxFractionDigits="0" minFractionDigits="0"/></td>
-                                <td data-search="${empty info.estadoRadicacion ? 'BORRADOR' : info.estadoRadicacion}">
-                                    <c:choose>
-                                        <c:when test="${info.estadoRadicacion == 'BORRADOR'}">
-                                            <span class="badge bg-secondary">BORRADOR</span>
-                                        </c:when>
-                                        <c:when test="${info.estadoRadicacion == 'RADICADA'}">
-                                            <span class="badge bg-primary">RADICADA</span>
-                                        </c:when>
-                                        <c:when test="${info.estadoRadicacion == 'EN REVISION'}">
-                                            <span class="badge bg-warning text-dark">EN REVISIÓN</span>
-                                        </c:when>
-                                        <c:when test="${info.estadoRadicacion == 'EN REVISION FINAL'}">
-                                            <span class="badge bg-info text-dark">EN REVISIÓN FINAL</span>
-                                        </c:when>
-                                        <c:when test="${info.estadoRadicacion == 'APROBADA PARA IMPRESION'}">
-                                            <span class="badge bg-success">APROBADA (LISTA PARA FIRMA)</span>
-                                        </c:when>
-                                        <c:when test="${info.estadoRadicacion == 'DEVUELTA'}">
-                                            <span class="badge bg-danger">DEVUELTA</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="badge bg-secondary">${empty info.estadoRadicacion ? 'BORRADOR' : info.estadoRadicacion}</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </td>
-                                <td class="text-center">
-                                    <a href="informes?action=view&id=${info.id}&modo=${param.modo}" class="btn btn-sm btn-outline-info" title="Ver Detalle">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <c:if test="${((empty info.estadoRadicacion || info.estadoRadicacion == 'BORRADOR' || info.estadoRadicacion == 'DEVUELTA') && param.modo == 'mis_cuentas') || esAdminCuentas}">
-                                        <a href="informes?action=edit&id=${info.id}&modo=${param.modo}" class="btn btn-sm btn-outline-primary ms-1" title="Editar Informe">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                    </c:if>
-                                    <c:choose>
-                                        <c:when test="${info.estadoRadicacion == 'APROBADA PARA IMPRESION'}">
-                                            <a href="informes?action=download&id=${info.id}" class="btn btn-sm btn-outline-success ms-1" title="Descargar Paquete Final">
-                                                <i class="bi bi-file-earmark-arrow-down"></i>
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="La descarga se habilitará cuando la cuenta sea aprobada" disabled>
-                                                <i class="bi bi-lock"></i>
-                                            </button>
-                                        </c:otherwise>
-                                    </c:choose>
-                                    
-                                    <%-- Lógica de visualización del botón Revisar según el rol y estado --%>
-                                    <c:set var="mostrarBtnRevisar" value="false" />
-                                    <c:set var="esModalAdmin" value="false" />
-                                    
-                                    <c:choose>
-                                        <%-- 1. Si el usuario logueado es el revisor asignado, siempre actúa como revisor básico primero en la etapa RADICADA --%>
-                                        <c:when test="${info.idRevisorAsignado == sessionScope.usuario.id && info.estadoRadicacion == 'RADICADA'}">
-                                            <c:set var="mostrarBtnRevisar" value="true" />
-                                            <c:set var="esModalAdmin" value="false" />
-                                        </c:when>
-                                        
-                                        <%-- 2. Lógica para Contratación (Control Global) --%>
-                                        <c:when test="${esAdminCuentas}">
-                                            <%-- Contratación entra como Admin en RADICADA solo si NO hay revisor asignado (pasó directo) --%>
-                                            <c:if test="${(empty info.idRevisorAsignado || info.idRevisorAsignado == 0) && info.estadoRadicacion == 'RADICADA'}">
-                                                <c:set var="mostrarBtnRevisar" value="true" />
-                                                <c:set var="esModalAdmin" value="true" />
-                                            </c:if>
-                                            <%-- Contratación entra como Admin cuando ya está en REVISION FINAL --%>
-                                            <c:if test="${info.estadoRadicacion == 'EN REVISION FINAL'}">
-                                                <c:set var="mostrarBtnRevisar" value="true" />
-                                                <c:set var="esModalAdmin" value="true" />
-                                            </c:if>
-                                        </c:when>
-                                    </c:choose>
-                                    
-                                    <c:if test="${mostrarBtnRevisar}">
-                                        <button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar Revisión" onclick="abrirModalRevision(${info.id}, '${info.estadoRadicacion}', ${esModalAdmin})">
-                                            <i class="bi bi-check2-square"></i> Revisar
-                                        </button>
-                                    </c:if>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -222,7 +129,96 @@
     <script>
         $(document).ready(function() {
             let table = $('#informesTable').DataTable({
-                responsive: true,
+                "processing": true,
+                "serverSide": true,
+                "responsive": true,
+                "ajax": {
+                    "url": "informes",
+                    "type": "POST",
+                    "data": function(d) {
+                        d.action = "data";
+                        d.modo = "${param.modo}";
+                        d.contrato_id = "${param.contrato_id}";
+                    }
+                },
+                "columns": [
+                    { "data": "contrato", "render": function(data) { return '<span class="fw-bold text-primary">' + data + '</span>'; } },
+                    { "data": "contratista" },
+                    { "data": "periodo" },
+                    { 
+                        "data": "tipo",
+                        "render": function(data) {
+                            let badgeClass = (data === 'FINAL') ? 'bg-info' : 'bg-secondary';
+                            return '<span class="badge ' + badgeClass + '">' + data + '</span>';
+                        }
+                    },
+                    { "data": "cuota" },
+                    { "data": "fechaRegistro" },
+                    { "data": "valorCuota" },
+                    { 
+                        "data": "estado",
+                        "render": function(data) {
+                            if (data === 'BORRADOR') return '<span class="badge bg-secondary">BORRADOR</span>';
+                            if (data === 'RADICADA') return '<span class="badge bg-primary">RADICADA</span>';
+                            if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÃ“N</span>';
+                            if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÃ“N FINAL</span>';
+                            if (data === 'APROBADA PARA IMPRESION') return '<span class="badge bg-success">APROBADA (LISTA PARA FIRMA)</span>';
+                            if (data === 'DEVUELTA') return '<span class="badge bg-danger">DEVUELTA</span>';
+                            return '<span class="badge bg-secondary">' + data + '</span>';
+                        }
+                    },
+                    { 
+                        "data": null,
+                        "className": "text-center",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let html = '';
+                            let id = row.id;
+                            let modo = row.modo;
+                            let estado = row.estado;
+                            let esAdminCuentas = row.esAdminCuentas;
+                            
+                            // BotÃ³n Ver
+                            html += '<a href="informes?action=view&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="bi bi-eye"></i></a>';
+                            
+                            // BotÃ³n Editar
+                            if (((estado === 'BORRADOR' || estado === 'DEVUELTA') && modo === 'mis_cuentas') || esAdminCuentas) {
+                                html += '<a href="informes?action=edit&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-primary ms-1" title="Editar Informe"><i class="bi bi-pencil-square"></i></a>';
+                            }
+                            
+                            // BotÃ³n Descargar
+                            if (estado === 'APROBADA PARA IMPRESION') {
+                                html += '<a href="informes?action=download&id=' + id + '" class="btn btn-sm btn-outline-success ms-1" title="Descargar Paquete Final"><i class="bi bi-file-earmark-arrow-down"></i></a>';
+                            } else {
+                                html += '<button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="La descarga se habilitarÃ¡ cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
+                            }
+                            
+                            // BotÃ³n Revisar
+                            let mostrarBtnRevisar = false;
+                            let esModalAdmin = false;
+                            
+                            if (row.idRevisorAsignado == row.usuarioActualId && estado === 'RADICADA') {
+                                mostrarBtnRevisar = true;
+                                esModalAdmin = false;
+                            } else if (esAdminCuentas) {
+                                if ((row.idRevisorAsignado === 0 || !row.idRevisorAsignado) && estado === 'RADICADA') {
+                                    mostrarBtnRevisar = true;
+                                    esModalAdmin = true;
+                                }
+                                if (estado === 'EN REVISION FINAL') {
+                                    mostrarBtnRevisar = true;
+                                    esModalAdmin = true;
+                                }
+                            }
+                            
+                            if (mostrarBtnRevisar) {
+                                html += '<button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar RevisiÃ³n" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
+                            }
+                            
+                            return html;
+                        }
+                    }
+                ],
                 order: [], // No ordenar inicialmente, respetar orden del backend
                 language: {
                     "decimal": "",
@@ -237,16 +233,15 @@
                     "zeroRecords": "No se encontraron registros coincidentes",
                     "paginate": {
                         "first": "Primero",
-                        "last": "Último",
+                        "last": "Ãšltimo",
                         "next": "Siguiente",
                         "previous": "Anterior"
                     }
                 }
             });
 
-            // Lógica para el filtro personalizado de estados
+            // LÃ³gica para el filtro personalizado de estados
             $('#filtroEstado').on('change', function() {
-                // Filtramos la columna 7 (Estado) buscando la coincidencia exacta
                 let val = $.fn.dataTable.util.escapeRegex($(this).val());
                 table.column(7).search(val ? '^' + val + '$' : '', true, false).draw();
             });
@@ -256,23 +251,23 @@
             let opcionesHTML = '';
             
             if (esAdminCuentas) {
-                // Si es Contratación / Admin, tiene el poder de Aprobación Final
+                // Si es ContrataciÃ³n / Admin, tiene el poder de AprobaciÃ³n Final
                 opcionesHTML = `
-                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    <option value="APROBADA PARA IMPRESION">AprobaciÃ³n Definitiva (Lista para imprimir)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere correcciÃ³n)</option>
                 `;
             } else {
-                // Si es solo Revisor Básico, solo da el Visto Bueno previo
+                // Si es solo Revisor BÃ¡sico, solo da el Visto Bueno previo
                 opcionesHTML = `
-                    <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
-                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a ContrataciÃ³n)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere correcciÃ³n)</option>
                 `;
             }
 
             Swal.fire({
-                title: 'Revisión de Cuenta de Cobro',
+                title: 'RevisiÃ³n de Cuenta de Cobro',
                 html: `
-                    <p class="text-muted">Seleccione la acción a tomar para esta cuenta:</p>
+                    <p class="text-muted">Seleccione la acciÃ³n a tomar para esta cuenta:</p>
                     <div class="mb-3">
                         <select id="swal-accion" class="form-select">
                             ` + opcionesHTML + `
@@ -280,7 +275,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-start w-100">Observaciones (Obligatorio si devuelve):</label>
-                        <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
+                        <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquÃ­ el motivo o sugerencias..."></textarea>
                     </div>
                 `,
                 showCancelButton: true,
@@ -290,7 +285,7 @@
                     const accion = document.getElementById('swal-accion').value;
                     const obs = document.getElementById('swal-obs').value;
                     if (accion === 'DEVUELTA' && !obs.trim()) {
-                        Swal.showValidationMessage('Debe escribir una observación para poder devolverla.');
+                        Swal.showValidationMessage('Debe escribir una observaciÃ³n para poder devolverla.');
                         return false;
                     }
                     return { accion: accion, obs: obs };
@@ -334,3 +329,4 @@
     </script>
 </body>
 </html>
+

@@ -10,7 +10,7 @@
         return;
     }
 
-    boolean esAdminCuentas = u.tienePermiso("ADMINISTRAR_CUENTAS") || u.esAdministrador();
+    boolean esAdminCuentas = u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS") || u.esAdministrador();
     boolean esRevisor = u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER");
 
     if (!esAdminCuentas && !esRevisor) {

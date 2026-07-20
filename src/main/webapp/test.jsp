@@ -1,9 +1,10 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.sql.*"%>
 <%@page import="com.combinacion.util.DBConnection"%>
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <title>Test DB Schema</title>
 </head>
 <body>
@@ -33,9 +34,9 @@
              }
              
              if (!foundConsecutivo) {
-                 out.println("<p style='color:red;font-weight:bold'>¡LA COLUMNA consecutivo_cobro NO EXISTE!</p>");
+                 out.println("<p style='color:red;font-weight:bold'>Â¡LA COLUMNA consecutivo_cobro NO EXISTE!</p>");
              } else {
-                 out.println("<p style='color:green;font-weight:bold'>LA COLUMNA consecutivo_cobro SÍ EXISTE.</p>");
+                 out.println("<p style='color:green;font-weight:bold'>LA COLUMNA consecutivo_cobro SÃ EXISTE.</p>");
              }
              
         } catch (Exception e) {
@@ -44,3 +45,4 @@
     %>
 </body>
 </html>
+

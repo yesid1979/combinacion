@@ -48,6 +48,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;
+            case "data":
+                devolverDatosDataTables(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -63,6 +66,8 @@ public class InformeSupervisionServlet extends HttpServlet {
             insertar(request, response);
         } else if ("update".equals(action)) {
             actualizar(request, response);
+        } else if ("data".equals(action)) {
+            devolverDatosDataTables(request, response);
         } else {
             listar(request, response);
         }
@@ -70,6 +75,15 @@ public class InformeSupervisionServlet extends HttpServlet {
 
     private void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        java.util.List<InformeSupervision> listaFinal = obtenerListaInformes(request);
+        String modo = (String) request.getAttribute("modo");
+        
+        request.setAttribute("listaInformes", listaFinal);
+        request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
+    }
+
+    private java.util.List<InformeSupervision> obtenerListaInformes(HttpServletRequest request) {
         com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
         
         // Refrescar usuario desde BD para tener los permisos actualizados en caliente
@@ -80,7 +94,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                 u = freshUser;
             }
         }
-        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS"));
+        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS"));
         boolean esRevisor = u != null && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
         boolean esContratistaBase = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
         
@@ -121,7 +135,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                     request.setAttribute("contrato", misContratos.get(0)); // Default para botón "Nuevo"
                     for(Contrato con : misContratos) {
                         misContratosIds.add(con.getId());
-                        if (contratoIdStr == null || contratoIdStr.isEmpty() || ParseUtils.parseInt(contratoIdStr) == con.getId()) {
+                        if (contratoIdStr == null || contratoIdStr.isEmpty() || com.combinacion.util.ParseUtils.parseInt(contratoIdStr) == con.getId()) {
                             listaFinal.addAll(informeService.listarPorContrato(con.getId()));
                         }
                     }
@@ -137,7 +151,7 @@ public class InformeSupervisionServlet extends HttpServlet {
         if ((esAdmin || esRevisor) && !"mis_cuentas".equals(modo)) {
             java.util.List<InformeSupervision> todos = new java.util.ArrayList<>();
             if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-                int contratoIdParam = ParseUtils.parseInt(contratoIdStr);
+                int contratoIdParam = com.combinacion.util.ParseUtils.parseInt(contratoIdStr);
                 todos = informeService.listarPorContrato(contratoIdParam);
                 // Cargar el contrato para que la JSP muestre el botón "Nuevo Informe"
                 if (esAdmin) {
@@ -175,14 +189,132 @@ public class InformeSupervisionServlet extends HttpServlet {
             if (a.getFechaCreacion() == null && b.getFechaCreacion() == null) return 0;
             if (a.getFechaCreacion() == null) return 1;
             if (b.getFechaCreacion() == null) return -1;
-            return a.getFechaCreacion().compareTo(b.getFechaCreacion());
+            return b.getFechaCreacion().compareTo(a.getFechaCreacion());
         });
         
         request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
         request.setAttribute("esAdminGlobal", esAdmin);
         request.setAttribute("esRevisorGlobal", esRevisor);
-        request.setAttribute("listaInformes", listaFinal);
-        request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
+        
+        return listaFinal;
+    }
+    
+    private void devolverDatosDataTables(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String drawStr = request.getParameter("draw");
+        int draw = (drawStr != null && !drawStr.isEmpty()) ? Integer.parseInt(drawStr) : 1;
+        String startStr = request.getParameter("start");
+        int start = (startStr != null && !startStr.isEmpty()) ? Integer.parseInt(startStr) : 0;
+        String lengthStr = request.getParameter("length");
+        int length = (lengthStr != null && !lengthStr.isEmpty()) ? Integer.parseInt(lengthStr) : 10;
+        String searchValue = request.getParameter("search[value]");
+        if (searchValue != null) searchValue = searchValue.toLowerCase();
+
+        java.util.List<InformeSupervision> listaTotal = obtenerListaInformes(request);
+        int recordsTotal = listaTotal.size();
+
+        // 1. Filtrado en memoria
+        java.util.List<InformeSupervision> listaFiltrada = new java.util.ArrayList<>();
+        if (searchValue != null && !searchValue.isEmpty()) {
+            for (InformeSupervision info : listaTotal) {
+                boolean match = false;
+                if (info.getContrato() != null && info.getContrato().getNumeroContrato() != null 
+                        && info.getContrato().getNumeroContrato().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getContrato() != null && info.getContrato().getContratistaNombre() != null 
+                        && info.getContrato().getContratistaNombre().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getPeriodoInforme() != null && info.getPeriodoInforme().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getEstadoRadicacion() != null && info.getEstadoRadicacion().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                // Si el filtro coincide con BORRADOR al estar vacío
+                if (info.getEstadoRadicacion() == null && "borrador".contains(searchValue)) {
+                    match = true;
+                }
+                
+                if (match) {
+                    listaFiltrada.add(info);
+                }
+            }
+        } else {
+            listaFiltrada = listaTotal;
+        }
+        int recordsFiltered = listaFiltrada.size();
+
+        // 2. Paginación en memoria
+        int toIndex = Math.min(start + length, listaFiltrada.size());
+        java.util.List<InformeSupervision> page = new java.util.ArrayList<>();
+        if (start < listaFiltrada.size()) {
+            page = listaFiltrada.subList(start, toIndex);
+        }
+
+        // 3. Serializar
+        com.google.gson.JsonObject jsonResponse = new com.google.gson.JsonObject();
+        jsonResponse.addProperty("draw", draw);
+        jsonResponse.addProperty("recordsTotal", recordsTotal);
+        jsonResponse.addProperty("recordsFiltered", recordsFiltered);
+
+        com.google.gson.JsonArray dataArray = new com.google.gson.JsonArray();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
+        nf.setMaximumFractionDigits(0);
+        
+        boolean esAdminGlobal = false;
+        boolean esRevisorGlobal = false;
+        if (request.getAttribute("esAdminGlobal") != null) esAdminGlobal = (Boolean) request.getAttribute("esAdminGlobal");
+        if (request.getAttribute("esRevisorGlobal") != null) esRevisorGlobal = (Boolean) request.getAttribute("esRevisorGlobal");
+        String modo = (String) request.getAttribute("modo");
+
+        for (InformeSupervision info : page) {
+            com.google.gson.JsonObject row = new com.google.gson.JsonObject();
+            
+            // 0: Contrato
+            row.addProperty("contrato", info.getContrato() != null ? info.getContrato().getNumeroContrato() : "");
+            
+            // 1: Contratista
+            row.addProperty("contratista", info.getContrato() != null ? info.getContrato().getContratistaNombre() : "");
+            
+            // 2: Periodo
+            row.addProperty("periodo", info.getPeriodoInforme());
+            
+            // 3: Tipo
+            row.addProperty("tipo", info.getTipoInforme());
+            
+            // 4: Cuota
+            row.addProperty("cuota", info.getNumeroCuota());
+            
+            // 5: Fecha Registro
+            row.addProperty("fechaRegistro", info.getFechaCreacion() != null ? sdf.format(info.getFechaCreacion()) : "");
+            row.addProperty("fechaRegistroTime", info.getFechaCreacion() != null ? info.getFechaCreacion().getTime() : 0);
+            
+            // 6: Valor Cuota
+            row.addProperty("valorCuota", info.getValorCuotaPagar() != null ? nf.format(info.getValorCuotaPagar()) : "$ 0");
+            
+            // 7: Estado
+            String estado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion();
+            row.addProperty("estado", estado);
+            
+            // Info adicional para construir las acciones en JS
+            row.addProperty("id", info.getId());
+            row.addProperty("modo", modo != null ? modo : "");
+            row.addProperty("esAdminCuentas", esAdminGlobal);
+            row.addProperty("esRevisorCuentas", esRevisorGlobal);
+            row.addProperty("idRevisorAsignado", info.getIdRevisorAsignado() != null ? info.getIdRevisorAsignado() : 0);
+            
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+            row.addProperty("usuarioActualId", u != null ? u.getId() : 0);
+
+            dataArray.add(row);
+        }
+        jsonResponse.add("data", dataArray);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(jsonResponse.toString());
     }
 
     private void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)

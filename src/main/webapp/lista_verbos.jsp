@@ -1,8 +1,9 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diccionario de Verbos - DAGJP</title>
@@ -49,7 +50,6 @@
                     <table id="tablaVerbos" class="table table-hover table-striped align-middle" style="width:100%">
                         <thead class="table-dark">
                             <tr>
-                                <th>ID</th>
                                 <th>3ra Persona (Ej. Realizó)</th>
                                 <th>1ra Persona (Ej. Realicé)</th>
                                 <th>Estado</th>
@@ -57,41 +57,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <c:forEach var="v" items="${verbos}">
-                                <tr>
-                                    <td>${v.id}</td>
-                                    <td class="fw-bold">${v.terceraPersona}</td>
-                                    <td class="text-primary">${v.primeraPersona}</td>
-                                    <td>
-                                        <c:choose>
-                                            <c:when test="${v.activo}">
-                                                <span class="badge bg-success">Activo</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-secondary">Inactivo</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_EDITAR') || sessionScope.usuario.tienePermiso('ADMIN_VER')}">
-                                                <a href="${pageContext.request.contextPath}/verbos?action=edit&id=${v.id}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
-                                            </c:if>
-                                            <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_ELIMINAR') || sessionScope.usuario.tienePermiso('ADMIN_VER')}">
-                                                <form action="${pageContext.request.contextPath}/verbos" method="post" onsubmit="return confirm('¿Seguro que deseas eliminar este verbo?');">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id" value="${v.id}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </c:if>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </c:forEach>
                         </tbody>
                     </table>
                 </div>
@@ -107,11 +72,74 @@
     <script>
         $(document).ready(function() {
             $('#tablaVerbos').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "${pageContext.request.contextPath}/verbos",
+                    "type": "POST",
+                    "data": function(d) {
+                        d.action = "data";
+                    }
+                },
+                "columns": [
+                    { "data": "terceraPersona" },
+                    { "data": "primeraPersona" },
+                    { 
+                        "data": "activo",
+                        "className": "text-center",
+                        "render": function(data) {
+                            if (data) return '<span class="badge bg-success">Activo</span>';
+                            return '<span class="badge bg-secondary">Inactivo</span>';
+                        }
+                    },
+                    { 
+                        "data": null,
+                        "className": "text-center",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let html = '<div class="d-flex justify-content-center gap-2">';
+                            if (row.canEdit) {
+                                html += '<a href="${pageContext.request.contextPath}/verbos?action=edit&id=' + row.id + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>';
+                            }
+                            if (row.canDelete) {
+                                html += '<form action="${pageContext.request.contextPath}/verbos" method="post" onsubmit="return confirm(\'¿Seguro que deseas eliminar este verbo?\');" style="margin:0;">';
+                                html += '<input type="hidden" name="action" value="delete">';
+                                html += '<input type="hidden" name="id" value="' + row.id + '">';
+                                html += '<button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                                html += '</form>';
+                            }
+                            html += '</div>';
+                            return html;
+                        }
+                    }
+                ],
                 "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                    "decimal": "",
+                    "emptyTable": "No hay datos disponibles en la tabla",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                    "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ entradas",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron registros coincidentes",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": activar para ordenar la columna ascendente",
+                        "sortDescending": ": activar para ordenar la columna descendente"
+                    }
                 }
             });
         });
     </script>
 </body>
 </html>
+

@@ -156,9 +156,9 @@ public class AuthService {
     }
 
     private String obtenerModulo(String path) {
-        if (path.contains("contratistas")) return "CONTRATISTAS";
+        if (path.contains("contratistas") || path.contains("masivo-usuarios")) return "CONTRATISTAS";
         if (path.contains("contratos")) return "CONTRATOS";
-        if (path.contains("usuarios")) return "ADMIN";
+        if (path.contains("usuarios") && !path.contains("masivo-usuarios")) return "ADMIN";
         if (path.contains("roles")) return "ADMIN";
         if (path.contains("presupuesto")) return "PRESUPUESTO";
         if (path.contains("supervisor")) return "SUPERVISORES";

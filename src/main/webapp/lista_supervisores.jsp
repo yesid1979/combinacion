@@ -54,28 +54,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach var="s" items="${listSupervisores}">
-                                    <tr>
-                                        <td>${s.cedula}</td>
-                                        <td><span class="text-primary fw-bold">${s.nombre}</span></td>
-                                        <td>${s.cargo}</td>
-                                        <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <a href="${pageContext.request.contextPath}/supervisores?action=view&id=${s.id}"
-                                                   class="btn btn-sm btn-outline-info" title="Ver">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="${pageContext.request.contextPath}/supervisores?action=edit&id=${s.id}"
-                                                   class="btn btn-sm btn-outline-primary" title="Editar">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
-                                                <button onclick="confirmarEliminar(${s.id})" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
                             </tbody>
                         </table>
                     </div>
@@ -95,7 +73,7 @@
                 $(document).ready(function () {
                     $('#tablaSupervisores').DataTable({
                         "processing": true,
-                        "serverSide": false,
+                        "serverSide": true,
                         "responsive": true,
                         "ajax": {
                             "url": "${pageContext.request.contextPath}/supervisores",
