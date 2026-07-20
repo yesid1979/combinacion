@@ -5,7 +5,7 @@
 <head>
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>DIAGNOSTICO USUARIO</title></head>
 <body>
-    <h2>DiagnÃ³stico de Usuario: yesid.piedrahita</h2>
+    <h2>Diagnóstico de Usuario: yesid.piedrahita</h2>
     <%
         try {
             Context initContext = new InitialContext();
@@ -35,7 +35,7 @@
                             int count = 0;
                             while (rs.next()) {
                                 count++;
-                                out.println("<li>CÃ³digo: " + rs.getString("codigo") + " | " + rs.getString("nombre") + "</li>");
+                                out.println("<li>Código: " + rs.getString("codigo") + " | " + rs.getString("nombre") + "</li>");
                             }
                             if (count == 0) out.println("<li style='color:red;'>Â¡NO TIENE PERMISOS EN LA TABLA usuario_permisos!</li>");
                         }

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Informes - GestiÃ³n de Prestadores</title>
+    <title>Historial de Informes - Gestión de Prestadores</title>
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -26,7 +26,7 @@
     <div class="container-fluid mt-4 flex-grow-1 px-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-dark mb-0">Informes de SupervisiÃ³n</h3>
+                <h3 class="fw-bold text-dark mb-0">Informes de Supervisión</h3>
             </div>
             <c:if test="${param.modo != 'revision'}">
                 <c:choose>
@@ -84,7 +84,7 @@
                         <select id="filtroEstado" class="form-select w-auto shadow-sm border-primary">
                             <option value="">Todos los estados</option>
                             <option value="RADICADA">Radicadas (Pendientes)</option>
-                            <option value="EN REVISION FINAL">En RevisiÃ³n Final</option>
+                            <option value="EN REVISION FINAL">En Revisión Final</option>
                             <option value="APROBADA PARA IMPRESION">Aprobadas</option>
                             <option value="DEVUELTA">Devueltas</option>
                             <option value="BORRADOR">Borradores</option>
@@ -178,22 +178,22 @@
                             let estado = row.estado;
                             let esAdminCuentas = row.esAdminCuentas;
                             
-                            // BotÃ³n Ver
+                            // Botón Ver
                             html += '<a href="informes?action=view&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="bi bi-eye"></i></a>';
                             
-                            // BotÃ³n Editar
+                            // Botón Editar
                             if (((estado === 'BORRADOR' || estado === 'DEVUELTA') && modo === 'mis_cuentas') || esAdminCuentas) {
                                 html += '<a href="informes?action=edit&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-primary ms-1" title="Editar Informe"><i class="bi bi-pencil-square"></i></a>';
                             }
                             
-                            // BotÃ³n Descargar
+                            // Botón Descargar
                             if (estado === 'APROBADA PARA IMPRESION') {
                                 html += '<a href="informes?action=download&id=' + id + '" class="btn btn-sm btn-outline-success ms-1" title="Descargar Paquete Final"><i class="bi bi-file-earmark-arrow-down"></i></a>';
                             } else {
-                                html += '<button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="La descarga se habilitarÃ¡ cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="La descarga se habilitará cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
                             }
                             
-                            // BotÃ³n Revisar
+                            // Botón Revisar
                             let mostrarBtnRevisar = false;
                             let esModalAdmin = false;
                             
@@ -212,7 +212,7 @@
                             }
                             
                             if (mostrarBtnRevisar) {
-                                html += '<button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar RevisiÃ³n" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
                             }
                             
                             return html;
@@ -240,7 +240,7 @@
                 }
             });
 
-            // LÃ³gica para el filtro personalizado de estados
+            // Lógica para el filtro personalizado de estados
             $('#filtroEstado').on('change', function() {
                 let val = $.fn.dataTable.util.escapeRegex($(this).val());
                 table.column(7).search(val ? '^' + val + '$' : '', true, false).draw();
@@ -251,23 +251,23 @@
             let opcionesHTML = '';
             
             if (esAdminCuentas) {
-                // Si es ContrataciÃ³n / Admin, tiene el poder de AprobaciÃ³n Final
+                // Si es Contratación / Admin, tiene el poder de Aprobación Final
                 opcionesHTML = `
-                    <option value="APROBADA PARA IMPRESION">AprobaciÃ³n Definitiva (Lista para imprimir)</option>
-                    <option value="DEVUELTA">Devolver al Contratista (Requiere correcciÃ³n)</option>
+                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                 `;
             } else {
-                // Si es solo Revisor BÃ¡sico, solo da el Visto Bueno previo
+                // Si es solo Revisor Básico, solo da el Visto Bueno previo
                 opcionesHTML = `
-                    <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a ContrataciÃ³n)</option>
-                    <option value="DEVUELTA">Devolver al Contratista (Requiere correcciÃ³n)</option>
+                    <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                 `;
             }
 
             Swal.fire({
-                title: 'RevisiÃ³n de Cuenta de Cobro',
+                title: 'Revisión de Cuenta de Cobro',
                 html: `
-                    <p class="text-muted">Seleccione la acciÃ³n a tomar para esta cuenta:</p>
+                    <p class="text-muted">Seleccione la acción a tomar para esta cuenta:</p>
                     <div class="mb-3">
                         <select id="swal-accion" class="form-select">
                             ` + opcionesHTML + `
@@ -275,7 +275,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-start w-100">Observaciones (Obligatorio si devuelve):</label>
-                        <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquÃ­ el motivo o sugerencias..."></textarea>
+                        <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
                     </div>
                 `,
                 showCancelButton: true,
@@ -285,7 +285,7 @@
                     const accion = document.getElementById('swal-accion').value;
                     const obs = document.getElementById('swal-obs').value;
                     if (accion === 'DEVUELTA' && !obs.trim()) {
-                        Swal.showValidationMessage('Debe escribir una observaciÃ³n para poder devolverla.');
+                        Swal.showValidationMessage('Debe escribir una observación para poder devolverla.');
                         return false;
                     }
                     return { accion: accion, obs: obs };

@@ -23,7 +23,7 @@
                         <h2 class="h4 mb-0 text-primary">
                             <i class="bi bi-translate me-2"></i>${verbo == null ? 'Registrar Nuevo' : 'Editar'} Verbo
                         </h2>
-                        <p class="text-muted small mt-2 mb-0">Define cÃ³mo se conjugarÃ¡n las actividades en los informes.</p>
+                        <p class="text-muted small mt-2 mb-0">Define cómo se conjugarán las actividades en los informes.</p>
                     </div>
                     
                     <div class="card-body p-4">
@@ -38,9 +38,9 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="bi bi-chat-left-text text-muted"></i></span>
                                     <input type="text" class="form-control" id="terceraPersona" name="terceraPersona" 
-                                           value="${verbo.terceraPersona}" placeholder="Ejemplo: realizÃ³, brindÃ³, apoyÃ³" required>
+                                           value="${verbo.terceraPersona}" placeholder="Ejemplo: realizó, brindó, apoyó" required>
                                 </div>
-                                <div class="form-text">Palabra exacta que usa el contratista en su informe. Puede escribirse en minÃºsculas.</div>
+                                <div class="form-text">Palabra exacta que usa el contratista en su informe. Puede escribirse en minúsculas.</div>
                             </div>
 
                             <div class="mb-4">
@@ -48,9 +48,9 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="bi bi-chat-right-text text-primary"></i></span>
                                     <input type="text" class="form-control" id="primeraPersona" name="primeraPersona" 
-                                           value="${verbo.primeraPersona}" placeholder="Ejemplo: realicÃ©, brindÃ©, apoyÃ©" required>
+                                           value="${verbo.primeraPersona}" placeholder="Ejemplo: realicé, brindé, apoyé" required>
                                 </div>
-                                <div class="form-text">CÃ³mo debe aparecer en el Word generado.</div>
+                                <div class="form-text">Cómo debe aparecer en el Word generado.</div>
                             </div>
 
                             <div class="form-check form-switch mb-4">

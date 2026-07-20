@@ -8,7 +8,7 @@
 <%
     Usuario u = (Usuario) session.getAttribute("usuario");
     if (u == null) {
-        out.println("No hay usuario en sesiÃ³n.");
+        out.println("No hay usuario en sesión.");
     } else {
         out.println("<h2>Usuario: " + u.getNombreCompleto() + " (ID: " + u.getId() + ")</h2>");
         out.println("<h3>Rol: " + (u.getRol() != null ? u.getRol().getNombre() : "SIN ROL") + "</h3>");

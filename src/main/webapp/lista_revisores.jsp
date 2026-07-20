@@ -7,7 +7,7 @@
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revisores de Documentos - GestiÃ³n de Prestadores</title>
+    <title>Revisores de Documentos - Gestión de Prestadores</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
@@ -25,7 +25,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Revisores de Documentos</h3>
-                <p class="text-muted small">ConfiguraciÃ³n de firmas para los documentos generados en lote.</p>
+                <p class="text-muted small">Configuración de firmas para los documentos generados en lote.</p>
             </div>
             <a href="revisores?action=new" class="btn btn-success px-4 fw-bold shadow-sm">
                 <i class="bi bi-plus-circle me-2"></i>Nuevo Revisor
@@ -53,7 +53,7 @@
                             <th>Tipo de Documento</th>
                             <th>Nombre del Revisor</th>
                             <th>Cargo del Revisor</th>
-                            <th>Ãšltima ActualizaciÃ³n</th>
+                            <th>Ãšltima Actualización</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -127,7 +127,7 @@
             });
 
             $('#revisoresTable').on('click', '.btn-delete', function() {
-                if(confirm('Â¿EstÃ¡ seguro de eliminar este revisor?')) {
+                if(confirm('Â¿Está seguro de eliminar este revisor?')) {
                     const id = $(this).data('id');
                     $.post('revisores?action=delete', { id: id }, function(response) {
                         $('#revisoresTable').DataTable().ajax.reload();

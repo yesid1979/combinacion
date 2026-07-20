@@ -1,7 +1,7 @@
 ﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-    // Refrescar sesiÃ³n para tomar cambios de permisos en caliente
+    // Refrescar sesión para tomar cambios de permisos en caliente
     com.combinacion.models.Usuario sessionUser = (com.combinacion.models.Usuario) session.getAttribute("usuario");
     if (sessionUser != null) {
         com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(sessionUser.getId());
@@ -19,7 +19,7 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Panel Principal - GestiÃ³n de Contratos</title>
+            <title>Panel Principal - Gestión de Contratos</title>
             <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
             <!-- Bootstrap 5 CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -88,7 +88,7 @@
                     </div>
                     </c:if>
 
-                    <!-- RevisiÃ³n de Cuentas (Para Revisores y Administradores) -->
+                    <!-- Revisión de Cuentas (Para Revisores y Administradores) -->
                     <c:if test="${sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='informes?modo=revision'">
@@ -96,7 +96,7 @@
                                 <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
                                     <i class="bi bi-ui-checks fs-2"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">RevisiÃ³n de Cuentas</h5>
+                                <h5 class="card-title fw-bold">Revisión de Cuentas</h5>
                                 <p class="card-text text-muted small">Revisar y aprobar cuentas de cobro de contratistas.</p>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
                                     <i class="bi bi-person-check fs-2"></i>
                                 </div>
                                 <h5 class="card-title fw-bold">Revisores de Documentos</h5>
-                                <p class="card-text text-muted small">GestiÃ³n de revisores.</p>
+                                <p class="card-text text-muted small">Gestión de revisores.</p>
                             </div>
                         </div>
                     </div>
@@ -157,7 +157,7 @@
                                     <i class="bi bi-wallet2 fs-2"></i>
                                 </div>
                                 <h5 class="card-title fw-bold">Ordenadores gasto</h5>
-                                <p class="card-text text-muted small">GestiÃ³n de ordenadores del gasto.</p>
+                                <p class="card-text text-muted small">Gestión de ordenadores del gasto.</p>
                             </div>
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                     </div>
                     </c:if>
 
-                    <!-- CombinaciÃ³n -->
+                    <!-- Combinación -->
                     <c:if test="${sessionScope.usuario.tienePermiso('COMBINACION_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='combinacion'">
@@ -187,14 +187,14 @@
                                     style="background-color: rgba(139, 92, 246, 0.1) !important; color: #8b5cf6 !important;">
                                     <i class="bi bi-file-earmark-word fs-2"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">CombinaciÃ³n</h5>
-                                <p class="card-text text-muted small">GeneraciÃ³n de documentos contractuales.</p>
+                                <h5 class="card-title fw-bold">Combinación</h5>
+                                <p class="card-text text-muted small">Generación de documentos contractuales.</p>
                             </div>
                         </div>
                     </div>
                     </c:if>
 
-                    <!-- AdministraciÃ³n -->
+                    <!-- Administración -->
                     <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER')}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='admin/usuarios'">
@@ -202,8 +202,8 @@
                                 <div class="icon-box bg-dark bg-opacity-10 text-dark mx-auto">
                                     <i class="bi bi-shield-lock fs-2"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">AdministraciÃ³n</h5>
-                                <p class="card-text text-muted small">GestiÃ³n de usuarios, roles y permisos.</p>
+                                <h5 class="card-title fw-bold">Administración</h5>
+                                <p class="card-text text-muted small">Gestión de usuarios, roles y permisos.</p>
                             </div>
                         </div>
                     </div>
@@ -224,7 +224,7 @@
                         Swal.fire({
                             icon: 'warning',
                             title: 'Acceso Denegado',
-                            text: 'No tienes permisos suficientes para acceder a este mÃ³dulo.',
+                            text: 'No tienes permisos suficientes para acceder a este módulo.',
                             confirmButtonColor: '#004884'
                         }).then(() => {
                             // Limpiar la URL param de error para evitar que la alerta vuelva a salir al recargar

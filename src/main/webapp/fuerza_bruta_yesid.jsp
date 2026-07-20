@@ -5,7 +5,7 @@
 <head>
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÃ“N FORZADA DE YESID</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
-    <h2 style="color: #2c3e50;">ReparaciÃ³n Forzada de Permisos: Yesid</h2>
+    <h2 style="color: #2c3e50;">Reparación Forzada de Permisos: Yesid</h2>
     <%
         try {
             Context initContext = new InitialContext();
@@ -24,13 +24,13 @@
                 }
                 
                 if (yesidId == -1) {
-                    out.println("<p style='color:red;'>ERROR: No se encontrÃ³ al usuario Yesid.</p>");
+                    out.println("<p style='color:red;'>ERROR: No se encontró al usuario Yesid.</p>");
                 } else {
                     out.println("<p style='color:blue;'>Cargando ID de Yesid: " + yesidId + "</p>");
                     
-                    // 2. Obtener IDs de permisos crÃ­ticos
+                    // 2. Obtener IDs de permisos críticos
                     out.println("<h3>Insertando permisos faltantes...</h3><ul>");
-                    // Intentamos varios cÃ³digos comunes para Carga Masiva y otros
+                    // Intentamos varios códigos comunes para Carga Masiva y otros
                     String[] codes = {"CARGA_MASIVA_VER", "CARGA_MASIVA", "MASIVOS", "MASIVOS_VER", "CONTRATOS_VER", "CONTRATISTAS_VER", "COMBINACION_VER"};
                     
                     for (String code : codes) {

@@ -107,7 +107,7 @@
         <div class="login-card">
             <div class="text-center mb-4">
                 <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png" alt="Logo" style="height: 60px;">
-                <h2 class="login-title mt-3">Sistema de GestiÃ³n Contractual del DAGJP</h2>
+                <h2 class="login-title mt-3">Sistema de Gestión Contractual del DAGJP</h2>
             </div>
             
             <form action="login" method="POST">
@@ -117,15 +117,15 @@
                 </div>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input type="password" name="password" class="form-control" placeholder="ContraseÃ±a" required>
+                    <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
                 </div>
-                <button type="submit" class="btn-login">Iniciar SesiÃ³n</button>
+                <button type="submit" class="btn-login">Iniciar Sesión</button>
             </form>
 
             <c:if test="${not empty error}">
                 <c:choose>
                     <c:when test="${error.contains('expirado')}">
-                        <!-- SesiÃ³n expirada: se muestra con SweetAlert abajo -->
+                        <!-- Sesión expirada: se muestra con SweetAlert abajo -->
                     </c:when>
                     <c:otherwise>
                         <div class="alert alert-danger mt-3 py-2 small text-center" role="alert">
@@ -146,8 +146,8 @@
     <script>
         Swal.fire({
             icon: 'info',
-            title: 'SesiÃ³n Expirada',
-            text: 'Tu sesiÃ³n ha expirado por inactividad. Por favor, inicia sesiÃ³n de nuevo.',
+            title: 'Sesión Expirada',
+            text: 'Tu sesión ha expirado por inactividad. Por favor, inicia sesión de nuevo.',
             confirmButtonColor: '#004884',
             confirmButtonText: 'Entendido'
         });

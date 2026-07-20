@@ -22,14 +22,14 @@
                 <div class="card-body p-4">
                     <h2 class="mb-4 fw-bold">
                         <i class="bi bi-upload text-primary me-2"></i>
-                        Carga masiva - gestiÃ³n integral
+                        Carga masiva - gestión integral
                     </h2>
 
                     <div class="alert alert-info border-0 shadow-sm">
                         <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Instrucciones del Archivo
                         </h5>
                         <p>Suba un archivo <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong>. El sistema
-                            identificarÃ¡ automÃ¡ticamente las columnas por nombre.</p>
+                            identificará automáticamente las columnas por nombre.</p>
 
                         <div class="row g-3 mt-2">
                             <!-- Ordenadores -->
@@ -38,8 +38,8 @@
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
                                 <small class="d-block">â€¢ Nombre del Ordenador</small>
-                                <small class="d-block">â€¢ CÃ©dula, Cargo</small>
-                                <small class="d-block">â€¢ Organismo, DirecciÃ³n</small>
+                                <small class="d-block">â€¢ Cédula, Cargo</small>
+                                <small class="d-block">â€¢ Organismo, Dirección</small>
                                 <small class="d-block">â€¢ Decreto, Acta</small>
                             </div>
 
@@ -48,8 +48,8 @@
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
-                                <small class="d-block">â€¢ CÃ©dula, Nombre, Correo</small>
-                                <small class="d-block">â€¢ FormaciÃ³n, Tarjeta Prof.</small>
+                                <small class="d-block">â€¢ Cédula, Nombre, Correo</small>
+                                <small class="d-block">â€¢ Formación, Tarjeta Prof.</small>
                                 <small class="d-block">â€¢ Experiencia, Nacimiento</small>
                             </div>
 
@@ -59,7 +59,7 @@
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
                                 <small class="d-block">â€¢ Nombre del Supervisor</small>
-                                <small class="d-block">â€¢ CÃ©dula del Supervisor</small>
+                                <small class="d-block">â€¢ Cédula del Supervisor</small>
                                 <small class="d-block">â€¢ Cargo del Supervisor</small>
                             </div>
 
@@ -68,8 +68,8 @@
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
-                                <small class="d-block">â€¢ Profesional JurÃ­dico y Cargo</small>
-                                <small class="d-block">â€¢ Profesional TÃ©cnico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Jurídico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Técnico y Cargo</small>
                                 <small class="d-block">â€¢ Profesional Financiero y Cargo</small>
                             </div>
 
@@ -78,8 +78,8 @@
                                 <h6 class="fw-bold text-danger">
                                     <i class="bi bi-cash-coin me-1"></i>Presupuesto:
                                 </h6>
-                                <small class="d-block">â€¢ CDP (NÃºmero, Fecha, Valor)</small>
-                                <small class="d-block">â€¢ RP (NÃºmero, Fecha)</small>
+                                <small class="d-block">â€¢ CDP (Número, Fecha, Valor)</small>
+                                <small class="d-block">â€¢ RP (Número, Fecha)</small>
                                 <small class="d-block">â€¢ Ficha EBI, Rubro</small>
                             </div>
 
@@ -163,7 +163,7 @@
 
                                     Swal.fire({
                                         title: 'Procesando solicitud',
-                                        html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la pÃ¡gina.',
+                                        html: 'Esto puede tardar unos segundos...<br>Por favor no cierre la página.',
                                         allowOutsideClick: false,
                                         allowEscapeKey: false,
                                         didOpen: () => {
