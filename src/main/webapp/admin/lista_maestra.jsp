@@ -3,7 +3,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>LISTA MAESTRA DE PERMISOS</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>LISTA MAESTRA DE PERMISOS</title>    <link href="assets/css/styles.css" rel="stylesheet">
+</head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2>Lista Maestra de Permisos en la DB</h2>
     <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">

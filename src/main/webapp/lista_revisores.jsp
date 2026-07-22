@@ -16,12 +16,13 @@
         .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
         .table td { vertical-align: middle; }
     </style>
+    <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-white d-flex flex-column min-vh-100">
 
     <jsp:include page="inc/navbar.jsp" />
 
-    <div class="container-fluid mt-4 flex-grow-1 px-4">
+    <div class="container mt-4 flex-grow-1 ">
 
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-premium">
@@ -53,10 +54,10 @@
             </div>
         </c:if>
 
-        <div class="card border">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <table id="revisoresTable" class="table table-hover w-100 nowrap">
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
                             <th>Tipo de Documento</th>
                             <th>Nombre del Revisor</th>
@@ -111,12 +112,12 @@
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay datos disponibles en la tabla",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                    "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
-                    "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(filtrado de _MAX_ registros totales)",
                     "infoPostFix": "",
                     "thousands": ",",
-                    "lengthMenu": "Mostrar _MENU_ entradas",
+                    "lengthMenu": "Mostrar _MENU_ registros",
                     "loadingRecords": "Cargando...",
                     "processing": "Procesando...",
                     "search": "Buscar:",

@@ -18,12 +18,13 @@
         .table td { vertical-align: middle; }
         .badge { font-weight: 600; padding: 6px 12px; border-radius: 6px; text-transform: uppercase; font-size: 0.75rem; }
     </style>
+    <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-white d-flex flex-column min-vh-100">
 
     <jsp:include page="inc/navbar.jsp" />
 
-    <div class="container-fluid mt-4 flex-grow-1 px-4">
+    <div class="container mt-4 flex-grow-1 ">
 
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-premium">
@@ -83,7 +84,7 @@
             <% request.getSession().removeAttribute("successMessage"); %>
         </c:if>
 
-        <div class="card border">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-end mb-3">
                     <div class="d-flex align-items-center">
@@ -99,7 +100,7 @@
                     </div>
                 </div>
                 <table id="informesTable" class="table table-hover w-100 nowrap">
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
                             <th>Contrato</th>
                             <th>Contratista</th>
@@ -230,10 +231,10 @@
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay datos disponibles en la tabla",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                    "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
-                    "infoFiltered": "(filtrado de _MAX_ entradas totales)",
-                    "lengthMenu": "Mostrar _MENU_ entradas",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(filtrado de _MAX_ registros totales)",
+                    "lengthMenu": "Mostrar _MENU_ registros",
                     "loadingRecords": "Cargando...",
                     "processing": "Procesando...",
                     "search": "Buscar:",
