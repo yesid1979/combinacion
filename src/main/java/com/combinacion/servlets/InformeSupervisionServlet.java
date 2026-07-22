@@ -1057,7 +1057,8 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
         String idRevisor = r.getParameter("id_revisor_asignado");
         if (idRevisor != null && !idRevisor.trim().isEmpty()) {
-            f.idRevisorAsignado = ParseUtils.parseInt(idRevisor);
+            int parsedRevisorId = ParseUtils.parseInt(idRevisor);
+            f.idRevisorAsignado = (parsedRevisorId > 0) ? parsedRevisorId : null;
         }
         
         return f;

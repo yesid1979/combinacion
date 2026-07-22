@@ -793,7 +793,12 @@
                                         
                                         canvas.toBlob(function(blob) {
                                             let formData = new FormData();
-                                            formData.append('file', blob, file.name || "imagen.jpg");
+                                            let originalName = file.name ? file.name : "imagen.jpg";
+                                            let dotIndex = originalName.lastIndexOf('.');
+                                            let baseName = dotIndex !== -1 ? originalName.substring(0, dotIndex) : originalName;
+                                            let ext = dotIndex !== -1 ? originalName.substring(dotIndex) : ".jpg";
+                                            let uniqueName = baseName + "_" + new Date().getTime() + ext;
+                                            formData.append('file', blob, uniqueName);
                                             
                                             $.ajax({
                                                 url: 'ImageUploadServlet',

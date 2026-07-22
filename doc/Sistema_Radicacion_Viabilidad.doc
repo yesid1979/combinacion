@@ -1,0 +1,447 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <meta charset="utf-8">
+    <title>Sistema de Gestión Contractual y Radicación</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
+        .right { text-align: right; font-size: 10pt; font-weight: bold; }
+        .center { text-align: center; }
+        h1, h2, h3 { font-family: Arial, sans-serif; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; }
+        .page-break { page-break-before: always; }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- PÁGINA 1: OFICIO -->
+    <div>
+        <p class="bold">
+            ALCALDÍA DE SANTIAGO DE CALI<br>
+            DEPARTAMENTO ADMINISTRATIVO<br>
+            DE GESTIÓN JURÍDICA PÚBLICA
+        </p>
+
+        <p class="right">
+            Al contestar por favor cite estos datos:<br>
+            Radicado No.: 202441210100062734<br>
+            Fecha: 22-07-2026<br>
+            TRD: 4121.010.13.1.971.006273
+        </p>
+
+        <p>
+            <strong>ALEXANDER MONDRAGÓN VALENCIA</strong><br>
+            Director<br>
+            Departamento Administrativo de Tecnologías de la Información y las Comunicaciones (DATIC)
+        </p>
+
+        <p>
+            <strong>Asunto:</strong> Solicitud de visto bueno para el desarrollo de un sistema de información de gestión precontractual, contractual y radicación de cuentas de cobro
+        </p>
+
+        <p>Cordial saludo,</p>
+
+        <p>
+            Comedidamente me dirijo a usted, con el objetivo de solicitar el visto bueno para adelantar el desarrollo de un sistema de información para la gestión precontractual, contractual y radicación de cuentas de la entidad. El cual será desarrollado, diseñado e implementado por iniciativa del ing. Yesid Javier Piedrahita Correa - CTO, el cual redunda en las buenas prácticas administrativas y en la ejecución oportuna de las tareas que se realizan en este organismo.
+        </p>
+
+        <p>
+            Al respecto es válido indicar que el Departamento Administrativo de Gestión Jurídica Pública cuenta con un volumen alto de procesos de contratación, supervisión y revisión de cuentas. Por ello, el sistema propuesto tiene como pilar fundamental la optimización de las etapas precontractual y contractual, incluyendo la gestión y radicación de cuentas de cobro como una herramienta adicional que se integra al ciclo completo del contrato.
+        </p>
+
+        <p>
+            Adicionalmente, para el adecuado funcionamiento del proceso es necesario contar con un flujo digital (Ciclo de Vida) que automatice la generación documental desde la etapa previa a la contratación, y posteriormente permita a los contratistas y supervisores generar, radicar, validar y aprobar sus informes y cuentas de cobro. La creación de nuevos desarrollos in-house para estos fines no generaría un incremento en el valor final dispuesto para licencias externas, resaltando que el organismo puede hacer uso de tecnologías web estándar sin incurrir en costos adicionales de licenciamiento propietario.
+        </p>
+
+        <p>
+            Dicho esto, se tienen como cambios relevantes la creación de interfaces para la vista de los usuarios finales (contratistas, supervisores y apoyos precontractuales) y otra parte administrativa donde se permitirá que la información, la elaboración de contratos y la trazabilidad sea registrada en una base de datos propia.
+        </p>
+
+        <p>
+            En ese sentido el Ing. Yesid Javier Piedrahita Correa – CTO propone optar por el desarrollo de este sistema de información precontractual y contractual, cuyo código fuente sea propiedad de la Entidad, lo cual a futuro permitirá hacer los ajustes y modificaciones a la par con el cambio normativo.
+        </p>
+
+        <p>En espera de su valiosa gestión, quedamos atentos a su respuesta de viabilidad.</p>
+
+        <br><br>
+        <p>Atentamente,</p>
+        <br><br>
+        <p>
+            <strong>ANA CATALINA CASTRO LOZANO</strong><br>
+            Directora<br>
+            Departamento Administrativo de Gestión Jurídica Pública
+        </p>
+        
+        <p style="font-size: 9pt;">
+            Anexos: Formato de solicitud de concepto de viabilidad en un folio.<br>
+            Documento técnico<br><br>
+            Proyectó: Yesid Javier Piedrahita Correa - Contratista<br>
+            Revisó: Ángela María Catalán Gutiérrez - Subdirectora de Doctrina y Asuntos Normativos
+        </p>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- PÁGINA 2: FORMATO DE SOLICITUD -->
+    <h3 class="center">SISTEMAS DE GESTIÓN Y CONTROL INTEGRADOS (SISTEDA, SGC y MECI)</h3>
+    <h3 class="center">SOLICITUD DE CONCEPTO DE VIABILIDAD</h3>
+
+    <table>
+        <tr>
+            <td colspan="2"><strong>Fecha de Solicitud:</strong> 22/07/2026</td>
+            <td colspan="2"><strong>ESPACIO RESERVADO DATIC</strong></td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Nombre del Organismo*:</strong> Departamento Administrativo de Gestión Jurídica Pública</td>
+            <td colspan="2"><strong>No de Radicado:</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Nombre Director o Secretario*:</strong> Ana Catalina Castro Lozano</td>
+            <td><strong>Nombre del Proyecto / Solicitud*:</strong> N/A</td>
+            <td colspan="2"><strong>Fecha de Respuesta:</strong></td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <strong>Descripción Sencilla del proyecto / necesidad Propuesta*:</strong><br>
+                Desarrollar un Sistema de Información para la Gestión Precontractual, Contractual, Informes de Supervisión y Radicación de Cuentas de Cobro.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" class="center bold" style="background-color: #f2f2f2;">Relación del proyecto / Solución con el Plan de Desarrollo</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Dimensión (Cod y Nombre)*:</strong></td>
+            <td colspan="2">54 Cali, Gobierno Inteligente</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Línea Estratégica (Cod y Nombre)*:</strong></td>
+            <td colspan="2">5402 Gobierno Inteligente</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Programa (Cod y Nombre)*:</strong></td>
+            <td colspan="2">5402001 Fortalecimiento Institucional</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>El proyecto cuenta con presupuesto?</strong> SI [ ] NO [X]</td>
+            <td colspan="2"><strong>Valor aproximado:</strong> 0</td>
+        </tr>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- PÁGINA 3: DOCUMENTO TÉCNICO -->
+    <br><br><br><br>
+    <h2 class="center">DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA</h2>
+    <br><br>
+    <h2 class="center">DISEÑAR Y DESARROLLAR UN SISTEMA DE INFORMACIÓN PARA LA GESTIÓN PRECONTRACTUAL, CONTRACTUAL Y RADICACIÓN DE CUENTAS DE COBRO PARA EL DISTRITO DE SANTIAGO DE CALI</h2>
+    <br><br><br><br><br><br>
+    <h3 class="center">Santiago de Cali, Julio del 2026</h3>
+
+    <div class="page-break"></div>
+
+    <h2>1. LA RAZONABILIDAD DEL DOCUMENTO TÉCNICO</h2>
+    <p>Los conceptos que se comparten aquí, sirven como base de referencia para el cumplimiento de lo que se solicita en el marco de la GUÍA PARA EL DESARROLLO E IMPLEMENTACIÓN DEL SISTEMAS DE INFORMACIÓN del Distrito de Cali.</p>
+    <p>Se presenta en forma resumida algunas características que debe tener el sistema:</p>
+    <ul>
+        <li>Es un sistema que apenas inicia su ciclo de vida. Está en sus primeras etapas de desarrollo y utilización por parte de la entidad.</li>
+        <li>El espectro tecnológico no es complejo, pero requiere alta integración para la generación documental (DOCX/PDF).</li>
+        <li><strong>Foco Central:</strong> Su principal módulo es la etapa precontractual (estudios previos, minutas) y contractual (seguimiento y contratos), adicionando la radicación de cuentas de cobro como complemento de pago.</li>
+        <li>Debe contener una interfaz para usuario final (contratistas y supervisores) donde el podrá consultar y radicar.</li>
+        <li>Debe contener una interfaz para la parte administrativa (abogados y ordenadores).</li>
+        <li>Módulo de mantenimiento donde se registrarán los datos básicos para la parametrizacion del sistema.</li>
+        <li>Módulo para el registro y estructuración de contratos y estudios previos.</li>
+        <li>Módulo para la radicación y validación de cuentas de cobro e informes.</li>
+        <li>Módulo de creación y asignación de usuarios en el sistema con sus respectivos roles.</li>
+        <li>Los códigos fuentes serán totalmente de propiedad de la Alcaldía de Santiago de Cali - DAGJP el cual garantizara que el sistema sea actualizado en cualquier momento sin contar con la autorización del desarrollador.</li>
+    </ul>
+
+    <h2>2. CONTENIDO Y DESARROLLO</h2>
+    
+    <h3>2.1 CUMPLIMIENTO DE ESTÁNDARES Y NORMATIVA VIGENTE</h3>
+    <p>El sistema no está sometido al cumplimiento de algún marco legal u otros preceptos a los cuales adherir, salvo las normas de contratación estatal y lineamientos de pagos internos de la entidad.</p>
+
+    <h3>2.2 DIMENSIONAMIENTO DEL SISTEMA</h3>
+    <p>El personal de sistemas del DAGJP, realizaron estimaciones que arrojan lo siguiente:</p>
+    
+    <p><strong>Métricas de usuarios</strong></p>
+    <table>
+        <tr>
+            <th>Elemento</th>
+            <th>Primer año</th>
+            <th>Estable en próximos años.</th>
+        </tr>
+        <tr>
+            <td>Número de usuarios administradores</td>
+            <td>1 Funcional<br>1 Técnico</td>
+            <td>1 Funcional<br>1 Técnico</td>
+        </tr>
+        <tr>
+            <td>Número total de usuarios en el sistema.</td>
+            <td>Max 150</td>
+            <td>estimado 200 internos Alcaldía</td>
+        </tr>
+        <tr>
+            <td>Número de usuarios concurrentes en el Sistema</td>
+            <td>Max 100</td>
+            <td>50 normales y 100 en pico en casos excepcionales (estructuración masiva o cierres de cobro)</td>
+        </tr>
+    </table>
+
+    <p><strong>Métricas de almacenamiento</strong></p>
+    <table>
+        <tr>
+            <td>Número de documentos, emails, videos, imágenes, etc.</td>
+            <td>En esta primera fase se cargarán y generarán archivos DOCX y PDF (Soportes, contratos, informes)</td>
+        </tr>
+        <tr>
+            <td>Tamaño promedio de documentos (KB/MB)</td>
+            <td>1 a 30 MB</td>
+        </tr>
+        <tr>
+            <td>Crecimiento estimado de la base de datos</td>
+            <td>10% - 2 GB para el primer año.</td>
+        </tr>
+    </table>
+
+    <p>NOTA EXPLICATIVA: El crecimiento de la BD se estimara en relación directa con los movimientos que se presenten que cada que se cree o modifique un contrato o se radique una cuenta de cobro.</p>
+
+    <p><strong>Métricas de transacciones</strong></p>
+    <table>
+        <tr>
+            <td>Estimación del número de transacciones registradas en una hora</td>
+            <td>se estima con base en experiencias del DAGJP que ocurran potencialmente unas 500 transacciones/mes</td>
+        </tr>
+    </table>
+
+    <h3>2.3 DESCRIPCIÓN DETALLADA DE LOS REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES DE LA SOLUCIÓN</h3>
+    <p>A continuación, se ofrece un resumen de estos requerimientos en concordancia con el documento de la guía de desarrollo.</p>
+    <table>
+        <tr>
+            <td>Características contractuales:</td>
+            <td>N/A</td>
+        </tr>
+        <tr>
+            <td>Requisitos funcionales derivados.</td>
+            <td>Elaborar el diseño y desarrollo de un sistema de información de gestión precontractual, contractual y radicación para la alcaldía de Santiago de Cali.<br>
+            - Implementar en una base de datos.<br>
+            - Que sea interactiva.<br>
+            - Permitir estructuración, consulta, generación de contratos, y actualización de datos (trazabilidad y radicación).</td>
+        </tr>
+        <tr>
+            <td>Requisitos NO funcionales derivados.</td>
+            <td>Debería satisfacer:<br>
+            - Que cumpla el estándar SQL.<br>
+            - Que pueda funcionar en cualquier sistema operativo<br>
+            - Que pueda funcionar con cualquier explorador web</td>
+        </tr>
+    </table>
+
+    <p>Como se ve, los requisitos no están formulados con detalle como es usual en un proyecto de desarrollo de software.</p>
+    
+    <table>
+        <tr>
+            <td>Entendimiento del requerimiento funcional:</td>
+            <td>Acerca de la interactividad en un contexto de bases de datos.<br>
+            - que satisfaga las funcionalidades de persistencia -CRUD-.<br>
+            - Que gestione usuarios, cualesquiera que sean sus roles<br>
+            - No definidos hasta este punto.<br>
+            - Se utilizará la metodología MVC</td>
+        </tr>
+        <tr>
+            <td>Funcionalidades ofrecidas</td>
+            <td>Para cada uno de los módulos se realizarán las siguientes operaciones de interactividad CRUD sobre la BD.<br>
+            • Crear<br>• Leer<br>• Actualizar/Modificar<br>• Eliminar<br>• Consultar<br>• Generación Documental Automatizada</td>
+        </tr>
+        <tr>
+            <td>Entendimiento del requerimiento NO funcional:</td>
+            <td>- Que cumpla el estándar SQL.<br>
+            - Que pueda funcionar en cualquier sistema operativo.<br>
+            - Que pueda funcionar en cualquier explorador web.</td>
+        </tr>
+    </table>
+
+    <h3>2.4 USABILIDAD Y ACCESIBILIDAD</h3>
+    <p>Como es una aplicación 100% web, en efecto se deben cumplir las siguientes condiciones.</p>
+    <p>Para aplicaciones WEB:</p>
+    <p>a. La solución implementada debe ser 100% WEB.</p>
+    <p>b. La solución debe presentarse al usuario en sus interfaces y/o formulario en idioma español.</p>
+    <p>c. El contenido del sistema debe cumplir con las pautas de accesibilidad al contenido de la Web para todo tipo de usuarios independientemente de sus capacidades. Las pautas WCAG de la W3C (www.w3c.org) cuentan con priorización en niveles A, AA y AAA; se requiere que cumpla con el nivel AA de la web 2.0. De Igual manera es necesario tener en cuenta el "Manual de Gobierno Digital".</p>
+    <p>d. Cumplir con la norma NTC 5854, sobre accesibilidad.</p>
+    <p>e. El sistema debe considerar el acceso a población con discapacidad visual y/o auditiva, teniendo en cuenta los principales estándares de la W3C para facilitar el acceso al mismo, manteniendo la estructura inicial.</p>
+    <p>f. Widgets que permiten que el contenido sea accesible (alto contraste, aumentar zoom, Acces key, STT (speech to text, browse a loud)).</p>
+    <p>g. Los URLS amigables deben ser únicos. (Un enlace sólo podrá accederse por su identificador único y por su único URL amigable)</p>
+    <p>h. Validación del código con W3C. Utilizar como referencia herramientas de validación como TAWDIS y W3C.</p>
+    <p>i. Cumplimiento de las 10 heurísticas de Nielsen (Visibilidad del estado del sistema, relación entre el sistema y el mundo real, control y libertad del usuario, consistencia y estándares, prevención de errores, reconocer más que recordar, flexibilidad y eficiencia de uso, estética y diseño minimalista, ayuda a los usuarios a reconocer, diagnosticar y recuperarse de errores, ayuda y documentación).</p>
+    <p>j. El sistema debe ser responsivo.</p>
+    <p>k. El sistema implementado debe funcionar correctamente en todos los navegadores Firefox, Internet Explorer, Chrome, Opera, Safari, en su última versión estable.</p>
+
+    <h3>2.5 AUTENTICACIÓN Y CONTROL DE ACCESO</h3>
+    <p>El sistema de información debe permitir por parametrizacion la integración con el directorio activo para los usuarios que cuenta en este sistema. Igualmente, la plataforma debe tener su propio sistema de autenticación para los aquellos usuarios que no tienen cuenta en directorio activo (ej: Contratistas), esto debe ser parametrizable.</p>
+    <p>La autenticación debe tener en cuenta dos controles básicos. El primer debe considerar bloquear a nivel de aplicación el usuario si tiene más de 3 intentos fallidos, pues el Directorio Activo lo hará después de 5 autenticaciones. El segundo control es que la aplicación cierre sesión a los 60 segundos de inactividad y deba iniciar sesión nuevamente si esta cierra automáticamente.</p>
+
+    <h3>2.6 SEGURIDAD</h3>
+    <ul>
+        <li>Se debe agregar un módulo donde se guarde siempre las transacciones hechas por los usuarios para posterior auditoría. Siempre considerando buenas prácticas. Mediante esta funcionalidad se deben poder conocer todas y cada una de las acciones ejecutadas por los usuarios, de tal forma que se tiene un control estricto sobre quién realiza modificaciones, adiciones a contratos, consulta o borrado de datos. Debe tener como mínimo las siguientes funcionalidades: se debe registrar información detallada por fecha, hora, módulo, nombre del contenido, acción realizada, nombre de usuario que realizó la acción (Interno de la aplicación o por servicio web) y la IP desde la cual se ejecutó la acción.</li>
+        <li>Se debe agregar un módulo donde se definan los roles, permisos y control de acceso de usuarios a la aplicación y a los módulos de la aplicación.</li>
+        <li>Definir y documentar los permisos exactos de los usuarios del sistema operativo. No se permitirá permisos root para usuarios de aplicación en el sistema operativo.</li>
+        <li>Definir y documentar los permisos que requiere la aplicación sobre los archivos y directorios del servidor, preferiblemente read-only.</li>
+        <li>Definir tipo y tamaño de archivos recomendado para subir al sistema de forma segura y que se obligue a usar sintaxis adecuada, sin etiquetas, sin espacios o caracteres especiales.</li>
+        <li>La administración del sistema y la carga de archivos por parte de los administradores debe realizarse únicamente desde la red interna.</li>
+        <li>El sistema debe quedar abierto a implementaciones de controles criptográficos en la comunicación (https) de la información.</li>
+        <li>La arquitectura de la solución debe estar separada por capas: Front end, Back end y base de datos.</li>
+        <li>Para los formularios públicos de entrada y consulta de datos, la comunicación entre la aplicación y la base de datos será a través de servicios evitando que se haga de manera directa, cualquier otra forma debe ser aprobada por el Departamento Administrativo de Tecnologías de la Información y las Comunicaciones.</li>
+    </ul>
+    <p>El sistema está definido en un entorno 100% web de acuerdo con las guías y se despliega así mismo.</p>
+
+    <h3>2.7 ARQUITECTURA, METODOLOGÍA, FASES Y PLATAFORMA TECNOLÓGICA</h3>
+    <p>Se deben aplicar las siguientes directrices en el proyecto:</p>
+    <ul>
+        <li>Separar por capas separadas: backend, base de datos y la interfaz de usuario.</li>
+        <li>Hacer un Desarrollo iterativo incremental.</li>
+        <li>El entorno de desarrollo debe ser local, en servidor propio del organismo.</li>
+        <li>El despliega se debe hacer en un servidor de pruebas asignado por el organismo.</li>
+        <li>Se debe entregar el sistema en un servidor dispuesto por el organismo en ambiente de pruebas. El sistema de información se debe desarrollar bajo los estándares actuales de desarrollo web, HTML5 y CSS3, lo cual permitirá su uso en cualquier versión de navegadores web, tales como Internet Explorer, Firefox, Safari, Chrome.</li>
+    </ul>
+
+    <p>En este sistema se debe utilizar el estándar MVC (Modelo Vista Controlador) implementado de la siguiente manera:</p>
+    <ul>
+        <li>Controlador: son los componentes a los cuales las vistas y los modelos se desean conectar, ya sean servicios, guardias, etc.</li>
+        <li>Modelo: reciben y envían la información de la base de datos.</li>
+        <li>Vistas: se encarga de la interacción con los usuarios de forma gráfica y la visualización de información de la base datos.</li>
+    </ul>
+
+    <p>Incluye los componentes que menciona la guía.</p>
+    <table>
+        <tr><td>Front end</td><td>JSP, Bootstrap, CSS, HTML5, JQuery</td></tr>
+        <tr><td>Back end</td><td>Java (Java EE), Apache Tomcat</td></tr>
+        <tr><td>Base de datos</td><td>PostgreSQL</td></tr>
+    </table>
+
+    <p><strong>REQUERIMIENTOS MÍNIMOS A NIVEL DE USUARIOS</strong></p>
+    <p>Los requerimientos mínimos con los cuales un usuario pueda ingresar al sistema de información serán los siguientes:</p>
+    <p><strong>1. Hardware</strong><br>• Computador de escritorio, portátil, tabletas o celulares inteligentes.</p>
+    <p><strong>2. Software</strong><br>• Windows, MAC OS, Linux.<br>• Debe soportar los siguientes navegadores:<br>• Internet Explorer 10 o superior<br>• Firefox 3.0 o superior<br>• Chrome<br>• Safari 8 o superior.</p>
+    <p>El Sistema de Información debe estar disponible a través de la red local e internet.</p>
+    <p>El programa se debe desarrollar en la plataforma Java JEE, JavaScript y JQuery, la base de datos se encuentra programada bajo el lenguaje SQL, en la plataforma: POSTGRESQL.</p>
+
+    <h4>2.7.1 Arquitectura de software para desarrollo de sistemas de información.</h4>
+    <p>No aplica</p>
+
+    <h4>2.7.2 Metodología y fases para la implementación de la solución</h4>
+    <p>Utilizar diferentes metodologías para el desarrollo e implementación de sistemas de información, como es el caso de UML y RUP. La experiencia recogida, a través de la ejecución de los diferentes proyectos realizados, nos ha encauzado a la utilización de la metodología XP (eXtreme Programming — Programación Extrema).</p>
+    <p>XP es una metodología ágil centrada en potenciar las relaciones interpersonales como clave para el éxito en desarrollo de software, promoviendo el trabajo en equipo, preocupándose por el aprendizaje de los desarrolladores, y propiciando un buen clima de trabajo. XP se basa en realimentación continua entre el cliente y el equipo de desarrollo, comunicación fluida entre todos los participantes, simplicidad en las soluciones implementadas y coraje para enfrentar los cambios. XP se define como especialmente adecuada para proyectos con requisitos imprecisos y muy cambiantes, y donde existe un alto riesgo técnico.</p>
+    <p>XP principalmente pone más énfasis en la adaptabilidad que en la previsibilidad de los proyectos, lo cual la encaja perfectamente a las necesidades de las aplicaciones de software de la mayor parte de las entidades públicas colombianas.</p>
+    <p>Nosotros consideramos que los cambios de requisitos sobre la marcha son un aspecto natural, inevitable e incluso deseable del desarrollo de sistemas de información, lo cual puede ser manejado con menores niveles de sobresaltos aplicando la metodología XP.</p>
+
+    <h4>2.7.3 Manuales</h4>
+    <p>Se deben elaborar y entregar los siguientes manuales en Idioma español.</p>
+    <p><strong>Manual técnico.</strong><br>Contiene los detalles que presenta la Guía en este aspecto.</p>
+    <ul>
+        <li>Versión del documento y fecha de la versión</li>
+        <li>Versión del sistema de información.</li>
+        <li>Pre-requisitos de instalación del sistema: Sistema operativo de los servidores de aplicaciones y base de datos, marca y versión de la base de datos, marca y versión de los servidores de aplicaciones, navegador, configuraciones de seguridad, etc.</li>
+        <li>Modelo entidad relación del sistema.</li>
+        <li>Scripts de instalación del sistema.</li>
+        <li>Manual o guía de instalación del sistema.</li>
+        <li>Guía con la estructura y descripción del código fuente.</li>
+    </ul>
+
+    <p><strong>Manual de usuario.</strong><br>El manual de usuario debe estar en línea, incorporado dentro de la aplicación.</p>
+    <p>Los componentes que deben tener son:</p>
+    <ul>
+        <li>Versión del documento y fecha de la versión</li>
+        <li>Versión del sistema de información.</li>
+        <li>Manual de uso del sistema: Paso a paso de uso de las principales opciones del sistema. Incluya imágenes para cada paso.</li>
+    </ul>
+
+    <h4>2.7.4 Plataforma de desarrollo</h4>
+    <p>El programa se debe desarrollar en la plataforma Java JEE, JavaScript y JQuery, la base de datos se encuentra programada bajo el lenguaje SQL, en plataforma: POSTGRESQL y el entorno de desarrollo actual bajo la especificación con soporte HTML5.</p>
+
+    <h3>2.8 SISTEMA CON APERTURA DE DATOS</h3>
+    <p>La implementación de este componente debe incluir las orientaciones dadas por el Departamento administrativo de planeación, oficina de transparencia y el proceso administración de tecnologías de la información y las comunicaciones.</p>
+
+    <h3>2.9 TRAZABILIDAD DE LA INFORMACIÓN Y DE LAS OPERACIONES</h3>
+    <p>El sistema de información contara con un módulo de auditoria donde se registran en el las actividades de los usuarios, los ciclos contractuales, las radicaciones y las transacciones exitosas que efectúan ellos cualquiera que sea el rol que desempeñen.</p>
+    <p>El proceso de autenticación reporta las actividades de:</p>
+    <ol>
+        <li>ingresos al sistema.</li>
+        <li>los correspondientes egresos de los usuarios.</li>
+        <li>las transacciones exitosas durante las sesiones activas.</li>
+    </ol>
+    <p>El rol administrador es el único autorizado para acceder, consultar, exportar, etc esta información.</p>
+
+    <h3>2.10 ADMINISTRACIÓN DEL SISTEMA</h3>
+    <p>La gestión del sistema de información estará a cargo del usuario de rol administrador. Se deben incluir las siguientes funciones:</p>
+    <ul>
+        <li>Agregar un módulo de gestión de roles (administrador, supervisor, apoyo, contratista, ordenador), privilegios y usuarios.</li>
+        <li>Contar con módulo de mantenimiento de datos el cual permitirá la parametrizacion del sistema.</li>
+        <li>Tiene todos los privilegios (CRUD) sobre todas las entidades tablas del sistema de información.</li>
+    </ul>
+    <p>El sistema debe contar un menú para realizar tales operaciones de administración que se llamara mantenimiento de datos.</p>
+
+    <h3>2.11 COMPONENTE DE INTEGRACIÓN / INTEROPERABILIDAD</h3>
+    <p>Para esta primera fase se identifica como necesaria la integración mediante APIS externas (Google Workspace - Drive y Gmail) para el flujo y soporte de actas contractuales, cuentas de cobro y notificaciones. La idea es que en una segunda fase se permita la integración con otras aplicaciones internas (ej. Financieras).</p>
+    <p>La integración con el directorio activo DA del Distrito está incluido en esta fase.</p>
+
+    <h3>2.12 MIGRACIÓN DE LOS DATOS</h3>
+    <p>Se debe ofrecer un cargue de datos inicial en el sistema, resultante de procesos de estructuración de contratos, contratistas y obligados mediante módulos de carga masiva CSV/Excel. Esta migración que se solicita será de forma básica para la realización de pruebas de contratación y radicación masiva.</p>
+
+    <h3>2.13 REALIZAR EL PROCESO DE PRUEBAS Y ASEGURAMIENTO DE CALIDAD DE LA SOLUCIÓN, GARANTIZANDO UNA IMPLEMENTACIÓN DE ÓPTIMA CALIDAD Y RENDIMIENTO</h3>
+    <p>Se deben generar los siguientes tipos de pruebas:</p>
+    <ol>
+        <li>Pruebas de funcionalidad e integración del sistema en generación de documentos contractuales.</li>
+        <li>Pruebas de rendimiento y tiempo de ejecución.</li>
+        <li>Pruebas de seguridad y de protección de datos (Habeas data)</li>
+        <li>Pruebas de stress en simulación de alta concurrencia (fechas de radicación de pagos).</li>
+    </ol>
+
+    <h3>2.14 TRANSFERENCIA DE CONOCIMIENTO</h3>
+    <p>La transferencia se lleva a cabo en sendas capacitaciones a usuarios y administradores, con el siguiente detalle:</p>
+    <table>
+        <tr>
+            <th>MÓDULO</th>
+            <th>USUARIOS</th>
+            <th>DURACIÓN</th>
+        </tr>
+        <tr>
+            <td>Capacitación dirigida a usuarios administradores del sistema</td>
+            <td>Min 1</td>
+            <td>2 h.</td>
+        </tr>
+        <tr>
+            <td>Capacitación a usuarios funcionales (Supervisores / Apoyos)</td>
+            <td>Min 1</td>
+            <td>2 h.</td>
+        </tr>
+        <tr>
+            <td>Capacitación a usuarios contratistas (Radicadores)</td>
+            <td>Min 5</td>
+            <td>2 h.</td>
+        </tr>
+    </table>
+
+    <h3>2.15 GARANTIZAR EL USO Y APROPIACIÓN DE LOS SISTEMAS</h3>
+    <p>Para garantizar el uso y apropiación de los sistemas se debe aplicar el proceso de uso y apropiación como lo indica la guía para la implementación de estrategias de uso y apropiación y además se puede solicitar apoyo a la subdirección de innovación digital de DATIC.</p>
+
+    <h3>2.16 INSTALAR, CONFIGURAR, AFINAR Y PONER EN OPERACIÓN LA SOLUCIÓN</h3>
+    <p>En este proceso se debe incluir:</p>
+    <ul>
+        <li>Realizar la instalación y parametrizacion de la solución, así como del software y servicios que requiera para su implementación primero en un ambiente de pruebas que dispondrá DATOS, sobre este ambiente se realizarán pruebas internas por el equipo de Calidad y usuarios del sistema, que se determinen para tal fin. Una vez el sistema haya pasado satisfactoriamente las pruebas realizadas y las pruebas internas, se deberá realizar la instalación y parametrizacion en los servidores de producción.</li>
+        <li>Realizar la afinación de todo el sistema (incluyendo sistema operativo, servidor web, base de datos y demás servicios requeridos) para un óptimo rendimiento y seguridad de la plataforma.</li>
+        <li>Entregar los manuales de usuario, técnicos y guías de instalación del sistema desarrollado.</li>
+    </ul>
+
+    <h3>2.17 SOPORTE DE LA SOLUCIÓN, NIVELES DE SERVICIO Y TIEMPO DE RESPUESTA A INCIDENTES REPORTADOS</h3>
+    <p>El soporte técnico será realizado por el CTO del organismo.</p>
+
+    <h3>2.18 PROPIEDAD INTELECTUAL Y LICENCIAMIENTO</h3>
+    <p>Se establece lo siguiente:</p>
+    <ul>
+        <li>Los derechos patrimoniales sobre el sistema corresponden en su totalidad a la Administración Central del Municipio Santiago de Cali - Departamento Administrativo de Gestión Jurídica Publica.</li>
+        <li>El CTO conservará los derechos morales de autor.</li>
+        <li>El CTO entrega el código fuente a la Administración Central del Municipio Santiago de Cali - Departamento Administrativo de Gestión Jurídica Publica.</li>
+    </ul>
+
+</body>
+</html>
