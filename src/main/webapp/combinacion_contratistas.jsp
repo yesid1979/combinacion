@@ -24,6 +24,14 @@
             <jsp:include page="inc/navbar.jsp" />
 
             <div class="container mt-4 mb-5 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Combinación</li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-files me-1"></i>Generar Documentos</li>
+                </ol>
+            </nav>
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex flex-wrap gap-2 justify-content-end">

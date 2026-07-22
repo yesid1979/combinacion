@@ -16,6 +16,8 @@ import java.util.Locale;
 
 public class CuentaCobroGenerator {
 
+    private static byte[] templateCacheBytes = null;
+
     public static String generarExcel(InformeSupervision informe, Contrato contrato, String realPath) throws Exception {
         // Asume que hay una plantilla base llamada "CUENTA_COBRO.xlsx" en la carpeta plantillas/
         String templatePath = realPath + File.separator + "plantillas" + File.separator + "CUENTA_COBRO.xlsx";
@@ -30,7 +32,11 @@ public class CuentaCobroGenerator {
             }
         }
 
-        Workbook wb = new XSSFWorkbook(new FileInputStream(templateFile));
+        if (templateCacheBytes == null) {
+            templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+        }
+
+        Workbook wb = new XSSFWorkbook(new java.io.ByteArrayInputStream(templateCacheBytes));
         Sheet sheet = wb.getSheetAt(0);
 
         // 1. Fecha de la transacción (D12)

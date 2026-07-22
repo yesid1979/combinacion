@@ -1,5 +1,15 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+    // Refrescar sesión para tomar cambios de permisos en caliente
+    com.combinacion.models.Usuario sessionUser = (com.combinacion.models.Usuario) session.getAttribute("usuario");
+    if (sessionUser != null) {
+        com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(sessionUser.getId());
+        if (freshUser != null) {
+            session.setAttribute("usuario", freshUser);
+        }
+    }
+%>
 <c:if test="${empty sessionScope.usuario}">
     <c:redirect url="login.jsp" />
 </c:if>
@@ -10,7 +20,7 @@
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Panel Principal - Gestión de Contratos</title>
-            <link rel="icon" href="favicon.ico" type="image/x-icon">
+            <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
             <!-- Bootstrap 5 CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -66,13 +76,28 @@
                     <!-- Mis Cuentas de Cobro (Para Contratistas) -->
                     <c:if test="${sessionScope.usuario.rolId == 3 || sessionScope.usuario.rol.nombre == 'Contratista' || sessionScope.usuario.rol.nombre == 'CONTRATISTA'}">
                     <div class="col-md-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='informes'">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='informes?modo=mis_cuentas'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-success bg-opacity-10 text-success mx-auto">
                                     <i class="bi bi-wallet2 fs-2"></i>
                                 </div>
                                 <h5 class="card-title fw-bold">Mis Cuentas de Cobro</h5>
                                 <p class="card-text text-muted small">Generar cuenta de cobro de mis contratos asignados.</p>
+                            </div>
+                        </div>
+                    </div>
+                    </c:if>
+
+                    <!-- Revisión de Cuentas (Para Revisores y Administradores) -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR')}">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='informes?modo=revision'">
+                            <div class="card-body text-center">
+                                <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
+                                    <i class="bi bi-ui-checks fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Revisión de Cuentas</h5>
+                                <p class="card-text text-muted small">Revisar y aprobar cuentas de cobro de contratistas.</p>
                             </div>
                         </div>
                     </div>

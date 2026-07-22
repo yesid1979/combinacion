@@ -36,6 +36,9 @@ public class GoogleDriveService {
 
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws Exception {
         InputStream in = GoogleDriveService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        if (in == null) {
+            throw new java.io.FileNotFoundException("ERROR CRÍTICO: Falta el archivo de credenciales de Google Drive (" + CREDENTIALS_FILE_PATH + "). Por favor ubíquelo en src/main/resources.");
+        }
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(

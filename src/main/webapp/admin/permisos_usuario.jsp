@@ -1,6 +1,49 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+    // --- PARCHE AUTOMATICO ---
+    try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection()) {
+        String check = "SELECT id FROM permisos WHERE nombre = 'PUEDE_REVISAR_CUENTAS'";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(check);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int pId = rs.getInt(1);
+                String update = "UPDATE permisos SET codigo = 'REVISION_CUENTAS_VER', modulo = 'REVISION_CUENTAS' WHERE id = ?";
+                try (java.sql.PreparedStatement psUp = conn.prepareStatement(update)) {
+                    psUp.setInt(1, pId);
+                    psUp.executeUpdate();
+                }
+            } else {
+                String insert = "INSERT INTO permisos (codigo, nombre, modulo, descripcion) VALUES (?, ?, ?, ?)";
+                try (java.sql.PreparedStatement psIns = conn.prepareStatement(insert)) {
+                    psIns.setString(1, "REVISION_CUENTAS_VER");
+                    psIns.setString(2, "PUEDE_REVISAR_CUENTAS");
+                    psIns.setString(3, "REVISION_CUENTAS");
+                    psIns.setString(4, "Permite ser asignado como revisor de cuentas.");
+                    psIns.executeUpdate();
+                }
+            }
+        }
+        
+        String checkAdmin = "SELECT id FROM permisos WHERE nombre = 'ADMINISTRAR_CUENTAS'";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(checkAdmin);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) {
+                String insert = "INSERT INTO permisos (codigo, nombre, modulo, descripcion) VALUES (?, ?, ?, ?)";
+                try (java.sql.PreparedStatement psIns = conn.prepareStatement(insert)) {
+                    psIns.setString(1, "ADMINISTRAR_CUENTAS_EDITAR");
+                    psIns.setString(2, "ADMINISTRAR_CUENTAS");
+                    psIns.setString(3, "REVISION_CUENTAS");
+                    psIns.setString(4, "Control Global: Ver todas las cuentas, reasignar, aprobar y editar cuentas radicadas.");
+                    psIns.executeUpdate();
+                }
+            }
+        }
+    } catch (Exception ignore) {}
+    request.setAttribute("todosPermisos", new com.combinacion.services.RolService().listarPermisos());
+    // ---------------------------
+%>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -80,6 +123,15 @@
     <jsp:include page="/inc/navbar.jsp" />
 <div class="flex-grow-1">
     <div class="container mt-5 mb-5 pb-5">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Administración</li>
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-people-fill me-1"></i>Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Permisos Especiales</li>
+                </ol>
+            </nav>
         <div class="matrix-card">
             <h2 class="h3 mb-4 text-secondary d-flex align-items-center">
                 <i class="bi bi-shield-lock-fill me-3 text-primary fs-2"></i> 
@@ -143,6 +195,10 @@
                                     <c:when test="${moduloItem == 'REVISORES'}">
                                         <c:set var="label" value="Revisores de Documentos" />
                                         <c:set var="icon" value="bi-person-check text-warning" />
+                                    </c:when>
+                                    <c:when test="${moduloItem == 'REVISION_CUENTAS'}">
+                                        <c:set var="label" value="Revisión de Cuentas (Radicadas)" />
+                                        <c:set var="icon" value="bi-check2-all text-primary" />
                                     </c:when>
                                 </c:choose>
 

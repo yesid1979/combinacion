@@ -1,8 +1,9 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*, javax.sql.*, javax.naming.*" %>
 <!DOCTYPE html>
 <html>
-<head><title>LISTA MAESTRA DE PERMISOS</title></head>
+<head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>LISTA MAESTRA DE PERMISOS</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2>Lista Maestra de Permisos en la DB</h2>
     <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
@@ -30,3 +31,4 @@
     </table>
 </body>
 </html>
+

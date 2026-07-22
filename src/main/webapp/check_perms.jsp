@@ -1,8 +1,9 @@
-<%@ page import="com.combinacion.models.Usuario, com.combinacion.models.Permiso, java.util.List" %>
+﻿<%@ page import="com.combinacion.models.Usuario, com.combinacion.models.Permiso, java.util.List" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html>
-<head><title>Inspector de Permisos</title></head>
+<head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>Inspector de Permisos</title></head>
 <body>
 <%
     Usuario u = (Usuario) session.getAttribute("usuario");
@@ -22,3 +23,4 @@
 %>
 </body>
 </html>
+

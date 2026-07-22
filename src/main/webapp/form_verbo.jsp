@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${verbo == null ? 'Nuevo' : 'Editar'} Verbo - DAGJP</title>
@@ -15,6 +16,14 @@
     <%@ include file="inc/navbar.jsp" %>
 
     <div class="container py-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-premium">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                <li class="breadcrumb-item"><a href="verbos"><i class="bi bi-list-task me-1"></i>Verbos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Formulario Verbo</li>
+            </ol>
+        </nav>
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="card shadow-sm border-0">
@@ -74,3 +83,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

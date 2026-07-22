@@ -130,7 +130,7 @@ public class Usuario implements Serializable {
                 // Fuzzy match para 'VER'
                 if (target.endsWith("_VER")) {
                     String moduloBase = target.substring(0, target.lastIndexOf("_"));
-                    if (normalized.startsWith(moduloBase)) return true;
+                    if (normalized.startsWith(moduloBase + "_")) return true;
                 }
             }
             // Si tiene permisos especiales y no se encontró, se deniega el acceso. NO se consulta el Rol.

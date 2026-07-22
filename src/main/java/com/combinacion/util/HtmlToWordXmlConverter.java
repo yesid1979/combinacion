@@ -49,12 +49,12 @@ public class HtmlToWordXmlConverter {
                 xml.append("<w:tbl>");
                 xml.append("<w:tblPr>");
                 xml.append("<w:tblBorders><w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/></w:tblBorders>");
-                xml.append("<w:tblW w:w=\"5000\" w:type=\"pct\"/>");
+                xml.append("<w:jc w:val=\"center\"/><w:tblLayout w:type=\"autofit\"/><w:tblW w:w=\"5000\" w:type=\"pct\"/>");
                 xml.append("</w:tblPr>");
                 for (Element tr : el.select("tr")) {
                     xml.append("<w:tr>");
                     for (Element td : tr.select("td, th")) {
-                        xml.append("<w:tc><w:tcPr><w:tcW w:w=\"1000\" w:type=\"pct\"/></w:tcPr>");
+                        xml.append("<w:tc><w:tcPr><w:tcW w:w=\"0\" w:type=\"auto\"/></w:tcPr>");
                         boolean hasBlock = false;
                         for (Node tdChild : td.childNodes()) {
                             if (isBlockNode(tdChild)) {
@@ -97,7 +97,7 @@ public class HtmlToWordXmlConverter {
 
                         xml.append("<w:p><w:pPr>");
                         xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
-                        xml.append("<w:ind w:left=\"360\" w:hanging=\"360\"/>");
+                        xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
                         if (!align.isEmpty()) {
                             xml.append("<w:jc w:val=\"").append(align).append("\"/>");
                         }

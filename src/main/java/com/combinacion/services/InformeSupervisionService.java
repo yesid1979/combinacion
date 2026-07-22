@@ -37,6 +37,9 @@ public class InformeSupervisionService {
     public String insertar(InformeFormData form) {
         try {
             InformeSupervision info = mapFormToModel(form);
+            if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
+                info.setEstadoRadicacion("BORRADOR");
+            }
             String daoResult = informeDAO.insertar(info);
             if (daoResult == null) {
                 return null; // Éxito
@@ -62,6 +65,9 @@ public class InformeSupervisionService {
                 }
                 if (info.getSoportesJson() == null || info.getSoportesJson().isEmpty()) {
                     info.setSoportesJson(existente.getSoportesJson());
+                }
+                if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
+                    info.setEstadoRadicacion(existente.getEstadoRadicacion());
                 }
             }
             
@@ -113,6 +119,8 @@ public class InformeSupervisionService {
         info.setFechaSuscripcion(ParseUtils.parseDate(f.fechaSuscripcion));
         info.setUrlDriveEvidencias(f.urlDriveEvidencias);
         info.setSoportesJson(f.soportesJson);
+        info.setEstadoRadicacion(f.estadoRadicacion);
+        info.setIdRevisorAsignado(f.idRevisorAsignado);
         
         return info;
     }
@@ -148,6 +156,8 @@ public class InformeSupervisionService {
         public String fechaSuscripcion;
         public String urlDriveEvidencias;
         public String soportesJson;
+        public String estadoRadicacion;
+        public Integer idRevisorAsignado;
     }
 
     public Contrato obtenerContrato(int id) {

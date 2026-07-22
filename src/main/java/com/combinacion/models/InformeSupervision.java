@@ -51,6 +51,12 @@ public class InformeSupervision implements Serializable {
     private Date fechaCreacion;
     private Date fechaSuscripcion;
     
+    // Radicación
+    private String estadoRadicacion;
+    private Date fechaRadicacion;
+    private Integer idRevisorAsignado;
+    private String observacionesRevision;
+    
     // Relación con Contrato (opcional para el modelo)
     private Contrato contrato;
 
@@ -153,6 +159,55 @@ public class InformeSupervision implements Serializable {
     public Date getFechaSuscripcion() { return fechaSuscripcion; }
     public void setFechaSuscripcion(Date fechaSuscripcion) { this.fechaSuscripcion = fechaSuscripcion; }
 
+    public String getEstadoRadicacion() { return estadoRadicacion; }
+    public void setEstadoRadicacion(String estadoRadicacion) { this.estadoRadicacion = estadoRadicacion; }
+    
+    public Date getFechaRadicacion() { return fechaRadicacion; }
+    public void setFechaRadicacion(Date fechaRadicacion) { this.fechaRadicacion = fechaRadicacion; }
+
+    public Integer getIdRevisorAsignado() { return idRevisorAsignado; }
+    public void setIdRevisorAsignado(Integer idRevisorAsignado) { this.idRevisorAsignado = idRevisorAsignado; }
+    
+    public String getObservacionesRevision() { return observacionesRevision; }
+    public void setObservacionesRevision(String observacionesRevision) { this.observacionesRevision = observacionesRevision; }
+
     public Contrato getContrato() { return contrato; }
     public void setContrato(Contrato contrato) { this.contrato = contrato; }
+
+    public static class ObservacionItem {
+        public String fecha;
+        public String autor;
+        public String mensaje;
+        public ObservacionItem(String fecha, String autor, String mensaje) {
+            this.fecha = fecha; this.autor = autor; this.mensaje = mensaje;
+        }
+        public String getFecha() { return fecha; }
+        public String getAutor() { return autor; }
+        public String getMensaje() { return mensaje; }
+    }
+
+    public java.util.List<ObservacionItem> getHistorialObservaciones() {
+        java.util.List<ObservacionItem> lista = new java.util.ArrayList<>();
+        if (observacionesRevision == null || observacionesRevision.trim().isEmpty()) {
+            return lista;
+        }
+        String[] lineas = observacionesRevision.split("\n\n");
+        for (String linea : lineas) {
+            linea = linea.trim();
+            if (linea.startsWith("[")) {
+                int finCorchete = linea.indexOf("]");
+                if (finCorchete > 0) {
+                    String cabecera = linea.substring(1, finCorchete);
+                    String[] partes = cabecera.split(" - ", 2);
+                    String fecha = partes[0];
+                    String autor = partes.length > 1 ? partes[1] : "Sistema";
+                    String mensaje = linea.substring(finCorchete + 1).trim();
+                    lista.add(new ObservacionItem(fecha, autor, mensaje));
+                    continue;
+                }
+            }
+            lista.add(new ObservacionItem("Histórico", "Revisor", linea));
+        }
+        return lista;
+    }
 }

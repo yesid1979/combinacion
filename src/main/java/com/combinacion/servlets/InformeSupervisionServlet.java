@@ -48,6 +48,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;
+            case "data":
+                devolverDatosDataTables(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -63,6 +66,8 @@ public class InformeSupervisionServlet extends HttpServlet {
             insertar(request, response);
         } else if ("update".equals(action)) {
             actualizar(request, response);
+        } else if ("data".equals(action)) {
+            devolverDatosDataTables(request, response);
         } else {
             listar(request, response);
         }
@@ -70,16 +75,47 @@ public class InformeSupervisionServlet extends HttpServlet {
 
     private void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-        boolean esContratista = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
-
-        String contratoIdStr = request.getParameter("contrato_id");
         
-        if (esContratista) {
-            // Lógica para el Contratista: Buscar su contrato automáticamente
+        java.util.List<InformeSupervision> listaFinal = obtenerListaInformes(request);
+        String modo = (String) request.getAttribute("modo");
+        
+        request.setAttribute("listaInformes", listaFinal);
+        request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
+    }
+
+    private java.util.List<InformeSupervision> obtenerListaInformes(HttpServletRequest request) {
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+        
+        // Refrescar usuario desde BD para tener los permisos actualizados en caliente
+        if (u != null) {
+            com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(u.getId());
+            if (freshUser != null) {
+                request.getSession().setAttribute("usuario", freshUser);
+                u = freshUser;
+            }
+        }
+        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS"));
+        boolean esRevisor = u != null && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
+        boolean esContratistaBase = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
+        
+        String modo = request.getParameter("modo");
+        
+        // Asignar modo por defecto si entran sin parámetro (ej. desde un enlace manual o error)
+        if (modo == null || modo.trim().isEmpty()) {
+            if (esContratistaBase) {
+                modo = "mis_cuentas";
+            } else if (esAdmin || esRevisor) {
+                modo = "revision";
+            }
+        }
+        
+        String contratoIdStr = request.getParameter("contrato_id");
+        java.util.List<InformeSupervision> listaFinal = new java.util.ArrayList<>();
+        
+        // 1. Lógica para Contratistas: Buscar sus contratos y sus propios informes
+        java.util.List<Integer> misContratosIds = new java.util.ArrayList<>();
+        if (esContratistaBase && !"revision".equals(modo)) {
             com.combinacion.dao.ContratistaDAO cdao = new com.combinacion.dao.ContratistaDAO();
-            
-            // Buscar contratista ignorando puntos y letras en la base de datos
             java.util.List<com.combinacion.models.Contratista> todos = cdao.listarTodos();
             com.combinacion.models.Contratista c = null;
             for (com.combinacion.models.Contratista cont : todos) {
@@ -91,48 +127,195 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                 }
             }
-
             if (c != null) {
                 com.combinacion.dao.ContratoDAO codao = new com.combinacion.dao.ContratoDAO();
                 java.util.List<Contrato> misContratos = codao.listarPorContratistaId(c.getId());
-                
                 if (!misContratos.isEmpty()) {
                     request.setAttribute("misContratos", misContratos);
-                    
-                    if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-                        int contratoId = ParseUtils.parseInt(contratoIdStr);
-                        request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
-                        request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
-                    } else {
-                        // Si tiene varios contratos pero no seleccionó uno, le mostramos todos sus informes y le asignamos su contrato más reciente por defecto para "Nuevo Informe" si solo tiene 1
-                        request.setAttribute("contrato", misContratos.get(0));
-                        
-                        java.util.List<InformeSupervision> todosMisInformes = new java.util.ArrayList<>();
-                        for(Contrato con : misContratos) {
-                            todosMisInformes.addAll(informeService.listarPorContrato(con.getId()));
+                    request.setAttribute("contrato", misContratos.get(0)); // Default para botón "Nuevo"
+                    for(Contrato con : misContratos) {
+                        misContratosIds.add(con.getId());
+                        if (contratoIdStr == null || contratoIdStr.isEmpty() || com.combinacion.util.ParseUtils.parseInt(contratoIdStr) == con.getId()) {
+                            listaFinal.addAll(informeService.listarPorContrato(con.getId()));
                         }
-                        request.setAttribute("listaInformes", todosMisInformes);
                     }
-                } else {
-                    request.setAttribute("listaInformes", new java.util.ArrayList<>());
+                } else if (!esAdmin && !esRevisor) {
                     request.setAttribute("error", "No tienes ningún contrato activo asignado en el sistema.");
                 }
-            } else {
-                request.setAttribute("listaInformes", new java.util.ArrayList<>());
+            } else if (!esAdmin && !esRevisor) {
                 request.setAttribute("error", "No se encontraron tus datos como contratista.");
-            }
-        } else {
-            // Lógica para Admin/Supervisor: Buscar por ID de contrato específico, o listar todos
-            if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
-                int contratoId = ParseUtils.parseInt(contratoIdStr);
-                request.setAttribute("listaInformes", informeService.listarPorContrato(contratoId));
-                request.setAttribute("contrato", informeService.obtenerContrato(contratoId));
-            } else {
-                request.setAttribute("listaInformes", informeService.listarTodos());
             }
         }
         
-        request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
+        // 2. Lógica para Admin / Revisor: Agregar informes que deben revisar
+        if ((esAdmin || esRevisor) && !"mis_cuentas".equals(modo)) {
+            java.util.List<InformeSupervision> todos = new java.util.ArrayList<>();
+            if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
+                int contratoIdParam = com.combinacion.util.ParseUtils.parseInt(contratoIdStr);
+                todos = informeService.listarPorContrato(contratoIdParam);
+                // Cargar el contrato para que la JSP muestre el botón "Nuevo Informe"
+                if (esAdmin) {
+                    Contrato contratoSeleccionado = informeService.obtenerContrato(contratoIdParam);
+                    if (contratoSeleccionado != null) {
+                        request.setAttribute("contrato", contratoSeleccionado);
+                        modo = "contrato_admin"; // Permitir que la JSP muestre el botón Nuevo Informe
+                    }
+                }
+            } else {
+                todos = informeService.listarTodos();
+            }
+            
+            for (InformeSupervision info : todos) {
+                // Evitar duplicados si ya los cargó por ser su propio contrato
+                if (misContratosIds.contains(info.getContratoId())) {
+                    continue; 
+                }
+                
+                if (esAdmin) {
+                    listaFinal.add(info);
+                } else if (esRevisor) {
+                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas
+                    if (info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
+                            && !"BORRADOR".equals(info.getEstadoRadicacion()) 
+                            && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
+                        listaFinal.add(info);
+                    }
+                }
+            }
+        }
+        
+        // Ordenar por Fecha de Registro (antiguas primero)
+        listaFinal.sort((a, b) -> {
+            if (a.getFechaCreacion() == null && b.getFechaCreacion() == null) return 0;
+            if (a.getFechaCreacion() == null) return 1;
+            if (b.getFechaCreacion() == null) return -1;
+            return b.getFechaCreacion().compareTo(a.getFechaCreacion());
+        });
+        
+        request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
+        request.setAttribute("esAdminGlobal", esAdmin);
+        request.setAttribute("esRevisorGlobal", esRevisor);
+        
+        return listaFinal;
+    }
+    
+    private void devolverDatosDataTables(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String drawStr = request.getParameter("draw");
+        int draw = (drawStr != null && !drawStr.isEmpty()) ? Integer.parseInt(drawStr) : 1;
+        String startStr = request.getParameter("start");
+        int start = (startStr != null && !startStr.isEmpty()) ? Integer.parseInt(startStr) : 0;
+        String lengthStr = request.getParameter("length");
+        int length = (lengthStr != null && !lengthStr.isEmpty()) ? Integer.parseInt(lengthStr) : 10;
+        String searchValue = request.getParameter("search[value]");
+        if (searchValue != null) searchValue = searchValue.toLowerCase();
+
+        java.util.List<InformeSupervision> listaTotal = obtenerListaInformes(request);
+        int recordsTotal = listaTotal.size();
+
+        // 1. Filtrado en memoria
+        java.util.List<InformeSupervision> listaFiltrada = new java.util.ArrayList<>();
+        if (searchValue != null && !searchValue.isEmpty()) {
+            for (InformeSupervision info : listaTotal) {
+                boolean match = false;
+                if (info.getContrato() != null && info.getContrato().getNumeroContrato() != null 
+                        && info.getContrato().getNumeroContrato().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getContrato() != null && info.getContrato().getContratistaNombre() != null 
+                        && info.getContrato().getContratistaNombre().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getPeriodoInforme() != null && info.getPeriodoInforme().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                if (info.getEstadoRadicacion() != null && info.getEstadoRadicacion().toLowerCase().contains(searchValue)) {
+                    match = true;
+                }
+                // Si el filtro coincide con BORRADOR al estar vacío
+                if (info.getEstadoRadicacion() == null && "borrador".contains(searchValue)) {
+                    match = true;
+                }
+                
+                if (match) {
+                    listaFiltrada.add(info);
+                }
+            }
+        } else {
+            listaFiltrada = listaTotal;
+        }
+        int recordsFiltered = listaFiltrada.size();
+
+        // 2. Paginación en memoria
+        int toIndex = Math.min(start + length, listaFiltrada.size());
+        java.util.List<InformeSupervision> page = new java.util.ArrayList<>();
+        if (start < listaFiltrada.size()) {
+            page = listaFiltrada.subList(start, toIndex);
+        }
+
+        // 3. Serializar
+        com.google.gson.JsonObject jsonResponse = new com.google.gson.JsonObject();
+        jsonResponse.addProperty("draw", draw);
+        jsonResponse.addProperty("recordsTotal", recordsTotal);
+        jsonResponse.addProperty("recordsFiltered", recordsFiltered);
+
+        com.google.gson.JsonArray dataArray = new com.google.gson.JsonArray();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
+        nf.setMaximumFractionDigits(0);
+        
+        boolean esAdminGlobal = false;
+        boolean esRevisorGlobal = false;
+        if (request.getAttribute("esAdminGlobal") != null) esAdminGlobal = (Boolean) request.getAttribute("esAdminGlobal");
+        if (request.getAttribute("esRevisorGlobal") != null) esRevisorGlobal = (Boolean) request.getAttribute("esRevisorGlobal");
+        String modo = (String) request.getAttribute("modo");
+
+        for (InformeSupervision info : page) {
+            com.google.gson.JsonObject row = new com.google.gson.JsonObject();
+            
+            // 0: Contrato
+            row.addProperty("contrato", info.getContrato() != null ? info.getContrato().getNumeroContrato() : "");
+            
+            // 1: Contratista
+            row.addProperty("contratista", info.getContrato() != null ? info.getContrato().getContratistaNombre() : "");
+            
+            // 2: Periodo
+            row.addProperty("periodo", info.getPeriodoInforme());
+            
+            // 3: Tipo
+            row.addProperty("tipo", info.getTipoInforme());
+            
+            // 4: Cuota
+            row.addProperty("cuota", info.getNumeroCuota());
+            
+            // 5: Fecha Registro
+            row.addProperty("fechaRegistro", info.getFechaCreacion() != null ? sdf.format(info.getFechaCreacion()) : "");
+            row.addProperty("fechaRegistroTime", info.getFechaCreacion() != null ? info.getFechaCreacion().getTime() : 0);
+            
+            // 6: Valor Cuota
+            row.addProperty("valorCuota", info.getValorCuotaPagar() != null ? nf.format(info.getValorCuotaPagar()) : "$ 0");
+            
+            // 7: Estado
+            String estado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion();
+            row.addProperty("estado", estado);
+            
+            // Info adicional para construir las acciones en JS
+            row.addProperty("id", info.getId());
+            row.addProperty("modo", modo != null ? modo : "");
+            row.addProperty("esAdminCuentas", esAdminGlobal);
+            row.addProperty("esRevisorCuentas", esRevisorGlobal);
+            row.addProperty("idRevisorAsignado", info.getIdRevisorAsignado() != null ? info.getIdRevisorAsignado() : 0);
+            
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+            row.addProperty("usuarioActualId", u != null ? u.getId() : 0);
+
+            dataArray.add(row);
+        }
+        jsonResponse.add("data", dataArray);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(jsonResponse.toString());
     }
 
     private void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)
@@ -159,6 +342,8 @@ public class InformeSupervisionServlet extends HttpServlet {
                 request.setAttribute("siguienteCuota", previos != null ? previos.size() + 1 : 1);
             }
         }
+        
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "insert");
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
@@ -177,6 +362,9 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
         request.setAttribute("readonly", true);
         request.setAttribute("action", "view");
+        request.setAttribute("modo", request.getParameter("modo"));
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
+        request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
@@ -196,7 +384,11 @@ public class InformeSupervisionServlet extends HttpServlet {
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }
+        
+        request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "update");
+        request.setAttribute("modo", request.getParameter("modo"));
+        request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
@@ -221,11 +413,13 @@ public class InformeSupervisionServlet extends HttpServlet {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
-            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
-            
             boolean esCuota1 = "1".equals(informe.getNumeroCuota());
             boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
+                                        ? informe.getConsecutivoCobro().trim() 
+                                        : (tieneIva ? "FACTURA" : "XXXX");
+            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
             
             String docxName;
             String xlsxName;
@@ -266,9 +460,17 @@ public class InformeSupervisionServlet extends HttpServlet {
             
             // Archivo de Gestion temporal
             File gestionFile = null;
+            File gestionPdfFile = null;
+            String gestionPdfName = null;
             try {
                 String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
                 gestionFile = new File(gestionPath);
+                if (gestionFile.exists()) {
+                    String pdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
+                    gestionPdfFile = new File(pdfPath);
+                    com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
+                    gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
+                }
             } catch (Exception e) {
                 System.out.println("No se pudo generar el Informe de Gestion: " + e.getMessage());
             }
@@ -294,41 +496,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                 
                 try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
                     
-                    // Agregar Evidencias desde la carpeta de Drive
-                    boolean hasEvidencias = false;
-                    if (informe.getUrlDriveEvidencias() != null && !informe.getUrlDriveEvidencias().trim().isEmpty()) {
-                        String folderId = com.combinacion.services.GoogleDriveService.extractIdFromUrl(informe.getUrlDriveEvidencias());
-                        if (folderId != null) {
-                            try {
-                                com.google.api.services.drive.model.FileList files = com.combinacion.services.GoogleDriveService.getFilesInFolder(folderId);
-                                if (files != null && files.getFiles() != null && !files.getFiles().isEmpty()) {
-                                    for (com.google.api.services.drive.model.File gFile : files.getFiles()) {
-                                        if (!"application/vnd.google-apps.folder".equals(gFile.getMimeType())) {
-                                            hasEvidencias = true;
-                                            zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/" + gFile.getName()));
-                                            try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(gFile.getId())) {
-                                                byte[] buffer = new byte[4096];
-                                                int length;
-                                                while ((length = in.read(buffer)) >= 0) {
-                                                    zos.write(buffer, 0, length);
-                                                }
-                                            } catch (Exception ex) {
-                                                System.err.println("No se pudo descargar evidencia " + gFile.getName() + ": " + ex.getMessage());
-                                            }
-                                            zos.closeEntry();
-                                        }
-                                    }
-                                }
-                            } catch (Exception ex) {
-                                System.err.println("Error al listar archivos de evidencias: " + ex.getMessage());
-                            }
-                        }
-                    }
-                    if (!hasEvidencias) {
-                        // Agregar carpeta Evidencias vacía si no hay archivos
-                        zos.putNextEntry(new java.util.zip.ZipEntry("Evidencias/"));
-                        zos.closeEntry();
-                    }
+                    // Las evidencias ahora se descargan desde el JSON de soportes para mantener las subcarpetas.
                     
                     // Agregar DOCX (Supervision)
                     zos.putNextEntry(new java.util.zip.ZipEntry(docxName));
@@ -345,6 +513,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                     if (gestionFile != null && gestionFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(gestionName));
                         try (FileInputStream fis = new FileInputStream(gestionFile)) {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = fis.read(buffer)) >= 0) {
+                                zos.write(buffer, 0, length);
+                            }
+                        }
+                        zos.closeEntry();
+                    }
+                    
+                    // Agregar PDF (Gestion)
+                    if (gestionPdfFile != null && gestionPdfFile.exists()) {
+                        zos.putNextEntry(new java.util.zip.ZipEntry(gestionPdfName));
+                        try (FileInputStream fis = new FileInputStream(gestionPdfFile)) {
                             byte[] buffer = new byte[4096];
                             int length;
                             while ((length = fis.read(buffer)) >= 0) {
@@ -381,33 +562,84 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                     
                     // Agregar anexos
+                    java.io.File tempSegSoc = null;
                     if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                            java.util.Set<String> addedEntries = new java.util.HashSet<>();
                             for (String key : soportes.keySet()) {
+                                String zipPath = "";
                                 if (key.startsWith("evidencia_")) {
-                                    continue; // Ya se descarga en la carpeta Evidencias desde Drive
+                                    try {
+                                        int actIndex = Integer.parseInt(key.split("_")[1]) + 1;
+                                        zipPath = "Evidencias/Actividad " + actIndex + "/";
+                                    } catch (Exception e) {
+                                        zipPath = "Evidencias/";
+                                    }
                                 }
                                 org.json.JSONObject fileData = soportes.getJSONObject(key);
                                 String fileId = fileData.optString("id");
                                 String fileName = fileData.optString("name");
                                 if (fileId != null && !fileId.isEmpty() && fileName != null && !fileName.isEmpty()) {
-                                    zos.putNextEntry(new java.util.zip.ZipEntry(fileName));
-                                    try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
-                                        byte[] buffer = new byte[4096];
-                                        int length;
-                                        while ((length = in.read(buffer)) >= 0) {
-                                            zos.write(buffer, 0, length);
+                                    try {
+                                        String entryName = zipPath + fileName;
+                                        int counter = 1;
+                                        while (addedEntries.contains(entryName)) {
+                                            int dotIndex = fileName.lastIndexOf('.');
+                                            if (dotIndex > 0) {
+                                                entryName = zipPath + fileName.substring(0, dotIndex) + " (" + counter + ")" + fileName.substring(dotIndex);
+                                            } else {
+                                                entryName = zipPath + fileName + " (" + counter + ")";
+                                            }
+                                            counter++;
                                         }
+                                        addedEntries.add(entryName);
+                                        
+                                        zos.putNextEntry(new java.util.zip.ZipEntry(entryName));
+                                        try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                                            byte[] buffer = new byte[4096];
+                                            int length;
+                                            if ("file_seguridad_social".equals(key)) {
+                                                tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                                                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                                    while ((length = in.read(buffer)) >= 0) {
+                                                        zos.write(buffer, 0, length);
+                                                        fos.write(buffer, 0, length);
+                                                    }
+                                                }
+                                            } else {
+                                                while ((length = in.read(buffer)) >= 0) {
+                                                    zos.write(buffer, 0, length);
+                                                }
+                                            }
+                                        }
+                                        zos.closeEntry();
                                     } catch (Exception ex) {
-                                        System.err.println("No se pudo descargar anexo " + fileName + " de Drive: " + ex.getMessage());
+                                        System.err.println("No se pudo descargar o agregar anexo " + fileName + " al ZIP: " + ex.getMessage());
                                     }
-                                    zos.closeEntry();
                                 }
                             }
                         } catch (Exception ex) {
                             System.err.println("Error procesando anexos: " + ex.getMessage());
                         }
+                    }
+                    
+                    if (gestionPdfFile != null && gestionPdfFile.exists() && tempSegSoc != null && tempSegSoc.exists()) {
+                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                        java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
+                        if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
+                            zos.putNextEntry(new java.util.zip.ZipEntry(mergedName));
+                            try (java.io.FileInputStream fis = new java.io.FileInputStream(mergedFile)) {
+                                byte[] buffer = new byte[4096];
+                                int length;
+                                while ((length = fis.read(buffer)) >= 0) {
+                                    zos.write(buffer, 0, length);
+                                }
+                            }
+                            zos.closeEntry();
+                        }
+                        mergedFile.delete();
+                        tempSegSoc.delete();
                     }
                 }
             } else {
@@ -436,10 +668,21 @@ public class InformeSupervisionServlet extends HttpServlet {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) ? informe.getConsecutivoCobro().trim() : "XXXX";
+            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
+            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
+                                        ? informe.getConsecutivoCobro().trim() 
+                                        : (tieneIva ? "FACTURA" : "XXXX");
+
             String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
+            String ultimoBloque = "";
+            if (contrato.getNumeroContrato() != null && contrato.getNumeroContrato().contains(".")) {
+                String[] numParts = contrato.getNumeroContrato().split("\\.");
+                ultimoBloque = numParts[numParts.length - 1];
+            }
             
-            String folderNamePrincipal = shortContrato + " - " + consecutivoStr + " " + nombreCorto;
+            String folderNamePrincipal = shortContrato + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " " + nombreCorto;
             String folderNameCuota = "Cuota " + informe.getNumeroCuota();
             
             // 1. Obtener/crear "pruebas cuenta de cobro"
@@ -464,9 +707,6 @@ public class InformeSupervisionServlet extends HttpServlet {
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
             // 5. Generar archivos localmente
-            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
-            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
-            
             String docxName;
             String xlsxName;
             String gestionName;
@@ -532,13 +772,24 @@ public class InformeSupervisionServlet extends HttpServlet {
                 try { soportes = new org.json.JSONObject(informe.getSoportesJson()); } catch (Exception ignore) {}
             }
             
+            java.io.File tempSegSoc = null;
+            
             System.out.println("Iniciando escaneo de partes (archivos adjuntos)...");
             for (Part part : request.getParts()) {
                 String submittedFileName = getFileName(part);
                 if (submittedFileName != null && !submittedFileName.trim().isEmpty() && part.getSize() > 0) {
                     String partName = part.getName();
                     
-                    String targetFolderId = (partName != null && partName.startsWith("evidencia_")) ? evidenciasFolderId : cuotaFolderId;
+                    String targetFolderId = cuotaFolderId;
+                    if (partName != null && partName.startsWith("evidencia_")) {
+                        try {
+                            int actIndex = Integer.parseInt(partName.split("_")[1]) + 1;
+                            String subFolderName = "Actividad " + actIndex;
+                            targetFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(subFolderName, evidenciasFolderId);
+                        } catch (Exception e) {
+                            targetFolderId = evidenciasFolderId;
+                        }
+                    }
                     
                     // Renombrar los archivos obligatorios segun la nomenclatura
                     if (partName != null && !partName.startsWith("evidencia_")) {
@@ -574,7 +825,20 @@ public class InformeSupervisionServlet extends HttpServlet {
                     System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
                     String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";
                     try (java.io.InputStream is = part.getInputStream()) {
-                        String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                        String fileId;
+                        if ("file_seguridad_social".equals(partName) && submittedFileName.toLowerCase().endsWith(".pdf")) {
+                            tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                byte[] buf = new byte[8192];
+                                int bytesRead;
+                                while ((bytesRead = is.read(buf)) != -1) {
+                                    fos.write(buf, 0, bytesRead);
+                                }
+                            }
+                            fileId = com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(tempSegSoc, submittedFileName, mimeType, targetFolderId);
+                        } else {
+                            fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                        }
                         
                         org.json.JSONObject fileData = new org.json.JSONObject();
                         fileData.put("name", submittedFileName);
@@ -595,6 +859,40 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
             informe.setSoportesJson(soportes.toString());
             new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
+            
+            // Logica para merge si no subieron una nueva SS pero existe en JSON
+            if (tempSegSoc == null && soportes.has("file_seguridad_social")) {
+                org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
+                String fileId = ssObj.optString("id");
+                if (fileId != null && !fileId.isEmpty()) {
+                    try {
+                        java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId);
+                        tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                            byte[] buf = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = is.read(buf)) != -1) {
+                                fos.write(buf, 0, bytesRead);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        tempSegSoc = null;
+                    }
+                }
+            }
+            
+            if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
+                String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
+                if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
+                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                }
+                mergedFile.delete();
+            }
+            if (tempSegSoc != null) {
+                tempSegSoc.delete();
+            }
             
             System.out.println("Subida a Drive completada con exito.");
         } catch (Exception e) {
@@ -626,7 +924,18 @@ public class InformeSupervisionServlet extends HttpServlet {
             // Procesar Drive después de guardar exitosamente
             java.util.List<InformeSupervision> lista = informeService.listarPorContrato(form.contratoId);
             if (lista != null && !lista.isEmpty()) {
-                procesarArchivosDrive(lista.get(0).getId(), request);
+                InformeSupervision guardado = lista.get(0);
+                if ("RADICADA".equals(guardado.getEstadoRadicacion())) {
+                    com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+                    com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
+                    hr.setIdInforme(guardado.getId());
+                    hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
+                    hr.setEstadoAnterior("BORRADOR");
+                    hr.setEstadoNuevo("RADICADA");
+                    hr.setObservaciones("Cuenta radicada por primera vez.");
+                    new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+                }
+                procesarArchivosDrive(guardado.getId(), request);
             }
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
             response.sendRedirect("informes");
@@ -638,11 +947,25 @@ public class InformeSupervisionServlet extends HttpServlet {
         int id = ParseUtils.parseInt(request.getParameter("id"));
         InformeFormData form = construirFormData(request);
         
+        com.combinacion.models.InformeSupervision existente = informeService.obtenerPorId(id);
+        String estadoAnterior = (existente != null) ? existente.getEstadoRadicacion() : "";
+        String obsAnterior = (existente != null && existente.getObservacionesRevision() != null) ? existente.getObservacionesRevision() : "";
+        
         String error = informeService.actualizar(id, form);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
+            if ("RADICADA".equals(form.estadoRadicacion) && !"RADICADA".equals(estadoAnterior)) {
+                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+                com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
+                hr.setIdInforme(id);
+                hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
+                hr.setEstadoAnterior(estadoAnterior);
+                hr.setEstadoNuevo("RADICADA");
+                hr.setObservaciones("DEVUELTA".equals(estadoAnterior) ? "Cuenta vuelta a radicar tras correcciones." : "Cuenta radicada para revisión.");
+                new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+            }
             // Procesar Drive después de actualizar exitosamente
             procesarArchivosDrive(id, request);
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
@@ -724,6 +1047,20 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.recomendaciones = r.getParameter("recomendaciones");
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
         f.soportesJson = r.getParameter("soportes_json");
+        
+        // Manejo de radicacion
+        String radicar = r.getParameter("radicar");
+        if ("true".equals(radicar)) {
+            f.estadoRadicacion = "RADICADA";
+        } else {
+            f.estadoRadicacion = null;
+        }
+        String idRevisor = r.getParameter("id_revisor_asignado");
+        if (idRevisor != null && !idRevisor.trim().isEmpty()) {
+            f.idRevisorAsignado = ParseUtils.parseInt(idRevisor);
+        }
+        
         return f;
     }
 }
+// Trigger reload

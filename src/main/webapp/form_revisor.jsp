@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${not empty revisor ? 'Editar' : 'Nuevo'} Revisor - Gestión de Prestadores</title>
@@ -17,6 +18,14 @@
     <jsp:include page="inc/navbar.jsp" />
 
     <div class="container mt-4 mb-5 flex-grow-1" style="max-width: 800px;">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-premium">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                <li class="breadcrumb-item"><a href="revisores"><i class="bi bi-check-circle-fill me-1"></i>Revisores</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Formulario Revisor</li>
+            </ol>
+        </nav>
         <div class="card border shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -67,3 +76,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

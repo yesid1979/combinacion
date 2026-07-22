@@ -1,8 +1,9 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*, javax.sql.*, javax.naming.*" %>
 <!DOCTYPE html>
 <html>
-<head><title>REPARACIÓN FORZADA DE YESID</title></head>
+<head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÓN FORZADA DE YESID</title></head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2 style="color: #2c3e50;">Reparación Forzada de Permisos: Yesid</h2>
     <%
@@ -60,7 +61,7 @@
                     }
                     out.println("</ul>");
                     
-                    out.println("<h2 style='color:green;'>¡REPARACIÓN COMPLETADA!</h2>");
+                    out.println("<h2 style='color:green;'>Â¡REPARACIÓN COMPLETADA!</h2>");
                     out.println("<p><b>PASO FINAL:</b> Por favor, <b>CERRAR SESIÓN DE YESID</b> y volver a entrar ahora mismo.</p>");
                 }
             }
@@ -71,3 +72,4 @@
     %>
 </body>
 </html>
+

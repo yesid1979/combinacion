@@ -59,6 +59,9 @@ public class VerboConjugacionServlet extends HttpServlet {
                     request.setAttribute("verbo", verbo);
                     request.getRequestDispatcher("form_verbo.jsp").forward(request, response);
                     break;
+                case "data":
+                    devolverDatosDataTables(request, response, u);
+                    break;
                 default:
                     List<VerboConjugacion> lista = verboDao.listarTodos();
                     request.setAttribute("verbos", lista);
@@ -66,6 +69,15 @@ public class VerboConjugacionServlet extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
+            e.printStackTrace();
+            if ("data".equals(action)) {
+                com.google.gson.JsonObject errorJson = new com.google.gson.JsonObject();
+                errorJson.addProperty("error", "Error interno: " + e.getMessage());
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write(errorJson.toString());
+                return;
+            }
             request.getSession().setAttribute("errorMsg", "Error: " + e.getMessage());
             response.sendRedirect("verbos");
         }
@@ -85,7 +97,10 @@ public class VerboConjugacionServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         try {
-            if ("insert".equals(action)) {
+            if ("data".equals(action)) {
+                devolverDatosDataTables(request, response, u);
+                return;
+            } else if ("insert".equals(action)) {
                 if (!authService.tienePermiso(u, "ADMIN_VER") && !authService.tienePermiso(u, "VERBOS_CREAR")) {
                     throw new Exception("Sin permisos para crear.");
                 }
@@ -128,9 +143,79 @@ public class VerboConjugacionServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
+            if ("data".equals(action)) {
+                com.google.gson.JsonObject errorJson = new com.google.gson.JsonObject();
+                errorJson.addProperty("error", "Error interno: " + e.getMessage());
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write(errorJson.toString());
+                return;
+            }
             session.setAttribute("errorMsg", "Error: " + e.getMessage());
         }
 
         response.sendRedirect("verbos");
+    }
+
+    private void devolverDatosDataTables(HttpServletRequest request, HttpServletResponse response, Usuario u) throws IOException {
+        String drawStr = request.getParameter("draw");
+        int draw = (drawStr != null && !drawStr.isEmpty()) ? Integer.parseInt(drawStr) : 1;
+        String startStr = request.getParameter("start");
+        int start = (startStr != null && !startStr.isEmpty()) ? Integer.parseInt(startStr) : 0;
+        String lengthStr = request.getParameter("length");
+        int length = (lengthStr != null && !lengthStr.isEmpty()) ? Integer.parseInt(lengthStr) : 10;
+        String searchValue = request.getParameter("search[value]");
+        if (searchValue != null) searchValue = searchValue.toLowerCase();
+
+        List<VerboConjugacion> listaTotal = verboDao.listarTodos();
+        int recordsTotal = listaTotal.size();
+
+        // Filtrado en memoria
+        List<VerboConjugacion> listaFiltrada = new java.util.ArrayList<>();
+        if (searchValue != null && !searchValue.isEmpty()) {
+            for (VerboConjugacion verbo : listaTotal) {
+                if (verbo.getTerceraPersona() != null && verbo.getTerceraPersona().toLowerCase().contains(searchValue) ||
+                    verbo.getPrimeraPersona() != null && verbo.getPrimeraPersona().toLowerCase().contains(searchValue)) {
+                    listaFiltrada.add(verbo);
+                }
+            }
+        } else {
+            listaFiltrada = listaTotal;
+        }
+        int recordsFiltered = listaFiltrada.size();
+
+        // Paginación en memoria
+        int toIndex = Math.min(start + length, listaFiltrada.size());
+        List<VerboConjugacion> page = new java.util.ArrayList<>();
+        if (start < listaFiltrada.size()) {
+            page = listaFiltrada.subList(start, toIndex);
+        }
+
+        // Permisos para UI
+        boolean canEdit = authService.tienePermiso(u, "ADMIN_VER") || authService.tienePermiso(u, "VERBOS_EDITAR");
+        boolean canDelete = authService.tienePermiso(u, "ADMIN_VER") || authService.tienePermiso(u, "VERBOS_ELIMINAR");
+
+        com.google.gson.JsonObject jsonResponse = new com.google.gson.JsonObject();
+        jsonResponse.addProperty("draw", draw);
+        jsonResponse.addProperty("recordsTotal", recordsTotal);
+        jsonResponse.addProperty("recordsFiltered", recordsFiltered);
+
+        com.google.gson.JsonArray dataArray = new com.google.gson.JsonArray();
+        for (VerboConjugacion v : page) {
+            com.google.gson.JsonObject row = new com.google.gson.JsonObject();
+            row.addProperty("id", v.getId());
+            row.addProperty("terceraPersona", v.getTerceraPersona());
+            row.addProperty("primeraPersona", v.getPrimeraPersona());
+            row.addProperty("activo", v.isActivo());
+            row.addProperty("canEdit", canEdit);
+            row.addProperty("canDelete", canDelete);
+            dataArray.add(row);
+        }
+        jsonResponse.add("data", dataArray);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(jsonResponse.toString());
     }
 }

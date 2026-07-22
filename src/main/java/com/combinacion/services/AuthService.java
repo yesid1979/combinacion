@@ -73,7 +73,7 @@ public class AuthService {
 
         // Si no hay permiso definido, permitir acceso a rutas base
         if (permiso == null) {
-            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet");
+            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet") || lowerPath.contains("procesar_revision.jsp");
             System.out.println("[AUTH] Permiso no definido. Acceso a ruta base: " + esRutaBase);
             return esRutaBase;
         }
@@ -83,6 +83,11 @@ public class AuthService {
                                 (usuario.getRol() != null && "Contratista".equalsIgnoreCase(usuario.getRol().getNombre()));
                                 
         if (lowerPath.equals("/informes") && esContratista) {
+            return true;
+        }
+
+        // Permiso global para que cualquier usuario autenticado use los servlets del editor de texto
+        if (lowerPath.equals("/imageuploadservlet") || lowerPath.equals("/imageservlet")) {
             return true;
         }
 
@@ -151,15 +156,17 @@ public class AuthService {
     }
 
     private String obtenerModulo(String path) {
-        if (path.contains("contratistas")) return "CONTRATISTAS";
+        if (path.contains("contratistas") || path.contains("masivo-usuarios")) return "CONTRATISTAS";
         if (path.contains("contratos")) return "CONTRATOS";
-        if (path.contains("usuarios")) return "ADMIN";
+        if (path.contains("usuarios") && !path.contains("masivo-usuarios")) return "ADMIN";
         if (path.contains("roles")) return "ADMIN";
         if (path.contains("presupuesto")) return "PRESUPUESTO";
         if (path.contains("supervisor")) return "SUPERVISORES";
         if (path.contains("ordenador")) return "ORDENADORES";
         if (path.contains("combinacion") || path.contains("informes")) return "COMBINACION";
         if (path.contains("carga_masiva") || path.contains("upload")) return "CARGA_MASIVA";
+        if (path.contains("revisor")) return "REVISORES";
+        if (path.contains("verbo")) return "VERBOS";
         return null;
     }
 

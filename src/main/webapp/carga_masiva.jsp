@@ -1,8 +1,9 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <!DOCTYPE html>
     <html lang="es">
 
     <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Carga Masiva - Ordenadores y Contratistas</title>
@@ -17,6 +18,14 @@
         <jsp:include page="inc/navbar.jsp" />
 
         <div class="container mt-4 mb-5 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Combinación</li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-upload me-1"></i>Carga Masiva Contratos</li>
+                </ol>
+            </nav>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <h2 class="mb-4 fw-bold">
@@ -36,10 +45,10 @@
                                 <h6 class="fw-bold text-primary">
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
-                                <small class="d-block">• Nombre del Ordenador</small>
-                                <small class="d-block">• Cédula, Cargo</small>
-                                <small class="d-block">• Organismo, Dirección</small>
-                                <small class="d-block">• Decreto, Acta</small>
+                                <small class="d-block">â€¢ Nombre del Ordenador</small>
+                                <small class="d-block">â€¢ Cédula, Cargo</small>
+                                <small class="d-block">â€¢ Organismo, Dirección</small>
+                                <small class="d-block">â€¢ Decreto, Acta</small>
                             </div>
 
                             <!-- Contratistas -->
@@ -47,9 +56,9 @@
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
-                                <small class="d-block">• Cédula, Nombre, Correo</small>
-                                <small class="d-block">• Formación, Tarjeta Prof.</small>
-                                <small class="d-block">• Experiencia, Nacimiento</small>
+                                <small class="d-block">â€¢ Cédula, Nombre, Correo</small>
+                                <small class="d-block">â€¢ Formación, Tarjeta Prof.</small>
+                                <small class="d-block">â€¢ Experiencia, Nacimiento</small>
                             </div>
 
                             <!-- Supervisores -->
@@ -57,9 +66,9 @@
                                 <h6 class="fw-bold text-info">
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
-                                <small class="d-block">• Nombre del Supervisor</small>
-                                <small class="d-block">• Cédula del Supervisor</small>
-                                <small class="d-block">• Cargo del Supervisor</small>
+                                <small class="d-block">â€¢ Nombre del Supervisor</small>
+                                <small class="d-block">â€¢ Cédula del Supervisor</small>
+                                <small class="d-block">â€¢ Cargo del Supervisor</small>
                             </div>
 
                             <!-- Estructuradores -->
@@ -67,9 +76,9 @@
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
-                                <small class="d-block">• Profesional Jurídico y Cargo</small>
-                                <small class="d-block">• Profesional Técnico y Cargo</small>
-                                <small class="d-block">• Profesional Financiero y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Jurídico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Técnico y Cargo</small>
+                                <small class="d-block">â€¢ Profesional Financiero y Cargo</small>
                             </div>
 
                             <!-- Presupuesto -->
@@ -77,9 +86,9 @@
                                 <h6 class="fw-bold text-danger">
                                     <i class="bi bi-cash-coin me-1"></i>Presupuesto:
                                 </h6>
-                                <small class="d-block">• CDP (Número, Fecha, Valor)</small>
-                                <small class="d-block">• RP (Número, Fecha)</small>
-                                <small class="d-block">• Ficha EBI, Rubro</small>
+                                <small class="d-block">â€¢ CDP (Número, Fecha, Valor)</small>
+                                <small class="d-block">â€¢ RP (Número, Fecha)</small>
+                                <small class="d-block">â€¢ Ficha EBI, Rubro</small>
                             </div>
 
                             <!-- Contratos -->
@@ -87,9 +96,9 @@
                                 <h6 class="fw-bold text-dark">
                                     <i class="bi bi-file-earmark-text me-1"></i>Contratos:
                                 </h6>
-                                <small class="d-block">• No. Contrato, Objeto</small>
-                                <small class="d-block">• Valores, Fechas (Inicio/Term.)</small>
-                                <small class="d-block">• Dependencia, Proceso</small>
+                                <small class="d-block">â€¢ No. Contrato, Objeto</small>
+                                <small class="d-block">â€¢ Valores, Fechas (Inicio/Term.)</small>
+                                <small class="d-block">â€¢ Dependencia, Proceso</small>
                             </div>
                         </div>
                         <hr>
@@ -135,7 +144,7 @@
                 <script>
                     Swal.fire({
                         icon: 'success',
-                        title: '¡Carga Exitosa!',
+                        title: 'Â¡Carga Exitosa!',
                         html: '<%= msg %>',
                         confirmButtonText: 'Entendido',
                         confirmButtonColor: '#0d6efd'

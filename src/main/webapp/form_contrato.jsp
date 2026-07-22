@@ -31,6 +31,14 @@
                 <jsp:include page="inc/navbar.jsp" />
 
                 <div class="container mt-4 mb-5 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="contratos"><i class="bi bi-file-earmark-text me-1"></i>Contratos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">${action == 'view' ? 'Ver' : (action == 'edit' ? 'Editar' : 'Nuevo')} Contrato</li>
+                </ol>
+            </nav>
                     <div class="row">
                         <div class="col-12">
                             <c:if test="${not empty error}">

@@ -45,6 +45,13 @@
     <jsp:include page="inc/navbar.jsp" />
 
     <div class="container container-custom py-4 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-person-circle me-1"></i>Mi Perfil</li>
+                </ol>
+            </nav>
         <div class="card card-profile p-4">
             
             <div class="row align-items-center mb-4">

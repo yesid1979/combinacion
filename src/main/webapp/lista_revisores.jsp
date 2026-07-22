@@ -1,9 +1,10 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Revisores de Documentos - Gestión de Prestadores</title>
@@ -21,6 +22,14 @@
     <jsp:include page="inc/navbar.jsp" />
 
     <div class="container-fluid mt-4 flex-grow-1 px-4">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active text-muted">Datos Maestros</li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-check-circle-fill me-1"></i>Revisores</li>
+                </ol>
+            </nav>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Revisores de Documentos</h3>
@@ -57,22 +66,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <c:forEach items="${listaRevisores}" var="rev">
-                            <tr>
-                                <td class="fw-bold text-primary">${rev.tipoDocumento}</td>
-                                <td>${rev.nombreCompleto}</td>
-                                <td>${rev.cargo}</td>
-                                <td><fmt:formatDate value="${rev.fechaActualizacion}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                <td class="text-center">
-                                    <a href="revisores?action=edit&id=${rev.id}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-outline-danger ms-1 btn-delete" data-id="${rev.id}" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </c:forEach>
                     </tbody>
                 </table>
             </div>
@@ -91,14 +84,61 @@
         $(document).ready(function() {
             $('#revisoresTable').DataTable({
                 responsive: true,
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' }
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: 'revisores',
+                    type: 'POST',
+                    data: function(d) {
+                        d.action = 'data';
+                    }
+                },
+                columns: [
+                    { data: 'tipoDocumento', className: 'fw-bold text-primary' },
+                    { data: 'nombreCompleto' },
+                    { data: 'cargo' },
+                    { data: 'fechaStr' },
+                    {
+                        data: 'id',
+                        className: 'text-center',
+                        orderable: false,
+                        render: function(data) {
+                            return '<a href="revisores?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a> ' +
+                                   '<button class="btn btn-sm btn-outline-danger ms-1 btn-delete" data-id="' + data + '" title="Eliminar"><i class="bi bi-trash"></i></button>';
+                        }
+                    }
+                ],
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay datos disponibles en la tabla",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                    "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ entradas",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron registros coincidentes",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": activar para ordenar la columna ascendente",
+                        "sortDescending": ": activar para ordenar la columna descendente"
+                    }
+                }
             });
 
-            $('.btn-delete').click(function() {
-                if(confirm('¿Está seguro de eliminar este revisor?')) {
+            $('#revisoresTable').on('click', '.btn-delete', function() {
+                if(confirm('Â¿Está seguro de eliminar este revisor?')) {
                     const id = $(this).data('id');
                     $.post('revisores?action=delete', { id: id }, function(response) {
-                        location.reload();
+                        $('#revisoresTable').DataTable().ajax.reload();
                     }).fail(function() {
                         alert('Error al eliminar el revisor.');
                     });
@@ -108,3 +148,4 @@
     </script>
 </body>
 </html>
+

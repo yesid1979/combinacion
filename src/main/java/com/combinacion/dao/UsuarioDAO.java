@@ -23,7 +23,7 @@ public class UsuarioDAO {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
                    + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
-                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "ORDER BY u.id";
@@ -45,7 +45,7 @@ public class UsuarioDAO {
     public Usuario obtenerPorId(int id) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
                    + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
-                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "WHERE u.id = ?";
@@ -74,7 +74,7 @@ public class UsuarioDAO {
     public Usuario obtenerPorUsername(String username) {
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
                    + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
-                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "WHERE u.username = ?";
@@ -204,16 +204,24 @@ public class UsuarioDAO {
     public String obtenerFirmaPorCedula(String cedula) {
         if (cedula == null || cedula.trim().isEmpty()) return null;
         
-        String cleanCedula = cedula.replace(".", "").replace(",", "").trim();
-        String sql = "SELECT firma_url FROM usuarios WHERE cedula = ? OR cedula = ?";
+        String cleanCedula = cedula.replaceAll("[^0-9]", "");
+        
+        String sql = "SELECT cedula, firma_url FROM usuarios WHERE firma_url IS NOT NULL ORDER BY id DESC";
         
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedula);
-            ps.setString(2, cleanCedula);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("firma_url");
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                String dbCedula = rs.getString("cedula");
+                if (dbCedula != null) {
+                    String cleanDbCedula = dbCedula.replaceAll("[^0-9]", "");
+                    if (cleanDbCedula.equals(cleanCedula)) {
+                        String url = rs.getString("firma_url");
+                        if (url != null && !url.trim().isEmpty()) {
+                            return url;
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -379,7 +387,7 @@ public class UsuarioDAO {
 
         String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
                    + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
-                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
                    + "r.nombre as rol_nombre "
                    + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
                    + "WHERE u.username LIKE ? OR u.nombre_completo LIKE ? OR u.cedula LIKE ? "
@@ -448,5 +456,29 @@ public class UsuarioDAO {
             }
         } catch (SQLException ignored) {}
         return u;
+    }
+
+    public List<Usuario> listarRevisores() {
+        List<Usuario> lista = new ArrayList<>();
+        String sql = "SELECT DISTINCT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
+                   + "r.nombre as rol_nombre "
+                   + "FROM usuarios u "
+                   + "LEFT JOIN roles r ON u.rol_id = r.id "
+                   + "JOIN usuario_permisos up ON u.id = up.usuario_id "
+                   + "JOIN permisos p1 ON up.permiso_id = p1.id "
+                   + "WHERE p1.nombre = 'PUEDE_REVISAR_CUENTAS' AND u.activo = true "
+                   + "ORDER BY u.nombre_completo";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                lista.add(mapear(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
     }
 }
