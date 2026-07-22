@@ -30,7 +30,7 @@
                 </ol>
             </nav>
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold text-dark mb-0">Generar Usuarios para Contratistas</h3>
+            <h3 class="fw-bold text-dark mb-0">Generar usuarios para ingreso al sistema</h3>
             <a href="${pageContext.request.contextPath}/contratistas" class="btn btn-secondary fw-bold">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
