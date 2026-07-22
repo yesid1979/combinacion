@@ -45,10 +45,10 @@
                                 <h6 class="fw-bold text-primary">
                                     <i class="bi bi-bank me-1"></i>Ordenadores:
                                 </h6>
-                                <small class="d-block">â€¢ Nombre del Ordenador</small>
-                                <small class="d-block">â€¢ Cédula, Cargo</small>
-                                <small class="d-block">â€¢ Organismo, Dirección</small>
-                                <small class="d-block">â€¢ Decreto, Acta</small>
+                                <small class="d-block">&bull; Nombre del Ordenador</small>
+                                <small class="d-block">&bull; Cédula, Cargo</small>
+                                <small class="d-block">&bull; Organismo, Dirección</small>
+                                <small class="d-block">&bull; Decreto, Acta</small>
                             </div>
 
                             <!-- Contratistas -->
@@ -56,9 +56,9 @@
                                 <h6 class="fw-bold text-success">
                                     <i class="bi bi-people me-1"></i>Contratistas:
                                 </h6>
-                                <small class="d-block">â€¢ Cédula, Nombre, Correo</small>
-                                <small class="d-block">â€¢ Formación, Tarjeta Prof.</small>
-                                <small class="d-block">â€¢ Experiencia, Nacimiento</small>
+                                <small class="d-block">&bull; Cédula, Nombre, Correo</small>
+                                <small class="d-block">&bull; Formación, Tarjeta Prof.</small>
+                                <small class="d-block">&bull; Experiencia, Nacimiento</small>
                             </div>
 
                             <!-- Supervisores -->
@@ -66,9 +66,9 @@
                                 <h6 class="fw-bold text-info">
                                     <i class="bi bi-person-badge-fill me-1"></i>Supervisores:
                                 </h6>
-                                <small class="d-block">â€¢ Nombre del Supervisor</small>
-                                <small class="d-block">â€¢ Cédula del Supervisor</small>
-                                <small class="d-block">â€¢ Cargo del Supervisor</small>
+                                <small class="d-block">&bull; Nombre del Supervisor</small>
+                                <small class="d-block">&bull; Cédula del Supervisor</small>
+                                <small class="d-block">&bull; Cargo del Supervisor</small>
                             </div>
 
                             <!-- Estructuradores -->
@@ -76,9 +76,9 @@
                                 <h6 class="fw-bold text-warning">
                                     <i class="bi bi-briefcase-fill me-1"></i>Estructuradores:
                                 </h6>
-                                <small class="d-block">â€¢ Profesional Jurídico y Cargo</small>
-                                <small class="d-block">â€¢ Profesional Técnico y Cargo</small>
-                                <small class="d-block">â€¢ Profesional Financiero y Cargo</small>
+                                <small class="d-block">&bull; Profesional Jurídico y Cargo</small>
+                                <small class="d-block">&bull; Profesional Técnico y Cargo</small>
+                                <small class="d-block">&bull; Profesional Financiero y Cargo</small>
                             </div>
 
                             <!-- Presupuesto -->
@@ -86,9 +86,9 @@
                                 <h6 class="fw-bold text-danger">
                                     <i class="bi bi-cash-coin me-1"></i>Presupuesto:
                                 </h6>
-                                <small class="d-block">â€¢ CDP (Número, Fecha, Valor)</small>
-                                <small class="d-block">â€¢ RP (Número, Fecha)</small>
-                                <small class="d-block">â€¢ Ficha EBI, Rubro</small>
+                                <small class="d-block">&bull; CDP (Número, Fecha, Valor)</small>
+                                <small class="d-block">&bull; RP (Número, Fecha)</small>
+                                <small class="d-block">&bull; Ficha EBI, Rubro</small>
                             </div>
 
                             <!-- Contratos -->
@@ -96,9 +96,9 @@
                                 <h6 class="fw-bold text-dark">
                                     <i class="bi bi-file-earmark-text me-1"></i>Contratos:
                                 </h6>
-                                <small class="d-block">â€¢ No. Contrato, Objeto</small>
-                                <small class="d-block">â€¢ Valores, Fechas (Inicio/Term.)</small>
-                                <small class="d-block">â€¢ Dependencia, Proceso</small>
+                                <small class="d-block">&bull; No. Contrato, Objeto</small>
+                                <small class="d-block">&bull; Valores, Fechas (Inicio/Term.)</small>
+                                <small class="d-block">&bull; Dependencia, Proceso</small>
                             </div>
                         </div>
                         <hr>
