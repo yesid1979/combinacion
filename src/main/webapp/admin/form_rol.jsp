@@ -18,6 +18,7 @@
                 .btn-save { background-color: #198754; color: white; transition: all 0.2s; }
                 .btn-save:hover { background-color: #157347; color: white; transform: translateY(-2px); }
             </style>
+            <link href="../assets/css/styles.css" rel="stylesheet">
         </head>
 
         <body class="bg-light d-flex flex-column min-vh-100">
@@ -33,13 +34,6 @@
                     <li class="breadcrumb-item active" aria-current="page">Formulario Rol</li>
                 </ol>
             </nav>
-                <nav aria-label="breadcrumb" class="mb-3">
-                    <ol class="breadcrumb small">
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/roles">Roles</a></li>
-                        <li class="breadcrumb-item active">${rol_edit != null ? 'Editar' : 'Nuevo'}</li>
-                    </ol>
-                </nav>
 
                 <div class="card border-0 shadow-sm overflow-hidden">
                     <div class="card-body p-4">
