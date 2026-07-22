@@ -263,7 +263,8 @@ public class ContratistaServlet extends HttpServlet {
                 request.setAttribute("contratista", c);
                 request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
             } else {
-                response.sendRedirect("contratistas?status=created");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("contratistas?status=created");
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error al insertar contratista", e);
@@ -312,7 +313,8 @@ public class ContratistaServlet extends HttpServlet {
                 request.setAttribute("contratista", c);
                 request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
             } else {
-                response.sendRedirect("contratistas?status=updated");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("contratistas?status=updated");
             }
         } catch (NumberFormatException e) {
             logger.log(Level.SEVERE, "ID inválido: " + request.getParameter("id"), e);
@@ -335,6 +337,7 @@ public class ContratistaServlet extends HttpServlet {
 
             int id = Integer.parseInt(idParam);
             contratistaService.eliminar(id);
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect("contratistas?status=deleted");
         } catch (NumberFormatException e) {
             logger.log(Level.SEVERE, "ID inválido: " + request.getParameter("id"), e);

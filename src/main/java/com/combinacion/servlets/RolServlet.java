@@ -84,7 +84,8 @@ public class RolServlet extends HttpServlet {
             request.setAttribute("error", error);
             Rol r = new Rol(); r.setNombre(request.getParameter("nombre")); r.setDescripcion(request.getParameter("descripcion"));
             mostrarFormulario(request, response, r);
-        } else response.sendRedirect("roles?status=created");
+        } else try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("roles?status=created");
     }
 
     private void actualizarRol(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -96,7 +97,8 @@ public class RolServlet extends HttpServlet {
                 request.setAttribute("error", error);
                 Rol r = new Rol(); r.setId(id); r.setNombre(request.getParameter("nombre")); r.setDescripcion(request.getParameter("descripcion")); r.setActivo(activo);
                 mostrarFormulario(request, response, r);
-            } else response.sendRedirect("roles?status=updated");
+            } else try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("roles?status=updated");
         } catch (Exception e) { response.sendRedirect("roles?status=error"); }
     }
 
@@ -105,7 +107,8 @@ public class RolServlet extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             String error = rolService.eliminar(id);
             if (error != null) response.sendRedirect("roles?status=error&msg=" + java.net.URLEncoder.encode(error, "UTF-8"));
-            else response.sendRedirect("roles?status=deleted");
+            else try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("roles?status=deleted");
         } catch (Exception e) { response.sendRedirect("roles?status=error"); }
     }
 

@@ -56,6 +56,9 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("rolNombre", usuario.getRol() != null ? usuario.getRol().getNombre() : "");
             session.setMaxInactiveInterval(30 * 60); // 30 minutos
 
+            // Registrar en Auditoría
+            com.combinacion.dao.AuditoriaDAO.registrar(usuario, "Ingresó al sistema", "Inicio de sesión exitoso", request.getRemoteAddr());
+
             response.sendRedirect(request.getContextPath() + "/index.jsp");
         } else {
             // Login fallido con mensaje detallado

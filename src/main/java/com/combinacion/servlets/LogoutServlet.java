@@ -19,6 +19,10 @@ public class LogoutServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) session.getAttribute("usuario");
+            if (u != null) {
+                com.combinacion.dao.AuditoriaDAO.registrar(u, "Salió del sistema", "Cierre de sesión", request.getRemoteAddr());
+            }
             session.invalidate();
         }
         response.sendRedirect(request.getContextPath() + "/login");

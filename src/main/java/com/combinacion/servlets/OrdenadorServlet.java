@@ -123,7 +123,8 @@ public class OrdenadorServlet extends HttpServlet {
                 request.setAttribute("error", error);
                 request.getRequestDispatcher("form_ordenador.jsp").forward(request, response);
             } else {
-                response.sendRedirect("ordenadores?status=created");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("ordenadores?status=created");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -152,7 +153,8 @@ public class OrdenadorServlet extends HttpServlet {
                 request.setAttribute("ordenador", o);
                 request.getRequestDispatcher("form_ordenador.jsp").forward(request, response);
             } else {
-                response.sendRedirect("ordenadores?status=updated");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("ordenadores?status=updated");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,6 +168,7 @@ public class OrdenadorServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             ordenadorService.eliminar(id);
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect("ordenadores?status=deleted");
         } catch (Exception e) {
             e.printStackTrace();

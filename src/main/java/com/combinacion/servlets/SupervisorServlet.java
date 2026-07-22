@@ -123,6 +123,7 @@ public class SupervisorServlet extends HttpServlet {
             request.getParameter("cargo")
         );
         if (supervisorService.insertar(s)) {
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect("supervisores?status=created");
         } else {
             response.sendRedirect("supervisores?status=error");
@@ -140,7 +141,8 @@ public class SupervisorServlet extends HttpServlet {
             );
             s.setId(id);
             if (supervisorService.actualizar(s)) {
-                response.sendRedirect("supervisores?status=updated");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("supervisores?status=updated");
             } else {
                 response.sendRedirect("supervisores?status=error");
             }

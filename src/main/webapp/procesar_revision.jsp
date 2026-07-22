@@ -69,6 +69,9 @@
                             hr.setObservaciones(observacion != null && !observacion.trim().isEmpty() ? observacion.trim() : "Cuenta pasada a estado: " + accion);
                             new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
                             
+                            // Auditoría del Sistema
+                            com.combinacion.dao.AuditoriaDAO.registrar(u, "Cambio de Estado", "La cuenta de cobro ID " + idInforme + " pasó a estado: " + accion, request.getRemoteAddr());
+                            
                             session.setAttribute("successMessage", "La cuenta de cobro fue actualizada a estado: " + accion);
                         } else {
                             session.setAttribute("error", "No se encontró la cuenta o no se pudo actualizar.");

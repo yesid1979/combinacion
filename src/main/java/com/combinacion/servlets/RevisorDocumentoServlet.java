@@ -91,6 +91,7 @@ public class RevisorDocumentoServlet extends HttpServlet {
         r.setCargo(decode(request.getParameter("cargo")));
 
         if (revisorDAO.insertar(r)) {
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect("revisores?status=created");
         } else {
             response.sendRedirect("revisores?status=error");
@@ -108,7 +109,8 @@ public class RevisorDocumentoServlet extends HttpServlet {
             r.setCargo(decode(request.getParameter("cargo")));
 
             if (revisorDAO.actualizar(r)) {
-                response.sendRedirect("revisores?status=updated");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("revisores?status=updated");
             } else {
                 response.sendRedirect("revisores?status=error");
             }

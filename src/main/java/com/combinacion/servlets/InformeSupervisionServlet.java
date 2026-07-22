@@ -925,8 +925,12 @@ public class InformeSupervisionServlet extends HttpServlet {
             java.util.List<InformeSupervision> lista = informeService.listarPorContrato(form.contratoId);
             if (lista != null && !lista.isEmpty()) {
                 InformeSupervision guardado = lista.get(0);
+                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+                
+                // Auditoría
+                com.combinacion.dao.AuditoriaDAO.registrar(u, "Creación de Cuenta", "Se creó la cuenta de cobro ID " + guardado.getId() + " para el contrato " + form.contratoId, request.getRemoteAddr());
+                
                 if ("RADICADA".equals(guardado.getEstadoRadicacion())) {
-                    com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
                     com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                     hr.setIdInforme(guardado.getId());
                     hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
@@ -956,8 +960,12 @@ public class InformeSupervisionServlet extends HttpServlet {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+            
+            // Auditoría
+            com.combinacion.dao.AuditoriaDAO.registrar(u, "Actualización de Cuenta", "Se actualizó la cuenta de cobro ID " + id, request.getRemoteAddr());
+            
             if ("RADICADA".equals(form.estadoRadicacion) && !"RADICADA".equals(estadoAnterior)) {
-                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
                 com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                 hr.setIdInforme(id);
                 hr.setIdUsuarioCambio(u != null ? u.getId() : 0);

@@ -165,6 +165,7 @@ public class MasivoUsuariosServlet extends HttpServlet {
         }).start();
         
         String finalMsg = "Se ha iniciado la creación de usuarios en segundo plano. Esto evitará que la pantalla se congele. ¡Puedes seguir trabajando! Los perfiles estarán listos en unos momentos.";
-        response.sendRedirect(request.getContextPath() + "/masivo-usuarios?success=" + java.net.URLEncoder.encode(finalMsg, "UTF-8"));
+        try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Carga Masiva", "Carga masiva de usuarios procesada", request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect(request.getContextPath() + "/masivo-usuarios?success=" + java.net.URLEncoder.encode(finalMsg, "UTF-8"));
     }
 }

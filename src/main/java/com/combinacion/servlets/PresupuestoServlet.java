@@ -117,7 +117,8 @@ public class PresupuestoServlet extends HttpServlet {
         try {
             PresupuestoDetalle p = mapearRequest(request);
             if (presupuestoService.insertar(p)) {
-                response.sendRedirect("presupuesto?success=insertado");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro insertado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("presupuesto?success=insertado");
             } else {
                 request.setAttribute("error", "No se pudo insertar el presupuesto.");
                 request.setAttribute("presupuesto", p);
@@ -135,7 +136,8 @@ public class PresupuestoServlet extends HttpServlet {
             PresupuestoDetalle p = mapearRequest(request);
             p.setId(Integer.parseInt(request.getParameter("id")));
             if (presupuestoService.actualizar(p)) {
-                response.sendRedirect("presupuesto?success=actualizado");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect("presupuesto?success=actualizado");
             } else {
                 request.setAttribute("error", "No se pudo actualizar el presupuesto.");
                 request.setAttribute("presupuesto", p);

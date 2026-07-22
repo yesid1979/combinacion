@@ -355,6 +355,7 @@ public class UsuarioServlet extends HttpServlet {
                 }
             }
             
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
         } catch (Exception e) {
             e.printStackTrace();
@@ -427,6 +428,7 @@ public class UsuarioServlet extends HttpServlet {
             u.setRolId(rolId);
             mostrarFormulario(request, response, u);
         } else {
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=created");
         }
     }
@@ -467,7 +469,8 @@ public class UsuarioServlet extends HttpServlet {
                 u.setRolId(rolId);
                 mostrarFormulario(request, response, u);
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -485,7 +488,8 @@ public class UsuarioServlet extends HttpServlet {
             if (error != null) {
                 response.sendRedirect(request.getContextPath() + "/admin/usuarios?action=edit&id=" + id + "&error=" + java.net.URLEncoder.encode(error, "UTF-8"));
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=password_changed");
+                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Cambio de Clave", "Contraseña cambiada en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=password_changed");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -498,6 +502,7 @@ public class UsuarioServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             usuarioService.eliminar(id);
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=deleted");
         } catch (Exception e) {
             e.printStackTrace();

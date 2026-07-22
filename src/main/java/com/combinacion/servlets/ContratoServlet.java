@@ -141,6 +141,7 @@ public class ContratoServlet extends HttpServlet {
                 listar(request, response);
             } else {
                 request.getSession().setAttribute("successMessage", "El contrato ha sido creado correctamente.");
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Acción General", "El contrato ha sido creado correctamente.", request.getRemoteAddr()); } catch(Exception ex){}
                 response.sendRedirect("contratos?action=list");
             }
         } catch (Exception e) {
@@ -161,6 +162,7 @@ public class ContratoServlet extends HttpServlet {
                 listar(request, response);
             } else {
                 request.getSession().setAttribute("successMessage", "El contrato ha sido actualizado correctamente.");
+            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Acción General", "El contrato ha sido actualizado correctamente.", request.getRemoteAddr()); } catch(Exception ex){}
                 response.sendRedirect("contratos?action=list");
             }
         } catch (Exception e) {
