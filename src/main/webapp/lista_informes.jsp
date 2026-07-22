@@ -20,11 +20,11 @@
     </style>
     <link href="assets/css/styles.css" rel="stylesheet">
 </head>
-<body class="bg-white d-flex flex-column min-vh-100">
+<body class="bg-light d-flex flex-column min-vh-100">
 
     <jsp:include page="inc/navbar.jsp" />
 
-    <div class="container mt-4 flex-grow-1 ">
+    <div class="container mt-4 mb-5 flex-grow-1">
 
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-premium">
