@@ -631,6 +631,11 @@ public class CargaMasivaServlet extends HttpServlet {
                 }
             }
 
+                        if (h.equals("ano contratos") || h.equals("ano") || h.equals("ano fiscal") || h.equals("vigencia")) {
+                safePut(map, "anio", i);
+                continue;
+            }
+
             // ===== ORDENADORES DEL GASTO =====
             if (h.contains("organismo") && !h.contains("direccion")) {
                 map.put("organismo", i);
