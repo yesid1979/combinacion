@@ -653,7 +653,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 }
             }
 
-                        if (h.equals("ano contratos") || h.equals("ano") || h.equals("ano fiscal") || h.equals("vigencia")) {
+            if (h.startsWith("ano contratos") || h.equals("ano") || h.equals("ano fiscal") || h.equals("vigencia")) {
                 safePut(map, "anio", i);
                 continue;
             }
