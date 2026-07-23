@@ -365,13 +365,24 @@ public class CargaMasivaServlet extends HttpServlet {
                 log.append("\n═════════════════════════════════════════\n\n");
                 System.out.println(log.toString());
 
-                // 3. CACHE EXISTING DATA (Optimización para evitar N+1 queries)
-                java.util.Set<String> cedulasOrdenadoresExistentes = ordenadorDAO.obtenerTodasLasCedulas();
-                java.util.Set<String> cedulasContratistasExistentes = new java.util.HashSet<>();
-                for(String ced : contratistaDAO.obtenerTodasLasCedulas()) {
-                    if (ced != null) cedulasContratistasExistentes.add(ced.replaceAll("[^0-9]", ""));
+                                // 3. CACHE EXISTING DATA (Optimización para evitar N+1 queries)
+                java.util.Map<String, String> mapOrdenadores = new java.util.HashMap<>();
+                for(String ced : ordenadorDAO.obtenerTodasLasCedulas()) {
+                    if (ced != null) mapOrdenadores.put(ced.replaceAll("[^0-9]", ""), ced);
                 }
-                java.util.Set<String> cedulasSupervisoresExistentes = supervisorDAO.obtenerTodasLasCedulas();
+
+                java.util.Map<String, String> mapContratistas = new java.util.HashMap<>();
+                for(String ced : contratistaDAO.obtenerTodasLasCedulas()) {
+                    if (ced != null) mapContratistas.put(ced.replaceAll("[^0-9]", ""), ced);
+                }
+
+                java.util.Map<String, String> mapSupervisores = new java.util.HashMap<>();
+                for(String ced : supervisorDAO.obtenerTodasLasCedulas()) {
+                    if (ced != null) {
+                        String base = ced.contains("-DUP-") ? ced.substring(0, ced.indexOf("-DUP-")) : ced;
+                        mapSupervisores.put(base.replaceAll("[^0-9]", ""), base);
+                    }
+                }
 
                 // 4. PROCESS DATA ROWS
                 for (int i = bestHeaderRowIndex + 1; i < allRows.size(); i++) {
@@ -396,19 +407,19 @@ public class CargaMasivaServlet extends HttpServlet {
                         Contrato cExistente = (numContrato != null && !numContrato.isEmpty()) ? contratoDAO.obtenerPorNumero(numContrato) : null;
 
                         // Intentar procesar como Ordenador
-                        OrdenadorGasto ordenadorObj = processOrdenador(row, map, cedulasOrdenadoresExistentes);
+                        OrdenadorGasto ordenadorObj = processOrdenador(row, map, mapOrdenadores);
                         if (ordenadorObj != null) {
                             ordenadoresCount++;
                         }
 
                         // Intentar procesar como Contratista
-                        Contratista contratistaObj = processContratista(row, map, cedulasContratistasExistentes);
+                        Contratista contratistaObj = processContratista(row, map, mapContratistas);
                         if (contratistaObj != null) {
                             contratistasCount++;
                         }
 
                         // Intentar procesar como Supervisor
-                        Supervisor supervisorObj = processSupervisor(row, map, cedulasSupervisoresExistentes, log);
+                        Supervisor supervisorObj = processSupervisor(row, map, mapSupervisores, log);
                         if (supervisorObj != null) {
                             supervisoresCount++;
                         }
@@ -1088,25 +1099,29 @@ public class CargaMasivaServlet extends HttpServlet {
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
     private OrdenadorGasto processOrdenador(String[] row, Map<String, Integer> map,
-            java.util.Set<String> cedulasExistentes) {
+            java.util.Map<String, String> mapCedulasExistentes) {
         try {
             String nombre = get(row, map, "nombre_ordenador");
-            String cedula = get(row, map, "cedula_ordenador");
+            String rawCedula = get(row, map, "cedula_ordenador");
+            String normalizedCedula = rawCedula.replaceAll("[^0-9]", "");
 
             if (nombre.isEmpty()) {
                 return null;
             }
 
-            if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                OrdenadorGasto existing = ordenadorDAO.obtenerPorCedula(cedula);
+            if (!normalizedCedula.isEmpty() && mapCedulasExistentes.containsKey(normalizedCedula)) {
+                String dbCedula = mapCedulasExistentes.get(normalizedCedula);
+                OrdenadorGasto existing = ordenadorDAO.obtenerPorCedula(dbCedula);
                 if (existing != null) {
                     existing.setOrganismo(get(row, map, "organismo"));
                     existing.setDireccionOrganismo(get(row, map, "direccion_organismo"));
                     existing.setNombreOrdenador(nombre);
+                    existing.setCedulaOrdenador(rawCedula); // Conservar el valor original de Excel
                     existing.setCargoOrdenador(get(row, map, "cargo_ordenador"));
                     existing.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
                     existing.setActaPosesion(get(row, map, "acta_posesion"));
                     ordenadorDAO.actualizar(existing);
+                    mapCedulasExistentes.put(normalizedCedula, rawCedula); // Actualizar cache
                     return existing;
                 }
             }
@@ -1115,14 +1130,14 @@ public class CargaMasivaServlet extends HttpServlet {
             ordenador.setOrganismo(get(row, map, "organismo"));
             ordenador.setDireccionOrganismo(get(row, map, "direccion_organismo"));
             ordenador.setNombreOrdenador(nombre);
-            ordenador.setCedulaOrdenador(cedula);
+            ordenador.setCedulaOrdenador(rawCedula);
             ordenador.setCargoOrdenador(get(row, map, "cargo_ordenador"));
             ordenador.setDecretoNombramiento(get(row, map, "decreto_nombramiento"));
             ordenador.setActaPosesion(get(row, map, "acta_posesion"));
 
             if (ordenadorDAO.insertar(ordenador)) {
-                if (!cedula.isEmpty())
-                    cedulasExistentes.add(cedula);
+                if (!normalizedCedula.isEmpty())
+                    mapCedulasExistentes.put(normalizedCedula, rawCedula);
                 return ordenador;
             }
             return null;
@@ -1144,21 +1159,22 @@ public class CargaMasivaServlet extends HttpServlet {
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
     private Contratista processContratista(String[] row, Map<String, Integer> map,
-            java.util.Set<String> cedulasExistentes) {
+            java.util.Map<String, String> mapCedulasExistentes) {
         try {
-            String cedula = get(row, map, "contratista_cedula");
+            String rawCedula = get(row, map, "contratista_cedula");
+            String normalizedCedula = rawCedula.replaceAll("[^0-9]", "");
             String nombre = get(row, map, "contratista_nombre");
 
-            if (cedula.isEmpty() && nombre.isEmpty()) {
+            if (rawCedula.isEmpty() && nombre.isEmpty()) {
                 return null;
             }
 
             Contratista contratista;
             boolean exists = false;
-            String normalizedCedula = cedula.replaceAll("[^0-9]", "");
             
-            if (!normalizedCedula.isEmpty() && cedulasExistentes.contains(normalizedCedula)) {
-                contratista = contratistaDAO.obtenerPorCedula(cedula);
+            if (!normalizedCedula.isEmpty() && mapCedulasExistentes.containsKey(normalizedCedula)) {
+                String dbCedula = mapCedulasExistentes.get(normalizedCedula);
+                contratista = contratistaDAO.obtenerPorCedula(dbCedula);
                 if (contratista != null) {
                     exists = true;
                 } else {
@@ -1169,7 +1185,9 @@ public class CargaMasivaServlet extends HttpServlet {
             }
 
             if (!exists) {
-                contratista.setCedula(cedula.isEmpty() ? "SIN_CEDULA_" + System.currentTimeMillis() : cedula);
+                contratista.setCedula(rawCedula.isEmpty() ? "SIN_CEDULA_" + System.currentTimeMillis() : rawCedula);
+            } else {
+                contratista.setCedula(rawCedula); // Conservar el valor original de Excel
             }
             
             // Siempre actualizar campos desde el Excel
@@ -1191,7 +1209,6 @@ public class CargaMasivaServlet extends HttpServlet {
                     String fechaNac = ano + "-" + mesFmt + "-" + diaFmt;
                     contratista.setFechaNacimiento(java.sql.Date.valueOf(fechaNac));
                 } catch (Exception e) {
-                    // System.err.println("Error al parsear fecha: " + dia + "/" + mes + "/" + ano);
                 }
             }
 
@@ -1199,12 +1216,12 @@ public class CargaMasivaServlet extends HttpServlet {
             String edad = get(row, map, "contratista_edad");
             if (!edad.isEmpty()) {
                 try {
-                    double edadDouble = Double.parseDouble(edad.replace(",", "."));
-                    contratista.setEdad((int) edadDouble);
+                    contratista.setEdad(Integer.parseInt(edad));
                 } catch (Exception e) {
                 }
             }
 
+            // Textos largos
             contratista.setFormacionTitulo(get(row, map, "contratista_formacion"));
             contratista.setDescripcionFormacion(get(row, map, "contratista_desc_formacion"));
             contratista.setTarjetaProfesional(get(row, map, "contratista_tarjeta"));
@@ -1215,12 +1232,12 @@ public class CargaMasivaServlet extends HttpServlet {
 
             if (exists) {
                 if (contratistaDAO.actualizar(contratista)) {
+                    if (!normalizedCedula.isEmpty()) mapCedulasExistentes.put(normalizedCedula, rawCedula);
                     return contratista;
                 }
             } else {
                 if (contratistaDAO.insertar(contratista)) {
-                    if (!normalizedCedula.isEmpty())
-                        cedulasExistentes.add(normalizedCedula);
+                    if (!normalizedCedula.isEmpty()) mapCedulasExistentes.put(normalizedCedula, rawCedula);
                     return contratista;
                 }
             }
@@ -1238,71 +1255,73 @@ public class CargaMasivaServlet extends HttpServlet {
      * @return 1=insertado, 0=omitido (datos vacíos), -1=duplicado
      */
     private Supervisor processSupervisor(String[] row, Map<String, Integer> map,
-            java.util.Set<String> cedulasExistentes, StringBuilder log) {
+            java.util.Map<String, String> mapCedulasExistentes, StringBuilder log) {
         try {
             String nombre = get(row, map, "supervisor_nombre");
-            String cedula = get(row, map, "supervisor_cedula");
+            String rawCedula = get(row, map, "supervisor_cedula");
+            String normalizedCedula = rawCedula.replaceAll("[^0-9]", "");
 
             if (nombre.isEmpty()) {
-                if (!cedula.isEmpty() || !get(row, map, "supervisor_cargo").isEmpty()) {
-                    log.append("  ⚠️ WARN SPV: Nombre vacio pero Cedula/Cargo existen. Ced='").append(cedula)
-                            .append("'\n");
+                if (!rawCedula.isEmpty() || !get(row, map, "supervisor_cargo").isEmpty()) {
+                    if (log != null)
+                        log.append("  ⚠️ Supervisor con cédula o cargo pero sin nombre, omitiendo.\\n");
                 }
                 return null;
             }
 
             // 1. INTENTO DE MATCH PERFECTO: Cedula (o DUP) + Nombre
-            Supervisor exactMatch = supervisorDAO.obtenerPorCedulaYNombre(cedula, nombre);
+            // For match exacto, we can query DB with rawCedula, but wait, DB might have different format.
+            // Let's use dbCedula if we can.
+            String dbCedula = mapCedulasExistentes.getOrDefault(normalizedCedula, rawCedula);
+            
+            Supervisor exactMatch = supervisorDAO.obtenerPorCedulaYNombre(dbCedula, nombre);
+            if (exactMatch == null && !rawCedula.equals(dbCedula)) {
+                exactMatch = supervisorDAO.obtenerPorCedulaYNombre(rawCedula, nombre);
+            }
+            
             if (exactMatch != null) {
-                // Actualizar campos si existen cambios
                 exactMatch.setCargo(get(row, map, "supervisor_cargo"));
+                exactMatch.setCedula(rawCedula); // Preserve excel
                 supervisorDAO.actualizar(exactMatch);
+                mapCedulasExistentes.put(normalizedCedula, rawCedula);
                 return exactMatch;
             }
 
-            // 2. Si no existe match exacto, revisamos si la CEDULA (base) ya esta usada por
-            // OTRO nombre
-            if (!cedula.isEmpty() && cedulasExistentes.contains(cedula)) {
-                // La cedula base ya la tiene alguien, y como no hicimos match exacto arriba,
-                // sabemos que es OTRO nombre.
-                // CONFLICTO -> Crear nuevo con sufijo.
+            // 2. Si no existe match exacto, revisamos si la CEDULA (base) ya esta usada por OTRO nombre
+            if (!normalizedCedula.isEmpty() && mapCedulasExistentes.containsKey(normalizedCedula)) {
+                String ownerDbCedula = mapCedulasExistentes.get(normalizedCedula);
                 if (log != null) {
-                    Supervisor owner = supervisorDAO.obtenerPorCedula(cedula);
+                    Supervisor owner = supervisorDAO.obtenerPorCedula(ownerDbCedula);
                     String ownerName = (owner != null) ? owner.getNombre() : "DESCONOCIDO";
-                    log.append("  ⚠️ CONFLICTO SPV: Cedula '").append(cedula).append("' ya existe para '")
+                    log.append("  ⚠️ CONFLICTO SPV: Cedula '").append(rawCedula).append("' ya existe para '")
                             .append(ownerName)
-                            .append("'. Creando NUEVO registro para '").append(nombre).append("'\n");
+                            .append("'. Creando NUEVO registro para '").append(nombre).append("'\\n");
                 }
-                cedula = cedula + "-DUP-" + System.nanoTime();
+                rawCedula = rawCedula + "-DUP-" + System.nanoTime();
             }
 
             // 3. Crear Nuevo
             Supervisor supervisor = new Supervisor();
             supervisor.setNombre(nombre);
-            supervisor.setCedula(cedula.isEmpty() ? "SIN_CEDULA_" + System.nanoTime() : cedula);
+            supervisor.setCedula(rawCedula.isEmpty() ? "SIN_CEDULA_" + System.nanoTime() : rawCedula);
             supervisor.setCargo(get(row, map, "supervisor_cargo"));
 
             if (supervisorDAO.insertar(supervisor)) {
                 if (log != null)
                     log.append("  ➜ Supervisor Nuevo Creado: ID ").append(supervisor.getId()).append(" ('")
-                            .append(nombre).append("')\n");
+                            .append(nombre).append("')\\n");
 
-                // Agregamos la cedula base al set para futuras validaciones en este mismo loop
-                // (Si la cedula era nueva, se agrega. Si era DUP, agregamos la base para que el
-                // proximo sepa que hay conflicto)
-                if (!cedula.isEmpty()) {
-                    // Si es un DUP, la base es lo que importa.
-                    // Pero espera, cedula variable ya tiene el DUP.
-                    // Necesitamos la base.
-                    String base = cedula.contains("-DUP-") ? cedula.substring(0, cedula.indexOf("-DUP-")) : cedula;
-                    cedulasExistentes.add(base);
+                if (!normalizedCedula.isEmpty() && !rawCedula.contains("-DUP-")) {
+                    mapCedulasExistentes.put(normalizedCedula, rawCedula);
                 }
                 return supervisor;
             }
             return null;
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            if (log != null)
+                log.append("⚠️ Error procesando supervisor: ").append(ex.getMessage()).append("\\n");
+            ex.printStackTrace();
             return null;
         }
     }
