@@ -88,8 +88,8 @@ public class CargaMasivaServlet extends HttpServlet {
 
                 if (isGoogleSync) {
                     log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
-                    String SPREADSHEET_ID = "PEGAR_AQUI_EL_ID";
-                    String[] TABS = {"Pestaña 1", "Pestaña 2"}; // Cambiar por los nombres reales de las pestañas
+                    String SPREADSHEET_ID = "1y94sMDYKMtDrEEDev2JE7rJFC5AZVHAt";
+                    String[] TABS = {"JULIO 2026", "ENERO 2026"};
                     
                     try (InputStream in = getClass().getResourceAsStream("/credencialescontratacion.json")) {
                         if (in == null) {
