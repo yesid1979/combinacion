@@ -213,35 +213,48 @@ public class InformeSupervisionServlet extends HttpServlet {
         int recordsTotal = listaTotal.size();
 
         // 1. Filtrado en memoria
+        String column7Search = request.getParameter("columns[7][search][value]");
+        String estadoFilter = null;
+        if (column7Search != null && !column7Search.isEmpty()) {
+            estadoFilter = column7Search.replaceAll("\\^|\\$|\\\\", "").toUpperCase();
+        }
+
         java.util.List<InformeSupervision> listaFiltrada = new java.util.ArrayList<>();
-        if (searchValue != null && !searchValue.isEmpty()) {
-            for (InformeSupervision info : listaTotal) {
-                boolean match = false;
+        for (InformeSupervision info : listaTotal) {
+            boolean matchGlobal = true;
+            if (searchValue != null && !searchValue.isEmpty()) {
+                matchGlobal = false;
                 if (info.getContrato() != null && info.getContrato().getNumeroContrato() != null 
                         && info.getContrato().getNumeroContrato().toLowerCase().contains(searchValue)) {
-                    match = true;
+                    matchGlobal = true;
                 }
                 if (info.getContrato() != null && info.getContrato().getContratistaNombre() != null 
                         && info.getContrato().getContratistaNombre().toLowerCase().contains(searchValue)) {
-                    match = true;
+                    matchGlobal = true;
                 }
                 if (info.getPeriodoInforme() != null && info.getPeriodoInforme().toLowerCase().contains(searchValue)) {
-                    match = true;
+                    matchGlobal = true;
                 }
                 if (info.getEstadoRadicacion() != null && info.getEstadoRadicacion().toLowerCase().contains(searchValue)) {
-                    match = true;
+                    matchGlobal = true;
                 }
                 // Si el filtro coincide con BORRADOR al estar vacío
-                if (info.getEstadoRadicacion() == null && "borrador".contains(searchValue)) {
-                    match = true;
-                }
-                
-                if (match) {
-                    listaFiltrada.add(info);
+                if ((info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) && "borrador".contains(searchValue)) {
+                    matchGlobal = true;
                 }
             }
-        } else {
-            listaFiltrada = listaTotal;
+
+            boolean matchEstado = true;
+            if (estadoFilter != null && !estadoFilter.isEmpty()) {
+                String currentEstado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion().toUpperCase();
+                if (!currentEstado.equals(estadoFilter)) {
+                    matchEstado = false;
+                }
+            }
+
+            if (matchGlobal && matchEstado) {
+                listaFiltrada.add(info);
+            }
         }
         int recordsFiltered = listaFiltrada.size();
 
