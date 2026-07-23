@@ -90,56 +90,83 @@ public class CargaMasivaServlet extends HttpServlet {
                     log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
                     String SPREADSHEET_ID = "1y94sMDYKMtDrEEDev2JE7rJFC5AZVHAt";
                     
-
                         com.google.api.client.auth.oauth2.Credential credential = com.combinacion.services.GoogleDriveService.getCredentials(GoogleNetHttpTransport.newTrustedTransport());
-                                
-                        Sheets sheetsService = new Sheets.Builder(
-                                GoogleNetHttpTransport.newTrustedTransport(),
-                                GsonFactory.getDefaultInstance(),
-                                credential)
-                                .setApplicationName("Combinacion DAGJP")
-                                .build();
-                                
-                        // Obtener los nombres de todas las pestañas dinámicamente
-                        com.google.api.services.sheets.v4.model.Spreadsheet spreadsheet = sheetsService.spreadsheets().get(SPREADSHEET_ID).execute();
-                        java.util.List<com.google.api.services.sheets.v4.model.Sheet> sheetsList = spreadsheet.getSheets();
-                        
-                        java.util.List<String> TABS = new java.util.ArrayList<>();
-                        for (com.google.api.services.sheets.v4.model.Sheet sheet : sheetsList) {
-                            TABS.add(sheet.getProperties().getTitle());
-                        }
-                        
-                        log.append("Se detectaron ").append(TABS.size()).append(" pestañas en el documento.\\n");
-                        
-                        for (String tab : TABS) {
-                            String range = tab + "!A:AZ";
-                            try {
-                                ValueRange responseVal = sheetsService.spreadsheets().values()
-                                        .get(SPREADSHEET_ID, range)
-                                        .execute();
-                                        
-                                List<List<Object>> values = responseVal.getValues();
-                                if (values != null && !values.isEmpty()) {
-                                    int maxCols = 0;
-                                    for (List<Object> row : values) {
-                                        if (row.size() > maxCols) maxCols = row.size();
-                                    }
-                                    for (List<Object> row : values) {
-                                        String[] strRow = new String[maxCols];
-                                        for(int i=0; i<maxCols; i++) {
-                                            strRow[i] = (i < row.size() && row.get(i) != null) ? row.get(i).toString() : "";
+                        com.google.api.services.drive.Drive driveService = com.combinacion.services.GoogleDriveService.getDriveService();
+                        com.google.api.services.drive.model.File fileMeta = driveService.files().get(SPREADSHEET_ID).setFields("mimeType, name").execute();
+                        String mimeType = fileMeta.getMimeType();
+
+                        if (mimeType.equals("application/vnd.google-apps.spreadsheet")) {
+                            Sheets sheetsService = new Sheets.Builder(
+                                    GoogleNetHttpTransport.newTrustedTransport(),
+                                    GsonFactory.getDefaultInstance(),
+                                    credential)
+                                    .setApplicationName("Combinacion DAGJP")
+                                    .build();
+                                    
+                            // Obtener los nombres de todas las pestañas dinámicamente
+                            com.google.api.services.sheets.v4.model.Spreadsheet spreadsheet = sheetsService.spreadsheets().get(SPREADSHEET_ID).execute();
+                            java.util.List<com.google.api.services.sheets.v4.model.Sheet> sheetsList = spreadsheet.getSheets();
+                            
+                            java.util.List<String> TABS = new java.util.ArrayList<>();
+                            for (com.google.api.services.sheets.v4.model.Sheet sheet : sheetsList) {
+                                TABS.add(sheet.getProperties().getTitle());
+                            }
+                            
+                            log.append("Se detectaron ").append(TABS.size()).append(" pestañas en el documento Nativo.\\n");
+                            
+                            for (String tab : TABS) {
+                                String range = tab + "!A:AZ";
+                                try {
+                                    ValueRange responseVal = sheetsService.spreadsheets().values()
+                                            .get(SPREADSHEET_ID, range)
+                                            .execute();
+                                            
+                                    List<List<Object>> values = responseVal.getValues();
+                                    if (values != null && !values.isEmpty()) {
+                                        int maxCols = 0;
+                                        for (List<Object> row : values) {
+                                            if (row.size() > maxCols) maxCols = row.size();
                                         }
-                                        allRows.add(strRow);
+                                        for (List<Object> row : values) {
+                                            String[] strRow = new String[maxCols];
+                                            for(int i=0; i<maxCols; i++) {
+                                                strRow[i] = (i < row.size() && row.get(i) != null) ? row.get(i).toString() : "";
+                                            }
+                                            allRows.add(strRow);
+                                        }
+                                        log.append("Se descargaron ").append(values.size()).append(" filas de la pestaña '").append(tab).append("'.\n");
                                     }
-                                    log.append("Se descargaron ").append(values.size()).append(" filas de la pestaña '").append(tab).append("'.\n");
+                                } catch (Exception e) {
+                                    log.append("Advertencia: No se pudo leer la pestaña '").append(tab).append("': ").append(e.getMessage()).append("\n");
                                 }
-                            } catch (Exception e) {
-                                log.append("Advertencia: No se pudo leer la pestaña '").append(tab).append("': ").append(e.getMessage()).append("\n");
+                            }
+                        } else {
+                            log.append("El documento no es nativo de Google Sheets (Tipo: ").append(mimeType).append("). Descargando como Excel...\\n");
+                            InputStream fileContent = driveService.files().get(SPREADSHEET_ID).executeMediaAsInputStream();
+                            
+                            if (fileMeta.getName().endsWith(".xlsx") || mimeType.contains("spreadsheetml")) {
+                                try (Workbook workbook = new XSSFWorkbook(fileContent)) {
+                                    log.append("Se detectaron ").append(workbook.getNumberOfSheets()).append(" pestañas en el Excel.\\n");
+                                    for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                                        Sheet poiSheet = workbook.getSheetAt(i);
+                                        allRows.addAll(readSheetData(poiSheet));
+                                        log.append("Se extrajeron datos de la pestaña '").append(poiSheet.getSheetName()).append("'.\\n");
+                                    }
+                                }
+                            } else {
+                                try (Workbook workbook = new HSSFWorkbook(fileContent)) {
+                                    log.append("Se detectaron ").append(workbook.getNumberOfSheets()).append(" pestañas en el Excel.\\n");
+                                    for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                                        Sheet poiSheet = workbook.getSheetAt(i);
+                                        allRows.addAll(readSheetData(poiSheet));
+                                        log.append("Se extrajeron datos de la pestaña '").append(poiSheet.getSheetName()).append("'.\\n");
+                                    }
+                                }
                             }
                         }
                         
                         if (allRows.isEmpty()) {
-                            throw new Exception("No se pudieron extraer datos de las pestañas indicadas.");
+                            throw new Exception("No se pudieron extraer datos del documento.");
                         }
                         log.append("Total unificado en memoria: " + allRows.size() + " filas.\\n");
                 } else {
