@@ -381,6 +381,15 @@ public class CargaMasivaServlet extends HttpServlet {
                     if (isRowEmpty(row))
                         continue;
 
+                    // Ignorar filas que son encabezados (sucede si la tabla tiene sub-encabezados o encabezados combinados)
+                    String checkTrd = get(row, map, "trd_proceso").toLowerCase();
+                    String checkNum = get(row, map, "numero_contrato").toLowerCase();
+                    if (checkTrd.contains("trd del proceso") || checkTrd.equals("trd") || 
+                        checkNum.contains("número de contrato") || checkNum.contains("numero de contrato") || checkNum.equals("numero")) {
+                        log.append("Se ignoró una fila de encabezado detectada en la posición ").append(i + 1).append(".\n");
+                        continue;
+                    }
+
                     try {
                         // REUPERAR CONTRATO EXISTENTE (para evitar duplicados en tablas relacionadas)
                         String numContrato = get(row, map, "numero_contrato");
