@@ -24,7 +24,8 @@
                     }
                 </style>
             <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
-    </head>
+        <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
+</head>
 
             <body class="bg-light d-flex flex-column min-vh-100">
 

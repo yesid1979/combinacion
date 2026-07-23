@@ -3,7 +3,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÓN FORZADA DE YESID</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>REPARACIÓN FORZADA DE YESID</title>    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
+</head>
 <body style="font-family: sans-serif; padding: 30px;">
     <h2 style="color: #2c3e50;">Reparación Forzada de Permisos: Yesid</h2>
     <%

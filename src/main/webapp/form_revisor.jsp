@@ -12,6 +12,7 @@
     <style>
         .form-label { font-weight: 600; color: #495057; font-size: 0.9rem; }
     </style>
+    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 

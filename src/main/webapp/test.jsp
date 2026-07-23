@@ -6,6 +6,7 @@
 <head>
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <title>Test DB Schema</title>
+    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
 </head>
 <body>
     <h1>Database Test</h1>

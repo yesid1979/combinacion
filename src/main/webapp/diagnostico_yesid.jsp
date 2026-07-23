@@ -3,7 +3,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>DIAGNOSTICO USUARIO</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>DIAGNOSTICO USUARIO</title>    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
+</head>
 <body>
     <h2>Diagnóstico de Usuario: yesid.piedrahita</h2>
     <%

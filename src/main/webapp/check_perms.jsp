@@ -3,7 +3,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>Inspector de Permisos</title></head>
+    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon"><title>Inspector de Permisos</title>    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
+</head>
 <body>
 <%
     Usuario u = (Usuario) session.getAttribute("usuario");
