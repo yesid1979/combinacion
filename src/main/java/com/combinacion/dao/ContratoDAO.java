@@ -375,7 +375,7 @@ public class ContratoDAO {
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
                 "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
                 "fecha_idoneidad=?, fecha_estructurador=?, adicion_si_no=?, numero_cuotas_adicion=?, valor_total_adicion_letras=?, " +
-                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=? " +
+                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=?, anio=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -449,7 +449,12 @@ public class ContratoDAO {
             ps.setBigDecimal(51, c.getValorContratoMasAdicion());
             ps.setString(52, c.getEnlaceSecop());
             ps.setString(53, c.getIvaSiNo());
-            ps.setInt(54, c.getId());
+            if (c.getAnio() != null) {
+                ps.setInt(54, c.getAnio());
+            } else {
+                ps.setNull(54, java.sql.Types.INTEGER);
+            }
+            ps.setInt(55, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

@@ -164,24 +164,24 @@
                 <script>
                     Swal.fire({
                         icon: 'success',
-                        title: 'Â¡Carga Exitosa!',
-                        html: '<%= msg %>',
+                        title: '¡Carga Exitosa!',
+                        html: <%= new com.google.gson.Gson().toJson(msg) %>,
                         confirmButtonText: 'Entendido',
                         confirmButtonColor: '#0d6efd'
                     });
                 </script>
-                <% } %>
+            <% } %>
 
-                    <% if (err !=null) { %>
-                        <script>
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error en la Carga',
-                                text: '<%= err %>',
-                                confirmButtonColor: '#dc3545'
-                            });
-                        </script>
-                        <% } %>
+            <% if (err !=null) { %>
+                <script>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en la Carga',
+                        text: <%= new com.google.gson.Gson().toJson(err) %>,
+                        confirmButtonColor: '#dc3545'
+                    });
+                </script>
+            <% } %>
 
                             <script>
                                 // Loading Overlay script
