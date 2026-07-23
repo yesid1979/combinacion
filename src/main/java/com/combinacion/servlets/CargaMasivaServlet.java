@@ -89,7 +89,6 @@ public class CargaMasivaServlet extends HttpServlet {
                 if (isGoogleSync) {
                     log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
                     String SPREADSHEET_ID = "1y94sMDYKMtDrEEDev2JE7rJFC5AZVHAt";
-                    String[] TABS = {"JULIO 2026", "ENERO 2026"};
                     
                     try (InputStream in = getClass().getResourceAsStream("/credencialescontratacion.json")) {
                         if (in == null) {
@@ -105,6 +104,17 @@ public class CargaMasivaServlet extends HttpServlet {
                                 .setApplicationName("Combinacion DAGJP")
                                 .build();
                                 
+                        // Obtener los nombres de todas las pestañas dinámicamente
+                        com.google.api.services.sheets.v4.model.Spreadsheet spreadsheet = sheetsService.spreadsheets().get(SPREADSHEET_ID).execute();
+                        java.util.List<com.google.api.services.sheets.v4.model.Sheet> sheetsList = spreadsheet.getSheets();
+                        
+                        java.util.List<String> TABS = new java.util.ArrayList<>();
+                        for (com.google.api.services.sheets.v4.model.Sheet sheet : sheetsList) {
+                            TABS.add(sheet.getProperties().getTitle());
+                        }
+                        
+                        log.append("Se detectaron ").append(TABS.size()).append(" pestañas en el documento.\\n");
+                        
                         for (String tab : TABS) {
                             String range = tab + "!A:AZ";
                             try {
