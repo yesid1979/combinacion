@@ -13,6 +13,7 @@ public class Contrato {
     private String modalidad;
     private String estado;
     private String periodo;
+    private Integer anio;
     private Date fechaSuscripcion;
     private Date fechaInicio;
     private Date fechaTerminacion;
@@ -199,4 +200,7 @@ public class Contrato {
     private String apoyoSupervision;
     public String getApoyoSupervision() { return apoyoSupervision; }
     public void setApoyoSupervision(String apoyoSupervision) { this.apoyoSupervision = apoyoSupervision; }
+
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
 }

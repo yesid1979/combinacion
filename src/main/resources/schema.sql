@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS contratos (
     modalidad VARCHAR(100),
     estado VARCHAR(50),
     periodo VARCHAR(50),
+    anio INT,
     fecha_suscripcion DATE,
     fecha_inicio DATE,
     fecha_terminacion DATE,

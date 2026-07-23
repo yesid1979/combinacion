@@ -306,6 +306,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "modalidad", "Modalidad");
                 logMapping(log, map, "estado", "Estado");
                 logMapping(log, map, "periodo", "Periodo");
+                logMapping(log, map, "anio", "Año");
                 logMapping(log, map, "fecha_suscripcion", "Fecha Suscripción");
                 logMapping(log, map, "fecha_inicio", "Fecha Inicio");
                 logMapping(log, map, "fecha_terminacion", "Fecha Terminación (Plazo Ejecución)");
@@ -1592,6 +1593,14 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setModalidad(get(row, map, "modalidad"));
             contrato.setEstado(get(row, map, "estado"));
             contrato.setPeriodo(get(row, map, "periodo"));
+            String anioStr = get(row, map, "anio");
+            if (!anioStr.isEmpty()) {
+                try {
+                    contrato.setAnio((int) Double.parseDouble(anioStr.replace(",", ".")));
+                } catch (Exception ex) {
+                    log.append("⚠️ Advertencia: El año '").append(anioStr).append("' no es un número válido.\n");
+                }
+            }
 
             // Fechas
             contrato.setFechaSuscripcion(parseDateStr(get(row, map, "fecha_suscripcion")));
