@@ -90,12 +90,8 @@ public class CargaMasivaServlet extends HttpServlet {
                     log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
                     String SPREADSHEET_ID = "1y94sMDYKMtDrEEDev2JE7rJFC5AZVHAt";
                     
-                    try (InputStream in = getClass().getResourceAsStream("/credencialescontratacion.json")) {
-                        if (in == null) {
-                            throw new Exception("No se encontró el archivo de credenciales credencialescontratacion.json en resources.");
-                        }
-                        GoogleCredential credential = GoogleCredential.fromStream(in)
-                                .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS_READONLY));
+
+                        com.google.api.client.auth.oauth2.Credential credential = com.combinacion.services.GoogleDriveService.getCredentials(GoogleNetHttpTransport.newTrustedTransport());
                                 
                         Sheets sheetsService = new Sheets.Builder(
                                 GoogleNetHttpTransport.newTrustedTransport(),
@@ -146,7 +142,6 @@ public class CargaMasivaServlet extends HttpServlet {
                             throw new Exception("No se pudieron extraer datos de las pestañas indicadas.");
                         }
                         log.append("Total unificado en memoria: " + allRows.size() + " filas.\\n");
-                    }
                 } else {
                     String fileName = filePart.getSubmittedFileName().toLowerCase();
                     try (InputStream fileContent = filePart.getInputStream()) {
