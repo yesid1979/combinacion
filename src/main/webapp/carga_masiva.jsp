@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <!DOCTYPE html>
     <html lang="es">
 
@@ -109,20 +109,40 @@
                         </small>
                     </div>
 
-                    <form id="uploadForm" action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
-                        <div class="mb-3">
-                            <label for="fileUpload" class="form-label fw-bold">Seleccionar Archivo (Excel o CSV)</label>
-                            <input class="form-control form-control-lg" type="file" id="fileUpload" name="file"
-                                accept=".csv, .xlsx, .xls" required>
+                    <div class="row g-4 mt-2">
+                        <!-- Manual Upload Form -->
+                        <div class="col-md-6">
+                            <form id="uploadForm" action="upload" method="POST" enctype="multipart/form-data" class="border p-4 rounded bg-white h-100 shadow-sm">
+                                <div class="mb-3">
+                                    <label for="fileUpload" class="form-label fw-bold text-dark">Opción 1: Subida Manual</label>
+                                    <p class="text-muted small">Seleccione un archivo de su computadora (.xlsx o .csv)</p>
+                                    <input class="form-control" type="file" id="fileUpload" name="file" accept=".csv, .xlsx, .xls" required>
+                                </div>
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-cloud-upload me-2"></i> Cargar Archivo</button>
+                                </div>
+                            </form>
                         </div>
 
-                        <div class="text-end mt-4">
-                            <a href="index.jsp" class="btn btn-secondary me-2" style="width: 140px;"><i
-                                    class="bi bi-x-circle me-2"></i> Cerrar</a>
-                            <button type="submit" class="btn btn-primary" style="width: 140px;"><i
-                                    class="bi bi-cloud-upload me-2"></i> Cargar</button>
+                        <!-- Google Drive Auto-Sync Form -->
+                        <div class="col-md-6">
+                            <form id="syncForm" action="google-sync" method="POST" class="border border-success p-4 rounded h-100 shadow-sm" style="background-color: #f2fcf5;">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-success">Opción 2: Sincronización Automática</label>
+                                    <p class="text-muted small">Conecta directamente con la matriz alojada en Google Drive (Requiere configuración de credenciales).</p>
+                                </div>
+                                <div class="text-end mt-4 pt-3">
+                                    <button type="submit" class="btn btn-success fw-bold w-100" id="btnSync" onclick="document.getElementById('btnSync').innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Conectando...';">
+                                        <i class="bi bi-google me-2"></i>Sincronizar desde Google Drive
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="index.jsp" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i> Cerrar / Volver</a>
+                    </div>
 
                     <% if (session.getAttribute("debug") != null) { %>
                         <div class="alert alert-secondary mt-4">

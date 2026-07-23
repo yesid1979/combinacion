@@ -22,6 +22,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.ValueRange;
+import java.util.Collections;
+
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -35,7 +44,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
-@WebServlet(name = "CargaMasivaServlet", urlPatterns = { "/upload" })
+@WebServlet(name = "CargaMasivaServlet", urlPatterns = { "/upload", "/google-sync" })
 @MultipartConfig
 public class CargaMasivaServlet extends HttpServlet {
 
@@ -57,44 +66,88 @@ public class CargaMasivaServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        Part filePart = request.getPart("file");
-
+        
         int ordenadoresCount = 0;
         int contratistasCount = 0;
         int supervisoresCount = 0;
-        // Remove separate duplicate counters if not needed, or keep for logs.
-        // For simplicity, we are returning objects, duplicates are handled inside.
         int estructuradoresCount = 0;
         int presupuestoCount = 0;
         int contratosCount = 0;
         int errorCount = 0;
         StringBuilder log = new StringBuilder();
 
-        if (filePart != null) {
-            String fileName = filePart.getSubmittedFileName().toLowerCase();
+        boolean isGoogleSync = "/google-sync".equals(request.getServletPath());
+        Part filePart = null;
+        if (!isGoogleSync) {
+            filePart = request.getPart("file");
+        }
 
-            try (InputStream fileContent = filePart.getInputStream()) {
-
+        if (isGoogleSync || filePart != null) {
+            try {
                 List<String[]> allRows = new java.util.ArrayList<>();
 
-                // 1. READ ALL DATA INTO MEMORY
-                if (fileName.endsWith(".xlsx")) {
-                    try (Workbook workbook = new XSSFWorkbook(fileContent)) {
-                        allRows = readSheetData(workbook.getSheetAt(0));
-                    }
-                } else if (fileName.endsWith(".xls")) {
-                    try (Workbook workbook = new HSSFWorkbook(fileContent)) {
-                        allRows = readSheetData(workbook.getSheetAt(0));
+                if (isGoogleSync) {
+                    log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
+                    String SPREADSHEET_ID = "PEGAR_AQUI_EL_ID";
+                    String RANGE = "A:AZ"; // Adjust range if needed
+                    
+                    try (InputStream in = getClass().getResourceAsStream("/credencialescontratacion.json")) {
+                        if (in == null) {
+                            throw new Exception("No se encontró el archivo de credenciales credencialescontratacion.json en resources.");
+                        }
+                        GoogleCredential credential = GoogleCredential.fromStream(in)
+                                .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS_READONLY));
+                                
+                        Sheets sheetsService = new Sheets.Builder(
+                                GoogleNetHttpTransport.newTrustedTransport(),
+                                GsonFactory.getDefaultInstance(),
+                                credential)
+                                .setApplicationName("Combinacion DAGJP")
+                                .build();
+                                
+                        ValueRange responseVal = sheetsService.spreadsheets().values()
+                                .get(SPREADSHEET_ID, RANGE)
+                                .execute();
+                                
+                        List<List<Object>> values = responseVal.getValues();
+                        if (values == null || values.isEmpty()) {
+                            throw new Exception("El documento de Google Sheets está vacío o no se pudo leer el rango.");
+                        }
+                        
+                        // Convert to List<String[]>
+                        int maxCols = 0;
+                        for (List<Object> row : values) {
+                            if (row.size() > maxCols) maxCols = row.size();
+                        }
+                        for (List<Object> row : values) {
+                            String[] strRow = new String[maxCols];
+                            for(int i=0; i<maxCols; i++) {
+                                strRow[i] = (i < row.size() && row.get(i) != null) ? row.get(i).toString() : "";
+                            }
+                            allRows.add(strRow);
+                        }
+                        log.append("Se descargaron " + allRows.size() + " filas de Google Sheets exitosamente.\n");
                     }
                 } else {
-                    // CSV - changing to UTF-8 to fix encoding issues
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "UTF-8"))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (line.trim().isEmpty())
-                                continue;
-                            // Use -1 limit to preserve trailing empty strings
-                            allRows.add(line.split(";", -1));
+                    String fileName = filePart.getSubmittedFileName().toLowerCase();
+                    try (InputStream fileContent = filePart.getInputStream()) {
+                        if (fileName.endsWith(".xlsx")) {
+                            try (Workbook workbook = new XSSFWorkbook(fileContent)) {
+                                allRows = readSheetData(workbook.getSheetAt(0));
+                            }
+                        } else if (fileName.endsWith(".xls")) {
+                            try (Workbook workbook = new HSSFWorkbook(fileContent)) {
+                                allRows = readSheetData(workbook.getSheetAt(0));
+                            }
+                        } else {
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileContent, "UTF-8"))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    if (line.trim().isEmpty())
+                                        continue;
+                                    allRows.add(line.split(";", -1));
+                                }
+                            }
                         }
                     }
                 }

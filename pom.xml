@@ -145,6 +145,13 @@
             <version>v3-rev20220815-2.0.0</version>
         </dependency>
 
+        <!-- Google Sheets API -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-sheets</artifactId>
+            <version>v4-rev20220927-2.0.0</version>
+        </dependency>
+
         <!-- JavaMail API for constructing emails -->
         <dependency>
             <groupId>com.sun.mail</groupId>
