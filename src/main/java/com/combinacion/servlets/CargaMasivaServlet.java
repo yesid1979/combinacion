@@ -89,7 +89,7 @@ public class CargaMasivaServlet extends HttpServlet {
                 if (isGoogleSync) {
                     log.append("=== INICIANDO SINCRONIZACIÓN CON GOOGLE SHEETS ===\n");
                     String SPREADSHEET_ID = "PEGAR_AQUI_EL_ID";
-                    String RANGE = "A:AZ"; // Adjust range if needed
+                    String[] TABS = {"Pestaña 1", "Pestaña 2"}; // Cambiar por los nombres reales de las pestañas
                     
                     try (InputStream in = getClass().getResourceAsStream("/credencialescontratacion.json")) {
                         if (in == null) {
@@ -105,28 +105,37 @@ public class CargaMasivaServlet extends HttpServlet {
                                 .setApplicationName("Combinacion DAGJP")
                                 .build();
                                 
-                        ValueRange responseVal = sheetsService.spreadsheets().values()
-                                .get(SPREADSHEET_ID, RANGE)
-                                .execute();
-                                
-                        List<List<Object>> values = responseVal.getValues();
-                        if (values == null || values.isEmpty()) {
-                            throw new Exception("El documento de Google Sheets está vacío o no se pudo leer el rango.");
+                        for (String tab : TABS) {
+                            String range = tab + "!A:AZ";
+                            try {
+                                ValueRange responseVal = sheetsService.spreadsheets().values()
+                                        .get(SPREADSHEET_ID, range)
+                                        .execute();
+                                        
+                                List<List<Object>> values = responseVal.getValues();
+                                if (values != null && !values.isEmpty()) {
+                                    int maxCols = 0;
+                                    for (List<Object> row : values) {
+                                        if (row.size() > maxCols) maxCols = row.size();
+                                    }
+                                    for (List<Object> row : values) {
+                                        String[] strRow = new String[maxCols];
+                                        for(int i=0; i<maxCols; i++) {
+                                            strRow[i] = (i < row.size() && row.get(i) != null) ? row.get(i).toString() : "";
+                                        }
+                                        allRows.add(strRow);
+                                    }
+                                    log.append("Se descargaron ").append(values.size()).append(" filas de la pestaña '").append(tab).append("'.\n");
+                                }
+                            } catch (Exception e) {
+                                log.append("Advertencia: No se pudo leer la pestaña '").append(tab).append("': ").append(e.getMessage()).append("\n");
+                            }
                         }
                         
-                        // Convert to List<String[]>
-                        int maxCols = 0;
-                        for (List<Object> row : values) {
-                            if (row.size() > maxCols) maxCols = row.size();
+                        if (allRows.isEmpty()) {
+                            throw new Exception("No se pudieron extraer datos de las pestañas indicadas.");
                         }
-                        for (List<Object> row : values) {
-                            String[] strRow = new String[maxCols];
-                            for(int i=0; i<maxCols; i++) {
-                                strRow[i] = (i < row.size() && row.get(i) != null) ? row.get(i).toString() : "";
-                            }
-                            allRows.add(strRow);
-                        }
-                        log.append("Se descargaron " + allRows.size() + " filas de Google Sheets exitosamente.\n");
+                        log.append("Total unificado en memoria: " + allRows.size() + " filas.\\n");
                     }
                 } else {
                     String fileName = filePart.getSubmittedFileName().toLowerCase();
