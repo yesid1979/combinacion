@@ -401,6 +401,15 @@ public class CargaMasivaServlet extends HttpServlet {
                         continue;
                     }
 
+                    // Ignorar filas que no tengan cédula de contratista válida (evita basura en BD)
+                    String cedulaCheck = get(row, map, "contratista_cedula");
+                    if (cedulaCheck == null || cedulaCheck.trim().isEmpty() || 
+                        cedulaCheck.trim().toLowerCase().contains("sin cedula") || 
+                        cedulaCheck.trim().toUpperCase().startsWith("SIN_CEDULA")) {
+                        log.append("Se ignoró la fila ").append(i + 1).append(" por no tener cédula de contratista válida.\n");
+                        continue;
+                    }
+
                     try {
                         // REUPERAR CONTRATO EXISTENTE (para evitar duplicados en tablas relacionadas)
                         String numContrato = get(row, map, "numero_contrato");

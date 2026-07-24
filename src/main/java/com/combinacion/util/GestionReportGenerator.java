@@ -125,7 +125,8 @@ public class GestionReportGenerator {
         } catch (Exception e) {}
         
         reps.put("${NUMERO_CUOTA}", cuotaLetras);
-        reps.put("${FECHA_INFORME}", formatearFechaLarga(info.getFechaFinPeriodo()));
+        java.util.Date fechaInforme = info.getFechaSuscripcion() != null ? info.getFechaSuscripcion() : info.getFechaFinPeriodo();
+        reps.put("${FECHA_INFORME}", formatearFechaLarga(fechaInforme));
         
         // Planilla
         reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero() != null ? info.getPlanillaNumero() : "");

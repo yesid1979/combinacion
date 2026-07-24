@@ -597,9 +597,14 @@
                         
                         var $input = $('input[name="' + baseKey + '"]');
                         if ($input.length) {
-                            var ui = '<div class="alert alert-secondary py-2 mt-2 mb-2 d-flex justify-content-between align-items-center shadow-sm" style="border-left: 4px solid #0d6efd;">' +
+                            var btnEliminar = '';
+                            if (!isReadonly) {
+                                btnEliminar = '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-soporte" data-key="' + key + '" title="Eliminar documento"><i class="bi bi-trash"></i></button>';
+                            }
+                            var ui = '<div class="alert alert-secondary py-2 mt-2 mb-2 d-flex justify-content-between align-items-center shadow-sm" style="border-left: 4px solid #0d6efd;" id="soporte-ui-' + key + '">' +
                                      '<div><i class="bi bi-file-earmark-check-fill text-success me-2 fs-5"></i>' +
                                      '<a href="' + fileData.url + '" target="_blank" class="text-decoration-none fw-bold text-dark">' + fileData.name + '</a></div>' +
+                                     '<div>' + btnEliminar + '</div>' +
                                      '</div>';
                             $input.before(ui);
                             
@@ -636,6 +641,17 @@
                     }
                 });
             }
+
+            $(document).on('click', '.btn-eliminar-soporte', function() {
+                if (confirm('¿Está seguro de eliminar este documento? Esta acción se aplicará definitivamente al presionar "Guardar Borrador".')) {
+                    var key = $(this).data('key');
+                    if (typeof soportesObj !== 'undefined' && soportesObj[key]) {
+                        delete soportesObj[key];
+                        $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
+                    }
+                    $('#soporte-ui-' + key).fadeOut(function() { $(this).remove(); });
+                }
+            });
         });
 
         function agregarActividadConValor(index, valor, isReadonly) {
