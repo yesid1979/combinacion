@@ -51,8 +51,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 5); // 5 minutos de timeout para lotes
             
             // Check if any PDF was generated
             File[] pdfs = outputDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".pdf"));
@@ -73,8 +72,7 @@ public class PdfGenerator {
                 "sh", "-c", "soffice --headless --convert-to pdf --outdir \"" + outputDir.getAbsolutePath() + "\" \"" + inputDir.getAbsolutePath() + "\"/*.docx"
             );
             
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 5); // 5 minutos de timeout para lotes
             
             return true;
         } catch (Exception e) {
@@ -134,8 +132,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 2); // 2 minutos de timeout por archivo
             
             if (pdfFile.exists() && pdfFile.length() > 0) {
                 return true;
@@ -160,8 +157,7 @@ public class PdfGenerator {
                 "--outdir", outDir, docxFile.getAbsolutePath()
             );
             
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 2); // 2 minutos de timeout por archivo
             
             // Soffice genera un archivo con el mismo nombre pero .pdf
             File generatedPdf = new File(docxFile.getAbsolutePath().replace(".docx", ".pdf"));
@@ -227,8 +223,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 2); // 2 minutos de timeout por archivo
             
             return pdfFile.exists() && pdfFile.length() > 0;
         } catch (Exception e) {
@@ -245,8 +240,7 @@ public class PdfGenerator {
                 "--outdir", outDir, excelFile.getAbsolutePath()
             );
             
-            Process p = pb.start();
-            p.waitFor();
+            executeProcessWithTimeout(pb, 2); // 2 minutos de timeout por Excel
             
             File generatedPdf = new File(excelFile.getAbsolutePath().replaceAll("(?i)\\.xlsx?$", ".pdf"));
             if (generatedPdf.exists() && !generatedPdf.getAbsolutePath().equals(pdfFile.getAbsolutePath())) {
@@ -290,6 +284,31 @@ public class PdfGenerator {
             System.err.println("Error al unir PDFs: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Helper centralizado para ejecutar comandos del sistema (LibreOffice / PowerShell)
+     * previniendo bloqueos (zombies) consumiendo la salida y aplicando un Timeout.
+     */
+    private static void executeProcessWithTimeout(ProcessBuilder pb, int timeoutMinutes) throws Exception {
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        
+        // Consumir el flujo de salida en un hilo separado para evitar que el buffer del SO se llene y bloquee el proceso
+        Thread consumer = new Thread(() -> {
+            try (java.util.Scanner s = new java.util.Scanner(p.getInputStream())) {
+                while (s.hasNextLine()) {
+                    s.nextLine(); 
+                }
+            } catch (Exception ignored) {}
+        });
+        consumer.start();
+        
+        // Esperar con Timeout (Requiere Java 8+)
+        if (!p.waitFor(timeoutMinutes, java.util.concurrent.TimeUnit.MINUTES)) {
+            p.destroyForcibly();
+            throw new RuntimeException("Proceso interrumpido por exceder el tiempo de espera (" + timeoutMinutes + " min). Zombie aniquilado.");
         }
     }
 }
