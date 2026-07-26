@@ -108,7 +108,11 @@ public class SupervisionReportGenerator {
         Map<String, String> reps = new HashMap<>();
 
         // Datos del Contrato
-        reps.put("${NUMERO_CONTRATO}", contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "");
+        String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
+        if (contrato.getAnio() != null && contrato.getAnio() > 0 && !numContrato.isEmpty()) {
+            numContrato += " de " + contrato.getAnio();
+        }
+        reps.put("${NUMERO_CONTRATO}", numContrato);
         reps.put("${CONTRATISTA_NOMBRE}", contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "");
         String cedula = contrato.getContratista() != null && contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
         reps.put("${CONTRATISTA_CEDULA}", cedula.replace(",", "."));

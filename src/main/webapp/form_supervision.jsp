@@ -157,7 +157,7 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">No. de Contrato</label>
-                                    <input type="text" class="form-control bg-light text-muted" value="${contrato.numeroContrato}" readonly>
+                                    <input type="text" class="form-control bg-light text-muted" value="${contrato.numeroContrato}${not empty contrato.anio and contrato.anio > 0 ? ' de ' : ''}${not empty contrato.anio and contrato.anio > 0 ? contrato.anio : ''}" readonly>
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label">Objeto del Contrato</label>

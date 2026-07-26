@@ -118,6 +118,13 @@ public class ContratoDAO {
                 Contrato c = new Contrato();
                 c.setId(rs.getInt("id"));
                 c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                 c.setObjeto(rs.getString("objeto"));
                 c.setEstado(rs.getString("estado"));
                 c.setFechaInicio(rs.getDate("fecha_inicio"));
@@ -274,6 +281,13 @@ public class ContratoDAO {
                     Contrato c = new Contrato();
                     c.setId(rs.getInt("id"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setObjeto(rs.getString("objeto"));
                     c.setEstado(rs.getString("estado"));
                     c.setFechaInicio(rs.getDate("fecha_inicio"));
@@ -302,6 +316,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -475,6 +496,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -582,6 +610,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -610,6 +645,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -682,6 +724,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -754,6 +803,13 @@ public class ContratoDAO {
                     c.setId(rs.getInt("id"));
                     c.setTrdProceso(rs.getString("trd_proceso"));
                     c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
                     c.setTipoContrato(rs.getString("tipo_contrato"));
                     c.setNivel(rs.getString("nivel"));
                     c.setObjeto(rs.getString("objeto"));
@@ -820,6 +876,13 @@ public class ContratoDAO {
         c.setId(rs.getInt("id"));
         c.setTrdProceso(rs.getString("trd_proceso"));
         c.setNumeroContrato(rs.getString("numero_contrato"));
+try {
+    int anioDb = rs.getInt("anio");
+    if (!rs.wasNull()) c.setAnio(anioDb);
+} catch (java.sql.SQLException e) {
+    // Ignore if column doesn't exist in some queries
+}
+
         c.setTipoContrato(rs.getString("tipo_contrato"));
         c.setNivel(rs.getString("nivel"));
         c.setObjeto(rs.getString("objeto"));
