@@ -23,7 +23,7 @@
                 <ol class="breadcrumb breadcrumb-premium">
                     <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
                     <li class="breadcrumb-item active text-muted">Datos Maestros</li>
-                    <li class="breadcrumb-item"><a href="presupuestos"><i class="bi bi-cash-stack me-1"></i>CDP / RP</a></li>
+                    <li class="breadcrumb-item"><a href="presupuesto"><i class="bi bi-cash-stack me-1"></i>CDP / RP</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Formulario Presupuesto</li>
                 </ol>
             </nav>

@@ -551,6 +551,25 @@ public class ContratoDAO {
         return periodos;
     }
 
+    public java.util.Map<Integer, java.util.List<String>> obtenerPeriodosPorAnio() {
+        java.util.Map<Integer, java.util.List<String>> map = new java.util.HashMap<>();
+        String sql = "SELECT DISTINCT anio, periodo FROM contratos WHERE anio IS NOT NULL AND periodo IS NOT NULL AND TRIM(periodo) != '' ORDER BY anio DESC, periodo ASC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+             while(rs.next()) {
+                 int anio = rs.getInt("anio");
+                 String periodo = rs.getString("periodo");
+                 map.putIfAbsent(anio, new java.util.ArrayList<>());
+                 map.get(anio).add(periodo);
+             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+
     public List<Contrato> listarPorContratistaId(int contratistaId) {
         List<Contrato> list = new ArrayList<>();
         String sql = "SELECT * FROM contratos WHERE contratista_id = ? ORDER BY id DESC";
@@ -582,6 +601,78 @@ public class ContratoDAO {
 
     public Contrato obtenerPorContratistaId(int contratistaId) {
         String sql = "SELECT * FROM contratos WHERE contratista_id = ? ORDER BY id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratistaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Contrato c = new Contrato();
+                    c.setId(rs.getInt("id"));
+                    c.setTrdProceso(rs.getString("trd_proceso"));
+                    c.setNumeroContrato(rs.getString("numero_contrato"));
+                    c.setTipoContrato(rs.getString("tipo_contrato"));
+                    c.setNivel(rs.getString("nivel"));
+                    c.setObjeto(rs.getString("objeto"));
+                    c.setModalidad(rs.getString("modalidad"));
+                    c.setEstado(rs.getString("estado"));
+                    c.setPeriodo(rs.getString("periodo"));
+                    c.setFechaSuscripcion(rs.getDate("fecha_suscripcion"));
+                    c.setFechaInicio(rs.getDate("fecha_inicio"));
+                    c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
+                    c.setFechaAprobacion(rs.getDate("fecha_aprobacion"));
+                    c.setFechaEjecucion(rs.getDate("fecha_ejecucion"));
+                    c.setFechaArl(rs.getDate("fecha_arl"));
+                    c.setPlazoEjecucion(rs.getString("plazo_ejecucion"));
+                    c.setPlazoMeses(rs.getInt("plazo_meses"));
+                    c.setPlazoDias(rs.getInt("plazo_dias"));
+                    c.setValorTotalLetras(rs.getString("valor_total_letras"));
+                    c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
+                    c.setValorAntesIva(rs.getBigDecimal("valor_antes_iva"));
+                    c.setValorIva(rs.getBigDecimal("valor_iva"));
+                    c.setValorAntesIvaLetras(rs.getString("valor_antes_iva_letras"));
+                    c.setValorIvaLetras(rs.getString("valor_iva_letras"));
+                    c.setValorCuotaLetras(rs.getString("valor_cuota_letras"));
+                    c.setValorCuotaNumero(rs.getBigDecimal("valor_cuota_numero"));
+                    c.setValorCuotaAntesIvaLetras(rs.getString("valor_cuota_antes_iva_letras"));
+                    c.setValorCuotaAntesIva(rs.getBigDecimal("valor_cuota_antes_iva"));
+                    c.setValorCuotaIvaLetras(rs.getString("valor_cuota_iva_letras"));
+                    c.setValorCuotaIva(rs.getBigDecimal("valor_cuota_iva"));
+                    c.setNumCuotasLetras(rs.getString("num_cuotas_letras"));
+                    c.setNumCuotasNumero(rs.getInt("num_cuotas_numero"));
+                    c.setValorMediaCuotaLetras(rs.getString("valor_media_cuota_letras"));
+                    c.setValorMediaCuotaNumero(rs.getBigDecimal("valor_media_cuota_numero"));
+                    c.setActividadesEntregables(rs.getString("actividades_entregables"));
+                    c.setLiquidacionAcuerdo(rs.getString("liquidacion_acuerdo"));
+                    c.setLiquidacionArticulo(rs.getString("liquidacion_articulo"));
+                    c.setLiquidacionDecreto(rs.getString("liquidacion_decreto"));
+                    c.setCircularHonorarios(rs.getString("circular_honorarios"));
+                    c.setContratistaId(rs.getInt("contratista_id"));
+                    c.setSupervisorId(rs.getInt("supervisor_id"));
+                    c.setOrdenadorId(rs.getInt("ordenador_id"));
+                    c.setPresupuestoId(rs.getInt("presupuesto_id"));
+                    c.setEstructuradorId(rs.getInt("estructurador_id"));
+                    c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+                    c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
+                    c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
+                    c.setAdicionSiNo(rs.getString("adicion_si_no"));
+                    c.setNumeroCuotasAdicion(rs.getInt("numero_cuotas_adicion"));
+                    c.setValorTotalAdicionLetras(rs.getString("valor_total_adicion_letras"));
+                    c.setValorTotalAdicion(rs.getBigDecimal("valor_total_adicion"));
+                    c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
+                    c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
+                    c.setEnlaceSecop(rs.getString("enlace_secop"));
+                    c.setIvaSiNo(rs.getString("iva_si_no"));
+                    return c;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Contrato obtenerUltimoOtrosiPorContratistaId(int contratistaId) {
+        String sql = "SELECT * FROM contratos WHERE contratista_id = ? AND UPPER(adicion_si_no) IN ('SI', 'SÍ', 'X') ORDER BY fecha_inicio DESC, id DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, contratistaId);
@@ -716,6 +807,115 @@ public class ContratoDAO {
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
                     return c;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Contrato mapResultSetToContrato(ResultSet rs) throws SQLException {
+        Contrato c = new Contrato();
+        c.setId(rs.getInt("id"));
+        c.setTrdProceso(rs.getString("trd_proceso"));
+        c.setNumeroContrato(rs.getString("numero_contrato"));
+        c.setTipoContrato(rs.getString("tipo_contrato"));
+        c.setNivel(rs.getString("nivel"));
+        c.setObjeto(rs.getString("objeto"));
+        c.setModalidad(rs.getString("modalidad"));
+        c.setEstado(rs.getString("estado"));
+        c.setPeriodo(rs.getString("periodo"));
+        c.setFechaSuscripcion(rs.getDate("fecha_suscripcion"));
+        c.setFechaInicio(rs.getDate("fecha_inicio"));
+        c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
+        c.setFechaAprobacion(rs.getDate("fecha_aprobacion"));
+        c.setFechaEjecucion(rs.getDate("fecha_ejecucion"));
+        c.setFechaArl(rs.getDate("fecha_arl"));
+        c.setPlazoEjecucion(rs.getString("plazo_ejecucion"));
+        c.setPlazoMeses(rs.getInt("plazo_meses"));
+        c.setPlazoDias(rs.getInt("plazo_dias"));
+        c.setValorTotalLetras(rs.getString("valor_total_letras"));
+        c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
+        c.setValorAntesIva(rs.getBigDecimal("valor_antes_iva"));
+        c.setValorIva(rs.getBigDecimal("valor_iva"));
+        c.setValorAntesIvaLetras(rs.getString("valor_antes_iva_letras"));
+        c.setValorIvaLetras(rs.getString("valor_iva_letras"));
+        c.setValorCuotaLetras(rs.getString("valor_cuota_letras"));
+        c.setValorCuotaNumero(rs.getBigDecimal("valor_cuota_numero"));
+        c.setValorCuotaAntesIvaLetras(rs.getString("valor_cuota_antes_iva_letras"));
+        c.setValorCuotaAntesIva(rs.getBigDecimal("valor_cuota_antes_iva"));
+        c.setValorCuotaIvaLetras(rs.getString("valor_cuota_iva_letras"));
+        c.setValorCuotaIva(rs.getBigDecimal("valor_cuota_iva"));
+        c.setNumCuotasLetras(rs.getString("num_cuotas_letras"));
+        c.setNumCuotasNumero(rs.getInt("num_cuotas_numero"));
+        c.setValorMediaCuotaLetras(rs.getString("valor_media_cuota_letras"));
+        c.setValorMediaCuotaNumero(rs.getBigDecimal("valor_media_cuota_numero"));
+        c.setActividadesEntregables(rs.getString("actividades_entregables"));
+        c.setLiquidacionAcuerdo(rs.getString("liquidacion_acuerdo"));
+        c.setLiquidacionArticulo(rs.getString("liquidacion_articulo"));
+        c.setLiquidacionDecreto(rs.getString("liquidacion_decreto"));
+        c.setCircularHonorarios(rs.getString("circular_honorarios"));
+        c.setContratistaId(rs.getInt("contratista_id"));
+        c.setSupervisorId(rs.getInt("supervisor_id"));
+        c.setOrdenadorId(rs.getInt("ordenador_id"));
+        c.setPresupuestoId(rs.getInt("presupuesto_id"));
+        c.setEstructuradorId(rs.getInt("estructurador_id"));
+        c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+        c.setFechaIdoneidad(rs.getDate("fecha_idoneidad"));
+        c.setFechaEstructurador(rs.getDate("fecha_estructurador"));
+        c.setAdicionSiNo(rs.getString("adicion_si_no"));
+        c.setNumeroCuotasAdicion(rs.getInt("numero_cuotas_adicion"));
+        c.setValorTotalAdicionLetras(rs.getString("valor_total_adicion_letras"));
+        c.setValorTotalAdicion(rs.getBigDecimal("valor_total_adicion"));
+        c.setValorContratoMasAdicionLetras(rs.getString("valor_contrato_mas_adicion_letras"));
+        c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
+        c.setEnlaceSecop(rs.getString("enlace_secop"));
+        c.setIvaSiNo(rs.getString("iva_si_no"));
+        return c;
+    }
+
+    public java.util.List<Integer> obtenerAniosDisponibles() {
+        java.util.List<Integer> list = new java.util.ArrayList<>();
+        String sql = "SELECT DISTINCT anio FROM contratos WHERE anio IS NOT NULL ORDER BY anio DESC";
+        try (Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(rs.getInt("anio"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Contrato obtenerUltimoOtrosiPorContratistaIdYAnio(int contratistaId, int anio) {
+        String sql = "SELECT * FROM contratos WHERE contratista_id = ? AND anio = ? AND UPPER(adicion_si_no) IN ('SI', 'SÍ', 'X') ORDER BY fecha_inicio DESC, id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratistaId);
+            ps.setInt(2, anio);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToContrato(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Contrato obtenerPorContratistaIdYAnio(int contratistaId, int anio) {
+        String sql = "SELECT * FROM contratos WHERE contratista_id = ? AND anio = ? ORDER BY id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratistaId);
+            ps.setInt(2, anio);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToContrato(rs);
                 }
             }
         } catch (SQLException e) {

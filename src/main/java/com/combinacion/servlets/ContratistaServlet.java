@@ -154,6 +154,8 @@ public class ContratistaServlet extends HttpServlet {
             String source = request.getParameter("source");
             boolean soloAdiciones = "true".equals(request.getParameter("filterAdicion"));
             String periodo = request.getParameter("periodo");
+            String anioParam = request.getParameter("anio");
+            Integer anio = (anioParam != null && !anioParam.isEmpty()) ? Integer.parseInt(anioParam) : null;
 
             // Validación de parámetros críticos
             if (source == null || source.isEmpty()) {
@@ -169,8 +171,8 @@ public class ContratistaServlet extends HttpServlet {
 
             // Log para depuración
             logger.info(String.format(
-                    "DataTables Request - Draw: %s, Start: %d, Length: %d, Search: %s, Order: %s %s, Source: %s, Periodo: %s",
-                    draw, start, length, search, sortCol, orderDir, source, periodo));
+                    "DataTables Request - Draw: %s, Start: %d, Length: %d, Search: %s, Order: %s %s, Source: %s, Periodo: %s, Anio: %s",
+                    draw, start, length, search, sortCol, orderDir, source, periodo, anioParam));
 
             // Configurar respuesta
             response.setContentType("application/json");
@@ -179,7 +181,7 @@ public class ContratistaServlet extends HttpServlet {
 
             // Generar y enviar JSON
             String jsonResponse = contratistaService.generarJsonDataTables(
-                    parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones, periodo);
+                    parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones, periodo, anio);
             response.getWriter().write(jsonResponse);
             response.getWriter().flush();
 

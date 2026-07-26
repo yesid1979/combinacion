@@ -48,8 +48,25 @@ public class CombinacionServlet extends HttpServlet {
 
     private Contrato obtenerContratoParaGeneracion(int contratistaId, HttpServletRequest request) {
         String periodo = request.getParameter("periodo");
+        String anioParam = request.getParameter("anio");
+        Integer anio = (anioParam != null && !anioParam.isEmpty()) ? Integer.parseInt(anioParam) : null;
+        
+        String action = request.getParameter("action");
+        boolean esModificacion = "generateModificacion".equals(action) || "downloadZipModificacion".equals(action);
+
         if (periodo != null && !periodo.isEmpty()) {
             return contratoDAO.obtenerPorContratistaYPeriodo(contratistaId, periodo);
+        }
+
+        if (esModificacion) {
+            if (anio != null) {
+                return contratoDAO.obtenerUltimoOtrosiPorContratistaIdYAnio(contratistaId, anio);
+            }
+            return contratoDAO.obtenerUltimoOtrosiPorContratistaId(contratistaId);
+        }
+
+        if (anio != null) {
+            return contratoDAO.obtenerPorContratistaIdYAnio(contratistaId, anio);
         }
         return contratoDAO.obtenerPorContratistaId(contratistaId);
     }
@@ -78,6 +95,10 @@ public class CombinacionServlet extends HttpServlet {
         } else {
             java.util.List<String> periodos = contratoDAO.obtenerPeriodosDisponibles();
             request.setAttribute("periodos", periodos);
+            java.util.List<Integer> anios = contratoDAO.obtenerAniosDisponibles();
+            request.setAttribute("anios", anios);
+            java.util.Map<Integer, java.util.List<String>> periodosPorAnio = contratoDAO.obtenerPeriodosPorAnio();
+            request.setAttribute("periodosPorAnioJson", new com.google.gson.Gson().toJson(periodosPorAnio));
             // Default view: Show list of contractors for merge
             request.getRequestDispatcher("combinacion_contratistas.jsp").forward(request, response);
         }

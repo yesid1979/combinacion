@@ -161,7 +161,7 @@ public class ContratistaDAO {
         return 0;
     }
 
-    public int countFiltered(String search, boolean soloAdiciones, String periodo) {
+    public int countFiltered(String search, boolean soloAdiciones, String periodo, Integer anio) {
         String sql = "SELECT COUNT(*) FROM contratistas WHERE 1=1 ";
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
         
@@ -184,14 +184,21 @@ public class ContratistaDAO {
             if (periodo != null && !periodo.isEmpty()) {
                 sql += " AND ct.periodo = ? ";
             }
-            sql += "   AND ct.id = (SELECT id FROM contratos WHERE contratista_id = contratistas.id ";
-            if (periodo != null && !periodo.isEmpty()) {
-                sql += " AND periodo = ? ";
+            if (anio != null) {
+                sql += " AND ct.anio = ? ";
             }
-            sql += " ORDER BY fecha_inicio DESC, id DESC LIMIT 1) "
-                 + " ) ";
-        } else if (periodo != null && !periodo.isEmpty()) {
-            sql += " AND EXISTS ( SELECT 1 FROM contratos ct WHERE ct.contratista_id = contratistas.id AND ct.periodo = ? )";
+            sql += " ) ";
+        } else {
+            if ((periodo != null && !periodo.isEmpty()) || anio != null) {
+                sql += " AND EXISTS ( SELECT 1 FROM contratos ct WHERE ct.contratista_id = contratistas.id ";
+                if (periodo != null && !periodo.isEmpty()) {
+                    sql += " AND ct.periodo = ? ";
+                }
+                if (anio != null) {
+                    sql += " AND ct.anio = ? ";
+                }
+                sql += " )";
+            }
         }
 
         try (Connection conn = DBConnection.getConnection();
@@ -210,10 +217,17 @@ public class ContratistaDAO {
             if (soloAdiciones) {
                 if (periodo != null && !periodo.isEmpty()) {
                     ps.setString(idx++, periodo);
+                }
+                if (anio != null) {
+                    ps.setInt(idx++, anio);
+                }
+            } else {
+                if (periodo != null && !periodo.isEmpty()) {
                     ps.setString(idx++, periodo);
                 }
-            } else if (periodo != null && !periodo.isEmpty()) {
-                ps.setString(idx++, periodo);
+                if (anio != null) {
+                    ps.setInt(idx++, anio);
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
@@ -225,21 +239,33 @@ public class ContratistaDAO {
         return 0;
     }
 
-    public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir, boolean soloAdiciones, String periodo) {
+    public List<Contratista> findWithPagination(int start, int length, String search, String sortCol, String orderDir, boolean soloAdiciones, String periodo, Integer anio) {
         List<Contratista> lista = new ArrayList<>();
         String searchDigits = (search != null) ? search.replaceAll("[^0-9]", "") : "";
         String sql = "SELECT id, cedula, nombre, correo, telefono, direccion, fecha_nacimiento, " +
                      "(SELECT numero_contrato FROM contratos WHERE contratista_id = contratistas.id ";
+        if (soloAdiciones) {
+            sql += " AND UPPER(adicion_si_no) IN ('SI', 'SÍ', 'X') ";
+        }
         if (periodo != null && !periodo.isEmpty()) {
             sql += " AND periodo = '" + periodo.replace("'", "''") + "' ";
+        }
+        if (anio != null) {
+            sql += " AND anio = " + anio + " ";
         }
         sql += " ORDER BY fecha_inicio DESC LIMIT 1) as numero_contrato, " +
                      "(SELECT CASE WHEN UPPER(ct.adicion_si_no) IN ('SI', 'SÍ', 'X') THEN 'Sí' " +
                      "             ELSE COALESCE(ct.adicion_si_no, 'No') END " +
                      " FROM contratos ct " +
                      " WHERE ct.contratista_id = contratistas.id ";
+        if (soloAdiciones) {
+            sql += " AND UPPER(ct.adicion_si_no) IN ('SI', 'SÍ', 'X') ";
+        }
         if (periodo != null && !periodo.isEmpty()) {
             sql += " AND ct.periodo = '" + periodo.replace("'", "''") + "' ";
+        }
+        if (anio != null) {
+            sql += " AND ct.anio = " + anio + " ";
         }
         sql += " ORDER BY ct.fecha_inicio DESC, ct.id DESC LIMIT 1) as adicion_si_no " +
                      "FROM contratistas WHERE 1=1 ";
@@ -263,14 +289,21 @@ public class ContratistaDAO {
             if (periodo != null && !periodo.isEmpty()) {
                 sql += " AND ct.periodo = ? ";
             }
-            sql += "   AND ct.id = (SELECT id FROM contratos WHERE contratista_id = contratistas.id ";
-            if (periodo != null && !periodo.isEmpty()) {
-                sql += " AND periodo = ? ";
+            if (anio != null) {
+                sql += " AND ct.anio = ? ";
             }
-            sql += " ORDER BY fecha_inicio DESC, id DESC LIMIT 1) "
-                 + " ) ";
-        } else if (periodo != null && !periodo.isEmpty()) {
-            sql += " AND EXISTS ( SELECT 1 FROM contratos ct WHERE ct.contratista_id = contratistas.id AND ct.periodo = ? )";
+            sql += " ) ";
+        } else {
+            if ((periodo != null && !periodo.isEmpty()) || anio != null) {
+                sql += " AND EXISTS ( SELECT 1 FROM contratos ct WHERE ct.contratista_id = contratistas.id ";
+                if (periodo != null && !periodo.isEmpty()) {
+                    sql += " AND ct.periodo = ? ";
+                }
+                if (anio != null) {
+                    sql += " AND ct.anio = ? ";
+                }
+                sql += " )";
+            }
         }
 
         // Validate sortCol to prevent SQL injection
@@ -303,10 +336,17 @@ public class ContratistaDAO {
             if (soloAdiciones) {
                 if (periodo != null && !periodo.isEmpty()) {
                     ps.setString(index++, periodo);
+                }
+                if (anio != null) {
+                    ps.setInt(index++, anio);
+                }
+            } else {
+                if (periodo != null && !periodo.isEmpty()) {
                     ps.setString(index++, periodo);
                 }
-            } else if (periodo != null && !periodo.isEmpty()) {
-                ps.setString(index++, periodo);
+                if (anio != null) {
+                    ps.setInt(index++, anio);
+                }
             }
             ps.setInt(index++, length);
             ps.setInt(index++, start);

@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 
@@ -16,22 +17,14 @@
 
     <div class="container mt-4 mb-5 flex-grow-1">
 
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb breadcrumb-premium">
                     <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
                     <li class="breadcrumb-item active text-muted">Administración</li>
                     <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/usuarios"><i class="bi bi-people-fill me-1"></i>Usuarios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Formulario Usuario</li>
+                    <li class="breadcrumb-item active" aria-current="page">${usuario_edit != null ? 'Editar' : 'Nuevo'} Usuario</li>
                 </ol>
             </nav>
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp">Inicio</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/usuarios">Usuarios</a></li>
-                <li class="breadcrumb-item active">${usuario_edit != null ? 'Editar' : 'Nuevo'}</li>
-            </ol>
-        </nav>
 
         <h3 class="fw-bold text-primary mb-4">
             <i class="bi bi-${usuario_edit != null ? 'pencil-square' : 'person-plus'} me-2"></i>
