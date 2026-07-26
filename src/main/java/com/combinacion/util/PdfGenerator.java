@@ -31,6 +31,38 @@ public class PdfGenerator {
         }
     }
 
+    private static boolean runProcessSafely(ProcessBuilder pb, long timeoutSeconds) {
+        try {
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            
+            // Hilo demonio para consumir la salida estándar y evitar el bloqueo por búfer lleno del SO
+            Thread gobbler = new Thread(() -> {
+                try (InputStream is = p.getInputStream()) {
+                    byte[] buffer = new byte[4096];
+                    while (is.read(buffer) != -1) {
+                        // Descartar la salida
+                    }
+                } catch (Exception e) {
+                    // Ignorar error al cerrar o leer el stream
+                }
+            });
+            gobbler.setDaemon(true);
+            gobbler.start();
+            
+            boolean finished = p.waitFor(timeoutSeconds, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                System.err.println("⚠️ El proceso excedió el límite de " + timeoutSeconds + " segundos. Se elimina forzadamente...");
+                p.destroyForcibly();
+                return false;
+            }
+            return p.exitValue() == 0;
+        } catch (Exception e) {
+            System.err.println("❌ Error al ejecutar el proceso del sistema de forma segura: " + e.getMessage());
+            return false;
+        }
+    }
+
     private static boolean convertBatchWithWordWindows(File inputDir, File outputDir) {
         try {
             String psCommand = String.format(
@@ -51,8 +83,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            runProcessSafely(pb, 180); // 3 minutos de límite
             
             // Check if any PDF was generated
             File[] pdfs = outputDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".pdf"));
@@ -73,10 +104,7 @@ public class PdfGenerator {
                 "sh", "-c", "soffice --headless --convert-to pdf --outdir \"" + outputDir.getAbsolutePath() + "\" \"" + inputDir.getAbsolutePath() + "\"/*.docx"
             );
             
-            Process p = pb.start();
-            p.waitFor();
-            
-            return true;
+            return runProcessSafely(pb, 180);
         } catch (Exception e) {
             System.err.println("⚠️ Falló LibreOffice por lotes en Linux.");
             return false;
@@ -134,8 +162,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            runProcessSafely(pb, 60); // 1 minuto de límite para archivo individual
             
             if (pdfFile.exists() && pdfFile.length() > 0) {
                 return true;
@@ -160,8 +187,7 @@ public class PdfGenerator {
                 "--outdir", outDir, docxFile.getAbsolutePath()
             );
             
-            Process p = pb.start();
-            p.waitFor();
+            runProcessSafely(pb, 60);
             
             // Soffice genera un archivo con el mismo nombre pero .pdf
             File generatedPdf = new File(docxFile.getAbsolutePath().replace(".docx", ".pdf"));
@@ -227,8 +253,7 @@ public class PdfGenerator {
             );
 
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command", psCommand);
-            Process p = pb.start();
-            p.waitFor();
+            runProcessSafely(pb, 60);
             
             return pdfFile.exists() && pdfFile.length() > 0;
         } catch (Exception e) {
@@ -245,8 +270,7 @@ public class PdfGenerator {
                 "--outdir", outDir, excelFile.getAbsolutePath()
             );
             
-            Process p = pb.start();
-            p.waitFor();
+            runProcessSafely(pb, 60);
             
             File generatedPdf = new File(excelFile.getAbsolutePath().replaceAll("(?i)\\.xlsx?$", ".pdf"));
             if (generatedPdf.exists() && !generatedPdf.getAbsolutePath().equals(pdfFile.getAbsolutePath())) {
