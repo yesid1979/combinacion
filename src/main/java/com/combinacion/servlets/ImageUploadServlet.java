@@ -39,8 +39,8 @@ public class ImageUploadServlet extends HttpServlet {
                 String mimeType = filePart.getContentType() != null ? filePart.getContentType() : "image/jpeg";
                 
                 // Asegurarse de tener la carpeta IMAGENES_EDITOR_WEB en Drive
-                String masterFolderId = GoogleDriveService.getOrCreateFolder("configuracion_SistemaContratacion", null);
-                String folderId = GoogleDriveService.getOrCreateFolder("IMAGENES_EDITOR_WEB", masterFolderId);
+                String masterFolderId = GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_SISTEMA", "configuracion_SistemaContratacion"), null);
+                String folderId = GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_IMAGENES_WEB", "IMAGENES_EDITOR_WEB"), masterFolderId);
                 
                 // Subir a Drive
                 try (InputStream is = filePart.getInputStream()) {

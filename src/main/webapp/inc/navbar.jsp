@@ -92,6 +92,9 @@
                                 <c:if test="${sessionScope.usuario.tienePermiso('ADMIN_VER') || sessionScope.usuario.tienePermiso('ADMIN_ROLES')}">
                                     <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/roles"><i class="bi bi-key-fill me-2"></i>Roles y permisos</a></li>
                                 </c:if>
+                                <c:if test="${sessionScope.usuario.esAdministrador()}">
+                                    <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/configuracion"><i class="bi bi-gear-fill me-2"></i>Configuración del Sistema</a></li>
+                                </c:if>
                                 <c:if test="${sessionScope.usuario.esAdministrador() || sessionScope.usuario.tienePermiso('AUDITORIA_VER')}">
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/admin/auditoria"><i class="bi bi-display me-2 text-primary"></i>Auditoría del sistema</a></li>

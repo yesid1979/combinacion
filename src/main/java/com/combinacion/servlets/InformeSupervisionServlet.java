@@ -699,13 +699,13 @@ public class InformeSupervisionServlet extends HttpServlet {
             String folderNameCuota = "Cuota " + informe.getNumeroCuota();
             
             // 1. Obtener/crear "pruebas cuenta de cobro"
-            String pruebasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("pruebas cuenta de cobro", null);
+            String pruebasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro"), null);
             // 2. Obtener/crear carpeta principal
             String principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, pruebasFolderId);
             // 3. Obtener/crear cuota
             String cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
             // 4. Obtener/crear evidencias
-            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("EVIDENCIAS", cuotaFolderId);
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
             
             // 4.1. Dar permisos públicos de lectura a la carpeta EVIDENCIAS
             try {

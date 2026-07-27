@@ -285,8 +285,8 @@ public class UsuarioServlet extends HttpServlet {
                 
                 String mimeType = filePart.getContentType() != null ? filePart.getContentType() : "image/jpeg";
                 
-                String masterFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("configuracion_SistemaContratacion", null);
-                String folderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("FIRMAS_CONTRATISTAS", masterFolderId);
+                String masterFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_SISTEMA", "configuracion_SistemaContratacion"), null);
+                String folderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_FIRMAS", "FIRMAS_CONTRATISTAS"), masterFolderId);
                 
                 try (java.io.InputStream is = filePart.getInputStream()) {
                     String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, filePart.getSize(), submittedFileName, mimeType, folderId);
