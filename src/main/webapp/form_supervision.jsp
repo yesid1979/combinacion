@@ -157,7 +157,7 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">No. de Contrato</label>
-                                    <input type="text" class="form-control bg-light text-muted" value="${contrato.numeroContrato}" readonly>
+                                    <input type="text" id="numero_contrato_display" class="form-control bg-light text-muted" value="${contrato.numeroContrato}${not empty contrato.anio and contrato.anio > 0 ? ' de ' : ''}${not empty contrato.anio and contrato.anio > 0 ? contrato.anio : ''}" readonly>
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label">Objeto del Contrato</label>
@@ -169,7 +169,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Tipo de Informe</label>
-                                    <select class="form-select" name="tipo_informe" required ${readonly ? 'disabled' : ''}>
+                                    <select class="form-select" name="tipo_informe" id="tipo_informe" required ${readonly ? 'disabled' : ''}>
                                         <option value="PARCIAL" ${informe.tipoInforme == 'PARCIAL' ? 'selected' : ''}>INFORME PARCIAL</option>
                                         <option value="FINAL" ${informe.tipoInforme == 'FINAL' ? 'selected' : ''}>INFORME FINAL</option>
                                     </select>
@@ -297,11 +297,11 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Recibo a Satisfacción de Servicios</label>
-                                    <textarea class="form-control" name="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</textarea>
+                                    <textarea class="form-control" name="recibo_satisfaccion" id="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Constancia de Paz y Salvo</label>
-                                    <textarea class="form-control" name="constancia_paz_salvo" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}</textarea>
+                                    <textarea class="form-control" name="constancia_paz_salvo" id="constancia_paz_salvo" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}</textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Concepto Supervisor (Obligaciones y Actividades)</label>
@@ -1047,7 +1047,26 @@
                         }
                     }
                 });
+
+                $('#tipo_informe').change(function() {
+                    var tipo = $(this).val();
+                    // Solo actualizar si no estamos en modo readonly
+                    if ($(this).is(':disabled')) return;
+                    
+                    if (tipo === 'FINAL') {
+                        var numContrato = $('#numero_contrato_display').val();
+                        var textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
+                        var textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
+                        
+                        $('#recibo_satisfaccion').val(textoRecibo);
+                        $('#constancia_paz_salvo').val(textoPazSalvo);
+                    } else {
+                        $('#recibo_satisfaccion').val('N/A');
+                        $('#constancia_paz_salvo').val('N/A');
+                    }
+                });
             });
+
             function setRadicar() {
                 var rev = document.getElementById("revisor_select").value;
                 if (!rev && rev !== "0") {

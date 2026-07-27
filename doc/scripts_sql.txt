@@ -1,0 +1,181 @@
+-- =============================================================================
+-- SCRIPTS SQL DEL PROYECTO COMBINACION
+-- =============================================================================
+
+-- 1. Actualizar fecha_inicio con el valor de fecha_ejecucion (para registros no vacíos)
+-- Solicitado: 25-07-2026
+UPDATE contratos 
+SET fecha_inicio = fecha_ejecucion 
+WHERE fecha_ejecucion IS NOT NULL;
+
+-- 2. Calcular la edad a partir de la fecha_nacimiento (solo si tiene fecha de nacimiento y la edad es 0 o Nula)
+-- Nota: En PostgreSQL, EXTRACT(YEAR FROM AGE(fecha_nacimiento)) calcula la edad real exacta (teniendo en cuenta si ya cumplió años este año)
+-- Solicitado: 25-07-2026
+UPDATE contratistas
+SET edad = EXTRACT(YEAR FROM AGE(fecha_nacimiento))
+WHERE fecha_nacimiento IS NOT NULL 
+  AND (edad IS NULL OR edad = 0);
+
+-- 3. Encontrar contratos repetidos (duplicados por numero_contrato)
+-- Muestra el número de contrato y cuántas veces se repite en la base de datos
+-- Solicitado: 25-07-2026
+SELECT numero_contrato, COUNT(*) as repeticiones
+FROM contratos
+GROUP BY numero_contrato
+HAVING COUNT(*) > 1;
+
+-- 3.1 Mostrar todos los detalles de las filas de contratos que están repetidos (para inspección)
+-- Solicitado: 25-07-2026
+SELECT * 
+FROM contratos
+WHERE numero_contrato IN (
+    SELECT numero_contrato 
+    FROM contratos
+    GROUP BY numero_contrato 
+    HAVING COUNT(*) > 1
+)
+ORDER BY numero_contrato;
+
+-- 4. Encontrar contratistas repetidos por CÉDULA
+-- Solicitado: 25-07-2026
+SELECT cedula, COUNT(*) as repeticiones
+FROM contratistas
+GROUP BY cedula
+HAVING COUNT(*) > 1;
+
+-- 4.1 Mostrar todos los detalles de los contratistas repetidos por CÉDULA
+-- Solicitado: 25-07-2026
+SELECT * 
+FROM contratistas
+WHERE cedula IN (
+    SELECT cedula 
+    FROM contratistas
+    GROUP BY cedula 
+    HAVING COUNT(*) > 1
+)
+ORDER BY cedula;
+
+-- 5. Encontrar contratistas con nombres repetidos (mismo nombre pero posiblemente diferente cédula)
+-- Solicitado: 25-07-2026
+SELECT nombre, COUNT(*) as repeticiones
+FROM contratistas
+GROUP BY nombre
+HAVING COUNT(*) > 1;
+
+-- 5.1 Mostrar todos los detalles de los contratistas con nombres repetidos
+-- Solicitado: 25-07-2026
+SELECT * 
+FROM contratistas
+WHERE nombre IN (
+    SELECT nombre 
+    FROM contratistas
+    GROUP BY nombre 
+    HAVING COUNT(*) > 1
+)
+ORDER BY nombre;
+
+-- 6. Verificar qué contratos están asociados a los contratistas duplicados detectados (IDs: 2121, 2143, 1956, 1957)
+-- Solicitado: 25-07-2026
+SELECT c.id as contrato_db_id, c.numero_contrato, c.contratista_id, con.nombre, con.cedula
+FROM contratos c
+JOIN contratistas con ON c.contratista_id = con.id
+WHERE con.id IN (2121, 2143, 1956, 1957);
+
+-- 7. Unificación de contratistas duplicados (Ejemplo de migración/fusión segura)
+-- NOTA: Antes de ejecutar el DELETE de un duplicado, se deben reasignar sus contratos al registro que se desea conservar.
+
+-- 7.1 Caso ENLACES JUDICIALES S.A.S. (Conservar ID 1957 que tiene el NIT real, fusionar ID 1956)
+-- Paso 1: Reasignar contratos de 1956 al 1957
+-- UPDATE contratos SET contratista_id = 1957 WHERE contratista_id = 1956;
+-- Paso 2: Eliminar el duplicado
+-- DELETE FROM contratistas WHERE id = 1956;
+
+-- 7.2 Caso ANGIE VANESSA JARAMILLO (Conservar ID 2121, fusionar ID 2143)
+-- Paso 1: Reasignar contratos de 2143 al 2121
+-- UPDATE contratos SET contratista_id = 2121 WHERE contratista_id = 2143;
+-- Paso 2: Eliminar el duplicado
+-- DELETE FROM contratistas WHERE id = 2143;
+
+-- 8. Encontrar todos los contratos asociados a contratistas con cédulas temporales 'SIN_CEDULA_'
+-- Solicitado: 25-07-2026
+SELECT c.id as contrato_db_id, c.numero_contrato, c.contratista_id, con.nombre, con.cedula
+FROM contratos c
+JOIN contratistas con ON c.contratista_id = con.id
+WHERE con.cedula LIKE 'SIN_CEDULA_%';
+
+-- 9. Buscar contratistas cuyas cédulas NO contienen puntos '.' (cédulas sin formatear)
+-- Omitiendo las cédulas temporales 'SIN_CEDULA_'
+-- Solicitado: 25-07-2026
+SELECT id, nombre, cedula 
+FROM contratistas 
+WHERE cedula NOT LIKE '%.%' 
+  AND cedula NOT LIKE 'SIN_CEDULA_%';
+
+-- 10. PREVISUALIZAR el formateo de puntos en las cédulas sin puntos (antes de hacer la actualización)
+-- Solicitado: 25-07-2026
+WITH formatted AS (
+  SELECT id, nombre, cedula,
+         regexp_replace(cedula, '[^0-9]', '', 'g') as num,
+         CASE 
+           WHEN cedula LIKE 'Nit: %' THEN 'Nit: '
+           ELSE ''
+         END as prefix,
+         CASE 
+           WHEN cedula LIKE 'Nit: %' THEN ''
+           ELSE regexp_replace(cedula, '^[0-9]+', '')
+         END as suffix
+  FROM contratistas
+  WHERE cedula NOT LIKE '%.%' 
+    AND cedula NOT LIKE 'SIN_CEDULA_%'
+)
+SELECT id, nombre, cedula as cedula_original,
+       prefix || 
+       CASE 
+         WHEN length(num) = 7 THEN substr(num, 1, 1) || '.' || substr(num, 2, 3) || '.' || substr(num, 5, 3)
+         WHEN length(num) = 8 THEN substr(num, 1, 2) || '.' || substr(num, 3, 3) || '.' || substr(num, 6, 3)
+         WHEN length(num) = 9 THEN substr(num, 1, 3) || '.' || substr(num, 4, 3) || '.' || substr(num, 7, 3)
+         WHEN length(num) = 10 THEN substr(num, 1, 1) || '.' || substr(num, 2, 3) || '.' || substr(num, 5, 3) || '.' || substr(num, 8, 3)
+         ELSE num
+       END || suffix as cedula_formateada
+FROM formatted;
+
+-- 10.1 APLICAR la actualización de puntos en las cédulas de los contratistas
+-- Conserva el formato de miles y respeta los sufijos de ciudad (' de Cali') y prefijos ('Nit:')
+-- Solicitado: 25-07-2026
+UPDATE contratistas
+SET cedula = sub.new_cedula
+FROM (
+  WITH formatted AS (
+    SELECT id, cedula,
+           regexp_replace(cedula, '[^0-9]', '', 'g') as num,
+           CASE 
+             WHEN cedula LIKE 'Nit: %' THEN 'Nit: '
+             ELSE ''
+           END as prefix,
+           CASE 
+             WHEN cedula LIKE 'Nit: %' THEN ''
+             ELSE regexp_replace(cedula, '^[0-9]+', '')
+           END as suffix
+    FROM contratistas
+    WHERE cedula NOT LIKE '%.%' 
+      AND cedula NOT LIKE 'SIN_CEDULA_%'
+  )
+  SELECT id, 
+         prefix || 
+         CASE 
+           WHEN length(num) = 7 THEN substr(num, 1, 1) || '.' || substr(num, 2, 3) || '.' || substr(num, 5, 3)
+           WHEN length(num) = 8 THEN substr(num, 1, 2) || '.' || substr(num, 3, 3) || '.' || substr(num, 6, 3)
+           WHEN length(num) = 9 THEN substr(num, 1, 3) || '.' || substr(num, 4, 3) || '.' || substr(num, 7, 3)
+           WHEN length(num) = 10 THEN substr(num, 1, 1) || '.' || substr(num, 2, 3) || '.' || substr(num, 5, 3) || '.' || substr(num, 8, 3)
+           ELSE num
+         END || suffix as new_cedula
+  FROM formatted
+) sub
+WHERE contratistas.id = sub.id;
+
+
+
+
+
+
+

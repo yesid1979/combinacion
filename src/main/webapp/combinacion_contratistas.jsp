@@ -35,6 +35,12 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Generación de documentos</h2>
                     <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <select id="filterAnio" class="form-select w-auto" onchange="actualizarPeriodosPorAnio(); $('#contratistasTable').DataTable().ajax.reload();">
+                            <option value="">Todos los años</option>
+                            <c:forEach var="a" items="${anios}">
+                                <option value="${a}">${a}</option>
+                            </c:forEach>
+                        </select>
                         <select id="filterPeriodo" class="form-select w-auto" onchange="$('#contratistasTable').DataTable().ajax.reload();">
                             <option value="">Todos los periodos</option>
                             <c:forEach var="p" items="${periodos}">
@@ -103,7 +109,46 @@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
             <script>
+                var periodosPorAnio = ${periodosPorAnioJson != null ? periodosPorAnioJson : '{}'};
+                var allPeriodOptions = [];
+                function actualizarPeriodosPorAnio() {
+                    var selectedYear = $('#filterAnio').val();
+                    var $periodoSelect = $('#filterPeriodo');
+                    var currentValue = $periodoSelect.val();
+                    
+                    $periodoSelect.empty();
+                    $periodoSelect.append('<option value="">Todos los periodos</option>');
+                    
+                    $.each(allPeriodOptions, function(i, opt) {
+                        var show = false;
+                        if (selectedYear === "") {
+                            show = true;
+                        } else {
+                            var validPeriods = periodosPorAnio[selectedYear] || [];
+                            if (validPeriods.indexOf(opt.value) !== -1) {
+                                show = true;
+                            }
+                        }
+                        
+                        if (show) {
+                            $periodoSelect.append($('<option></option>').attr('value', opt.value).text(opt.text));
+                        }
+                    });
+                    
+                    if ($periodoSelect.find("option[value='" + currentValue + "']").length > 0) {
+                        $periodoSelect.val(currentValue);
+                    }
+                }
+
                 $(document).ready(function () {
+                    $('#filterPeriodo option').each(function() {
+                        if ($(this).val() !== "") {
+                            allPeriodOptions.push({
+                                value: $(this).val(),
+                                text: $(this).text()
+                            });
+                        }
+                    });
                     $('#contratistasTable').DataTable({
                         "processing": true,
                         "serverSide": true,
@@ -119,6 +164,7 @@
                                 d.t = new Date().getTime();
                                 d.filterAdicion = $('#btnFilterAdicion').hasClass('active');
                                 d.periodo = $('#filterPeriodo').val();
+                                d.anio = $('#filterAnio').val();
                             },
                             "error": function (xhr, error, thrown) {
                                 console.error("Error AJAX Status:", xhr.status);
@@ -204,12 +250,14 @@
 
                 function descargarIndividual(id) {
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=generate&id=' + id + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=generate&id=' + id + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
                 
                 function descargarIndividualModificacion(id) {
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=generateModificacion&id=' + id + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=generateModificacion&id=' + id + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
 
                 function descargarMasivo() {
@@ -225,7 +273,8 @@
 
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
                 
                 function descargarMasivoModificacion() {
@@ -241,7 +290,8 @@
 
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=downloadZipModificacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=downloadZipModificacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
 
                 function descargarMasivoEstructuradores() {
@@ -257,7 +307,8 @@
 
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=downloadZipEstructuradores&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=downloadZipEstructuradores&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
 
                 function descargarMasivoDesignacion() {
@@ -273,7 +324,8 @@
 
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
-                    window.location.href = 'combinacion?action=downloadZipDesignacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo);
+                    var anio = $('#filterAnio').val();
+                    window.location.href = 'combinacion?action=downloadZipDesignacion&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
             </script>
         </body>
