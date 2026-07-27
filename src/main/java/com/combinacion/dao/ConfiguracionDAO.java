@@ -131,4 +131,86 @@ public class ConfiguracionDAO {
         }
         return false;
     }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM configuracion";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countFiltered(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return countAll();
+        }
+        String sql = "SELECT COUNT(*) FROM configuracion WHERE clave LIKE ? OR valor LIKE ? OR descripcion LIKE ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String likeParam = "%" + search + "%";
+            ps.setString(1, likeParam);
+            ps.setString(2, likeParam);
+            ps.setString(3, likeParam);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<Configuracion> findWithPagination(int start, int length, String search, String sortCol, String orderDir) {
+        List<Configuracion> list = new ArrayList<>();
+        String sql = "SELECT * FROM configuracion ";
+        
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        if (hasSearch) {
+            sql += "WHERE clave LIKE ? OR valor LIKE ? OR descripcion LIKE ? ";
+        }
+        
+        String orderColumn = "clave"; // default
+        if (sortCol != null && !sortCol.isEmpty()) {
+            if (sortCol.equals("valor") || sortCol.equals("descripcion")) {
+                orderColumn = sortCol;
+            }
+        }
+        String dir = "asc";
+        if ("desc".equalsIgnoreCase(orderDir)) {
+            dir = "desc";
+        }
+        sql += "ORDER BY " + orderColumn + " " + dir + " ";
+        sql += "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int index = 1;
+            if (hasSearch) {
+                String likeParam = "%" + search + "%";
+                ps.setString(index++, likeParam);
+                ps.setString(index++, likeParam);
+                ps.setString(index++, likeParam);
+            }
+            ps.setInt(index++, length);
+            ps.setInt(index++, start);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Configuracion(
+                        rs.getInt("id"),
+                        rs.getString("clave"),
+                        rs.getString("valor"),
+                        rs.getString("descripcion")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

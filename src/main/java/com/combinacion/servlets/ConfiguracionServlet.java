@@ -2,6 +2,9 @@ package com.combinacion.servlets;
 
 import com.combinacion.dao.ConfiguracionDAO;
 import com.combinacion.models.Configuracion;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -14,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 public class ConfiguracionServlet extends HttpServlet {
 
     private final ConfiguracionDAO dao = new ConfiguracionDAO();
+    private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -61,6 +65,8 @@ public class ConfiguracionServlet extends HttpServlet {
                 dao.insertar(c);
             }
             response.sendRedirect(request.getContextPath() + "/admin/configuracion?msg=success");
+        } else if ("data".equals(action)) {
+            responderDatosTabla(request, response);
         } else {
             response.sendRedirect(request.getContextPath() + "/admin/configuracion");
         }
@@ -86,5 +92,63 @@ public class ConfiguracionServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         dao.eliminar(id);
         response.sendRedirect(request.getContextPath() + "/admin/configuracion?msg=deleted");
+    }
+
+    private void responderDatosTabla(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            int draw = parseIntSafe(request.getParameter("draw"), 1);
+            int start = parseIntSafe(request.getParameter("start"), 0);
+            int length = parseIntSafe(request.getParameter("length"), 10);
+            String search = request.getParameter("search[value]");
+            int orderCol = parseIntSafe(request.getParameter("order[0][column]"), 0);
+            String orderDir = request.getParameter("order[0][dir]");
+            if (orderDir == null) orderDir = "asc";
+
+            String sortCol = "clave";
+            switch (orderCol) {
+                case 1: sortCol = "valor"; break;
+                case 2: sortCol = "descripcion"; break;
+                default: sortCol = "clave"; break;
+            }
+
+            int total = dao.countAll();
+            int filtered = dao.countFiltered(search);
+            List<Configuracion> list = dao.findWithPagination(start, length, search, sortCol, orderDir);
+
+            JsonObject jsonResponse = new JsonObject();
+            jsonResponse.addProperty("draw", draw);
+            jsonResponse.addProperty("recordsTotal", total);
+            jsonResponse.addProperty("recordsFiltered", filtered);
+
+            JsonArray dataArray = new JsonArray();
+            if (list != null) {
+                for (Configuracion c : list) {
+                    JsonArray row = new JsonArray();
+                    row.add(c.getClave() != null ? c.getClave() : "");
+                    row.add(c.getValor() != null ? c.getValor() : "");
+                    row.add(c.getDescripcion() != null ? c.getDescripcion() : "");
+                    row.add(c.getId());
+                    dataArray.add(row);
+                }
+            }
+            jsonResponse.add("data", dataArray);
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(gson.toJson(jsonResponse));
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al procesar la solicitud");
+        }
+    }
+
+    private int parseIntSafe(String val, int defaultVal) {
+        if (val == null) return defaultVal;
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return defaultVal;
+        }
     }
 }
