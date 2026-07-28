@@ -211,7 +211,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Modificación al contrato</label>
-                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.modificaciones ? 'N/A' : informe.modificaciones}</textarea>
+                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.modificaciones && informe.modificaciones != 'N/A' ? informe.modificaciones : (informeAuto != null && not empty informeAuto.modificaciones ? informeAuto.modificaciones : 'N/A')}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Suspensión</label>
@@ -231,11 +231,11 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Adición</label>
-                                    <input type="text" class="form-control" name="adiciones" value="${empty informe.adiciones ? 'N/A' : informe.adiciones}" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="adiciones" value="${informe != null && not empty informe.adiciones && informe.adiciones != 'N/A' ? informe.adiciones : (informeAuto != null && not empty informeAuto.adiciones ? informeAuto.adiciones : 'N/A')}" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Prórroga</label>
-                                    <input type="text" class="form-control" name="prorrogas" value="${empty informe.prorrogas ? 'N/A' : informe.prorrogas}" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="prorrogas" value="${informe != null && not empty informe.prorrogas && informe.prorrogas != 'N/A' ? informe.prorrogas : (informeAuto != null && not empty informeAuto.prorrogas ? informeAuto.prorrogas : 'N/A')}" ${readonly ? 'readonly' : ''}>
                                 </div>
                             </div>
                         </div>

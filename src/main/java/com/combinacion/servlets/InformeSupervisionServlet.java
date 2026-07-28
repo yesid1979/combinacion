@@ -339,6 +339,53 @@ public class InformeSupervisionServlet extends HttpServlet {
             Contrato contrato = informeService.obtenerContrato(contratoId);
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
+                // ---- GENERACION AUTOMATICA DE TEXTOS DE MODIFICACION ----
+                com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
+                
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                    
+                    String valTotal = (contrato.getValorTotalAdicion() != null) ? nf.format(contrato.getValorTotalAdicion()) : "$0";
+                    String valCuota = (contrato.getValorCuotaNumero() != null) ? nf.format(contrato.getValorCuotaNumero()) : "$0";
+                    String valTotalLetras = (contrato.getValorTotalAdicionLetras() != null) ? contrato.getValorTotalAdicionLetras() : "";
+                    String valCuotasLetras = (contrato.getValorCuotaLetras() != null) ? contrato.getValorCuotaLetras() : "";
+                    int numCuotas = contrato.getNumeroCuotasAdicion();
+                    
+                    String fechaMod = contrato.getFechaModificacion() != null ? sdf.format(contrato.getFechaModificacion()) : "XXX";
+                    String fechaPror = contrato.getFechaTerminacion() != null ? sdf.format(contrato.getFechaTerminacion()) : "XXX";
+                    
+                    String adicionTxt = String.format("Mediante Modificación No. %s del %s se adiciona la suma %s (%s).", 
+                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
+                            fechaMod,
+                            valTotalLetras, valTotal);
+                            
+                    String prorrogaTxt = String.format("Mediante Modificación No. %s del %s se prorroga el plazo de ejecución del contrato hasta el %s.",
+                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
+                            fechaMod,
+                            fechaPror);
+                            
+                    String valTotalMod = (contrato.getValorContratoMasAdicion() != null) ? nf.format(contrato.getValorContratoMasAdicion()) : "XXX";
+                    String valTotalModLetras = (contrato.getValorContratoMasAdicionLetras() != null) ? contrato.getValorContratoMasAdicionLetras() : "XXX";
+                            
+                    String modificacionTxt = String.format("Modificación al contrato: Modificación No. %s del %s mediante la cual las partes acordaron: PRORROGAR el Contrato de Prestación de servicios de apoyo a la gestión No. %s hasta el %s; y ADICIONAR el Contrato de Prestación de servicios de apoyo a la gestión No. %s por la suma de %s (%s). Dicha adición se pagará en %d cuotas iguales, cada una de ellas por valor de %s (%s).\n\nPor lo tanto, el valor total del contrato queda en la suma de %s (%s).",
+                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
+                            fechaMod,
+                            contrato.getNumeroContrato(), 
+                            fechaPror,
+                            contrato.getNumeroContrato(),
+                            valTotalLetras, valTotal, numCuotas,
+                            valCuotasLetras, valCuota,
+                            valTotalModLetras, valTotalMod);
+                            
+                    informeAuto.setAdiciones(adicionTxt);
+                    informeAuto.setProrrogas(prorrogaTxt);
+                    informeAuto.setModificaciones(modificacionTxt);
+                }
+                
+                request.setAttribute("informeAuto", informeAuto);
+                // --------------------------------------------------------
+                
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
                 
                 // Calcular acumulado previo y número de cuota sugerido
