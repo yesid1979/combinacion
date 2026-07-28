@@ -36,6 +36,24 @@ public class DatabasePatcher {
                 System.out.println("✅ Columna 'iva_si_no' agregada exitosamente.");
             }
 
+            ResultSet rsNumMod = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                            "WHERE table_name='contratos' AND column_name='numero_modificacion'");
+            if (!rsNumMod.next()) {
+                System.out.println("⚠️ Columna 'numero_modificacion' no encontrada. Agregándola automáticamente...");
+                stmt.executeUpdate("ALTER TABLE contratos ADD COLUMN numero_modificacion VARCHAR(50)");
+                System.out.println("✅ Columna 'numero_modificacion' agregada exitosamente.");
+            }
+
+            ResultSet rsFecMod = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                            "WHERE table_name='contratos' AND column_name='fecha_modificacion'");
+            if (!rsFecMod.next()) {
+                System.out.println("⚠️ Columna 'fecha_modificacion' no encontrada. Agregándola automáticamente...");
+                stmt.executeUpdate("ALTER TABLE contratos ADD COLUMN fecha_modificacion DATE");
+                System.out.println("✅ Columna 'fecha_modificacion' agregada exitosamente.");
+            }
+
             // --- NUEVOS CAMPOS PARA ADICION EN PRESUPUESTO_DETALLES ---
             String[] columnasPresupuesto = {
                 "cdp_adicion TEXT", 
