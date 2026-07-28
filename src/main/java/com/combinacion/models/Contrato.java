@@ -61,6 +61,9 @@ public class Contrato {
     private String liquidacionDecreto;
     private String circularHonorarios;
 
+    private String numeroModificacion;
+    private Date fechaModificacion;
+
     private int contratistaId;
     private int supervisorId;
     private int ordenadorId;
@@ -203,4 +206,9 @@ public class Contrato {
 
     public Integer getAnio() { return anio; }
     public void setAnio(Integer anio) { this.anio = anio; }
+
+    public String getNumeroModificacion() { return numeroModificacion; }
+    public void setNumeroModificacion(String numeroModificacion) { this.numeroModificacion = numeroModificacion; }
+    public Date getFechaModificacion() { return fechaModificacion; }
+    public void setFechaModificacion(Date fechaModificacion) { this.fechaModificacion = fechaModificacion; }
 }

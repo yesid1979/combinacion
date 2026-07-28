@@ -340,6 +340,8 @@ public class CargaMasivaServlet extends HttpServlet {
                 logMapping(log, map, "valor_total_letras", "Valor Total (Letras)");
                 logMapping(log, map, "valor_total_numeros", "Valor Total (Números)");
                 logMapping(log, map, "iva_si_no", "IVA SI/NO");
+                logMapping(log, map, "numero_modificacion", "No. Modificación");
+                logMapping(log, map, "fecha_modificacion", "Fecha Modificación");
                 logMapping(log, map, "valor_antes_iva_letras", "Valor Antes IVA (Letras)");
                 logMapping(log, map, "valor_antes_iva", "Valor Antes IVA");
                 logMapping(log, map, "valor_iva_letras", "Valor IVA (Letras)");
@@ -946,17 +948,23 @@ public class CargaMasivaServlet extends HttpServlet {
             } else if (h.contains("meses") && !h.contains("media")) {
                 map.put("plazo_meses", i);
             } else if (h.contains("fecha") && h.contains("idoneidad")) {
-                map.put("fecha_idoneidad", i);
+                    map.put("fecha_idoneidad", i);
             } else if ((h.contains("fecha") || h.contains("firm")) && h.contains("estructurador")) {
                 map.put("fecha_estructurador", i);
             } else if (h.contains("dias") && (h.contains("plazo") || h.equals("dias"))) {
                 map.put("plazo_dias", i);
+            } else if (h.contains("adicion") && h.contains("si") && h.contains("no")) {
+                map.put("adicion_si_no", i);
+            } else if (h.contains("iva") && h.contains("si") && h.contains("no")) {
+                map.put("iva_si_no", i);
+            } else if (h.contains("modificaci") && h.contains("no") && h.contains(".")) {
+                map.put("numero_modificacion", i);
+            } else if (h.contains("modificaci") && h.contains("fecha")) {
+                map.put("fecha_modificacion", i);
             } else if (h.contains("valor") && h.contains("total") && h.contains("letras") && !h.contains("adicion")) {
                 map.put("valor_total_letras", i);
             } else if (h.contains("valor") && h.contains("total") && h.contains("numeros") && !h.contains("adicion")) {
                 map.put("valor_total_numeros", i);
-            } else if (h.contains("iva") && h.contains("si") && h.contains("no")) {
-                map.put("iva_si_no", i);
             } else if (h.contains("valor") && h.contains("cuota") && h.contains("letras") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
                 map.put("valor_cuota_letras", i);
             } else if (h.contains("valor") && h.contains("cuota") && h.contains("numero") && !h.contains("media") && !h.contains("antes") && !h.contains("iva") && !h.contains("adicion")) {
@@ -1743,6 +1751,9 @@ public class CargaMasivaServlet extends HttpServlet {
             contrato.setNumCuotasLetras(get(row, map, "num_cuotas_letras"));
             contrato.setValorMediaCuotaLetras(get(row, map, "valor_media_cuota_letras"));
             contrato.setAdicionSiNo(parseBooleanCheck(get(row, map, "adicion_si_no")));
+            contrato.setIvaSiNo(parseBooleanCheck(get(row, map, "iva_si_no")));
+            contrato.setNumeroModificacion(get(row, map, "numero_modificacion"));
+            contrato.setFechaModificacion(parseDateStr(get(row, map, "fecha_modificacion")));
             contrato.setValorTotalAdicionLetras(get(row, map, "valor_total_adicion_letras"));
             contrato.setValorContratoMasAdicionLetras(get(row, map, "valor_contrato_mas_adicion_letras"));
             contrato.setEnlaceSecop(get(row, map, "enlace_secop"));
