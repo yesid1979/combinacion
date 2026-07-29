@@ -178,9 +178,10 @@
                                     <label class="form-label">Cuota Número</label>
                                     <c:choose>
                                         <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
+                                            <c:set var="totalCuotas" value="${contrato.numCuotasNumero + contrato.numeroCuotasAdicion}" />
                                             <select class="form-select" name="numero_cuota" required>
                                                 <option value="" disabled ${empty informe.numeroCuota && empty siguienteCuota ? 'selected' : ''}>Seleccione...</option>
-                                                <c:forEach var="i" begin="1" end="${contrato.numCuotasNumero}">
+                                                <c:forEach var="i" begin="1" end="${totalCuotas}">
                                                     <option value="${i}" ${(not empty informe.numeroCuota && informe.numeroCuota == i) || (empty informe.id && siguienteCuota == i) ? 'selected' : ''}>Cuota ${i}</option>
                                                 </c:forEach>
                                             </select>
@@ -211,7 +212,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Modificación al contrato</label>
-                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.modificaciones && informe.modificaciones != 'N/A' ? informe.modificaciones : (informeAuto != null && not empty informeAuto.modificaciones ? informeAuto.modificaciones : 'N/A')}</textarea>
+                                    <textarea class="form-control" name="modificaciones" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.modificaciones && informe.modificaciones != 'N/A' ? informe.modificaciones : (mostrarTextosAuto && informeAuto != null && not empty informeAuto.modificaciones ? informeAuto.modificaciones : 'N/A')}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Suspensión</label>
@@ -229,13 +230,14 @@
                                     <label class="form-label">Terminación anticipada</label>
                                     <input type="text" class="form-control" name="terminacion_anticipada" value="${empty informe.terminacionAnticipada ? 'N/A' : informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
                                 </div>
+                                <c:set var="mostrarTextosAuto" value="${contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero && siguienteCuota < totalCuotas}" />
                                 <div class="col-md-6">
                                     <label class="form-label">Adición</label>
-                                    <input type="text" class="form-control" name="adiciones" value="${informe != null && not empty informe.adiciones && informe.adiciones != 'N/A' ? informe.adiciones : (informeAuto != null && not empty informeAuto.adiciones ? informeAuto.adiciones : 'N/A')}" ${readonly ? 'readonly' : ''}>
+                                    <textarea class="form-control" name="adiciones" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.adiciones && informe.adiciones != 'N/A' ? informe.adiciones : (mostrarTextosAuto && informeAuto != null && not empty informeAuto.adiciones ? informeAuto.adiciones : 'N/A')}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Prórroga</label>
-                                    <input type="text" class="form-control" name="prorrogas" value="${informe != null && not empty informe.prorrogas && informe.prorrogas != 'N/A' ? informe.prorrogas : (informeAuto != null && not empty informeAuto.prorrogas ? informeAuto.prorrogas : 'N/A')}" ${readonly ? 'readonly' : ''}>
+                                    <textarea class="form-control" name="prorrogas" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.prorrogas && informe.prorrogas != 'N/A' ? informe.prorrogas : (mostrarTextosAuto && informeAuto != null && not empty informeAuto.prorrogas ? informeAuto.prorrogas : 'N/A')}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -986,7 +988,7 @@
             $('#saldo_cancelar').val(formatMoney(saldo));
         }
         
-        $('#valor_cuota, #valor_acumulado').on('input', calcularSaldo);
+        $('#valor_cuota, #valor_acumulado, #valor_total').on('input', calcularSaldo);
         // Calcular al cargar la pagina por si ya hay valores
         $(document).ready(function() {
             if(!'${readonly}') {
@@ -1079,6 +1081,64 @@
                 document.getElementById("radicar_input").value = "true";
                 return true;
             }
+            
+            // Dinamismo para textos de adición y valores
+            $(document).ready(function() {
+                var adicionesAuto = `${fn:escapeXml(informeAuto.adiciones)}`;
+                var prorrogasAuto = `${fn:escapeXml(informeAuto.prorrogas)}`;
+                var modificacionesAuto = `${fn:escapeXml(informeAuto.modificaciones)}`;
+                var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
+                var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
+                var cuotaFinal = cuotasNormales + cuotasAdicion;
+                
+                var valorNormal = "${contrato.valorTotalNumeros}";
+                var valorAdicionado = "${contrato.valorContratoMasAdicion}";
+                
+                var baseDateStr = "<fmt:formatDate value='${contrato.fechaTerminacion}' pattern='yyyy-MM-dd'/>";
+                var fechaAdicion = baseDateStr;
+                if (baseDateStr && cuotasAdicion > 0) {
+                    var dateParts = baseDateStr.split("-");
+                    var dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    dateObj.setMonth(dateObj.getMonth() + cuotasAdicion);
+                    var y = dateObj.getFullYear();
+                    var m = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+                    var d = ("0" + dateObj.getDate()).slice(-2);
+                    fechaAdicion = y + "-" + m + "-" + d;
+                }
+
+                $('select[name="numero_cuota"]').change(function() {
+                    var cuota = parseInt($(this).val());
+                    if (!cuota) return;
+
+                    var currentAd = $('textarea[name="adiciones"]').val().trim();
+                    var currentPro = $('textarea[name="prorrogas"]').val().trim();
+                    var currentMod = $('textarea[name="modificaciones"]').val().trim();
+
+                    if (cuotasNormales > 0 && cuota >= cuotasNormales && cuota < cuotaFinal) {
+                        if (currentAd === 'N/A' || currentAd === '') $('textarea[name="adiciones"]').val(adicionesAuto);
+                        if (currentPro === 'N/A' || currentPro === '') $('textarea[name="prorrogas"]').val(prorrogasAuto);
+                        if (currentMod === 'N/A' || currentMod === '') $('textarea[name="modificaciones"]').val(modificacionesAuto);
+                    } else {
+                        if (currentAd === adicionesAuto || currentAd === '') $('textarea[name="adiciones"]').val('N/A');
+                        if (currentPro === prorrogasAuto || currentPro === '') $('textarea[name="prorrogas"]').val('N/A');
+                        if (currentMod === modificacionesAuto || currentMod === '') $('textarea[name="modificaciones"]').val('N/A');
+                    }
+                    
+                    // Actualizar Valor Total y Fecha de Terminación a partir de la última cuota normal
+                    if (cuotasNormales > 0 && cuota >= cuotasNormales) {
+                        if (valorAdicionado) $('#valor_total').val(valorAdicionado).trigger('input');
+                        if (fechaAdicion) $('input[name="fecha_fin_periodo"]').val(fechaAdicion);
+                    } else {
+                        if (valorNormal) $('#valor_total').val(valorNormal).trigger('input');
+                        if (baseDateStr) $('input[name="fecha_fin_periodo"]').val(baseDateStr);
+                    }
+                });
+                
+                // Ejecutar al cargar la página para inicializar los valores si ya hay una cuota preseleccionada
+                if ($('select[name="numero_cuota"]').val()) {
+                    $('select[name="numero_cuota"]').trigger('change');
+                }
+            });
         </script>
     </body>
 </html>

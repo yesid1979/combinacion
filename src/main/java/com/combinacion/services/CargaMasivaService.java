@@ -351,7 +351,7 @@ public class CargaMasivaService {
             else if (h.contains("valor") && h.contains("total") && h.contains("contrato") && h.contains("mas") && h.contains("adicion")) {
                 if (h.contains("letras")) map.put("valor_contrato_mas_adicion_letras", i); else map.put("valor_contrato_mas_adicion", i);
             }
-            else if (h.contains("numero") && h.contains("cuotas") && h.contains("adicion")) { map.put("numero_cuotas_adicion", i); }
+            else if ((h.contains("numero") || h.contains("num") || h.contains("nro") || h.contains("no.") || h.contains("#")) && h.contains("cuota") && h.contains("adicion")) { map.put("numero_cuotas_adicion", i); }
             else if (h.contains("adicion") && h.contains("si") && h.contains("no"))         { map.put("adicion_si_no", i); }
             else if (h.contains("iva") && h.contains("si") && h.contains("no"))             { map.put("iva_si_no", i); }
         }

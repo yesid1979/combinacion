@@ -862,6 +862,10 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    
+                    try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch(Exception e) {}
+                    try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch(Exception e) {}
+                    
                     return c;
                 }
             }
@@ -935,6 +939,10 @@ try {
         c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
         c.setEnlaceSecop(rs.getString("enlace_secop"));
         c.setIvaSiNo(rs.getString("iva_si_no"));
+        
+        try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch(Exception e) {}
+        try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch(Exception e) {}
+        
         return c;
     }
 

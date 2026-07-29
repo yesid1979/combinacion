@@ -339,55 +339,6 @@ public class InformeSupervisionServlet extends HttpServlet {
             Contrato contrato = informeService.obtenerContrato(contratoId);
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
-                // ---- GENERACION AUTOMATICA DE TEXTOS DE MODIFICACION ----
-                com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
-                
-                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
-                    java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                    
-                    String valTotal = (contrato.getValorTotalAdicion() != null) ? nf.format(contrato.getValorTotalAdicion()) : "$0";
-                    String valCuota = (contrato.getValorCuotaNumero() != null) ? nf.format(contrato.getValorCuotaNumero()) : "$0";
-                    String valTotalLetras = (contrato.getValorTotalAdicionLetras() != null) ? contrato.getValorTotalAdicionLetras() : "";
-                    String valCuotasLetras = (contrato.getValorCuotaLetras() != null) ? contrato.getValorCuotaLetras() : "";
-                    int numCuotas = contrato.getNumeroCuotasAdicion();
-                    
-                    String fechaMod = contrato.getFechaModificacion() != null ? sdf.format(contrato.getFechaModificacion()) : "XXX";
-                    String fechaPror = contrato.getFechaTerminacion() != null ? sdf.format(contrato.getFechaTerminacion()) : "XXX";
-                    
-                    String adicionTxt = String.format("Mediante Modificación No. %s del %s se adiciona la suma %s (%s).", 
-                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
-                            fechaMod,
-                            valTotalLetras, valTotal);
-                            
-                    String prorrogaTxt = String.format("Mediante Modificación No. %s del %s se prorroga el plazo de ejecución del contrato hasta el %s.",
-                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
-                            fechaMod,
-                            fechaPror);
-                            
-                    String valTotalMod = (contrato.getValorContratoMasAdicion() != null) ? nf.format(contrato.getValorContratoMasAdicion()) : "XXX";
-                    String valTotalModLetras = (contrato.getValorContratoMasAdicionLetras() != null) ? contrato.getValorContratoMasAdicionLetras() : "XXX";
-                            
-                    String modificacionTxt = String.format("Modificación al contrato: Modificación No. %s del %s mediante la cual las partes acordaron: PRORROGAR el Contrato de Prestación de servicios de apoyo a la gestión No. %s hasta el %s; y ADICIONAR el Contrato de Prestación de servicios de apoyo a la gestión No. %s por la suma de %s (%s). Dicha adición se pagará en %d cuotas iguales, cada una de ellas por valor de %s (%s).\n\nPor lo tanto, el valor total del contrato queda en la suma de %s (%s).",
-                            contrato.getNumeroModificacion() != null ? contrato.getNumeroModificacion() : "XXX",
-                            fechaMod,
-                            contrato.getNumeroContrato(), 
-                            fechaPror,
-                            contrato.getNumeroContrato(),
-                            valTotalLetras, valTotal, numCuotas,
-                            valCuotasLetras, valCuota,
-                            valTotalModLetras, valTotalMod);
-                            
-                    informeAuto.setAdiciones(adicionTxt);
-                    informeAuto.setProrrogas(prorrogaTxt);
-                    informeAuto.setModificaciones(modificacionTxt);
-                }
-                
-                request.setAttribute("informeAuto", informeAuto);
-                // --------------------------------------------------------
-                
-                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
-                
                 // Calcular acumulado previo y número de cuota sugerido
                 java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(contratoId);
                 java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
@@ -399,7 +350,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                     }
                 }
                 request.setAttribute("acumuladoPrevio", acumulado);
-                request.setAttribute("siguienteCuota", previos != null ? previos.size() + 1 : 1);
+                int siguienteCuota = previos != null ? previos.size() + 1 : 1;
+                request.setAttribute("siguienteCuota", siguienteCuota);
+
+                // ---- GENERACION AUTOMATICA DE TEXTOS DE MODIFICACION ----
+                com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    poblarTextosModificacion(contrato, informeAuto);
+                }
+                
+                request.setAttribute("informeAuto", informeAuto);
+                // --------------------------------------------------------------------------------
+                
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
             }
         }
         
@@ -441,6 +404,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    poblarTextosModificacion(contrato, informe);
+                }
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }
@@ -1131,5 +1097,67 @@ public class InformeSupervisionServlet extends HttpServlet {
         
         return f;
     }
+
+    private void poblarTextosModificacion(Contrato contrato, InformeSupervision informe) {
+        java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
+        nf.setMaximumFractionDigits(0);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new java.util.Locale("es", "CO"));
+        
+        String valTotal = (contrato.getValorTotalAdicion() != null) ? nf.format(contrato.getValorTotalAdicion()) : "$0";
+        String valCuota = (contrato.getValorCuotaNumero() != null) ? nf.format(contrato.getValorCuotaNumero()) : "$0";
+        String valTotalLetras = (contrato.getValorTotalAdicionLetras() != null) ? contrato.getValorTotalAdicionLetras().toUpperCase() : "";
+        String valCuotasLetras = (contrato.getValorCuotaLetras() != null) ? contrato.getValorCuotaLetras().toLowerCase() : "";
+        
+        int numCuotas = contrato.getNumeroCuotasAdicion();
+        String[] cuotasStr = {"cero (0)", "una (1)", "dos (2)", "tres (3)", "cuatro (4)", "cinco (5)", "seis (6)", "siete (7)", "ocho (8)", "nueve (9)", "diez (10)", "once (11)", "doce (12)"};
+        String cuotasTxt = (numCuotas >= 0 && numCuotas <= 12) ? cuotasStr[numCuotas] : numCuotas + " (" + numCuotas + ")";
+        
+        String fechaMod = contrato.getFechaModificacion() != null ? sdf.format(contrato.getFechaModificacion()) : "XX de XXX de 202X";
+        
+        String fechaPror = "XX de XXX de 202X";
+        if (contrato.getFechaTerminacion() != null) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(contrato.getFechaTerminacion());
+            cal.add(java.util.Calendar.MONTH, numCuotas);
+            fechaPror = sdf.format(cal.getTime());
+        }
+        
+        String numMod = contrato.getNumeroModificacion() != null && !contrato.getNumeroModificacion().trim().isEmpty() ? contrato.getNumeroModificacion() : "00X";
+        String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "XXX";
+        if (contrato.getAnio() != null && contrato.getAnio() > 0) {
+            numContrato += "-" + contrato.getAnio();
+        }
+        
+        String valTotalMod = (contrato.getValorContratoMasAdicion() != null) ? nf.format(contrato.getValorContratoMasAdicion()) : "$0";
+        String valTotalModLetras = (contrato.getValorContratoMasAdicionLetras() != null) ? contrato.getValorContratoMasAdicionLetras().toUpperCase() : "";
+                
+        String adicionTxt = String.format("Mediante Modificación No. %s del %s se adiciona la suma %s (%s).", 
+                numMod, fechaMod, valTotalLetras, valTotal);
+                
+        String tipoContratoStr = contrato.getTipoContrato() != null && !contrato.getTipoContrato().trim().isEmpty() ? contrato.getTipoContrato() : "Prestación de servicios";
+        
+        String prorrogaTxt = String.format("Mediante Modificación No. %s del %s se prorroga el Contrato de %s %s hasta el %s.",
+                numMod, fechaMod, tipoContratoStr, numContrato, fechaPror);
+                
+        String modificacionTxt = String.format("Modificación No. %s del %s mediante la cual las partes acordaron: PRORROGAR el Contrato de %s No. %s hasta el %s; y ADICIONAR el Contrato de %s No. %s por la suma de %s (%s). Dicha adición se pagará en %s cuotas iguales, cada una de ellas por valor de %s (%s).\n\nPor lo tanto, el valor total del contrato queda en la suma de %s (%s).",
+                numMod,
+                fechaMod,
+                tipoContratoStr,
+                numContrato, 
+                fechaPror,
+                tipoContratoStr,
+                numContrato,
+                valTotalLetras, valTotal, cuotasTxt,
+                valCuotasLetras, valCuota,
+                valTotalModLetras, valTotalMod);
+                
+        boolean adVacio = (informe.getAdiciones() == null || informe.getAdiciones().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getAdiciones().trim()));
+        boolean proVacio = (informe.getProrrogas() == null || informe.getProrrogas().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getProrrogas().trim()));
+        boolean modVacio = (informe.getModificaciones() == null || informe.getModificaciones().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getModificaciones().trim()));
+        
+        if (adVacio) informe.setAdiciones(adicionTxt);
+        if (proVacio) informe.setProrrogas(prorrogaTxt);
+        if (modVacio) informe.setModificaciones(modificacionTxt);
+    }
 }
-// Trigger reload
+// Trigger reload 3
