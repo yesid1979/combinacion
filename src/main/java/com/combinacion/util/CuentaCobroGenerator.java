@@ -131,14 +131,33 @@ public class CuentaCobroGenerator {
         Cell cellD25 = row25.getCell(3); if(cellD25 == null) cellD25 = row25.createCell(3);
         cellD25.setCellValue(contrato.getNumeroContrato());
 
+        boolean esCuotaAdicion = false;
+        if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+            int cuotasNormales = contrato.getNumCuotasNumero();
+            int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+            if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                esCuotaAdicion = true;
+            }
+        }
+
         if (contrato.getPresupuestoDetalle() != null) {
             com.combinacion.models.PresupuestoDetalle pre = contrato.getPresupuestoDetalle();
             Cell cellH25 = row25.getCell(7); if(cellH25 == null) cellH25 = row25.createCell(7);
-            cellH25.setCellValue(pre.getCdpNumero() != null ? pre.getCdpNumero() : "");
+            
+            String cdpStr = pre.getCdpNumero() != null ? pre.getCdpNumero() : "";
+            if (esCuotaAdicion && pre.getCdpAdicion() != null && !pre.getCdpAdicion().trim().isEmpty()) {
+                cdpStr += " - " + pre.getCdpAdicion().trim();
+            }
+            cellH25.setCellValue(cdpStr);
             
             Row row26 = sheet.getRow(25); if(row26 == null) row26 = sheet.createRow(25);
             Cell cellH26 = row26.getCell(7); if(cellH26 == null) cellH26 = row26.createCell(7);
-            cellH26.setCellValue(pre.getRpNumero() != null ? pre.getRpNumero() : "");
+            
+            String rpStr = pre.getRpNumero() != null ? pre.getRpNumero() : "";
+            if (esCuotaAdicion && pre.getRpAdicion() != null && !pre.getRpAdicion().trim().isEmpty()) {
+                rpStr += " - " + pre.getRpAdicion().trim();
+            }
+            cellH26.setCellValue(rpStr);
         }
 
         Row row27 = sheet.getRow(26); if(row27 == null) row27 = sheet.createRow(26);
@@ -159,9 +178,15 @@ public class CuentaCobroGenerator {
         Row row28 = sheet.getRow(27); if(row28 == null) row28 = sheet.createRow(27);
         Cell cellD28 = row28.getCell(3); if(cellD28 == null) cellD28 = row28.createCell(3);
         Cell cellF28 = row28.getCell(5); if(cellF28 == null) cellF28 = row28.createCell(5);
-        if (contrato.getValorTotalNumeros() != null) {
-            cellD28.setCellValue(formatearMoneda(contrato.getValorTotalNumeros()));
-            cellF28.setCellValue(convertirNumeroALetras(contrato.getValorTotalNumeros().longValue()).toUpperCase() + " PESOS M/CTE");
+        
+        Number valorMostrar = contrato.getValorTotalNumeros();
+        if (esCuotaAdicion && contrato.getValorContratoMasAdicion() != null) {
+            valorMostrar = contrato.getValorContratoMasAdicion();
+        }
+        
+        if (valorMostrar != null) {
+            cellD28.setCellValue(formatearMoneda(valorMostrar));
+            cellF28.setCellValue(convertirNumeroALetras(valorMostrar.longValue()).toUpperCase() + " PESOS M/CTE");
         }
 
         // Crear directorio temporal para el archivo generado
