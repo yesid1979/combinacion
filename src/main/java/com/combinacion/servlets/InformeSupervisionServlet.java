@@ -1064,7 +1064,9 @@ public class InformeSupervisionServlet extends HttpServlet {
                             }
                             joinedAct = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
                             // Limpiar posible basura restante en texto plano (ej: mso-bidi-language:AR-SA">)
-                            joinedAct = joinedAct.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[a-zA-Z0-9\\-]+;?\"?>?", "");
+                            joinedAct = joinedAct.replaceAll("(?i)(mso-[a-zA-Z0-9\\-]+|font-[a-zA-Z0-9\\-]+|line-height|text-align|margin|padding|background|color):[^;\">]+;?\"?>?", "");
+                            // Remover caracteres basura que quedan sueltos como "> o " o >
+                            joinedAct = joinedAct.replaceAll("(?i)(<[^>]+>)\\s*\"?>\\s*", "$1");
                             joinedAct = joinedAct.replaceAll("^\\s*\"?>\\s*", "");
                         } catch (Exception ex) {}
                     }
