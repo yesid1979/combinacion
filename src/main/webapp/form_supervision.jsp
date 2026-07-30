@@ -904,12 +904,15 @@
             let isValid = true;
             let firstInvalid = null;
             
-            $(this).find('[required]').each(function() {
-                if (!$(this).val() || $(this).val().trim() === '') {
-                    isValid = false;
-                    if (!firstInvalid) firstInvalid = $(this);
-                }
-            });
+            // Solo validar campos requeridos si se está Radicando la cuenta
+            if ($('#radicar_input').val() === 'true') {
+                $(this).find('[required]').each(function() {
+                    if (!$(this).val() || $(this).val().trim() === '') {
+                        isValid = false;
+                        if (!firstInvalid) firstInvalid = $(this);
+                    }
+                });
+            }
             
             if (!isValid) {
                 e.preventDefault();
