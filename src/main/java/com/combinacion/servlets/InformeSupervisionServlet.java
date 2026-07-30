@@ -428,6 +428,31 @@ public class InformeSupervisionServlet extends HttpServlet {
                     poblarTextosModificacion(contrato, informe);
                 }
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
+                
+                // Auto-cargar RPC si no lo tiene (útil para informes ya creados en borrador sin RPC)
+                String currentJson = informe.getSoportesJson();
+                if (currentJson == null || !currentJson.contains("\"file_rpc\"")) {
+                    java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(informe.getContratoId());
+                    if (previos != null && !previos.isEmpty()) {
+                        for (int i = previos.size() - 1; i >= 0; i--) {
+                            if (previos.get(i).getId() == informe.getId()) continue; // Skip itself
+                            String sJson = previos.get(i).getSoportesJson();
+                            if (sJson != null && sJson.contains("\"file_rpc\"")) {
+                                try {
+                                    org.json.JSONObject soportesAnteriores = new org.json.JSONObject(sJson);
+                                    if (soportesAnteriores.has("file_rpc")) {
+                                        org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
+                                        org.json.JSONObject rpcData = soportesAnteriores.getJSONObject("file_rpc");
+                                        rpcData.put("needs_copy", true); // Flag para copiarlo físicamente
+                                        currentObj.put("file_rpc", rpcData);
+                                        informe.setSoportesJson(currentObj.toString());
+                                        break;
+                                    }
+                                } catch (Exception e) {}
+                            }
+                        }
+                    }
+                }
             }
         }
         
