@@ -180,13 +180,21 @@ public class CuentaCobroGenerator {
         Cell cellF28 = row28.getCell(5); if(cellF28 == null) cellF28 = row28.createCell(5);
         
         Number valorMostrar = contrato.getValorTotalNumeros();
+        String valorLetras = null;
         if (esCuotaAdicion && contrato.getValorContratoMasAdicion() != null) {
             valorMostrar = contrato.getValorContratoMasAdicion();
+            valorLetras = contrato.getValorContratoMasAdicionLetras();
         }
         
         if (valorMostrar != null) {
             cellD28.setCellValue(formatearMoneda(valorMostrar));
-            cellF28.setCellValue(convertirNumeroALetras(valorMostrar.longValue()).toUpperCase() + " PESOS M/CTE");
+            String letras = (valorLetras != null && !valorLetras.trim().isEmpty()) 
+                                ? valorLetras.trim().toUpperCase() 
+                                : convertirNumeroALetras(valorMostrar.longValue()).toUpperCase();
+            if (!letras.endsWith("PESOS M/CTE") && !letras.endsWith("PESOS M/CTE.")) {
+                letras += " PESOS M/CTE";
+            }
+            cellF28.setCellValue(letras);
         }
 
         // Crear directorio temporal para el archivo generado
