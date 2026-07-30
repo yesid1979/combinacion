@@ -362,7 +362,9 @@ public class InformeSupervisionServlet extends HttpServlet {
                                 org.json.JSONObject soportesAnteriores = new org.json.JSONObject(sJson);
                                 if (soportesAnteriores.has("file_rpc")) {
                                     org.json.JSONObject newSoportes = new org.json.JSONObject();
-                                    newSoportes.put("file_rpc", soportesAnteriores.getJSONObject("file_rpc"));
+                                    org.json.JSONObject rpcData = soportesAnteriores.getJSONObject("file_rpc");
+                                    rpcData.put("needs_copy", true); // Flag para copiarlo físicamente
+                                    newSoportes.put("file_rpc", rpcData);
                                     request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
                                     break;
                                 }
@@ -813,7 +815,28 @@ public class InformeSupervisionServlet extends HttpServlet {
             // 7. Subir todos los documentos soporte
             org.json.JSONObject soportes = new org.json.JSONObject();
             if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
-                try { soportes = new org.json.JSONObject(informe.getSoportesJson()); } catch (Exception ignore) {}
+                try { 
+                    soportes = new org.json.JSONObject(informe.getSoportesJson());
+                    
+                    // Procesar archivos marcados para copia física
+                    java.util.Iterator<String> keys = soportes.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        org.json.JSONObject fileObj = soportes.getJSONObject(key);
+                        if (fileObj.optBoolean("needs_copy", false)) {
+                            try {
+                                String oldId = fileObj.getString("id");
+                                String newName = fileObj.getString("name");
+                                String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName, cuotaFolderId);
+                                fileObj.put("id", newId);
+                                fileObj.put("url", "https://drive.google.com/file/d/" + newId + "/view");
+                                fileObj.remove("needs_copy");
+                            } catch (Exception e) {
+                                System.err.println("Error copying file in drive: " + e.getMessage());
+                            }
+                        }
+                    }
+                } catch (Exception ignore) {}
             }
             
             java.io.File tempSegSoc = null;

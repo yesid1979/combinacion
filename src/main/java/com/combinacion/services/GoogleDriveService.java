@@ -193,4 +193,15 @@ public class GoogleDriveService {
         }
         return null;
     }
+
+    public static String copyFile(String fileId, String newName, String parentId) throws Exception {
+        Drive driveService = getDriveService();
+        File copiedFile = new File();
+        copiedFile.setName(newName);
+        if (parentId != null && !parentId.isEmpty()) {
+            copiedFile.setParents(Collections.singletonList(parentId));
+        }
+        File result = driveService.files().copy(fileId, copiedFile).execute();
+        return result.getId();
+    }
 }
