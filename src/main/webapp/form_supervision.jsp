@@ -417,6 +417,10 @@
                                     <label class="form-label">RPC (Registro Presupuestal)</label>
                                     <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
+                                <div class="col-md-6 req-cuota-adicion-only" style="display: none;">
+                                    <label class="form-label text-primary fw-bold">Modificación No 001</label>
+                                    <input type="file" class="form-control border-primary" name="file_modificacion" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                </div>
                             </div>
                         </div>
 
@@ -573,12 +577,25 @@
             // Lógica para mostrar/ocultar soportes según la cuota
             function actualizarCamposSoportes() {
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
+                var esAdicion = "${contrato.adicionSiNo}" === "Si";
+                var esCuotaAdicion = (esAdicion && parseInt(cuotaStr) === cuotasNormales);
+
                 if (cuotaStr == "1") {
                     $('.req-cuota-1').show();
+                    $('.req-cuota-adicion-only').hide();
+                    $('.req-cuota-adicion-only input[type="file"]').val('');
+                } else if (esCuotaAdicion) {
+                    $('.req-cuota-1').hide();
+                    $('.req-cuota-1 input[type="file"]').not('[name="file_secop"]').val(''); // Limpiar todos menos secop
+                    
+                    $('.req-cuota-adicion-only').show();
+                    $('input[name="file_secop"]').closest('div').show();
                 } else {
                     $('.req-cuota-1').hide();
-                    // Limpiar el input si se oculta para no enviar cosas innecesarias
                     $('.req-cuota-1 input[type="file"]').val('');
+                    $('.req-cuota-adicion-only').hide();
+                    $('.req-cuota-adicion-only input[type="file"]').val('');
                 }
             }
 

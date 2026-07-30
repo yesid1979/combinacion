@@ -501,9 +501,23 @@ public class InformeSupervisionServlet extends HttpServlet {
                 xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
                 gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
             } else {
-                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                boolean esCuotaAdicion = false;
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    int cuotasNormales = com.combinacion.util.ParseUtils.parseInt(contrato.getNumCuotasNumero());
+                    int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                        esCuotaAdicion = true;
+                    }
+                }
+                if (esCuotaAdicion) {
+                    docxName = "4. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "12. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                } else {
+                    docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                }
             }
             
             // Archivo DOCX temporal
@@ -787,9 +801,23 @@ public class InformeSupervisionServlet extends HttpServlet {
                 xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
                 gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
             } else {
-                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                boolean esCuotaAdicion = false;
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    int cuotasNormales = com.combinacion.util.ParseUtils.parseInt(contrato.getNumCuotasNumero());
+                    int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                        esCuotaAdicion = true;
+                    }
+                }
+                if (esCuotaAdicion) {
+                    docxName = "4. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "12. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                } else {
+                    docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                }
             }
 
             String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
@@ -891,10 +919,12 @@ public class InformeSupervisionServlet extends HttpServlet {
                         
                         if ("file_rpc".equals(partName)) {
                             baseName = "1. RPC - " + nombreCorto;
+                        } else if ("file_modificacion".equals(partName)) {
+                            baseName = "2. MODIFICACION No 001 - " + nombreCorto;
                         } else if ("file_factura".equals(partName)) {
-                            baseName = (esCuota1 ? "3." : "2.") + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuota1 || esCuotaAdicion ? "3." : "2.") + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
                         } else if ("file_secop".equals(partName)) {
-                            baseName = "2. CONTRATO SECOP II - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "3." : "2.") + " CONTRATO SECOP II - " + nombreCorto;
                         } else if ("file_ficha_tecnica".equals(partName)) {
                             baseName = "4. FICHA TECNICA - " + nombreCorto;
                         } else if ("file_cedula".equals(partName)) {
@@ -902,7 +932,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                         } else if ("file_rut".equals(partName)) {
                             baseName = "7. RUT - " + nombreCorto;
                         } else if ("file_seguridad_social".equals(partName)) {
-                            baseName = (esCuota1 ? "8." : "4.") + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuota1 ? "8." : (esCuotaAdicion ? "5." : "4.")) + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
                         } else if ("file_correccion_monetaria".equals(partName)) {
                             baseName = "9. CERTIFICACION CORRECCION MONETARIA - " + nombreCorto;
                         } else if ("file_medicina_prepagada".equals(partName)) {
