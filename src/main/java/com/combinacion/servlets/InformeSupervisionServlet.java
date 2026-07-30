@@ -429,9 +429,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                 }
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
                 
-                // Auto-cargar RPC si no lo tiene (útil para informes ya creados en borrador sin RPC)
+                // Determinar si es cuota de adición para NO autocargar el RPC
+                boolean esCuotaAdicion = false;
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    int cuotasNormales = contrato.getNumCuotasNumero();
+                    int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                        esCuotaAdicion = true;
+                    }
+                }
+                
+                // Auto-cargar RPC si no lo tiene (excepto en la cuota de adición donde se sube el unificado)
                 String currentJson = informe.getSoportesJson();
-                if (currentJson == null || !currentJson.contains("\"file_rpc\"")) {
+                if (!esCuotaAdicion && (currentJson == null || !currentJson.contains("\"file_rpc\""))) {
                     java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(informe.getContratoId());
                     if (previos != null && !previos.isEmpty()) {
                         for (int i = previos.size() - 1; i >= 0; i--) {
