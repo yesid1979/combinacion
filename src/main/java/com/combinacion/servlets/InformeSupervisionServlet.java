@@ -353,6 +353,24 @@ public class InformeSupervisionServlet extends HttpServlet {
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 
+                // Auto-cargar RPC de la cuota anterior si existe
+                if(previos != null && !previos.isEmpty()) {
+                    for (int i = previos.size() - 1; i >= 0; i--) {
+                        String sJson = previos.get(i).getSoportesJson();
+                        if (sJson != null && sJson.contains("\"file_rpc\"")) {
+                            try {
+                                org.json.JSONObject soportesAnteriores = new org.json.JSONObject(sJson);
+                                if (soportesAnteriores.has("file_rpc")) {
+                                    org.json.JSONObject newSoportes = new org.json.JSONObject();
+                                    newSoportes.put("file_rpc", soportesAnteriores.getJSONObject("file_rpc"));
+                                    request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
+                                    break;
+                                }
+                            } catch (Exception e) {}
+                        }
+                    }
+                }
+
                 // ---- GENERACION AUTOMATICA DE TEXTOS DE MODIFICACION ----
                 com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {

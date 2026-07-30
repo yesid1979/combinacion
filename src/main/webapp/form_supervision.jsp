@@ -114,8 +114,15 @@
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
                         <input type="hidden" name="id" value="${informe.id}">
-                        <input type="hidden" name="soportes_json" value="${fn:escapeXml(informe.soportesJson)}">
                     </c:if>
+                    <c:choose>
+                        <c:when test="${not empty informe.soportesJson}">
+                            <input type="hidden" name="soportes_json" value="${fn:escapeXml(informe.soportesJson)}">
+                        </c:when>
+                        <c:when test="${not empty soportesJsonPreCargados}">
+                            <input type="hidden" name="soportes_json" value="${fn:escapeXml(soportesJsonPreCargados)}">
+                        </c:when>
+                    </c:choose>
 
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
@@ -579,7 +586,7 @@
             actualizarCamposSoportes(); // Ejecutar al cargar la página
             
             // Renderizar archivos previamente subidos (la interfaz que pediste)
-            var soportesJsonStr = '${fn:escapeXml(informe.soportesJson)}';
+            var soportesJsonStr = '${fn:escapeXml(not empty informe.soportesJson ? informe.soportesJson : soportesJsonPreCargados)}';
             if (soportesJsonStr && soportesJsonStr.trim() !== '') {
                 try {
                     // Reemplazamos entidades xml en caso de que fn:escapeXml las haya codificado
