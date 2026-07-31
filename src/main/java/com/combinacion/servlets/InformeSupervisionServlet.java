@@ -1157,21 +1157,22 @@ public class InformeSupervisionServlet extends HttpServlet {
                             for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
                                 String style = e.attr("style");
                                 if (style != null && !style.isEmpty()) {
-                                    style = style.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"]+;?", "");
-                                    style = style.replaceAll("(?i)font-family:[^;\"]+;?", "");
-                                    style = style.replaceAll("(?i)font-size:[^;\"]+;?", "");
+                                    // Limpiar basura de Word de manera segura dentro del atributo
+                                    style = style.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;]+;?", "");
+                                    style = style.replaceAll("(?i)font-family:[^;]+;?", "");
+                                    style = style.replaceAll("(?i)font-size:[^;]+;?", "");
+                                    style = style.replaceAll("(?i)line-height:[^;]+;?", "");
                                     if (style.trim().isEmpty()) e.removeAttr("style");
-                                    else e.attr("style", style);
+                                    else e.attr("style", style.trim());
                                 }
                                 e.removeAttr("class");
                                 e.removeAttr("lang");
                             }
+                            // Remover comentarios HTML (basura de Word)
                             joinedAct = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
-                            // Limpiar posible basura restante en texto plano (ej: mso-bidi-language:AR-SA">)
-                            joinedAct = joinedAct.replaceAll("(?i)(mso-[a-zA-Z0-9\\-]+|font-[a-zA-Z0-9\\-]+|line-height|text-align|margin|padding|background|color):[^;\">]+;?\"?>?", "");
-                            // Remover caracteres basura que quedan sueltos como "> o " o >
-                            joinedAct = joinedAct.replaceAll("(?i)(<[^>]+>)\\s*\"?>\\s*", "$1");
-                            joinedAct = joinedAct.replaceAll("^\\s*\"?>\\s*", "");
+                            
+                            // Limpiar texto basura que haya quedado suelto como nodos de texto
+                            joinedAct = joinedAct.replaceAll("(?i)(mso-[a-zA-Z0-9\\-]+|font-family):[^;\">]+;?\"?>?", "");
                         } catch (Exception ex) {}
                     }
                     obj.put("actividad", joinedAct);
