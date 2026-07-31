@@ -556,6 +556,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            // Agregar asterisco rojo a los labels de campos requeridos
+            $('input[required], select[required], textarea[required]').each(function() {
+                var container = $(this).closest('.col-md-6, .col-md-4, .col-12, .mb-3, .mb-4');
+                var label = container.find('.form-label').first();
+                if (label.length && label.find('.req-asterisk').length === 0) {
+                    label.append(' <span class="text-danger req-asterisk" title="Requerido">*</span>');
+                }
+            });
             // Activar pestañas con clic
             $('#informeTabs button').on('click', function (e) {
                 e.preventDefault();
