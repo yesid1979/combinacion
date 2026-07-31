@@ -129,7 +129,11 @@ public class CuentaCobroGenerator {
         // Info Contrato
         Row row25 = sheet.getRow(24); if(row25 == null) row25 = sheet.createRow(24);
         Cell cellD25 = row25.getCell(3); if(cellD25 == null) cellD25 = row25.createCell(3);
-        cellD25.setCellValue(contrato.getNumeroContrato());
+        String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
+        if (contrato.getAnio() != null && !numContrato.endsWith(String.valueOf(contrato.getAnio()))) {
+            numContrato += "-" + contrato.getAnio();
+        }
+        cellD25.setCellValue(numContrato);
 
         boolean esCuotaAdicion = false;
         if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
