@@ -139,7 +139,7 @@ public class CuentaCobroGenerator {
         if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
             int cuotasNormales = contrato.getNumCuotasNumero();
             int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-            if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
+            if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
                 esCuotaAdicion = true;
             }
         }

@@ -355,7 +355,7 @@ public class InformeSupervisionServlet extends HttpServlet {
 
                 boolean esPrimeraCuotaAdicion = ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) 
                         && contrato.getNumCuotasNumero() > 0 
-                        && siguienteCuota == (contrato.getNumCuotasNumero() + 1));
+                        && siguienteCuota == contrato.getNumCuotasNumero());
 
                 // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es la primera cuota de adicion
                 if(previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
@@ -453,7 +453,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                     int cuotasNormales = contrato.getNumCuotasNumero();
                     int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                    if (cuotasNormales > 0 && cuotaActual == (cuotasNormales + 1)) {
+                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
                         esPrimeraCuotaAdicion = true;
                     }
                 }
@@ -538,7 +538,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                 int cuotasNormales = contrato.getNumCuotasNumero();
                 int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
+                if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
                     esCuotaAdicion = true;
                 }
             }
@@ -806,7 +806,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                 int cuotasNormales = contrato.getNumCuotasNumero();
                 int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
+                if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
                     esCuotaAdicion = true;
                 }
             }
