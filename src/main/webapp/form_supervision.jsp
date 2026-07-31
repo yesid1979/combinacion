@@ -558,10 +558,12 @@
         $(document).ready(function() {
             // Agregar asterisco rojo a los labels de campos requeridos
             $('input[required], select[required], textarea[required]').each(function() {
-                var container = $(this).closest('.col-md-6, .col-md-4, .col-12, .mb-3, .mb-4');
-                var label = container.find('.form-label').first();
+                var label = $(this).siblings('.form-label');
+                if (label.length === 0) {
+                    label = $(this).closest('div').find('.form-label').first();
+                }
                 if (label.length && label.find('.req-asterisk').length === 0) {
-                    label.append(' <span class="text-danger req-asterisk" title="Requerido">*</span>');
+                    label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
                 }
             });
             // Activar pestañas con clic
