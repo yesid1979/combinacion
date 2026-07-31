@@ -446,7 +446,7 @@
                                 <div class="row align-items-center">
                                     <div class="col-md-6">
                                         <label class="form-label">Asignar a Revisor:</label>
-                                        <select class="form-select" name="id_revisor_asignado" id="revisor_select">
+                                        <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
                                             <option value="">-- Seleccione un Revisor --</option>
                                             <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
                                             <c:forEach var="rev" items="${listaRevisores}">
