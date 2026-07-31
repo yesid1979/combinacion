@@ -200,7 +200,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label" title="Para la cuenta de cobro">Consecutivo</label>
-                                    <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si'}">required</c:if> ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha de inicio</label>
