@@ -588,8 +588,8 @@
             function actualizarCamposSoportes() {
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
-                var esAdicion = "${contrato.adicionSiNo}" === "Si";
-                var esCuotaAdicion = (esAdicion && parseInt(cuotaStr) === cuotasNormales);
+                var esAdicion = "${contrato.adicionSiNo}".toLowerCase() === "si";
+                var esCuotaAdicion = (esAdicion && parseInt(cuotaStr) > cuotasNormales);
 
                 if (cuotaStr == "1") {
                     $('.req-cuota-1').show();
