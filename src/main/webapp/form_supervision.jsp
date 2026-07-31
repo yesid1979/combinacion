@@ -29,7 +29,7 @@
     <c:set var="esAdminCuentas" value="${sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || sessionScope.usuario.esAdministrador()}" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${action == 'view' ? 'Ver' : 'Nuevo'} Informe de Supervisión - Gestión de Prestadores</title>
+    <title>${action == 'view' ? 'Ver' : (action == 'update' ? 'Editar' : 'Crear')} Cuenta de cobro No. <fmt:formatNumber value="${not empty informe.numeroCuota ? informe.numeroCuota : (not empty siguienteCuota ? siguienteCuota : 1)}" pattern="000" /> - Gestión de Prestadores</title>
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -93,7 +93,7 @@
     <ol class="breadcrumb breadcrumb-premium">
         <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
         <li class="breadcrumb-item"><a href="informes${not empty modo ? '?modo='.concat(modo) : ''}"><i class="bi bi-wallet2 me-1"></i>Cuentas</a></li>
-        <li class="breadcrumb-item active" aria-current="page">${action == 'view' ? 'Ver' : 'Editar'} Informe de Supervisión</li>
+        <li class="breadcrumb-item active" aria-current="page">${action == 'view' ? 'Ver' : (action == 'update' ? 'Editar' : 'Crear')} Cuenta de cobro No. <fmt:formatNumber value="${not empty informe.numeroCuota ? informe.numeroCuota : (not empty siguienteCuota ? siguienteCuota : 1)}" pattern="000" /></li>
     </ol>
 </nav>
             </div>
@@ -104,7 +104,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold m-0 text-dark">
                         <i class="bi bi-file-earmark-check me-2 text-primary"></i>
-                        ${action == 'view' ? 'Detalle de' : 'Nuevo'} Informe de Supervisión
+                        ${action == 'view' ? 'Detalle de' : (action == 'update' ? 'Edición de' : 'Nueva')} Cuenta de cobro No. <fmt:formatNumber value="${not empty informe.numeroCuota ? informe.numeroCuota : (not empty siguienteCuota ? siguienteCuota : 1)}" pattern="000" />
                     </h2>
                     <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
                 </div>
