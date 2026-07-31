@@ -366,23 +366,29 @@ public class InformeSupervisionServlet extends HttpServlet {
                         if (sJson != null && !sJson.isEmpty()) {
                             try {
                                 org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                if (!foundRpc && sAnteriores.has("file_rpc")) {
-                                    org.json.JSONObject rpcData = sAnteriores.getJSONObject("file_rpc");
-                                    rpcData.put("needs_copy", true);
-                                    newSoportes.put("file_rpc", rpcData);
-                                    foundRpc = true;
+                                if (!foundRpc) {
+                                    org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
+                                    if (rpcData != null) {
+                                        rpcData.put("needs_copy", true);
+                                        newSoportes.put("file_rpc", rpcData);
+                                        foundRpc = true;
+                                    }
                                 }
-                                if (!foundMod && sAnteriores.has("file_modificacion")) {
-                                    org.json.JSONObject modData = sAnteriores.getJSONObject("file_modificacion");
-                                    modData.put("needs_copy", true);
-                                    newSoportes.put("file_modificacion", modData);
-                                    foundMod = true;
+                                if (!foundMod) {
+                                    org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                    if (modData != null) {
+                                        modData.put("needs_copy", true);
+                                        newSoportes.put("file_modificacion", modData);
+                                        foundMod = true;
+                                    }
                                 }
-                                if (!foundSecop && sAnteriores.has("file_secop")) {
-                                    org.json.JSONObject secopData = sAnteriores.getJSONObject("file_secop");
-                                    secopData.put("needs_copy", true);
-                                    newSoportes.put("file_secop", secopData);
-                                    foundSecop = true;
+                                if (!foundSecop) {
+                                    org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
+                                    if (secopData != null) {
+                                        secopData.put("needs_copy", true);
+                                        newSoportes.put("file_secop", secopData);
+                                        foundSecop = true;
+                                    }
                                 }
                             } catch (Exception e) {}
                         }
@@ -474,23 +480,29 @@ public class InformeSupervisionServlet extends HttpServlet {
                             if (sJson != null && !sJson.isEmpty()) {
                                 try {
                                     org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                    if (!foundRpc && sAnteriores.has("file_rpc")) {
-                                        org.json.JSONObject rpcData = sAnteriores.getJSONObject("file_rpc");
-                                        rpcData.put("needs_copy", true);
-                                        currentObj.put("file_rpc", rpcData);
-                                        foundRpc = true;
+                                    if (!foundRpc) {
+                                        org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
+                                        if (rpcData != null) {
+                                            rpcData.put("needs_copy", true);
+                                            currentObj.put("file_rpc", rpcData);
+                                            foundRpc = true;
+                                        }
                                     }
-                                    if (!foundMod && sAnteriores.has("file_modificacion")) {
-                                        org.json.JSONObject modData = sAnteriores.getJSONObject("file_modificacion");
-                                        modData.put("needs_copy", true);
-                                        currentObj.put("file_modificacion", modData);
-                                        foundMod = true;
+                                    if (!foundMod) {
+                                        org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                        if (modData != null) {
+                                            modData.put("needs_copy", true);
+                                            currentObj.put("file_modificacion", modData);
+                                            foundMod = true;
+                                        }
                                     }
-                                    if (!foundSecop && sAnteriores.has("file_secop")) {
-                                        org.json.JSONObject secopData = sAnteriores.getJSONObject("file_secop");
-                                        secopData.put("needs_copy", true);
-                                        currentObj.put("file_secop", secopData);
-                                        foundSecop = true;
+                                    if (!foundSecop) {
+                                        org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
+                                        if (secopData != null) {
+                                            secopData.put("needs_copy", true);
+                                            currentObj.put("file_secop", secopData);
+                                            foundSecop = true;
+                                        }
                                     }
                                 } catch (Exception e) {}
                             }
@@ -781,6 +793,22 @@ public class InformeSupervisionServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al generar el documento: " + e.getMessage());
         }
     }
+    
+    private org.json.JSONObject getLatestFile(org.json.JSONObject soportes, String baseKey) {
+        org.json.JSONObject latest = null;
+        if (soportes.has(baseKey)) {
+            latest = soportes.optJSONObject(baseKey);
+        }
+        int k = 1;
+        while (soportes.has(baseKey + "_" + k)) {
+            latest = soportes.optJSONObject(baseKey + "_" + k);
+            k++;
+        }
+        return latest;
+    }
+
+    private void exportarPdf(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {  }
 
     private void procesarArchivosDrive(int informeId, HttpServletRequest request) {
         try {
