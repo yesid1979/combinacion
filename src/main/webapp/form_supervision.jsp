@@ -876,10 +876,9 @@
                                 reader.readAsDataURL(file);
                             }
                         }
-                        }
                     }
                 });
-            
+
             if (isReadonly) {
                 $(textarea).summernote('disable');
             }
