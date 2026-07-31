@@ -106,7 +106,7 @@
                         <i class="bi bi-file-earmark-check me-2 text-primary"></i>
                         ${action == 'view' ? 'Detalle de' : (action == 'update' ? 'Edición de' : 'Nueva')} Cuenta de cobro No. <fmt:formatNumber value="${not empty informe.numeroCuota ? informe.numeroCuota : (not empty siguienteCuota ? siguienteCuota : 1)}" pattern="000" />
                     </h2>
-                    <span class="badge bg-primary px-3 py-2">MAJA01.04.03.P002.F003</span>
+                    <span class="badge bg-primary px-3 py-2">${contrato.contratistaNombre}</span>
                 </div>
 
                 <form action="informes?action=${action}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
