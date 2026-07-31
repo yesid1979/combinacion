@@ -353,8 +353,12 @@ public class InformeSupervisionServlet extends HttpServlet {
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 
-                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen
-                if(previos != null && !previos.isEmpty()) {
+                boolean esPrimeraCuotaAdicion = ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) 
+                        && contrato.getNumCuotasNumero() > 0 
+                        && siguienteCuota == (contrato.getNumCuotasNumero() + 1));
+
+                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es la primera cuota de adicion
+                if(previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
                     org.json.JSONObject newSoportes = new org.json.JSONObject();
                     boolean foundRpc = false, foundMod = false, foundSecop = false;
                     for (int i = previos.size() - 1; i >= 0; i--) {
@@ -444,19 +448,19 @@ public class InformeSupervisionServlet extends HttpServlet {
                 }
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
                 
-                // Determinar si es cuota de adición para NO autocargar el RPC
-                boolean esCuotaAdicion = false;
+                // Determinar si es la PRIMERA cuota de adición para NO autocargar el RPC de las cuotas normales
+                boolean esPrimeraCuotaAdicion = false;
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                     int cuotasNormales = contrato.getNumCuotasNumero();
                     int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                    if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
-                        esCuotaAdicion = true;
+                    if (cuotasNormales > 0 && cuotaActual == (cuotasNormales + 1)) {
+                        esPrimeraCuotaAdicion = true;
                     }
                 }
                 
-                // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la cuota de adición)
+                // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la primera cuota de adición)
                 String currentJson = informe.getSoportesJson();
-                if (!esCuotaAdicion) {
+                if (!esPrimeraCuotaAdicion) {
                     java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(informe.getContratoId());
                     if (previos != null && !previos.isEmpty()) {
                         org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
