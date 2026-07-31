@@ -594,19 +594,48 @@
                 if (cuotaStr == "1") {
                     $('.req-cuota-1').show();
                     $('.req-cuota-adicion-only').hide();
-                    $('.req-cuota-adicion-only input[type="file"]').val('');
+                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
                 } else if (esCuotaAdicion) {
                     $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').not('[name="file_secop"]').val(''); // Limpiar todos menos secop
+                    $('.req-cuota-1 input[type="file"]').not('[name="file_secop"]').val('').prop('required', false);
                     
                     $('.req-cuota-adicion-only').show();
                     $('input[name="file_secop"]').closest('div').show();
+                    
+                    // Hacer requeridos los de adicion
+                    $('input[name="file_modificacion"]').prop('required', true);
+                    $('input[name="file_secop"]').prop('required', true);
                 } else {
                     $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').val('');
+                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
                     $('.req-cuota-adicion-only').hide();
-                    $('.req-cuota-adicion-only input[type="file"]').val('');
+                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
+                    $('input[name="file_secop"]').prop('required', false);
                 }
+                actualizarAsteriscosArchivos();
+            }
+
+            function actualizarAsteriscosArchivos() {
+                setTimeout(function() {
+                    $('input[type="file"]').each(function() {
+                        var $input = $(this);
+                        var $label = $input.prevAll('.form-label, small.fw-bold').first();
+                        
+                        // Si ya esta cargado, ya no es requerido
+                        if ($label.find('.badge.bg-success').length > 0) {
+                            $input.prop('required', false);
+                        }
+                        
+                        // Refrescar asterisco
+                        if ($input.prop('required') && $input.is(':visible')) {
+                            if ($label.find('.req-asterisk').length === 0) {
+                                $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
+                            }
+                        } else {
+                            $label.find('.req-asterisk').remove();
+                        }
+                    });
+                }, 100);
             }
 
             $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
@@ -666,6 +695,9 @@
                     console.log('Error parseando soportesJson', e);
                 }
             }
+            
+            // Actualizar asteriscos de archivos después de renderizarlos
+            actualizarAsteriscosArchivos();
             
             // Si es solo lectura, limpiar visualmente la pestaña de soportes
             if (isReadonly) {
