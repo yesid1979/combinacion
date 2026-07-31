@@ -144,18 +144,18 @@ public class CuentaCobroGenerator {
             com.combinacion.models.PresupuestoDetalle pre = contrato.getPresupuestoDetalle();
             Cell cellH25 = row25.getCell(7); if(cellH25 == null) cellH25 = row25.createCell(7);
             
-            String cdpStr = pre.getCdpNumero() != null ? pre.getCdpNumero() : "";
+            String cdpStr = pre.getCdpNumero() != null && !pre.getCdpNumero().trim().isEmpty() ? pre.getCdpNumero().trim().split("\\s+")[0] : "";
             if (esCuotaAdicion && pre.getCdpAdicion() != null && !pre.getCdpAdicion().trim().isEmpty()) {
-                cdpStr += " - " + pre.getCdpAdicion().trim();
+                cdpStr += " - " + pre.getCdpAdicion().trim().split("\\s+")[0];
             }
             cellH25.setCellValue(cdpStr);
             
             Row row26 = sheet.getRow(25); if(row26 == null) row26 = sheet.createRow(25);
             Cell cellH26 = row26.getCell(7); if(cellH26 == null) cellH26 = row26.createCell(7);
             
-            String rpStr = pre.getRpNumero() != null ? pre.getRpNumero() : "";
+            String rpStr = pre.getRpNumero() != null && !pre.getRpNumero().trim().isEmpty() ? pre.getRpNumero().trim().split("\\s+")[0] : "";
             if (esCuotaAdicion && pre.getRpAdicion() != null && !pre.getRpAdicion().trim().isEmpty()) {
-                rpStr += " - " + pre.getRpAdicion().trim();
+                rpStr += " - " + pre.getRpAdicion().trim().split("\\s+")[0];
             }
             cellH26.setCellValue(rpStr);
         }
