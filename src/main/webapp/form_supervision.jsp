@@ -153,7 +153,7 @@
                             <button class="nav-link" id="tecnico-tab" data-bs-toggle="tab" data-bs-target="#tecnico" type="button">Técnico</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link" id="soportes-tab" data-bs-toggle="tab" data-bs-target="#soportes" type="button">Evidencias / Soportes</button>
+                            <button class="nav-link" id="soportes-tab" data-bs-toggle="tab" data-bs-target="#soportes" type="button">Documentos de soporte</button>
                         </li>
                     </ul>
 
