@@ -353,23 +353,38 @@ public class InformeSupervisionServlet extends HttpServlet {
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 
-                // Auto-cargar RPC de la cuota anterior si existe
+                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen
                 if(previos != null && !previos.isEmpty()) {
+                    org.json.JSONObject newSoportes = new org.json.JSONObject();
+                    boolean foundRpc = false, foundMod = false, foundSecop = false;
                     for (int i = previos.size() - 1; i >= 0; i--) {
                         String sJson = previos.get(i).getSoportesJson();
-                        if (sJson != null && sJson.contains("\"file_rpc\"")) {
+                        if (sJson != null && !sJson.isEmpty()) {
                             try {
-                                org.json.JSONObject soportesAnteriores = new org.json.JSONObject(sJson);
-                                if (soportesAnteriores.has("file_rpc")) {
-                                    org.json.JSONObject newSoportes = new org.json.JSONObject();
-                                    org.json.JSONObject rpcData = soportesAnteriores.getJSONObject("file_rpc");
-                                    rpcData.put("needs_copy", true); // Flag para copiarlo físicamente
+                                org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
+                                if (!foundRpc && sAnteriores.has("file_rpc")) {
+                                    org.json.JSONObject rpcData = sAnteriores.getJSONObject("file_rpc");
+                                    rpcData.put("needs_copy", true);
                                     newSoportes.put("file_rpc", rpcData);
-                                    request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
-                                    break;
+                                    foundRpc = true;
+                                }
+                                if (!foundMod && sAnteriores.has("file_modificacion")) {
+                                    org.json.JSONObject modData = sAnteriores.getJSONObject("file_modificacion");
+                                    modData.put("needs_copy", true);
+                                    newSoportes.put("file_modificacion", modData);
+                                    foundMod = true;
+                                }
+                                if (!foundSecop && sAnteriores.has("file_secop")) {
+                                    org.json.JSONObject secopData = sAnteriores.getJSONObject("file_secop");
+                                    secopData.put("needs_copy", true);
+                                    newSoportes.put("file_secop", secopData);
+                                    foundSecop = true;
                                 }
                             } catch (Exception e) {}
                         }
+                    }
+                    if (newSoportes.length() > 0) {
+                        request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
                     }
                 }
 
@@ -434,32 +449,50 @@ public class InformeSupervisionServlet extends HttpServlet {
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                     int cuotasNormales = contrato.getNumCuotasNumero();
                     int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                    if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
                         esCuotaAdicion = true;
                     }
                 }
                 
-                // Auto-cargar RPC si no lo tiene (excepto en la cuota de adición donde se sube el unificado)
+                // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la cuota de adición)
                 String currentJson = informe.getSoportesJson();
-                if (!esCuotaAdicion && (currentJson == null || !currentJson.contains("\"file_rpc\""))) {
+                if (!esCuotaAdicion) {
                     java.util.List<com.combinacion.models.InformeSupervision> previos = informeService.listarPorContrato(informe.getContratoId());
                     if (previos != null && !previos.isEmpty()) {
+                        org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
+                        boolean foundRpc = currentObj.has("file_rpc");
+                        boolean foundMod = currentObj.has("file_modificacion");
+                        boolean foundSecop = currentObj.has("file_secop");
+                        
                         for (int i = previos.size() - 1; i >= 0; i--) {
                             if (previos.get(i).getId() == informe.getId()) continue; // Skip itself
                             String sJson = previos.get(i).getSoportesJson();
-                            if (sJson != null && sJson.contains("\"file_rpc\"")) {
+                            if (sJson != null && !sJson.isEmpty()) {
                                 try {
-                                    org.json.JSONObject soportesAnteriores = new org.json.JSONObject(sJson);
-                                    if (soportesAnteriores.has("file_rpc")) {
-                                        org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
-                                        org.json.JSONObject rpcData = soportesAnteriores.getJSONObject("file_rpc");
-                                        rpcData.put("needs_copy", true); // Flag para copiarlo físicamente
+                                    org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
+                                    if (!foundRpc && sAnteriores.has("file_rpc")) {
+                                        org.json.JSONObject rpcData = sAnteriores.getJSONObject("file_rpc");
+                                        rpcData.put("needs_copy", true);
                                         currentObj.put("file_rpc", rpcData);
-                                        informe.setSoportesJson(currentObj.toString());
-                                        break;
+                                        foundRpc = true;
+                                    }
+                                    if (!foundMod && sAnteriores.has("file_modificacion")) {
+                                        org.json.JSONObject modData = sAnteriores.getJSONObject("file_modificacion");
+                                        modData.put("needs_copy", true);
+                                        currentObj.put("file_modificacion", modData);
+                                        foundMod = true;
+                                    }
+                                    if (!foundSecop && sAnteriores.has("file_secop")) {
+                                        org.json.JSONObject secopData = sAnteriores.getJSONObject("file_secop");
+                                        secopData.put("needs_copy", true);
+                                        currentObj.put("file_secop", secopData);
+                                        foundSecop = true;
                                     }
                                 } catch (Exception e) {}
                             }
+                        }
+                        if (currentObj.length() > 0) {
+                            informe.setSoportesJson(currentObj.toString());
                         }
                     }
                 }
@@ -501,7 +534,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                 int cuotasNormales = contrato.getNumCuotasNumero();
                 int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
                     esCuotaAdicion = true;
                 }
             }
@@ -769,7 +802,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                 int cuotasNormales = contrato.getNumCuotasNumero();
                 int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                if (cuotasNormales > 0 && cuotaActual > cuotasNormales) {
                     esCuotaAdicion = true;
                 }
             }
