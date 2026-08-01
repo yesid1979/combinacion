@@ -76,9 +76,10 @@
                             if ("DEVUELTA".equals(accion) || "APROBADA PARA IMPRESION".equals(accion)) {
                                 try {
                                     String emailContratista = null;
+                                    String nombreContratista = "";
                                     String numCuota = "";
                                     String numContrato = "";
-                                    String sqlEmail = "SELECT c.correo, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
+                                    String sqlEmail = "SELECT c.correo, c.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
                                                       "JOIN contratos con ON i.contrato_id = con.id " +
                                                       "JOIN contratistas c ON con.contratista_id = c.id " +
                                                       "WHERE i.id = ?";
@@ -87,6 +88,7 @@
                                         try (java.sql.ResultSet rs = psEmail.executeQuery()) {
                                             if (rs.next()) {
                                                 emailContratista = rs.getString("correo");
+                                                nombreContratista = rs.getString("nombre");
                                                 numCuota = rs.getString("numero_cuota");
                                                 numContrato = rs.getString("numero_contrato");
                                             }
@@ -98,15 +100,15 @@
                                         String body;
                                         if ("DEVUELTA".equals(accion)) {
                                             subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido DEVUELTA";
-                                            body = "Estimado Contratista (Contrato " + numContrato + "),\n\n" +
-                                                   "Le informamos que su cuenta de cobro correspondiente a la cuota " + numCuota + " ha sido DEVUELTA con la siguiente observacion:\n\n" +
+                                            body = "Estimado(a) " + nombreContratista + " contratista del DAGJP,\n\n" +
+                                                   "Le informamos que su cuenta de cobro correspondiente a la cuota " + numCuota + " del Contrato No. " + numContrato + " ha sido DEVUELTA con la siguiente observacion:\n\n" +
                                                    observacion + "\n\n" +
                                                    "Por favor, ingrese a la plataforma para realizar las correcciones necesarias.\n\n" +
                                                    "Atentamente,\nGrupo de contratacion - DAGJP";
                                         } else {
                                             subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido APROBADA";
-                                            body = "Estimado Contratista (Contrato " + numContrato + "),\n\n" +
-                                                   "Nos complace informarle que su cuenta de cobro correspondiente a la cuota " + numCuota + " ha superado la revision exitosamente y ha sido APROBADA PARA IMPRESION.\n\n" +
+                                            body = "Estimado(a) " + nombreContratista + " contratista del DAGJP,\n\n" +
+                                                   "Nos complace informarle que su cuenta de cobro correspondiente a la cuota " + numCuota + " del Contrato No. " + numContrato + " ha superado la revision exitosamente y ha sido APROBADA PARA IMPRESION.\n\n" +
                                                    "Ya puede ingresar a la plataforma, descargar los formatos (Informe de Supervision y de Gestion), imprimirlos, firmarlos y continuar con el tramite correspondiente.\n\n" +
                                                    "Atentamente,\nGrupo de contratacion - DAGJP";
                                         }
