@@ -367,7 +367,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                     org.json.JSONObject newSoportes = new org.json.JSONObject();
                     boolean foundRpc = false, foundMod = false, foundSecop = false;
                     System.out.println("Auto-cargando soportes para cuota: " + siguienteCuota);
-                    for (int i = previos.size() - 1; i >= 0; i--) {
+                    for (int i = 0; i < previos.size(); i++) {
                         String sJson = previos.get(i).getSoportesJson();
                         System.out.println("Revisando previo cuota " + previos.get(i).getNumeroCuota() + " -> JSON: " + sJson);
                         if (sJson != null && !sJson.isEmpty()) {
@@ -381,20 +381,23 @@ public class InformeSupervisionServlet extends HttpServlet {
                                         foundRpc = true;
                                     }
                                 }
-                                if (!foundMod) {
-                                    org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
-                                    if (modData != null) {
-                                        modData.put("needs_copy", true);
-                                        newSoportes.put("file_modificacion", modData);
-                                        foundMod = true;
+                                boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0 && siguienteCuota > contrato.getNumCuotasNumero();
+                                if (esAdicionAvanzada) {
+                                    if (!foundMod) {
+                                        org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                        if (modData != null) {
+                                            modData.put("needs_copy", true);
+                                            newSoportes.put("file_modificacion", modData);
+                                            foundMod = true;
+                                        }
                                     }
-                                }
-                                if (!foundSecop) {
-                                    org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
-                                    if (secopData != null) {
-                                        secopData.put("needs_copy", true);
-                                        newSoportes.put("file_secop", secopData);
-                                        foundSecop = true;
+                                    if (!foundSecop) {
+                                        org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
+                                        if (secopData != null) {
+                                            secopData.put("needs_copy", true);
+                                            newSoportes.put("file_secop", secopData);
+                                            foundSecop = true;
+                                        }
                                     }
                                 }
                                 System.out.println("newSoportes actuales: " + newSoportes.toString());
@@ -486,7 +489,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                         boolean foundMod = currentObj.has("file_modificacion");
                         boolean foundSecop = currentObj.has("file_secop");
                         
-                        for (int i = previos.size() - 1; i >= 0; i--) {
+                        for (int i = 0; i < previos.size(); i++) {
                             if (previos.get(i).getId() == informe.getId()) continue; // Skip itself
                             String sJson = previos.get(i).getSoportesJson();
                             if (sJson != null && !sJson.isEmpty()) {
@@ -500,20 +503,24 @@ public class InformeSupervisionServlet extends HttpServlet {
                                             foundRpc = true;
                                         }
                                     }
-                                    if (!foundMod) {
-                                        org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
-                                        if (modData != null) {
-                                            modData.put("needs_copy", true);
-                                            currentObj.put("file_modificacion", modData);
-                                            foundMod = true;
+                                    int cuotaActualStr = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                                    boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0 && cuotaActualStr > contrato.getNumCuotasNumero();
+                                    if (esAdicionAvanzada) {
+                                        if (!foundMod) {
+                                            org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                            if (modData != null) {
+                                                modData.put("needs_copy", true);
+                                                currentObj.put("file_modificacion", modData);
+                                                foundMod = true;
+                                            }
                                         }
-                                    }
-                                    if (!foundSecop && !esPrimeraCuotaAdicion) {
-                                        org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
-                                        if (secopData != null) {
-                                            secopData.put("needs_copy", true);
-                                            currentObj.put("file_secop", secopData);
-                                            foundSecop = true;
+                                        if (!foundSecop && !esPrimeraCuotaAdicion) {
+                                            org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
+                                            if (secopData != null) {
+                                                secopData.put("needs_copy", true);
+                                                currentObj.put("file_secop", secopData);
+                                                foundSecop = true;
+                                            }
                                         }
                                     }
                                 } catch (Exception e) {}
@@ -884,11 +891,11 @@ public class InformeSupervisionServlet extends HttpServlet {
             // 4. Obtener/crear evidencias
             String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
             
-            // 4.1. Dar permisos públicos de lectura a la carpeta EVIDENCIAS
+            // 4.1. Dar permisos públicos de lectura a TODA la carpeta de la cuota
             try {
-                com.combinacion.services.GoogleDriveService.setPublicViewPermission(evidenciasFolderId);
+                com.combinacion.services.GoogleDriveService.setPublicViewPermission(cuotaFolderId);
             } catch (Exception ignore) {
-                System.err.println("Aviso: No se pudo asignar permisos publicos a la carpeta EVIDENCIAS: " + ignore.getMessage());
+                System.err.println("Aviso: No se pudo asignar permisos publicos a la carpeta CUOTA: " + ignore.getMessage());
             }
             
             // 4.5. Guardar la URL en la base de datos (apuntando a la carpeta EVIDENCIAS)
