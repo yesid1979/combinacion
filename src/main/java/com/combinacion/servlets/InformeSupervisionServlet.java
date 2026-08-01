@@ -353,16 +353,23 @@ public class InformeSupervisionServlet extends HttpServlet {
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 
-                boolean esPrimeraCuotaAdicion = ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) 
-                        && contrato.getNumCuotasNumero() > 0 
-                        && siguienteCuota == contrato.getNumCuotasNumero());
+                boolean esPrimeraCuotaAdicion = false;
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0) {
+                    int totalCuotas = contrato.getNumCuotasNumero();
+                int ultimaNormal = totalCuotas;
+                if (siguienteCuota == ultimaNormal) {
+                        esPrimeraCuotaAdicion = true;
+                    }
+                }
 
                 // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es la primera cuota de adicion
                 if(previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
                     org.json.JSONObject newSoportes = new org.json.JSONObject();
                     boolean foundRpc = false, foundMod = false, foundSecop = false;
+                    System.out.println("Auto-cargando soportes para cuota: " + siguienteCuota);
                     for (int i = previos.size() - 1; i >= 0; i--) {
                         String sJson = previos.get(i).getSoportesJson();
+                        System.out.println("Revisando previo cuota " + previos.get(i).getNumeroCuota() + " -> JSON: " + sJson);
                         if (sJson != null && !sJson.isEmpty()) {
                             try {
                                 org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
@@ -390,10 +397,14 @@ public class InformeSupervisionServlet extends HttpServlet {
                                         foundSecop = true;
                                     }
                                 }
-                            } catch (Exception e) {}
+                                System.out.println("newSoportes actuales: " + newSoportes.toString());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                     if (newSoportes.length() > 0) {
+                        System.out.println("FINAL PRECARGADOS: " + newSoportes.toString());
                         request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
                     }
                 }
@@ -456,10 +467,11 @@ public class InformeSupervisionServlet extends HttpServlet {
                 
                 // Determinar si es la PRIMERA cuota de adición para NO autocargar el RPC de las cuotas normales
                 boolean esPrimeraCuotaAdicion = false;
-                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
-                    int cuotasNormales = contrato.getNumCuotasNumero();
-                    int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                    if (cuotasNormales > 0 && cuotaActual == cuotasNormales) {
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0) {
+                    int totalCuotas = contrato.getNumCuotasNumero();
+                int ultimaNormal = totalCuotas;
+                int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                if (cuotaActual == ultimaNormal) {
                         esPrimeraCuotaAdicion = true;
                     }
                 }
@@ -480,7 +492,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                             if (sJson != null && !sJson.isEmpty()) {
                                 try {
                                     org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                    if (!foundRpc) {
+                                    if (!foundRpc && !esPrimeraCuotaAdicion) {
                                         org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
                                         if (rpcData != null) {
                                             rpcData.put("needs_copy", true);
@@ -496,7 +508,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                                             foundMod = true;
                                         }
                                     }
-                                    if (!foundSecop) {
+                                    if (!foundSecop && !esPrimeraCuotaAdicion) {
                                         org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
                                         if (secopData != null) {
                                             secopData.put("needs_copy", true);
@@ -796,13 +808,23 @@ public class InformeSupervisionServlet extends HttpServlet {
     
     private org.json.JSONObject getLatestFile(org.json.JSONObject soportes, String baseKey) {
         org.json.JSONObject latest = null;
-        if (soportes.has(baseKey)) {
-            latest = soportes.optJSONObject(baseKey);
-        }
-        int k = 1;
-        while (soportes.has(baseKey + "_" + k)) {
-            latest = soportes.optJSONObject(baseKey + "_" + k);
-            k++;
+        int maxVersion = -1;
+        
+        java.util.Iterator<String> keys = soportes.keys();
+        while (keys.hasNext()) {
+            String k = keys.next();
+            if (k.equals(baseKey) && maxVersion < 0) {
+                latest = soportes.optJSONObject(k);
+                maxVersion = 0;
+            } else if (k.startsWith(baseKey + "_")) {
+                try {
+                    int v = Integer.parseInt(k.substring(baseKey.length() + 1));
+                    if (v > maxVersion) {
+                        maxVersion = v;
+                        latest = soportes.optJSONObject(k);
+                    }
+                } catch (NumberFormatException e) {}
+            }
         }
         return latest;
     }
