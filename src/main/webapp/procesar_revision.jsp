@@ -72,6 +72,51 @@
                             // Auditoría del Sistema
                             com.combinacion.dao.AuditoriaDAO.registrar(u, "Cambio de Estado", "La cuenta de cobro ID " + idInforme + " pasó a estado: " + accion, request.getRemoteAddr());
                             
+                            // Notificación por correo al contratista si fue devuelta o aprobada
+                            if ("DEVUELTA".equals(accion) || "APROBADA PARA IMPRESION".equals(accion)) {
+                                try {
+                                    String emailContratista = null;
+                                    String numCuota = "";
+                                    String numContrato = "";
+                                    String sqlEmail = "SELECT c.correo, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
+                                                      "JOIN contratos con ON i.contrato_id = con.id " +
+                                                      "JOIN contratistas c ON con.contratista_id = c.id " +
+                                                      "WHERE i.id = ?";
+                                    try (PreparedStatement psEmail = conn.prepareStatement(sqlEmail)) {
+                                        psEmail.setInt(1, idInforme);
+                                        try (java.sql.ResultSet rs = psEmail.executeQuery()) {
+                                            if (rs.next()) {
+                                                emailContratista = rs.getString("correo");
+                                                numCuota = rs.getString("numero_cuota");
+                                                numContrato = rs.getString("numero_contrato");
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (emailContratista != null && !emailContratista.trim().isEmpty()) {
+                                        String subject;
+                                        String body;
+                                        if ("DEVUELTA".equals(accion)) {
+                                            subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido DEVUELTA";
+                                            body = "Estimado Contratista (Contrato " + numContrato + "),\n\n" +
+                                                   "Le informamos que su cuenta de cobro correspondiente a la cuota " + numCuota + " ha sido DEVUELTA con la siguiente observacion:\n\n" +
+                                                   observacion + "\n\n" +
+                                                   "Por favor, ingrese a la plataforma para realizar las correcciones necesarias.\n\n" +
+                                                   "Atentamente,\nGrupo de contratacion - DAGJP";
+                                        } else {
+                                            subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido APROBADA";
+                                            body = "Estimado Contratista (Contrato " + numContrato + "),\n\n" +
+                                                   "Nos complace informarle que su cuenta de cobro correspondiente a la cuota " + numCuota + " ha superado la revision exitosamente y ha sido APROBADA PARA IMPRESION.\n\n" +
+                                                   "Ya puede ingresar a la plataforma, descargar los formatos (Informe de Supervision y de Gestion), imprimirlos, firmarlos y continuar con el tramite correspondiente.\n\n" +
+                                                   "Atentamente,\nGrupo de contratacion - DAGJP";
+                                        }
+                                        com.combinacion.services.EmailService.sendEmail(emailContratista, subject, body);
+                                    }
+                                } catch (Exception ex) {
+                                    System.err.println("Error enviando email: " + ex.getMessage());
+                                }
+                            }
+                            
                             session.setAttribute("successMessage", "La cuenta de cobro fue actualizada a estado: " + accion);
                         } else {
                             session.setAttribute("error", "No se encontró la cuenta o no se pudo actualizar.");
