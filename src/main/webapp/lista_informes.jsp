@@ -1,6 +1,13 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.combinacion.dao.UsuarioDAO" %>
+<%@ page import="com.combinacion.models.Usuario" %>
+<%@ page import="java.util.List" %>
+<%
+    List<Usuario> revisoresList = new UsuarioDAO().listarRevisores();
+    request.setAttribute("revisoresList", revisoresList);
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -205,15 +212,11 @@
                             let mostrarBtnRevisar = false;
                             let esModalAdmin = false;
                             
-                            if (row.idRevisorAsignado == row.usuarioActualId && estado === 'RADICADA') {
+                            if (row.idRevisorAsignado == row.usuarioActualId && (estado === 'RADICADA' || estado === 'VISTO BUENO CONTRATACION')) {
                                 mostrarBtnRevisar = true;
                                 esModalAdmin = false;
                             } else if (esAdminCuentas) {
-                                if ((row.idRevisorAsignado === 0 || !row.idRevisorAsignado) && estado === 'RADICADA') {
-                                    mostrarBtnRevisar = true;
-                                    esModalAdmin = true;
-                                }
-                                if (estado === 'EN REVISION FINAL') {
+                                if (estado === 'RADICADA' || estado === 'EN REVISION FINAL') {
                                     mostrarBtnRevisar = true;
                                     esModalAdmin = true;
                                 }
@@ -257,13 +260,24 @@
         
         function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
             let opcionesHTML = '';
+            let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
+                <c:forEach var="r" items="${revisoresList}">
+                    <option value="${r.id}">${r.nombreCompleto}</option>
+                </c:forEach>`;
             
             if (esAdminCuentas) {
-                // Si es Contratación / Admin, tiene el poder de Aprobación Final
-                opcionesHTML = `
-                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                `;
+                if (estadoActual === 'RADICADA') {
+                    opcionesHTML = `
+                        <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else {
+                    opcionesHTML = `
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                }
             } else {
                 // Si es solo Revisor Básico, solo da el Visto Bueno previo
                 opcionesHTML = `
@@ -281,6 +295,12 @@
                             ` + opcionesHTML + `
                         </select>
                     </div>
+                    <div class="mb-3" id="div-revisor" style="display: none;">
+                        <label class="form-label text-start w-100 fw-bold text-primary">Seleccione el Revisor:</label>
+                        <select id="swal-revisor" class="form-select">
+                            ` + opcionesRevisores + `
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label text-start w-100">Observaciones (Obligatorio si devuelve):</label>
                         <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
@@ -289,14 +309,33 @@
                 showCancelButton: true,
                 confirmButtonText: 'Aplicar',
                 cancelButtonText: 'Cancelar',
+                didOpen: () => {
+                    const accionSelect = document.getElementById('swal-accion');
+                    const divRevisor = document.getElementById('div-revisor');
+                    
+                    accionSelect.addEventListener('change', () => {
+                        if (accionSelect.value === 'VISTO BUENO CONTRATACION') {
+                            divRevisor.style.display = 'block';
+                        } else {
+                            divRevisor.style.display = 'none';
+                        }
+                    });
+                    accionSelect.dispatchEvent(new Event('change'));
+                },
                 preConfirm: () => {
                     const accion = document.getElementById('swal-accion').value;
                     const obs = document.getElementById('swal-obs').value;
+                    const revisorId = document.getElementById('swal-revisor') ? document.getElementById('swal-revisor').value : '';
+                    
                     if (accion === 'DEVUELTA' && !obs.trim()) {
                         Swal.showValidationMessage('Debe escribir una observación para poder devolverla.');
                         return false;
                     }
-                    return { accion: accion, obs: obs };
+                    if (accion === 'VISTO BUENO CONTRATACION' && !revisorId) {
+                        Swal.showValidationMessage('Debe seleccionar un revisor.');
+                        return false;
+                    }
+                    return { accion: accion, obs: obs, revisorId: revisorId };
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -304,6 +343,14 @@
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = 'procesar_revision.jsp';
+                    
+                    if (result.value.revisorId) {
+                        const inputRevisor = document.createElement('input');
+                        inputRevisor.type = 'hidden';
+                        inputRevisor.name = 'revisor_id';
+                        inputRevisor.value = result.value.revisorId;
+                        form.appendChild(inputRevisor);
+                    }
                     
                     const inputId = document.createElement('input');
                     inputId.type = 'hidden';

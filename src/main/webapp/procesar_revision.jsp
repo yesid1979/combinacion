@@ -28,6 +28,7 @@
         String idStr = request.getParameter("id_informe");
         String accion = request.getParameter("accion");
         String observacion = request.getParameter("observacion");
+        String revisorIdStr = request.getParameter("revisor_id");
 
         if (idStr != null && accion != null) {
             int idInforme = 0;
@@ -53,11 +54,29 @@
                         }
                     }
 
-                    // Actualizar el estado
-                    String sql = "UPDATE informes_supervision SET estado_radicacion = ? WHERE id = ?";
+                    // Actualizar el estado y el revisor si aplica
+                    String sql = "UPDATE informes_supervision SET estado_radicacion = ?";
+                    boolean updateRevisor = false;
+                    int idRevisorNuevo = 0;
+                    if ("VISTO BUENO CONTRATACION".equals(accion) && revisorIdStr != null && !revisorIdStr.trim().isEmpty()) {
+                        try {
+                            idRevisorNuevo = Integer.parseInt(revisorIdStr);
+                            if (idRevisorNuevo > 0) {
+                                sql += ", id_revisor_asignado = ?";
+                                updateRevisor = true;
+                            }
+                        } catch (Exception e) {}
+                    }
+                    sql += " WHERE id = ?";
+                    
                     try (PreparedStatement ps = conn.prepareStatement(sql)) {
                         ps.setString(1, accion);
-                        ps.setInt(2, idInforme);
+                        if (updateRevisor) {
+                            ps.setInt(2, idRevisorNuevo);
+                            ps.setInt(3, idInforme);
+                        } else {
+                            ps.setInt(2, idInforme);
+                        }
                         
                         int affected = ps.executeUpdate();
                         if (affected > 0) {
