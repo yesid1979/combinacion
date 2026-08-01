@@ -1264,9 +1264,6 @@ public class InformeSupervisionServlet extends HttpServlet {
                             }
                             // Remover comentarios HTML (basura de Word)
                             joinedAct = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
-                            
-                            // Limpiar texto basura que haya quedado suelto como nodos de texto
-                            joinedAct = joinedAct.replaceAll("(?i)(mso-[a-zA-Z0-9\\-]+|font-family):[^;\">]+;?\"?>?", "");
                         } catch (Exception ex) {}
                     }
                     obj.put("actividad", joinedAct);
