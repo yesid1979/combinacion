@@ -1011,6 +1011,8 @@ public class InformeSupervisionServlet extends HttpServlet {
                         } catch (Exception e) {
                             targetFolderId = evidenciasFolderId;
                         }
+                    } else if (partName != null && (partName.equals("file_paz_salvo_orfeo") || partName.equals("file_paz_salvo_procesos"))) {
+                        targetFolderId = evidenciasFolderId;
                     }
                     
                     // Renombrar los archivos obligatorios segun la nomenclatura
@@ -1041,6 +1043,10 @@ public class InformeSupervisionServlet extends HttpServlet {
                             baseName = "10. CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto;
                         } else if ("file_certificado_dependientes".equals(partName)) {
                             baseName = "11. CERTIFICADO DEPENDIENTES - " + nombreCorto;
+                        } else if ("file_paz_salvo_orfeo".equals(partName)) {
+                            baseName = "Paz y salvo orfeo Cuota No. " + cuotaNum;
+                        } else if ("file_paz_salvo_procesos".equals(partName)) {
+                            baseName = "Paz y salvo procesos Cuota No. " + cuotaNum;
                         }
                         
                         submittedFileName = baseName + ext;

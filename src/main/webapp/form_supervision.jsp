@@ -421,6 +421,14 @@
                                     <label class="form-label text-primary fw-bold">Modificación No 001</label>
                                     <input type="file" class="form-control border-primary" name="file_modificacion" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Paz y salvo Orfeo (Opcional)</label>
+                                    <input type="file" class="form-control" name="file_paz_salvo_orfeo" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Paz y salvo Gestión de Procesos (Opcional)</label>
+                                    <input type="file" class="form-control" name="file_paz_salvo_procesos" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
+                                </div>
                             </div>
                         </div>
 
