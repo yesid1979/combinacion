@@ -58,6 +58,7 @@
                 <div class="col-auto">
                     <div class="avatar-section">
                         <img src="${usuario.fotoUrl != null ? pageContext.request.contextPath.concat('/').concat(usuario.fotoUrl) : 'https://ui-avatars.com/api/?name='.concat(nombreUsuario).concat('&background=0D8ABC&color=fff&size=150')}" 
+                             onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${nombreUsuario}&background=0D8ABC&color=fff&size=150';"
                              alt="Foto" class="avatar-img" id="profileImagePreview">
                         <label for="profileImageInput" class="avatar-overlay" title="Cambiar foto">
                             <i class="bi bi-camera-fill"></i>
@@ -138,7 +139,15 @@
                     <div class="section-header text-success">
                         <i class="bi bi-pen me-2"></i> Mi Firma para Documentos
                     </div>
-                    <p class="text-muted small">Sube una imagen de tu firma (preferiblemente con fondo blanco o transparente) para que sea incrustada automáticamente al generar los informes de supervisión.</p>
+                    <p class="text-muted small mb-2">Sube una imagen de tu firma (preferiblemente con fondo blanco o transparente) para que sea incrustada automáticamente al generar los informes de supervisión.</p>
+                    <div class="alert alert-secondary border-0 bg-light mb-3 py-2 px-3 small">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="authFirmaCheck" ${not empty sessionScope.usuario.firmaUrl ? 'checked disabled' : ''}>
+                            <label class="form-check-label fw-bold text-dark" for="authFirmaCheck" style="font-size: 0.8rem; line-height: 1.3;">
+                                Autorizo el uso de mi firma digitalizada para la suscripción y generación automática de los informes y cuentas tramitados en este sistema, en concordancia con la Ley 527 de 1999 (Comercio Electrónico) y la Ley 1581 de 2012 (Protección de Datos Personales).
+                            </label>
+                        </div>
+                    </div>
                     <div class="d-flex align-items-center">
                         <div id="dropFirmaArea" class="me-4" style="width: 250px; height: 120px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa; position: relative; cursor: pointer;">
                             <c:choose>
@@ -290,6 +299,16 @@
 
         // Subida de Firma
         function uploadFirma() {
+            if (!$('#authFirmaCheck').is(':checked')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Autorización requerida',
+                    text: 'Debes marcar la casilla autorizando el uso legal de tu firma antes de poder subirla.',
+                    confirmButtonColor: '#004884'
+                });
+                $('#firmaImageInput').val(''); // Limpiar el input
+                return;
+            }
             var fileInput = $('#firmaImageInput')[0];
             if (fileInput.files.length > 0) {
                 var file = fileInput.files[0];

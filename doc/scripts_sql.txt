@@ -173,9 +173,8 @@ FROM (
 ) sub
 WHERE contratistas.id = sub.id;
 
-
-
-
-
-
-
+-- 12. Devolver informe atascado en estado RADICADA a BORRADOR
+-- Solicitado: 01-08-2026
+UPDATE informes_supervision 
+SET estado_radicacion = 'BORRADOR' 
+WHERE numero_cuota = '6' AND contrato_id = 2055;

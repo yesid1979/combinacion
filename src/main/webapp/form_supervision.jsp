@@ -215,6 +215,8 @@
 
                         <!-- Tab 2: Jurídico -->
                         <div class="tab-pane fade" id="juridico" role="tabpanel">
+                            <c:set var="mostrarTextosAuto" value="${contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero}" />
+                            <!-- DEBUG: siguienteCuota=${siguienteCuota}, contrato.numCuotasNumero=${contrato.numCuotasNumero}, mostrarTextosAuto=${mostrarTextosAuto} -->
                             <div class="section-title">Informe Jurídico</div>
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -237,7 +239,6 @@
                                     <label class="form-label">Terminación anticipada</label>
                                     <input type="text" class="form-control" name="terminacion_anticipada" value="${empty informe.terminacionAnticipada ? 'N/A' : informe.terminacionAnticipada}" ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <c:set var="mostrarTextosAuto" value="${contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero && siguienteCuota < totalCuotas}" />
                                 <div class="col-md-6">
                                     <label class="form-label">Adición</label>
                                     <textarea class="form-control" name="adiciones" rows="2" ${readonly ? 'readonly' : ''}>${informe != null && not empty informe.adiciones && informe.adiciones != 'N/A' ? informe.adiciones : (mostrarTextosAuto && informeAuto != null && not empty informeAuto.adiciones ? informeAuto.adiciones : 'N/A')}</textarea>
@@ -342,7 +343,7 @@
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Observaciones al Informe Técnico</label>
-                                    <textarea class="form-control" name="observaciones_tecnicas" rows="2" placeholder="Observaciones adicionales..." required ${readonly ? 'readonly' : ''}>${informe.observacionesTecnicas}</textarea>
+                                    <textarea class="form-control" name="observaciones_tecnicas" rows="2" placeholder="Observaciones adicionales..." required ${readonly ? 'readonly' : ''}>${empty informe.observacionesTecnicas ? 'N/A' : informe.observacionesTecnicas}</textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Recomendaciones para el Contratista</label>
@@ -411,7 +412,7 @@
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">Seguridad Social</label>
-                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : 'required'}>
                                 </div>
                                  <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">RPC (Registro Presupuestal)</label>
@@ -429,6 +430,10 @@
                                     <label class="form-label">Paz y salvo Gestión de Procesos (Opcional)</label>
                                     <input type="file" class="form-control" name="file_paz_salvo_procesos" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Paz y salvo Creaciones (Opcional)</label>
+                                    <input type="file" class="form-control" name="file_paz_salvo_creaciones" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
+                                </div>
                             </div>
                         </div>
 
@@ -442,27 +447,35 @@
                         <div class="card mt-4 border-primary bg-light">
                             <div class="card-body">
                                 <c:choose>
-                                    <c:when test="${esBorradorDevuelta}">
-                                        <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
-                                        <p class="card-text text-muted small">Seleccione la persona encargada de revisar su cuenta y haga clic en Radicar.</p>
+                                    <c:when test="${empty informe.id}">
+                                        <h5 class="card-title text-primary"><i class="bi bi-info-circle"></i> Radicación</h5>
+                                        <p class="card-text text-muted">Debes **Guardar el Informe** por primera vez antes de poder seleccionar un revisor y radicar la cuenta de cobro.</p>
                                     </c:when>
                                     <c:otherwise>
-                                        <h5 class="card-title text-primary"><i class="bi bi-person-gear"></i> Asignar / Cambiar Revisor</h5>
-                                        <p class="card-text text-muted small">Como administrador, puedes reasignar esta cuenta a otro revisor sin cambiar su estado.</p>
+                                        <c:choose>
+                                            <c:when test="${esBorradorDevuelta}">
+                                                <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
+                                                <p class="card-text text-muted small">Seleccione la persona encargada de revisar su cuenta y haga clic en Radicar.</p>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <h5 class="card-title text-primary"><i class="bi bi-person-gear"></i> Asignar / Cambiar Revisor</h5>
+                                                <p class="card-text text-muted small">Como administrador, puedes reasignar esta cuenta a otro revisor sin cambiar su estado.</p>
+                                            </c:otherwise>
+                                        </c:choose>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Asignar a Revisor:</label>
+                                                <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
+                                                    <option value="">-- Seleccione un Revisor --</option>
+                                                    <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                                    <c:forEach var="rev" items="${listaRevisores}">
+                                                        <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </c:otherwise>
                                 </c:choose>
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Asignar a Revisor:</label>
-                                        <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
-                                            <option value="">-- Seleccione un Revisor --</option>
-                                            <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
-                                            <c:forEach var="rev" items="${listaRevisores}">
-                                                <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                </div>
                                 <input type="hidden" name="radicar" id="radicar_input" value="false">
                             </div>
                         </div>
@@ -487,6 +500,29 @@
                                     </c:otherwise>
                                 </c:choose>
                             </c:if>
+                        </div>
+                    </c:if>
+                    
+                    <!-- Sección de Documentos Generados (solo si ya existe el informe) -->
+                    <c:if test="${not empty informe.id}">
+                        <div class="card mt-4 border-success bg-light shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-success fw-bold"><i class="bi bi-file-earmark-check"></i> Documentos Generados por el Sistema</h5>
+                                <p class="card-text text-muted small">Descargue o previsualice los documentos generados automáticamente con la información actual de esta cuenta.</p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <c:if test="${contrato.ivaSiNo != 'SI'}">
+                                        <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=ds&id=${informe.id}" class="btn btn-outline-success" target="_blank">
+                                            <i class="bi bi-file-earmark-excel"></i> Cuenta de Cobro (Excel)
+                                        </a>
+                                    </c:if>
+                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=supervision&id=${informe.id}" class="btn btn-outline-danger" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf"></i> Informe de Supervisión (PDF)
+                                    </a>
+                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=gestion&id=${informe.id}" class="btn btn-outline-danger" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf"></i> Informe de Gestión (PDF)
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </c:if>
                     
@@ -538,13 +574,22 @@
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                         <c:if test="${not readonly}">
-                            <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm">
+                            <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm" onclick="document.getElementById('radicar_input').value='false'; return true;">
                                 <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe'}
                             </button>
                             <c:if test="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}">
-                                <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
-                                    <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
-                                </button>
+                                <c:choose>
+                                    <c:when test="${empty informe.id}">
+                                        <button type="button" class="btn btn-secondary px-5 fw-bold shadow-sm" disabled title="Guarde el informe primero para poder radicarlo">
+                                            <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
+                                        </button>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
+                                            <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
                         </c:if>
                         <%-- El botón de imprimir ha sido removido a petición del usuario --%>
@@ -597,22 +642,31 @@
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                 var esAdicion = "${contrato.adicionSiNo}".toLowerCase() === "si";
-                var esCuotaAdicion = (esAdicion && parseInt(cuotaStr) >= cuotasNormales);
+                
+                var esFirmaAdicion = (esAdicion && parseInt(cuotaStr) === cuotasNormales);
+                var esCuotaAdicionPosterior = (esAdicion && parseInt(cuotaStr) > cuotasNormales);
 
                 if (cuotaStr == "1") {
                     $('.req-cuota-1').show();
                     $('.req-cuota-adicion-only').hide();
                     $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
-                } else if (esCuotaAdicion) {
+                } else if (esFirmaAdicion) {
                     $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').not('[name="file_secop"]').val('').prop('required', false);
+                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
                     
                     $('.req-cuota-adicion-only').show();
                     $('input[name="file_secop"]').closest('div').show();
+                    $('input[name="file_ficha_tecnica"]').closest('div').show();
                     
                     // Hacer requeridos los de adicion
                     $('input[name="file_modificacion"]').prop('required', true);
                     $('input[name="file_secop"]').prop('required', true);
+                    $('input[name="file_ficha_tecnica"]').prop('required', true);
+                } else if (esCuotaAdicionPosterior) {
+                    $('.req-cuota-1').hide();
+                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
+                    $('.req-cuota-adicion-only').hide();
+                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
                 } else {
                     $('.req-cuota-1').hide();
                     $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
@@ -719,14 +773,30 @@
             }
 
             $(document).on('click', '.btn-eliminar-soporte', function() {
-                if (confirm('¿Está seguro de eliminar este documento? Esta acción se aplicará definitivamente al presionar "Guardar Borrador".')) {
-                    var key = $(this).data('key');
-                    if (typeof soportesObj !== 'undefined' && soportesObj[key]) {
-                        delete soportesObj[key];
-                        $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
+                var $btn = $(this);
+                Swal.fire({
+                    title: '¿Está seguro de eliminar este documento?',
+                    text: 'Esta acción aplicará los cambios al presionar "Guardar Borrador".',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash"></i> Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var key = $btn.data('key');
+                        if (typeof soportesObj !== 'undefined' && soportesObj[key]) {
+                            delete soportesObj[key];
+                            $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
+                        }
+                        var $ui = $('#soporte-ui-' + key);
+                        var $container = $ui.parent();
+                        $container.find('label .badge').remove();
+                        $ui.fadeOut(function() { $(this).remove(); });
+                        setTimeout(actualizarAsteriscosArchivos, 100);
                     }
-                    $('#soporte-ui-' + key).fadeOut(function() { $(this).remove(); });
-                }
+                });
             });
         });
 
@@ -925,6 +995,31 @@
                                 }
                                 reader.readAsDataURL(file);
                             }
+                        },
+                        onPaste: function (e) {
+                            var clipboardData = (e.originalEvent || e).clipboardData || window.clipboardData;
+                            var html = clipboardData.getData('text/html');
+                            // Si detectamos basura de Word, la limpiamos antes de pegarla
+                            if (html && (html.indexOf('mso-') !== -1 || html.indexOf('class="Mso') !== -1)) {
+                                e.preventDefault();
+                                var temp = document.createElement("div");
+                                temp.innerHTML = html;
+                                var allNodes = temp.getElementsByTagName("*");
+                                for (var k = 0, max = allNodes.length; k < max; k++) {
+                                    var node = allNodes[k];
+                                    if(node) {
+                                        node.removeAttribute("style");
+                                        node.removeAttribute("class");
+                                        node.removeAttribute("lang");
+                                    }
+                                }
+                                var cleanHtml = temp.innerHTML;
+                                // Remover comentarios XML de Word
+                                cleanHtml = cleanHtml.replace(/<!--[\s\S]*?-->/g, "");
+                                setTimeout(function () {
+                                    $(textarea).summernote('pasteHTML', cleanHtml);
+                                }, 10);
+                            }
                         }
                     }
                 });
@@ -996,7 +1091,7 @@
                 
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Â¡Faltan datos!',
+                    title: '¡Faltan datos!',
                     text: 'Por favor, diligencia todos los campos obligatorios antes de guardar el informe.',
                     confirmButtonColor: '#007bff'
                 }).then(() => {
@@ -1186,7 +1281,7 @@
                     var currentPro = $('textarea[name="prorrogas"]').val().trim();
                     var currentMod = $('textarea[name="modificaciones"]').val().trim();
 
-                    if (cuotasNormales > 0 && cuota >= cuotasNormales && cuota < cuotaFinal) {
+                    if (cuotasNormales > 0 && cuota >= cuotasNormales) {
                         if (currentAd === 'N/A' || currentAd === '') $('textarea[name="adiciones"]').val(adicionesAuto);
                         if (currentPro === 'N/A' || currentPro === '') $('textarea[name="prorrogas"]').val(prorrogasAuto);
                         if (currentMod === 'N/A' || currentMod === '') $('textarea[name="modificaciones"]').val(modificacionesAuto);

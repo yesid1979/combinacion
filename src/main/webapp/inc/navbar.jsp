@@ -111,7 +111,7 @@
                                href="#" id="userDrop" role="button" data-bs-toggle="dropdown" style="min-height: 50px;">
                                 <c:choose>
                                     <c:when test="${not empty sessionScope.usuario.fotoUrl}">
-                                        <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" 
+                                        <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${sessionScope.nombreUsuario}&background=0D8ABC&color=fff&size=38';"
                                              alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; object-fit: cover; object-position: 50% 15%; border: 2px solid #fff; display: block;">
                                     </c:when>
                                     <c:otherwise>

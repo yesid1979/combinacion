@@ -200,7 +200,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
-                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, soportes_json = ?, estado_radicacion = ?, id_revisor_asignado = ? " +
+                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -234,14 +234,13 @@ public class InformeSupervisionDAO {
             ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
             ps.setString(27, info.getUrlDriveEvidencias());
             ps.setString(28, info.getConsecutivoCobro());
-            ps.setString(29, info.getSoportesJson());
-            ps.setString(30, info.getEstadoRadicacion());
+            ps.setString(29, info.getEstadoRadicacion());
             if (info.getIdRevisorAsignado() != null) {
-                ps.setInt(31, info.getIdRevisorAsignado());
+                ps.setInt(30, info.getIdRevisorAsignado());
             } else {
-                ps.setNull(31, Types.INTEGER);
+                ps.setNull(30, Types.INTEGER);
             }
-            ps.setInt(32, info.getId());
+            ps.setInt(31, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;

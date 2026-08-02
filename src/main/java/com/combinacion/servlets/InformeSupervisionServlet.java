@@ -45,6 +45,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "download":
                 descargarInforme(request, response);
                 break;
+            case "descargar_doc":
+                descargarArchivoDirecto(request, response);
+                break;
             case "edit":
                 mostrarFormularioEdicion(request, response);
                 break;
@@ -541,11 +544,74 @@ public class InformeSupervisionServlet extends HttpServlet {
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
-    private void descargarInforme(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    private void descargarArchivoDirecto(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        String tipo = request.getParameter("tipo");
+        if (idStr == null || idStr.isEmpty() || tipo == null) return;
+        
+        InformeSupervision informe = informeService.obtenerPorId(Integer.parseInt(idStr));
+        if (informe == null) return;
+        Contrato contrato = informeService.obtenerContrato(informe.getContratoId());
+        
+        java.io.File file = null;
+        String fileName = "";
+        String mime = "";
+        boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+        
         try {
-            int id = ParseUtils.parseInt(request.getParameter("id"));
-            InformeSupervision informe = informeService.obtenerPorId(id);
+            if ("ds".equals(tipo)) {
+                if (tieneIva) return;
+                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, getServletContext().getRealPath("/"));
+                file = new java.io.File(xlsxPath);
+                fileName = "DS_Cuota_" + informe.getNumeroCuota() + ".xlsx";
+                mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            } else if ("supervision".equals(tipo)) {
+                String path = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
+                java.io.File docx = new java.io.File(path);
+                String pdfPath = path.replaceAll("(?i)\\.docx$", ".pdf");
+                file = new java.io.File(pdfPath);
+                com.combinacion.util.PdfGenerator.convertToPdf(docx, file);
+                fileName = "Informe_Supervision_Cuota_" + informe.getNumeroCuota() + ".pdf";
+                mime = "application/pdf";
+            } else if ("gestion".equals(tipo)) {
+                String path = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
+                java.io.File docx = new java.io.File(path);
+                String pdfPath = path.replaceAll("(?i)\\.docx$", ".pdf");
+                file = new java.io.File(pdfPath);
+                com.combinacion.util.PdfGenerator.convertToPdf(docx, file);
+                fileName = "Informe_Gestion_Cuota_" + informe.getNumeroCuota() + ".pdf";
+                mime = "application/pdf";
+            }
+            
+            if (file != null && file.exists()) {
+                response.setContentType(mime);
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(file); java.io.OutputStream os = response.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
+                }
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "No se pudo generar el documento solicitado.");
+            }
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando documento: " + e.getMessage());
+        }
+    }
+
+    private void descargarInforme(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID de informe no proporcionado.");
+            return;
+        }
+
+        try {
+            int informeId = com.combinacion.util.ParseUtils.parseInt(idStr);
+            InformeSupervision informe = informeService.obtenerPorId(informeId);
             if (informe == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Informe no encontrado.");
                 return;
@@ -597,7 +663,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                 gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
             }
             
-            // Archivo DOCX temporal
+            // Archivo DOCX temporal Archivo DOCX temporal
             String filePathDocx = SupervisionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
             File docxFile = new File(filePathDocx);
             
@@ -913,9 +979,9 @@ public class InformeSupervisionServlet extends HttpServlet {
                 xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
                 gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
             } else if (esCuotaAdicion) {
-                docxName = "4. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "12. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
             } else {
                 docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
                 xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
@@ -972,26 +1038,86 @@ public class InformeSupervisionServlet extends HttpServlet {
             if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                 try { 
                     soportes = new org.json.JSONObject(informe.getSoportesJson());
-                    
-                    // Procesar archivos marcados para copia física
-                    java.util.Iterator<String> keys = soportes.keys();
-                    while (keys.hasNext()) {
-                        String key = keys.next();
-                        org.json.JSONObject fileObj = soportes.getJSONObject(key);
-                        if (fileObj.optBoolean("needs_copy", false)) {
-                            try {
-                                String oldId = fileObj.getString("id");
-                                String newName = fileObj.getString("name");
-                                String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName, cuotaFolderId);
-                                fileObj.put("id", newId);
-                                fileObj.put("url", "https://drive.google.com/file/d/" + newId + "/view");
-                                fileObj.remove("needs_copy");
-                            } catch (Exception e) {
-                                System.err.println("Error copying file in drive: " + e.getMessage());
+                } catch (Exception ignore) {}
+            }
+            
+            // LOGICA AUTOMATICA DE HERENCIA PARA ADICIONES
+            boolean esAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo());
+            boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null && informe.getNumeroCuota().equals(String.valueOf(contrato.getNumCuotasNumero())));
+            boolean esCuotaAdicionPosterior = (esAdicion && informe.getNumeroCuota() != null && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato.getNumCuotasNumero());
+
+            if (esFirmaAdicion) {
+                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
+                for (com.combinacion.models.InformeSupervision inf : informes) {
+                    if ("1".equals(inf.getNumeroCuota()) && inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
+                        try {
+                            org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
+                            String[] keys = {"file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"};
+                            for (String k : keys) {
+                                if (sop.has(k) && !soportes.has(k)) {
+                                    org.json.JSONObject fileObj = sop.getJSONObject(k);
+                                    fileObj.put("needs_copy", true);
+                                    soportes.put(k, fileObj);
+                                }
+                            }
+                        } catch (Exception e) {}
+                        break;
+                    }
+                }
+            } else if (esCuotaAdicionPosterior) {
+                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
+                for (com.combinacion.models.InformeSupervision inf : informes) {
+                    if (String.valueOf(contrato.getNumCuotasNumero()).equals(inf.getNumeroCuota()) && inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
+                        try {
+                            org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
+                            String[] keys = {"file_rpc", "file_modificacion", "file_secop", "file_ficha_tecnica", "file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"};
+                            for (String k : keys) {
+                                if (sop.has(k) && !soportes.has(k)) {
+                                    org.json.JSONObject fileObj = sop.getJSONObject(k);
+                                    fileObj.put("needs_copy", true);
+                                    soportes.put(k, fileObj);
+                                }
+                            }
+                        } catch (Exception e) {}
+                        break;
+                    }
+                }
+            }
+            
+            // Procesar archivos marcados para copia física (tanto los que venían en JSON como los heredados)
+            java.util.Iterator<String> iterKeys = soportes.keys();
+            while (iterKeys.hasNext()) {
+                String key = iterKeys.next();
+                org.json.JSONObject fileObj = soportes.getJSONObject(key);
+                if (fileObj.optBoolean("needs_copy", false)) {
+                    try {
+                        String oldId = fileObj.getString("id");
+                        String newName = fileObj.getString("name");
+                        
+                        // Renombrar los archivos heredados si estamos en la cuota de adición (Cuota 4)
+                        if (esFirmaAdicion) {
+                            if ("file_cedula".equals(key)) {
+                                newName = "7. CEDULA - " + nombreCorto + ".pdf";
+                            } else if ("file_rut".equals(key)) {
+                                newName = "8. RUT - " + nombreCorto + ".pdf";
+                            } else if ("file_correccion_monetaria".equals(key)) {
+                                newName = "10. CERTIFICACION CORRECCION MONETARIA - " + nombreCorto + ".pdf";
+                            } else if ("file_medicina_prepagada".equals(key)) {
+                                newName = "11. CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto + ".pdf";
+                            } else if ("file_certificado_dependientes".equals(key)) {
+                                newName = "12. CERTIFICADO DEPENDIENTES - " + nombreCorto + ".pdf";
                             }
                         }
+                        
+                        String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName, cuotaFolderId);
+                        fileObj.put("name", newName);
+                        fileObj.put("id", newId);
+                        fileObj.put("url", "https://drive.google.com/file/d/" + newId + "/view");
+                        fileObj.remove("needs_copy");
+                    } catch (Exception e) {
+                        System.err.println("Error copying file in drive: " + e.getMessage());
                     }
-                } catch (Exception ignore) {}
+                }
             }
             
             java.io.File tempSegSoc = null;
@@ -1011,7 +1137,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                         } catch (Exception e) {
                             targetFolderId = evidenciasFolderId;
                         }
-                    } else if (partName != null && (partName.equals("file_paz_salvo_orfeo") || partName.equals("file_paz_salvo_procesos"))) {
+                    } else if (partName != null && (partName.equals("file_paz_salvo_orfeo") || partName.equals("file_paz_salvo_procesos") || partName.equals("file_paz_salvo_creaciones"))) {
                         targetFolderId = evidenciasFolderId;
                     }
                     
@@ -1024,29 +1150,31 @@ public class InformeSupervisionServlet extends HttpServlet {
                         if ("file_rpc".equals(partName)) {
                             baseName = "1. RPC - " + nombreCorto;
                         } else if ("file_modificacion".equals(partName)) {
-                            baseName = "2. MODIFICACION No 001 - " + nombreCorto;
+                            baseName = "2. OTROSI - " + nombreCorto;
                         } else if ("file_factura".equals(partName)) {
-                            baseName = (esCuota1 || esCuotaAdicion ? "3." : "2.") + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "4." : (esCuota1 ? "2." : "2.")) + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
                         } else if ("file_secop".equals(partName)) {
-                            baseName = (esCuotaAdicion ? "3." : "2.") + " CONTRATO SECOP II - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "3. CONTRATO Y PANTALLAZO SECOP - " : "2. CONTRATO SECOP II - ") + nombreCorto;
                         } else if ("file_ficha_tecnica".equals(partName)) {
-                            baseName = "4. FICHA TECNICA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "5." : "4.") + " FICHA TECNICA - " + nombreCorto;
                         } else if ("file_cedula".equals(partName)) {
-                            baseName = "6. CEDULA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "7." : "6.") + " CEDULA - " + nombreCorto;
                         } else if ("file_rut".equals(partName)) {
-                            baseName = "7. RUT - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "8." : "7.") + " RUT - " + nombreCorto;
                         } else if ("file_seguridad_social".equals(partName)) {
-                            baseName = (esCuota1 ? "8." : (esCuotaAdicion ? "5." : "4.")) + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuota1 ? "8." : (esCuotaAdicion ? "9." : "4.")) + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
                         } else if ("file_correccion_monetaria".equals(partName)) {
-                            baseName = "9. CERTIFICACION CORRECCION MONETARIA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "10." : "9.") + " CERTIFICACION CORRECCION MONETARIA - " + nombreCorto;
                         } else if ("file_medicina_prepagada".equals(partName)) {
-                            baseName = "10. CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "11." : "10.") + " CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto;
                         } else if ("file_certificado_dependientes".equals(partName)) {
-                            baseName = "11. CERTIFICADO DEPENDIENTES - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "12." : "11.") + " CERTIFICADO DEPENDIENTES - " + nombreCorto;
                         } else if ("file_paz_salvo_orfeo".equals(partName)) {
                             baseName = "Paz y salvo orfeo Cuota No. " + cuotaNum;
                         } else if ("file_paz_salvo_procesos".equals(partName)) {
                             baseName = "Paz y salvo procesos Cuota No. " + cuotaNum;
+                        } else if ("file_paz_salvo_creaciones".equals(partName)) {
+                            baseName = "Paz y salvo creaciones Cuota No. " + cuotaNum;
                         }
                         
                         submittedFileName = baseName + ext;
@@ -1240,7 +1368,20 @@ public class InformeSupervisionServlet extends HttpServlet {
         
         String conceptoJson = r.getParameter("concepto_supervisor_json");
         if (conceptoJson != null && !conceptoJson.isEmpty()) {
-            f.conceptoSupervisor = conceptoJson;
+            try {
+                org.json.JSONArray arr = new org.json.JSONArray(conceptoJson);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject obj = arr.getJSONObject(i);
+                    if (obj.has("actividad")) {
+                        String joinedAct = obj.getString("actividad");
+                        joinedAct = cleanWordHtml(joinedAct);
+                        obj.put("actividad", joinedAct);
+                    }
+                }
+                f.conceptoSupervisor = arr.toString();
+            } catch (Exception ex) {
+                f.conceptoSupervisor = conceptoJson;
+            }
         } else {
             int count = ParseUtils.parseInt(r.getParameter("obligaciones_count"));
             if (count > 0) {
@@ -1252,25 +1393,7 @@ public class InformeSupervisionServlet extends HttpServlet {
                     String joinedAct = "";
                     if (acts != null) {
                         joinedAct = String.join("\n", acts);
-                        try {
-                            org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(joinedAct);
-                            for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
-                                String style = e.attr("style");
-                                if (style != null && !style.isEmpty()) {
-                                    // Limpiar basura de Word de manera segura dentro del atributo
-                                    style = style.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;]+;?", "");
-                                    style = style.replaceAll("(?i)font-family:[^;]+;?", "");
-                                    style = style.replaceAll("(?i)font-size:[^;]+;?", "");
-                                    style = style.replaceAll("(?i)line-height:[^;]+;?", "");
-                                    if (style.trim().isEmpty()) e.removeAttr("style");
-                                    else e.attr("style", style.trim());
-                                }
-                                e.removeAttr("class");
-                                e.removeAttr("lang");
-                            }
-                            // Remover comentarios HTML (basura de Word)
-                            joinedAct = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
-                        } catch (Exception ex) {}
+                        joinedAct = cleanWordHtml(joinedAct);
                     }
                     obj.put("actividad", joinedAct);
                     arr.put(obj);
@@ -1300,6 +1423,31 @@ public class InformeSupervisionServlet extends HttpServlet {
         }
         
         return f;
+    }
+
+    private String cleanWordHtml(String html) {
+        if (html == null || html.isEmpty()) return html;
+        try {
+            org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(html);
+            for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
+                String style = e.attr("style");
+                if (style != null && !style.isEmpty()) {
+                    // Limpiar basura de Word de manera segura dentro del atributo
+                    style = style.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;]+;?", "");
+                    style = style.replaceAll("(?i)font-family:[^;]+;?", "");
+                    style = style.replaceAll("(?i)font-size:[^;]+;?", "");
+                    style = style.replaceAll("(?i)line-height:[^;]+;?", "");
+                    if (style.trim().isEmpty()) e.removeAttr("style");
+                    else e.attr("style", style.trim());
+                }
+                e.removeAttr("class");
+                e.removeAttr("lang");
+            }
+            // Remover comentarios HTML (basura de Word)
+            return docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
+        } catch (Exception ex) {
+            return html;
+        }
     }
 
     private void poblarTextosModificacion(Contrato contrato, InformeSupervision informe) {

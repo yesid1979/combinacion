@@ -139,6 +139,7 @@ public class AuthService {
             case "downloadzipdesignacion":
             case "export":
             case "print":
+            case "descargar_doc":
                 return modulo + "_VER";
             case "new":
             case "insert":
