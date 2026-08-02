@@ -216,7 +216,11 @@
                                 mostrarBtnRevisar = true;
                                 esModalAdmin = false;
                             } else if (esAdminCuentas) {
-                                if (estado === 'RADICADA' || estado === 'EN REVISION FINAL') {
+                                // Contratación interviene si:
+                                // 1. Ya pasó por el supervisor (EN REVISION FINAL)
+                                // 2. O si se radicó (RADICADA) pero NO tiene un revisor asignado (idRevisorAsignado es nulo, vacío o 0)
+                                let sinRevisor = (!row.idRevisorAsignado || row.idRevisorAsignado === 0 || row.idRevisorAsignado === '0');
+                                if (estado === 'EN REVISION FINAL' || (estado === 'RADICADA' && sinRevisor)) {
                                     mostrarBtnRevisar = true;
                                     esModalAdmin = true;
                                 }
