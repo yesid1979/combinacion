@@ -589,6 +589,31 @@
                         <a href="informes${not empty modo ? '?modo='.concat(modo) : ''}" class="btn btn-secondary px-4 shadow-sm">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
+                        
+                        <%-- Lógica del botón Revisar (Idéntica a la de la lista) --%>
+                        <c:set var="esAdmin" value="${sessionScope.usuario != null and (sessionScope.usuario.tienePermiso('ADMIN_CUENTAS') or sessionScope.usuario.tienePermiso('REVISION_CUENTAS_ADMIN'))}" />
+                        <c:set var="esRevisorAsignado" value="${sessionScope.usuario != null and informe.idRevisorAsignado == sessionScope.usuario.id}" />
+                        <c:set var="sinRevisor" value="${empty informe.idRevisorAsignado or informe.idRevisorAsignado == 0}" />
+                        
+                        <c:set var="mostrarBtnRevisar" value="false" />
+                        <c:set var="esModalAdmin" value="false" />
+                        
+                        <c:if test="${esRevisorAsignado and (informe.estadoRadicacion == 'RADICADA' or informe.estadoRadicacion == 'VISTO BUENO CONTRATACION')}">
+                            <c:set var="mostrarBtnRevisar" value="true" />
+                        </c:if>
+                        <c:if test="${esAdmin}">
+                            <c:if test="${informe.estadoRadicacion == 'EN REVISION FINAL' or (informe.estadoRadicacion == 'RADICADA' and sinRevisor)}">
+                                <c:set var="mostrarBtnRevisar" value="true" />
+                                <c:set var="esModalAdmin" value="true" />
+                            </c:if>
+                        </c:if>
+                        
+                        <c:if test="${mostrarBtnRevisar and not empty informe.id}">
+                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', ${esModalAdmin})">
+                                <i class="bi bi-check2-square me-2"></i>Revisar
+                            </button>
+                        </c:if>
+                        
                         <c:if test="${not readonly}">
                             <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm" onclick="document.getElementById('radicar_input').value='false'; return true;">
                                 <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe'}
@@ -1403,6 +1428,130 @@
                     $('select[name="numero_cuota"]').trigger('change');
                 }
             });
+
+            // Función para modal de Revisión
+            function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
+                let opcionesHTML = '';
+                let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
+                    <c:forEach var="r" items="${listaRevisores}">
+                        <option value="${r.id}">${r.nombreCompleto}</option>
+                    </c:forEach>`;
+                
+                if (esAdminCuentas) {
+                    if (estadoActual === 'RADICADA') {
+                        opcionesHTML = `
+                            <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                        `;
+                    } else {
+                        opcionesHTML = `
+                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                        `;
+                    }
+                } else {
+                    opcionesHTML = `
+                        <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                }
+
+                Swal.fire({
+                    title: 'Revisión de Cuenta de Cobro',
+                    html: `
+                        <p class="text-muted">Seleccione la acción a tomar para esta cuenta:</p>
+                        <div class="mb-3">
+                            <select id="swal-accion" class="form-select">
+                                ` + opcionesHTML + `
+                            </select>
+                        </div>
+                        <div class="mb-3" id="div-revisor" style="display: none;">
+                            <label class="form-label text-start w-100 fw-bold text-primary">Seleccione el Revisor:</label>
+                            <select id="swal-revisor" class="form-select">
+                                ` + opcionesRevisores + `
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-start w-100">Observaciones (Obligatorio si devuelve):</label>
+                            <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Aplicar',
+                    cancelButtonText: 'Cancelar',
+                    didOpen: () => {
+                        const accionSelect = document.getElementById('swal-accion');
+                        const divRevisor = document.getElementById('div-revisor');
+                        
+                        accionSelect.addEventListener('change', () => {
+                            if (accionSelect.value === 'VISTO BUENO CONTRATACION') {
+                                divRevisor.style.display = 'block';
+                            } else {
+                                divRevisor.style.display = 'none';
+                            }
+                        });
+                        accionSelect.dispatchEvent(new Event('change'));
+                    },
+                    preConfirm: () => {
+                        const accion = document.getElementById('swal-accion').value;
+                        const obs = document.getElementById('swal-obs').value;
+                        const revisorId = document.getElementById('swal-revisor') ? document.getElementById('swal-revisor').value : '';
+                        
+                        if (accion === 'DEVUELTA' && !obs.trim()) {
+                            Swal.showValidationMessage('Debe escribir una observación para poder devolverla.');
+                            return false;
+                        }
+                        if (accion === 'VISTO BUENO CONTRATACION' && !revisorId) {
+                            Swal.showValidationMessage('Debe seleccionar un revisor.');
+                            return false;
+                        }
+                        return { accion: accion, obs: obs, revisorId: revisorId };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = 'procesar_revision.jsp';
+                        
+                        if (result.value.revisorId) {
+                            const inputRevisor = document.createElement('input');
+                            inputRevisor.type = 'hidden';
+                            inputRevisor.name = 'revisor_id';
+                            inputRevisor.value = result.value.revisorId;
+                            form.appendChild(inputRevisor);
+                        }
+                        
+                        const inputId = document.createElement('input');
+                        inputId.type = 'hidden';
+                        inputId.name = 'id_informe';
+                        inputId.value = idInforme;
+                        
+                        const inputAccion = document.createElement('input');
+                        inputAccion.type = 'hidden';
+                        inputAccion.name = 'accion';
+                        inputAccion.value = result.value.accion;
+                        
+                        const inputObs = document.createElement('input');
+                        inputObs.type = 'hidden';
+                        inputObs.name = 'observacion';
+                        inputObs.value = result.value.obs;
+                        
+                        const inputModo = document.createElement('input');
+                        inputModo.type = 'hidden';
+                        inputModo.name = 'modo';
+                        inputModo.value = '${not empty param.modo ? param.modo : ''}';
+                        
+                        form.appendChild(inputId);
+                        form.appendChild(inputAccion);
+                        form.appendChild(inputObs);
+                        form.appendChild(inputModo);
+                        
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
         </script>
     </body>
 </html>
