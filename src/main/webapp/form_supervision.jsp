@@ -591,7 +591,7 @@
                         </a>
                         
                         <%-- Lógica del botón Revisar (Idéntica a la de la lista) --%>
-                        <c:set var="esAdmin" value="${sessionScope.usuario != null and (sessionScope.usuario.tienePermiso('ADMIN_CUENTAS') or sessionScope.usuario.tienePermiso('REVISION_CUENTAS_ADMIN'))}" />
+                        <c:set var="esAdmin" value="${sessionScope.usuario != null and (sessionScope.usuario.esAdministrador() or sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') or sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS'))}" />
                         <c:set var="esRevisorAsignado" value="${sessionScope.usuario != null and informe.idRevisorAsignado == sessionScope.usuario.id}" />
                         <c:set var="sinRevisor" value="${empty informe.idRevisorAsignado or informe.idRevisorAsignado == 0}" />
                         
