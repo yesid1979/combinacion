@@ -130,8 +130,12 @@
                                                    "Nos complace informarle que su cuenta de cobro correspondiente a la cuota " + numCuota + " del Contrato No. " + numContrato + " ha superado la revision exitosamente y ha sido APROBADA PARA IMPRESION.\n\n" +
                                                    "Ya puede ingresar a la plataforma, descargar los formatos (Informe de Supervision y de Gestion), imprimirlos, firmarlos y continuar con el tramite correspondiente.\n\n" +
                                                    "Atentamente,\nGrupo de contratacion - DAGJP";
-                                        }
-                                        com.combinacion.services.EmailService.sendEmail(emailContratista, subject, body);
+                                        final String finalEmail = emailContratista;
+                                        final String finalSubject = subject;
+                                        final String finalBody = body;
+                                        new Thread(() -> {
+                                            com.combinacion.services.EmailService.sendEmail(finalEmail, finalSubject, finalBody);
+                                        }).start();
                                     }
                                 } catch (Exception ex) {
                                     System.err.println("Error enviando email: " + ex.getMessage());
