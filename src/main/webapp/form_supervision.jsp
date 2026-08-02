@@ -172,7 +172,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Periodo del Informe (Mes y Año)</label>
-                                    <input type="text" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" placeholder="Ej: Enero 2026" required ${readonly ? 'readonly' : ''}>
+                                    <input type="month" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" required ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Tipo de Informe</label>
@@ -272,6 +272,12 @@
                                     <input type="text" id="saldo_cancelar" class="form-control bg-light money-mask fw-bold" name="saldo_por_cancelar" value="${informe.saldoPorCancelar}" placeholder="0" readonly>
                                 </div>
                             </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Observaciones al informe financiero y contable</label>
+                                    <textarea class="form-control" name="observaciones_financieras" rows="2" placeholder="Observaciones adicionales..." ${readonly ? 'readonly' : ''}>${empty informe.observacionesFinancieras ? '' : informe.observacionesFinancieras}</textarea>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Tab 4: Seguridad Social -->
@@ -296,7 +302,17 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Periodo de Pago</label>
-                                    <input type="text" class="form-control" name="planilla_periodo" value="${informe.planillaPeriodo}" placeholder="Ej: 2026-01" required ${readonly ? 'readonly' : ''}>
+                                    <input type="month" class="form-control" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}" required ${readonly ? 'readonly' : ''}>
+                                </div>
+                            </div>
+                            <div class="row mt-3" id="container_pago_seguridad" style="display: none;">
+                                <div class="col-md-12">
+                                    <label class="form-label">El pago de la seguridad social es: <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="pago_seguridad_social" id="pago_seguridad_social" ${readonly ? 'disabled' : ''}>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Al Día" ${informe.pagoSeguridadSocial == 'Al Día' ? 'selected' : ''}>Al Día</option>
+                                        <option value="Mes vencido" ${informe.pagoSeguridadSocial == 'Mes vencido' ? 'selected' : ''}>Mes vencido</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -1217,8 +1233,86 @@
                     }
                 });
 
+                function togglePagoSeguridadSocial() {
+                    var tipo = $('#tipo_informe').val();
+                    if (tipo === 'FINAL') {
+                        $('#container_pago_seguridad').show();
+                        $('#pago_seguridad_social').prop('required', true);
+                    } else {
+                        $('#container_pago_seguridad').hide();
+                        $('#pago_seguridad_social').prop('required', false);
+                        if(!$('#pago_seguridad_social').is(':disabled')) {
+                            $('#pago_seguridad_social').val('');
+                            $('textarea[name="observaciones_financieras"]').val('');
+                        }
+                    }
+                }
+                
+                const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+                function getMesTexto(dateString) {
+                    if (!dateString) return '[MES ACTUAL]';
+                    const parts = dateString.split('-');
+                    if (parts.length !== 2) return dateString;
+                    const year = parts[0];
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (isNaN(month) || month < 0 || month > 11) return dateString;
+                    return meses[month] + ' de ' + year;
+                }
+
+                function getMesSiguienteTexto(dateString) {
+                    if (!dateString) return '[MES SIGUIENTE]';
+                    const parts = dateString.split('-');
+                    if (parts.length !== 2) return dateString;
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    if (isNaN(month) || month < 0 || month > 11) return dateString;
+                    
+                    let nextMonth = month + 1;
+                    let nextYear = year;
+                    if (nextMonth > 11) {
+                        nextMonth = 0;
+                        nextYear++;
+                    }
+                    return meses[nextMonth] + ' de ' + nextYear;
+                }
+
+                function updateObservacionesFinancieras() {
+                    var pagoVal = $('#pago_seguridad_social').val();
+                    if ($('#pago_seguridad_social').is(':disabled')) return; // No auto-cambiar si es readonly
+                    
+                    var obsFinancieras = $('textarea[name="observaciones_financieras"]');
+                    
+                    if (pagoVal === 'Mes vencido') {
+                        var periodo = $('#planilla_periodo').val();
+                        var mesActual = getMesTexto(periodo);
+                        var mesSiguiente = getMesSiguienteTexto(periodo);
+                        
+                        var textoLegal = "El contratista acreditó el pago de los aportes a la Seguridad Social Integral correspondiente al mes de " + mesActual + ", último mes legalmente exigible al contratista para el trámite de la última cuota del contrato, de conformidad con lo dispuesto en Ley 1955 de 2019.\n\nNo obstante, en cumplimiento de lo señalado en el artículo 50 de la Ley 789 de 2002 que establece que: \"Las Entidades públicas en el momento de liquidar los contratos deberán verificar y dejar constancia del cumplimiento de las obligaciones del contratista frente a los aportes mencionados durante toda su vigencia, estableciendo una correcta relación entre el monto cancelado y las sumas que debieron haber sido cotizadas\", y teniendo en cuenta que a la luz del artículo 60 de la Ley 80 de 1993 la liquidación de los contratos de prestación de servicios profesionales y de apoyo a la gestión no es obligatoria, el contratista deberá acreditar ante el Supervisor el pago de los aportes su seguridad social del mes de " + mesSiguiente + " remitiendo los correspondientes soportes al correo electrónico institucional del Supervisor con copia al correo institucional del Organismo, dentro de los cinco (5) días hábiles siguientes al vencimiento del plazo para la autoliquidación y el pago de los aportes al Sistema de Seguridad Social Integral y Aportes Parafiscales, establecido en el Decreto 1990 de 2016, o la disposición que la derogue o modifique, conforme a los dígitos de su cédula. La acreditación del pago de los aportes se anexará al expediente.\n\nEn caso de que el contratista no cumpla esta obligación, el Supervisor reportará el eventual incumplimiento en el pago de aportes a la Unidad Administrativa Especial de Gestión Pensional y Contribuciones Parafiscales de la Protección Social (UGPP), con el fin de que esta entidad adelante las acciones pertinentes a que haya lugar.";
+                        
+                        obsFinancieras.val(textoLegal);
+                    } else if (pagoVal === 'Al Día') {
+                        obsFinancieras.val('');
+                    }
+                }
+                
+                $('#pago_seguridad_social').change(updateObservacionesFinancieras);
+                $('#planilla_periodo').change(function() {
+                    // Si ya está seleccionado "Mes vencido", actualizar el texto si cambia el mes
+                    if ($('#pago_seguridad_social').val() === 'Mes vencido') {
+                        updateObservacionesFinancieras();
+                    }
+                });
+                
+                // Ejecutar al cargar para autocompletar si estaba seleccionado pero el texto está vacío
+                if ($('#pago_seguridad_social').val() === 'Mes vencido' && !$('textarea[name="observaciones_financieras"]').val().trim()) {
+                    updateObservacionesFinancieras();
+                }
+
                 $('#tipo_informe').change(function() {
                     var tipo = $(this).val();
+                    togglePagoSeguridadSocial();
+                    
                     // Solo actualizar si no estamos en modo readonly
                     if ($(this).is(':disabled')) return;
                     
@@ -1234,6 +1328,9 @@
                         $('#constancia_paz_salvo').val('N/A');
                     }
                 });
+                
+                // Ejecutar al inicio para ajustar estado según valor cargado
+                togglePagoSeguridadSocial();
             });
 
             function setRadicar() {

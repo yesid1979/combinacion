@@ -178,3 +178,6 @@ WHERE contratistas.id = sub.id;
 UPDATE informes_supervision 
 SET estado_radicacion = 'BORRADOR' 
 WHERE numero_cuota = '6' AND contrato_id = 2055;
+
+-- 13. Agregar campo de observaciones financieras al informe de supervision
+ALTER TABLE informes_supervision ADD COLUMN observaciones_financieras TEXT;

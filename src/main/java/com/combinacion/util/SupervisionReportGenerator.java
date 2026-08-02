@@ -45,24 +45,7 @@ public class SupervisionReportGenerator {
     }
     
     private static String formatearPeriodo(String periodo) {
-        if (periodo == null || periodo.trim().isEmpty()) return "";
-        try {
-            String[] parts = periodo.split("-");
-            if (parts.length == 2) {
-                int year = Integer.parseInt(parts[0]);
-                int month = Integer.parseInt(parts[1]);
-                java.util.Calendar cal = java.util.Calendar.getInstance();
-                cal.set(java.util.Calendar.YEAR, year);
-                cal.set(java.util.Calendar.MONTH, month - 1);
-                cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
-                SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", new Locale("es", "CO"));
-                String formatted = sdf.format(cal.getTime());
-                return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
-            }
-        } catch (Exception e) {
-            // Ignore parse errors and return original
-        }
-        return periodo;
+        return ParseUtils.formatearPeriodo(periodo);
     }
 
     private static final String TEMPLATE_PATH = "plantillas/INFORME_SUPERVISION_TEMPLATE.docx";
@@ -150,7 +133,7 @@ public class SupervisionReportGenerator {
         reps.put("${VALOR_INICIAL_NUMEROS}", valorNumeros);
 
         // Datos del Informe
-        reps.put("${PERIODO_INFORME}", info.getPeriodoInforme() != null ? info.getPeriodoInforme() : "");
+        reps.put("${PERIODO_INFORME}", info.getPeriodoInforme() != null ? formatearPeriodo(info.getPeriodoInforme()) : "");
         reps.put("${TIPO_INFORME}", info.getTipoInforme() != null ? info.getTipoInforme() : "");
         
         String cuotaOriginal = info.getNumeroCuota() != null ? info.getNumeroCuota().trim() : "";
@@ -194,6 +177,7 @@ public class SupervisionReportGenerator {
         // No agregamos CONCEPTO_SUPERVISOR a reps para que TemplateGenerator no lo rompa.
         // Lo reemplazaremos directamente en el XML en el post-procesamiento.
         final String finalConceptoSup = concepto != null ? concepto : "";
+        reps.put("${OBSERVACIONES_FINANCIERAS}", info.getObservacionesFinancieras() != null ? info.getObservacionesFinancieras() : "");
         reps.put("${OBSERVACIONES_TECNICAS}", info.getObservacionesTecnicas() != null ? info.getObservacionesTecnicas() : "");
         reps.put("${RECOMENDACIONES}", info.getRecomendaciones() != null ? info.getRecomendaciones() : "");
         String fechaSuscripcionFormateada = info.getFechaSuscripcion() != null ? 

@@ -112,8 +112,10 @@ public class InformeSupervisionService {
         info.setPlanillaOperador(f.planillaOperador);
         info.setPlanillaFechaPago(ParseUtils.parseDate(f.planillaFechaPago));
         info.setPlanillaPeriodo(f.planillaPeriodo);
+        info.setPagoSeguridadSocial(f.pagoSeguridadSocial);
         
         info.setConceptoSupervisor(f.conceptoSupervisor);
+        info.setObservacionesFinancieras(f.observacionesFinancieras);
         info.setObservacionesTecnicas(f.observacionesTecnicas);
         info.setRecomendaciones(f.recomendaciones);
         info.setFechaSuscripcion(ParseUtils.parseDate(f.fechaSuscripcion));
@@ -150,7 +152,9 @@ public class InformeSupervisionService {
         public String planillaOperador;
         public String planillaFechaPago;
         public String planillaPeriodo;
+        public String pagoSeguridadSocial;
         public String conceptoSupervisor;
+        public String observacionesFinancieras;
         public String observacionesTecnicas;
         public String recomendaciones;
         public String fechaSuscripcion;

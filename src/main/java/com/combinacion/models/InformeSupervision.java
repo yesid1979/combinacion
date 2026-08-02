@@ -31,6 +31,7 @@ public class InformeSupervision implements Serializable {
     private BigDecimal valorCuotaPagar;
     private BigDecimal valorAccumuladoPagado;
     private BigDecimal saldoPorCancelar;
+    private String observacionesFinancieras;
     
     // Seguridad Social
     private String planillaNumero;
@@ -38,6 +39,7 @@ public class InformeSupervision implements Serializable {
     private String planillaOperador;
     private Date planillaFechaPago;
     private String planillaPeriodo;
+    private String pagoSeguridadSocial;
     
     // Informe Técnico
     private String observacionesTecnicas;
@@ -128,6 +130,9 @@ public class InformeSupervision implements Serializable {
 
     public BigDecimal getSaldoPorCancelar() { return saldoPorCancelar; }
     public void setSaldoPorCancelar(BigDecimal saldoPorCancelar) { this.saldoPorCancelar = saldoPorCancelar; }
+    
+    public String getObservacionesFinancieras() { return observacionesFinancieras; }
+    public void setObservacionesFinancieras(String observacionesFinancieras) { this.observacionesFinancieras = observacionesFinancieras; }
 
     public String getPlanillaNumero() { return planillaNumero; }
     public void setPlanillaNumero(String planillaNumero) { this.planillaNumero = planillaNumero; }
@@ -143,6 +148,9 @@ public class InformeSupervision implements Serializable {
 
     public String getPlanillaPeriodo() { return planillaPeriodo; }
     public void setPlanillaPeriodo(String planillaPeriodo) { this.planillaPeriodo = planillaPeriodo; }
+    
+    public String getPagoSeguridadSocial() { return pagoSeguridadSocial; }
+    public void setPagoSeguridadSocial(String pagoSeguridadSocial) { this.pagoSeguridadSocial = pagoSeguridadSocial; }
 
     public String getObservacionesTecnicas() { return observacionesTecnicas; }
     public void setObservacionesTecnicas(String observacionesTecnicas) { this.observacionesTecnicas = observacionesTecnicas; }

@@ -37,4 +37,23 @@ public class ParseUtils {
             return 0;
         }
     }
+
+    public static String formatearPeriodo(String periodo) {
+        if (periodo == null || periodo.trim().isEmpty()) return "";
+        try {
+            String[] parts = periodo.split("-");
+            if (parts.length == 2) {
+                int year = Integer.parseInt(parts[0]);
+                int month = Integer.parseInt(parts[1]);
+                java.util.Calendar cal = java.util.Calendar.getInstance();
+                cal.set(java.util.Calendar.YEAR, year);
+                cal.set(java.util.Calendar.MONTH, month - 1);
+                cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMMM yyyy", new java.util.Locale("es", "CO"));
+                String formatted = sdf.format(cal.getTime());
+                return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
+            }
+        } catch (Exception e) {}
+        return periodo;
+    }
 }

@@ -296,7 +296,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             row.addProperty("contratista", info.getContrato() != null ? info.getContrato().getContratistaNombre() : "");
             
             // 2: Periodo
-            row.addProperty("periodo", info.getPeriodoInforme());
+            row.addProperty("periodo", info.getPeriodoInforme() != null ? ParseUtils.formatearPeriodo(info.getPeriodoInforme()) : "");
             
             // 3: Tipo
             row.addProperty("tipo", info.getTipoInforme());
@@ -1365,6 +1365,7 @@ public class InformeSupervisionServlet extends HttpServlet {
         f.planillaOperador = r.getParameter("planilla_operador");
         f.planillaFechaPago = r.getParameter("planilla_fecha_pago");
         f.planillaPeriodo = r.getParameter("planilla_periodo");
+        f.pagoSeguridadSocial = r.getParameter("pago_seguridad_social");
         
         String conceptoJson = r.getParameter("concepto_supervisor_json");
         if (conceptoJson != null && !conceptoJson.isEmpty()) {
@@ -1404,6 +1405,7 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
         }
         
+        f.observacionesFinancieras = r.getParameter("observaciones_financieras");
         f.observacionesTecnicas = r.getParameter("observaciones_tecnicas");
         f.recomendaciones = r.getParameter("recomendaciones");
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");

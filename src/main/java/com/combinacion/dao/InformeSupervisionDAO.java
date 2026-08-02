@@ -15,9 +15,9 @@ public class InformeSupervisionDAO {
                 "fecha_inicio_periodo, fecha_fin_periodo, modificaciones, suspensiones, " +
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
-                "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, " +
-                "concepto_supervisor, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
+                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -46,17 +46,19 @@ public class InformeSupervisionDAO {
             ps.setString(21, info.getPlanillaOperador());
             ps.setDate(22, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
             ps.setString(23, info.getPlanillaPeriodo());
-            ps.setString(24, info.getConceptoSupervisor());
-            ps.setString(25, info.getObservacionesTecnicas());
-            ps.setString(26, info.getRecomendaciones());
-            ps.setDate(27, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
-            ps.setString(28, info.getUrlDriveEvidencias());
-            ps.setString(29, info.getConsecutivoCobro());
-            ps.setString(30, info.getEstadoRadicacion() != null ? info.getEstadoRadicacion() : "BORRADOR");
+            ps.setString(24, info.getPagoSeguridadSocial());
+            ps.setString(25, info.getConceptoSupervisor());
+            ps.setString(26, info.getObservacionesFinancieras());
+            ps.setString(27, info.getObservacionesTecnicas());
+            ps.setString(28, info.getRecomendaciones());
+            ps.setDate(29, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(30, info.getUrlDriveEvidencias());
+            ps.setString(31, info.getConsecutivoCobro());
+            ps.setString(32, info.getEstadoRadicacion() != null ? info.getEstadoRadicacion() : "BORRADOR");
             if (info.getIdRevisorAsignado() != null) {
-                ps.setInt(31, info.getIdRevisorAsignado());
+                ps.setInt(33, info.getIdRevisorAsignado());
             } else {
-                ps.setNull(31, Types.INTEGER);
+                ps.setNull(33, Types.INTEGER);
             }
 
             if (ps.executeUpdate() > 0) {
@@ -160,7 +162,9 @@ public class InformeSupervisionDAO {
         info.setPlanillaOperador(rs.getString("planilla_operador"));
         info.setPlanillaFechaPago(rs.getDate("planilla_fecha_pago"));
         info.setPlanillaPeriodo(rs.getString("planilla_periodo"));
+        try { info.setPagoSeguridadSocial(rs.getString("pago_seguridad_social")); } catch(SQLException ignore) {}
         info.setConceptoSupervisor(rs.getString("concepto_supervisor"));
+        try { info.setObservacionesFinancieras(rs.getString("observaciones_financieras")); } catch(SQLException ignore) {}
         info.setObservacionesTecnicas(rs.getString("observaciones_tecnicas"));
         info.setRecomendaciones(rs.getString("recomendaciones"));
         info.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
@@ -199,8 +203,8 @@ public class InformeSupervisionDAO {
                 "fecha_inicio_periodo = ?, fecha_fin_periodo = ?, modificaciones = ?, suspensiones = ?, " +
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
-                "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, " +
-                "concepto_supervisor = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ? " +
+                "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
+                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -228,19 +232,21 @@ public class InformeSupervisionDAO {
             ps.setString(20, info.getPlanillaOperador());
             ps.setDate(21, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
             ps.setString(22, info.getPlanillaPeriodo());
-            ps.setString(23, info.getConceptoSupervisor());
-            ps.setString(24, info.getObservacionesTecnicas());
-            ps.setString(25, info.getRecomendaciones());
-            ps.setDate(26, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
-            ps.setString(27, info.getUrlDriveEvidencias());
-            ps.setString(28, info.getConsecutivoCobro());
-            ps.setString(29, info.getEstadoRadicacion());
+            ps.setString(23, info.getPagoSeguridadSocial());
+            ps.setString(24, info.getConceptoSupervisor());
+            ps.setString(25, info.getObservacionesFinancieras());
+            ps.setString(26, info.getObservacionesTecnicas());
+            ps.setString(27, info.getRecomendaciones());
+            ps.setDate(28, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(29, info.getUrlDriveEvidencias());
+            ps.setString(30, info.getConsecutivoCobro());
+            ps.setString(31, info.getEstadoRadicacion());
             if (info.getIdRevisorAsignado() != null) {
-                ps.setInt(30, info.getIdRevisorAsignado());
+                ps.setInt(32, info.getIdRevisorAsignado());
             } else {
-                ps.setNull(30, Types.INTEGER);
+                ps.setNull(32, Types.INTEGER);
             }
-            ps.setInt(31, info.getId());
+            ps.setInt(33, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -337,6 +343,8 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN soportes_json TEXT"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN estado_radicacion VARCHAR(50) DEFAULT 'BORRADOR'"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN id_revisor_asignado INTEGER REFERENCES usuarios(id)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN observaciones_financieras TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN pago_seguridad_social VARCHAR(50)"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }
