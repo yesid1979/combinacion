@@ -9,9 +9,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
@@ -32,11 +29,9 @@ public class EmailService {
 
     private static final String APPLICATION_NAME = "Gestor Contratacion";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = System.getProperty("user.home") + "/.credentials/gmail-java";
 
     private static final List<String> SCOPES = Arrays.asList(
-            GmailScopes.GMAIL_SEND,
-            DriveScopes.DRIVE
+            GmailScopes.GMAIL_SEND
     );
     private static final String CREDENTIALS_FILE_PATH = "/credencialescontratacion.json";
 
@@ -52,8 +47,19 @@ public class EmailService {
                 .setDataStoreFactory(new JDBCDataStoreFactory())
                 .setAccessType("offline")
                 .build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8889).build();
-        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        
+        Credential credential = flow.loadCredential("user");
+        if (credential == null || (credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60 && credential.getRefreshToken() == null)) {
+            System.err.println("¡ADVERTENCIA! El token de Gmail no existe o expiro y no tiene refresh token. El correo NO se enviará.");
+            throw new Exception("Token de Gmail no válido o expirado.");
+        }
+        
+        // Refrescar manualmente si es necesario (el cliente lo hace solo, pero aquí aseguramos)
+        if (credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60) {
+            credential.refreshToken();
+        }
+        
+        return credential;
     }
 
     private static Gmail getGmailService() throws Exception {
@@ -95,43 +101,6 @@ public class EmailService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-    }
-    private static Drive getDriveService() throws Exception {
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build();
-    }
-
-    public static String createFolder(String folderName) {
-        try {
-            Drive driveService = getDriveService();
-            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
-            fileMetadata.setName(folderName);
-            fileMetadata.setMimeType("application/vnd.google-apps.folder");
-
-            com.google.api.services.drive.model.File folder = driveService.files().create(fileMetadata)
-                    .setFields("id")
-                    .execute();
-            System.out.println("Carpeta creada con exito! ID: " + folder.getId());
-            return folder.getId();
-        } catch (Exception e) {
-            System.err.println("Error al crear la carpeta en Drive:");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("Iniciando prueba de creacion de carpeta en Drive...");
-            String folderId = createFolder("pruebas cuenta de cobro");
-            if (folderId != null) {
-                System.out.println("¡Prueba superada! Ve a tu Google Drive y busca la carpeta.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
