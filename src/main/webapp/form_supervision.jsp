@@ -531,11 +531,11 @@
                                             <i class="bi bi-file-earmark-excel"></i> Cuenta de Cobro (Excel)
                                         </a>
                                     </c:if>
-                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=supervision&id=${informe.id}" class="btn btn-outline-danger" target="_blank">
-                                        <i class="bi bi-file-earmark-pdf"></i> Informe de Supervisión (PDF)
+                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=supervision&id=${informe.id}" class="btn btn-outline-primary" target="_blank">
+                                        <i class="bi bi-file-earmark-word"></i> Informe de Supervisión (Word)
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=gestion&id=${informe.id}" class="btn btn-outline-danger" target="_blank">
-                                        <i class="bi bi-file-earmark-pdf"></i> Informe de Gestión (PDF)
+                                    <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=gestion&id=${informe.id}" class="btn btn-outline-primary" target="_blank">
+                                        <i class="bi bi-file-earmark-word"></i> Informe de Gestión (Word)
                                     </a>
                                 </div>
                             </div>

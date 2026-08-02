@@ -241,6 +241,56 @@ public class SupervisionReportGenerator {
                     xml = xml.replace("${X_PARCIAL}", xParcial != null ? xParcial : "  ");
                     xml = xml.replace("${X_FINAL}", xFinal != null ? xFinal : "  ");
                     
+                    // Forzar que TODAS las filas de las tablas puedan dividirse entre páginas 
+                    // para evitar que LibreOffice corte el texto cuando es muy largo
+                    xml = xml.replaceAll("(?i)<w:cantSplit[^>]*>", "");
+                    
+                    // ================================================================
+                    // FIX DEFINITIVO PARA LibreOffice Linux - CAUSA RAÍZ IDENTIFICADA:
+                    // Cuando la tabla abarca múltiples páginas (por Objeto largo) Y
+                    // contiene formas flotantes con <wp:anchor> (<mc:AlternateContent>),
+                    // LibreOffice falla al renderizar TODA la tabla (pierde bordes, rellenos, etc.)
+                    // ================================================================
+                    
+                    // FIX 1: Eliminar los bloques <mc:AlternateContent> (formas flotantes WPS)
+                    // y conservar solo el contenido VML de <mc:Fallback>.
+                    // LibreOffice no puede manejar correctamente formas WPS ancladas (<wp:anchor>)
+                    // dentro de tablas que saltan de página → falla el renderizado completo.
+                    xml = xml.replaceAll(
+                        "<mc:AlternateContent>.*?<mc:Fallback>(.*?)</mc:Fallback>\\s*</mc:AlternateContent>",
+                        "$1"
+                    );
+                    
+                    // FIX 2: Agregar <w:tblBorders> a nivel de la tabla principal del cuerpo.
+                    // La plantilla SOLO tiene bordes a nivel de celda (<w:tcBorders>),
+                    // NO tiene <w:tblBorders> en el <w:tblPr>. LibreOffice necesita los
+                    // bordes también a nivel de tabla para respetarlos cuando las celdas
+                    // saltan páginas.
+                    String TBL_BORDERS =
+                        "<w:tblBorders>" +
+                        "<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "</w:tblBorders>";
+                    // Usar replaceFirst para agregar solo a la PRIMERA tabla (la principal del cuerpo).
+                    // La tabla principal es la única que tiene <w:tblCellMar> en su <w:tblPr>.
+                    xml = xml.replaceFirst("<w:tblCellMar>", TBL_BORDERS + "<w:tblCellMar>");
+                    
+                    // FIX 3 (redundante pero seguro): Asegurar bordes explícitos en cada celda.
+                    // La plantilla ya los tiene pero los reforzamos por si POI los alteró.
+                    String EXPLICIT_BORDERS = 
+                        "<w:tcBorders>" +
+                        "<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                        "</w:tcBorders>";
+                    xml = xml.replaceAll("<w:tcBorders>[\\s\\S]*?</w:tcBorders>", "");
+                    xml = xml.replace("</w:tcPr>", EXPLICIT_BORDERS + "</w:tcPr>");
+                    
                     if (lista != null) {
                         StringBuilder tablaXml = new StringBuilder();
                         tablaXml.append("</w:t></w:r></w:p>"); // Cerrar el párrafo actual de ${CONCEPTO_SUPERVISOR}
@@ -257,6 +307,11 @@ public class SupervisionReportGenerator {
                         tablaXml.append("</w:tblBorders>");
                         tablaXml.append("<w:tblW w:w=\"5000\" w:type=\"pct\"/>"); // 100% width
                         tablaXml.append("</w:tblPr>");
+                        
+                        tablaXml.append("<w:tblGrid>");
+                        tablaXml.append("<w:gridCol w:w=\"4000\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"6000\"/>");
+                        tablaXml.append("</w:tblGrid>");
                         
                         // Header
                         tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");

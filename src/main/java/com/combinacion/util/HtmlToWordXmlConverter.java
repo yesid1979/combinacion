@@ -51,6 +51,21 @@ public class HtmlToWordXmlConverter {
                 xml.append("<w:tblBorders><w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/><w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/></w:tblBorders>");
                 xml.append("<w:jc w:val=\"center\"/><w:tblLayout w:type=\"autofit\"/><w:tblW w:w=\"5000\" w:type=\"pct\"/>");
                 xml.append("</w:tblPr>");
+                
+                int maxCols = 0;
+                for (Element tr : el.select("tr")) {
+                    int cols = tr.select("td, th").size();
+                    if (cols > maxCols) maxCols = cols;
+                }
+                if (maxCols > 0) {
+                    xml.append("<w:tblGrid>");
+                    int colWidth = 10000 / maxCols;
+                    for (int i = 0; i < maxCols; i++) {
+                        xml.append("<w:gridCol w:w=\"").append(colWidth).append("\"/>");
+                    }
+                    xml.append("</w:tblGrid>");
+                }
+                
                 for (Element tr : el.select("tr")) {
                     xml.append("<w:tr>");
                     for (Element td : tr.select("td, th")) {

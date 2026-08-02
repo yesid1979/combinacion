@@ -467,8 +467,14 @@ public class InformeSupervisionServlet extends HttpServlet {
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
-                    poblarTextosModificacion(contrato, informe);
+                    com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
+                    poblarTextosModificacion(contrato, informeAuto);
+                    request.setAttribute("informeAuto", informeAuto);
                 }
+                
+                int cuotaActualParsed = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                request.setAttribute("siguienteCuota", cuotaActualParsed);
+                
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
                 
                 // Determinar si es la PRIMERA cuota de adición para NO autocargar el RPC de las cuotas normales
@@ -568,19 +574,15 @@ public class InformeSupervisionServlet extends HttpServlet {
             } else if ("supervision".equals(tipo)) {
                 String path = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
                 java.io.File docx = new java.io.File(path);
-                String pdfPath = path.replaceAll("(?i)\\.docx$", ".pdf");
-                file = new java.io.File(pdfPath);
-                com.combinacion.util.PdfGenerator.convertToPdf(docx, file);
-                fileName = "Informe_Supervision_Cuota_" + informe.getNumeroCuota() + ".pdf";
-                mime = "application/pdf";
+                file = docx;
+                fileName = "Informe_Supervision_Cuota_" + informe.getNumeroCuota() + ".docx";
+                mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             } else if ("gestion".equals(tipo)) {
                 String path = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, getServletContext().getRealPath("/"));
                 java.io.File docx = new java.io.File(path);
-                String pdfPath = path.replaceAll("(?i)\\.docx$", ".pdf");
-                file = new java.io.File(pdfPath);
-                com.combinacion.util.PdfGenerator.convertToPdf(docx, file);
-                fileName = "Informe_Gestion_Cuota_" + informe.getNumeroCuota() + ".pdf";
-                mime = "application/pdf";
+                file = docx;
+                fileName = "Informe_Gestion_Cuota_" + informe.getNumeroCuota() + ".docx";
+                mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             }
             
             if (file != null && file.exists()) {
@@ -1401,13 +1403,13 @@ public class InformeSupervisionServlet extends HttpServlet {
                 }
                 f.conceptoSupervisor = arr.toString();
             } else {
-                f.conceptoSupervisor = r.getParameter("concepto_supervisor");
+                f.conceptoSupervisor = cleanWordHtml(r.getParameter("concepto_supervisor"));
             }
         }
         
-        f.observacionesFinancieras = r.getParameter("observaciones_financieras");
-        f.observacionesTecnicas = r.getParameter("observaciones_tecnicas");
-        f.recomendaciones = r.getParameter("recomendaciones");
+        f.observacionesFinancieras = cleanWordHtml(r.getParameter("observaciones_financieras"));
+        f.observacionesTecnicas = cleanWordHtml(r.getParameter("observaciones_tecnicas"));
+        f.recomendaciones = cleanWordHtml(r.getParameter("recomendaciones"));
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
         f.soportesJson = r.getParameter("soportes_json");
         
@@ -1430,6 +1432,11 @@ public class InformeSupervisionServlet extends HttpServlet {
     private String cleanWordHtml(String html) {
         if (html == null || html.isEmpty()) return html;
         try {
+            // Limpieza cruda antes de Jsoup para atributos mal formados sin comillas
+            html = html.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
+            html = html.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
+            html = html.replaceAll("(?i)o:p", "span"); // Reemplazar tags <o:p> de word
+            
             org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(html);
             for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
                 String style = e.attr("style");
@@ -1446,7 +1453,18 @@ public class InformeSupervisionServlet extends HttpServlet {
                 e.removeAttr("lang");
             }
             // Remover comentarios HTML (basura de Word)
-            return docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
+            String finalHtml = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
+            
+            // Limpieza final cruda por si quedó basura textual
+            finalHtml = finalHtml.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
+            finalHtml = finalHtml.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
+            finalHtml = finalHtml.replaceAll("(?i)font-size:[^;\"'>]+;?", "");
+            finalHtml = finalHtml.replaceAll("(?i)line-height:[^;\"'>]+;?", "");
+            
+            // Eliminar tags span vacíos o basura que quedó
+            finalHtml = finalHtml.replaceAll("(?i)<span[^>]*>\\s*</span>", "");
+            
+            return finalHtml;
         } catch (Exception ex) {
             return html;
         }
