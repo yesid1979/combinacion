@@ -678,6 +678,23 @@
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
+            function manejarVisibilidadReq(selector, mostrar) {
+                $(selector).each(function() {
+                    var $div = $(this);
+                    // Consider it has a document if it has the uploaded file UI or the badge
+                    var tieneDocumento = $div.find('.alert-secondary').length > 0 || $div.find('.badge.bg-success').length > 0;
+                    if (mostrar || tieneDocumento) {
+                        $div.show();
+                        if (!mostrar) {
+                            $div.find('input[type="file"]').prop('required', false);
+                        }
+                    } else {
+                        $div.hide();
+                        $div.find('input[type="file"]').val('').prop('required', false);
+                    }
+                });
+            }
+
             // Lógica para mostrar/ocultar soportes según la cuota
             function actualizarCamposSoportes() {
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
@@ -688,14 +705,12 @@
                 var esCuotaAdicionPosterior = (esAdicion && parseInt(cuotaStr) > cuotasNormales);
 
                 if (cuotaStr == "1") {
-                    $('.req-cuota-1').show();
-                    $('.req-cuota-adicion-only').hide();
-                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
+                    manejarVisibilidadReq('.req-cuota-1', true);
+                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
                 } else if (esFirmaAdicion) {
-                    $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
+                    manejarVisibilidadReq('.req-cuota-1', false);
                     
-                    $('.req-cuota-adicion-only').show();
+                    manejarVisibilidadReq('.req-cuota-adicion-only', true);
                     $('input[name="file_secop"]').closest('div').show();
                     $('input[name="file_ficha_tecnica"]').closest('div').show();
                     
@@ -704,15 +719,11 @@
                     $('input[name="file_secop"]').prop('required', true);
                     $('input[name="file_ficha_tecnica"]').prop('required', true);
                 } else if (esCuotaAdicionPosterior) {
-                    $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
-                    $('.req-cuota-adicion-only').hide();
-                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
+                    manejarVisibilidadReq('.req-cuota-1', false);
+                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
                 } else {
-                    $('.req-cuota-1').hide();
-                    $('.req-cuota-1 input[type="file"]').val('').prop('required', false);
-                    $('.req-cuota-adicion-only').hide();
-                    $('.req-cuota-adicion-only input[type="file"]').val('').prop('required', false);
+                    manejarVisibilidadReq('.req-cuota-1', false);
+                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
                     $('input[name="file_secop"]').prop('required', false);
                 }
                 actualizarAsteriscosArchivos();
@@ -799,8 +810,8 @@
                 }
             }
             
-            // Actualizar asteriscos de archivos después de renderizarlos
-            actualizarAsteriscosArchivos();
+            // Actualizar visibilidad de divs y asteriscos después de renderizar archivos
+            actualizarCamposSoportes();
             
             // Si es solo lectura, limpiar visualmente la pestaña de soportes
             if (isReadonly) {

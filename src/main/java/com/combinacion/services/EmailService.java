@@ -48,7 +48,7 @@ public class EmailService {
                 .setAccessType("offline")
                 .build();
         
-        Credential credential = flow.loadCredential("user");
+        Credential credential = flow.loadCredential("user_v2");
         if (credential == null || (credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60 && credential.getRefreshToken() == null)) {
             System.err.println("¡ADVERTENCIA! El token de Gmail no existe o expiro y no tiene refresh token. El correo NO se enviará.");
             throw new Exception("Token de Gmail no válido o expirado.");
