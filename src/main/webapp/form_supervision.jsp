@@ -366,7 +366,7 @@
                                     <textarea class="form-control" name="recomendaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.id ? 'No se reportan recomendaciones para este periodo' : informe.recomendaciones}</textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Fecha de Suscripción del Informe</label>
+                                    <label class="form-label">Fecha de transacción</label>
                                     <c:choose>
                                         <c:when test="${not empty informe.fechaSuscripcion}">
                                             <input type="date" class="form-control" name="fecha_suscripcion" value="<fmt:formatDate value='${informe.fechaSuscripcion}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
