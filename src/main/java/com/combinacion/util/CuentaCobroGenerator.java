@@ -32,12 +32,44 @@ public class CuentaCobroGenerator {
             }
         }
 
-        if (templateCacheBytes == null) {
-            templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
-        }
+        // Siempre leer la plantilla fresca para garantizar que el fix BiDi se aplique
+        templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
 
         Workbook wb = new XSSFWorkbook(new java.io.ByteArrayInputStream(templateCacheBytes));
         Sheet sheet = wb.getSheetAt(0);
+        
+        // FIX BiDi: LibreOffice invierte los paréntesis en cuadros de texto (Shapes)
+        // Solución: Iterar sobre las formas y reemplazar los paréntesis ASCII de (MIPG)
+        // con paréntesis de ancho completo （MIPG） (Full-width U+FF08 / U+FF09).
+        // Estos se ven casi idénticos pero NO activan la regla de inversión BiDi.
+        if (sheet instanceof org.apache.poi.xssf.usermodel.XSSFSheet) {
+            org.apache.poi.xssf.usermodel.XSSFSheet xSheet = (org.apache.poi.xssf.usermodel.XSSFSheet) sheet;
+            org.apache.poi.xssf.usermodel.XSSFDrawing drawing = xSheet.getDrawingPatriarch();
+            if (drawing != null) {
+                for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
+                    if (shape instanceof org.apache.poi.xssf.usermodel.XSSFSimpleShape) {
+                        org.apache.poi.xssf.usermodel.XSSFSimpleShape simpleShape = 
+                            (org.apache.poi.xssf.usermodel.XSSFSimpleShape) shape;
+                        for (org.apache.poi.xssf.usermodel.XSSFTextParagraph para : simpleShape.getTextParagraphs()) {
+                            // Obtener el texto completo del párrafo para ver si contiene MIPG
+                            StringBuilder fullText = new StringBuilder();
+                            for (org.apache.poi.xssf.usermodel.XSSFTextRun run : para.getTextRuns()) {
+                                fullText.append(run.getText());
+                            }
+                            if (fullText.toString().contains("MIPG")) {
+                                // Si contiene MIPG, reemplazar los paréntesis en todos los runs de este párrafo
+                                for (org.apache.poi.xssf.usermodel.XSSFTextRun run : para.getTextRuns()) {
+                                    String text = run.getText();
+                                    if (text != null) {
+                                        run.setText(text.replace("(", "（").replace(")", "）"));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // 1. Fecha de la transacción (D12)
         Row row12 = sheet.getRow(11); if(row12 == null) row12 = sheet.createRow(11);

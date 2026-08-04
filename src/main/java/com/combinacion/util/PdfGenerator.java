@@ -265,22 +265,64 @@ public class PdfGenerator {
     private static boolean convertExcelWithLibreOfficeLinux(File excelFile, File pdfFile) {
         try {
             String outDir = pdfFile.getParent();
+            
+            // Se usa un directorio de perfil temporal y limpio para cada conversión.
+            // Esto evita el bug de BiDi (paréntesis invertidos) que ocurre cuando
+            // LibreOffice reutiliza un perfil de usuario con configuraciones de idioma
+            // o dirección de texto conflictivas.
+            File tempProfile = new File(System.getProperty("java.io.tmpdir"), "lo_profile_" + Thread.currentThread().getId());
+            tempProfile.mkdirs();
+            
             ProcessBuilder pb = new ProcessBuilder(
-                "soffice", "--headless", "--convert-to", "pdf", 
-                "--outdir", outDir, excelFile.getAbsolutePath()
+                "soffice",
+                "-env:UserInstallation=file://" + tempProfile.getAbsolutePath(),
+                "--headless",
+                "--norestore",
+                "--nofirststartwizard",
+                "--convert-to", "pdf",
+                "--outdir", outDir,
+                excelFile.getAbsolutePath()
             );
+            
+            // Forzar localización en español de Colombia para que el motor
+            // de texto no aplique reglas BiDi incorrectas en el encabezado.
+            pb.environment().put("LC_ALL", "es_CO.UTF-8");
+            pb.environment().put("LANG", "es_CO.UTF-8");
             
             runProcessSafely(pb, 60);
             
-            File generatedPdf = new File(excelFile.getAbsolutePath().replaceAll("(?i)\\.xlsx?$", ".pdf"));
+            // Limpiar el perfil temporal después de la conversión
+            try {
+                deleteDirectory(tempProfile);
+            } catch (Exception ignore) {}
+            
+            // LibreOffice genera el PDF en outDir con el mismo nombre base del xlsx
+            String baseName = excelFile.getName().replaceAll("(?i)\\.xlsx?$", ".pdf");
+            File generatedPdf = new File(outDir, baseName);
             if (generatedPdf.exists() && !generatedPdf.getAbsolutePath().equals(pdfFile.getAbsolutePath())) {
                 generatedPdf.renameTo(pdfFile);
             }
             
             return pdfFile.exists() && pdfFile.length() > 0;
         } catch (Exception e) {
-            System.err.println("⚠️ LibreOffice no encontrado o falló en Linux para Excel.");
+            System.err.println("⚠️ LibreOffice no encontrado o falló en Linux para Excel: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Elimina un directorio de forma recursiva.
+     */
+    private static void deleteDirectory(File dir) {
+        if (dir != null && dir.exists()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory()) deleteDirectory(f);
+                    else f.delete();
+                }
+            }
+            dir.delete();
         }
     }
 
