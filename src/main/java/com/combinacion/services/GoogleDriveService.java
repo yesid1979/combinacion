@@ -108,10 +108,9 @@ public class GoogleDriveService {
 
         FileContent mediaContent = new FileContent(mimeType, file);
         if (result.getFiles() != null && !result.getFiles().isEmpty()) {
-            // Existe, lo actualizamos
+            // Existe con el mismo nombre, lo actualizamos
             String fileId = result.getFiles().get(0).getId();
             File updatedFile = new File();
-            // Para update, usamos el contenido pero no le pasamos metadatos que cambien de padre
             File newFile = driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute();
             return newFile.getId();
         } else {
@@ -124,6 +123,48 @@ public class GoogleDriveService {
             File newFile = driveService.files().create(fileMetadata, mediaContent).setFields("id").execute();
             return newFile.getId();
         }
+    }
+
+    /**
+     * Busca en la carpeta Drive un archivo cuyo nombre coincida con el patrón (prefijo),
+     * elimina el archivo anterior si existe con nombre diferente al nuevo, y sube el archivo
+     * con el nombre correcto. Útil cuando el nombre del archivo puede cambiar (ej: consecutivo XXXX -> 0233).
+     *
+     * @param file      Archivo local a subir
+     * @param fileName  Nombre definitivo del archivo en Drive
+     * @param mimeType  Tipo MIME del archivo
+     * @param parentId  ID de la carpeta destino en Drive
+     * @param namePrefix Prefijo del nombre para buscar archivos anteriores (ej: "3. DS-4121-")
+     */
+    public static String uploadOrReplaceByPattern(java.io.File file, String fileName, String mimeType, String parentId, String namePrefix) throws Exception {
+        Drive driveService = getDriveService();
+
+        // 1. Buscar archivos en la carpeta que coincidan con el prefijo
+        if (namePrefix != null && !namePrefix.isEmpty() && parentId != null && !parentId.isEmpty()) {
+            String patternQuery = "'" + parentId + "' in parents and trashed=false";
+            FileList existing = driveService.files().list()
+                    .setQ(patternQuery)
+                    .setSpaces("drive")
+                    .setFields("files(id, name)")
+                    .execute();
+
+            if (existing.getFiles() != null) {
+                for (File f : existing.getFiles()) {
+                    // Si el nombre empieza con el prefijo pero NO es el nombre correcto, lo eliminamos
+                    if (f.getName() != null && f.getName().startsWith(namePrefix) && !f.getName().equals(fileName)) {
+                        try {
+                            driveService.files().delete(f.getId()).execute();
+                            System.out.println("Drive: Archivo antiguo eliminado: " + f.getName());
+                        } catch (Exception ignore) {
+                            System.err.println("Drive: No se pudo eliminar archivo antiguo: " + f.getName());
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Subir/actualizar con el nombre correcto
+        return uploadOrUpdateFile(file, fileName, mimeType, parentId);
     }
 
     public static String uploadStreamToDrive(java.io.InputStream in, long length, String fileName, String mimeType, String parentId) throws Exception {

@@ -1026,10 +1026,14 @@ public class InformeSupervisionServlet extends HttpServlet {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
             }
             if (xlsxFile != null && xlsxFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId);
+                // Usar prefijo para detectar y eliminar versiones anteriores con diferente consecutivo (ej: XXXX -> 0233)
+                String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
             }
             if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId);
+                // Mismo prefijo para la versión PDF de la cuenta cobro
+                String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
             }
             if (gestionFile != null && gestionFile.exists()) {
                 com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
