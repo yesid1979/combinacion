@@ -308,6 +308,17 @@ public class InformeSupervisionDAO {
         }
     }
 
+    public void eliminar(int id) {
+        String sql = "DELETE FROM informes_supervision WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void actualizarSoportesJson(int id, String json) {
         String sql = "UPDATE informes_supervision SET soportes_json = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

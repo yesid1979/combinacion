@@ -54,6 +54,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "data":
                 devolverDatosDataTables(request, response);
                 break;
+            case "delete":
+                eliminar(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -1271,6 +1274,32 @@ public class InformeSupervisionServlet extends HttpServlet {
             }
         }
         return null;
+    }
+
+    private void eliminar(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+        int id = com.combinacion.util.ParseUtils.parseInt(request.getParameter("id"));
+        if (id <= 0) {
+            request.getSession().setAttribute("errorMessage", "ID de cuenta inválido.");
+            response.sendRedirect("informes");
+            return;
+        }
+        com.combinacion.models.InformeSupervision informe = informeService.obtenerPorId(id);
+        if (informe == null) {
+            request.getSession().setAttribute("errorMessage", "No se encontró la cuenta de cobro.");
+            response.sendRedirect("informes");
+            return;
+        }
+        if (!"BORRADOR".equals(informe.getEstadoRadicacion())) {
+            request.getSession().setAttribute("errorMessage", "Solo se pueden eliminar cuentas en estado BORRADOR.");
+            response.sendRedirect("informes");
+            return;
+        }
+        new com.combinacion.dao.InformeSupervisionDAO().eliminar(id);
+        com.combinacion.dao.AuditoriaDAO.registrar(u, "Eliminación de Cuenta", "Se eliminó la cuenta de cobro ID " + id + " (estaba en BORRADOR)", request.getRemoteAddr());
+        request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido eliminada correctamente.");
+        response.sendRedirect("informes");
     }
 
     private void insertar(HttpServletRequest request, HttpServletResponse response)

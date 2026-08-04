@@ -91,6 +91,13 @@
             <% request.getSession().removeAttribute("successMessage"); %>
         </c:if>
 
+        <c:if test="${not empty sessionScope.errorMessage}">
+            <div class="alert alert-danger shadow-sm border-0 mb-4">
+                <i class="bi bi-x-circle-fill me-2"></i> ${sessionScope.errorMessage}
+            </div>
+            <% request.getSession().removeAttribute("errorMessage"); %>
+        </c:if>
+
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-end mb-3">
@@ -229,6 +236,11 @@
                             if (mostrarBtnRevisar) {
                                 html += '<button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
                             }
+
+                            // Botón Borrar (solo en estado BORRADOR y si es el dueño o admin)
+                            if (estado === 'BORRADOR' && (modo === 'mis_cuentas' || esAdminCuentas)) {
+                                html += '<button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Eliminar Borrador" onclick="confirmarBorrar(' + id + ')"><i class="bi bi-trash3"></i></button>';
+                            }
                             
                             return html;
                         }
@@ -262,6 +274,24 @@
             });
         });
         
+        function confirmarBorrar(id) {
+            Swal.fire({
+                title: '¿Eliminar borrador?',
+                html: '<p class="text-muted mb-0">Esta acción <strong>no se puede deshacer</strong>.<br>¿Está seguro de que desea eliminar esta cuenta de cobro?</p>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash3"></i> Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'informes?action=delete&id=' + id;
+                }
+            });
+        }
+
         function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
             let opcionesHTML = '';
             let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
