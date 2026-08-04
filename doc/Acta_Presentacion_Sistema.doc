@@ -1,0 +1,125 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="utf-8">
+    <title>Acta de Reunión</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; font-size: 11pt; line-height: 1.5; text-align: justify; }
+        h1, h2 { text-align: center; color: #000000; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000000; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; width: 30%; }
+        .footer { margin-top: 50px; text-align: center; }
+        .signature-line { border-bottom: 1px solid #000; width: 250px; margin: 40px auto 10px auto; }
+    </style>
+</head>
+<body>
+    <h1>ACTA DE REUNIÓN</h1>
+    <h2>Presentación del Sistema de Gestión de Contratación y Cuentas de Cobro</h2>
+
+    <table>
+        <tr>
+            <th>Fecha:</th>
+            <td>[DD/MM/AAAA]</td>
+        </tr>
+        <tr>
+            <th>Hora de Inicio:</th>
+            <td>[00:00 AM/PM]</td>
+        </tr>
+        <tr>
+            <th>Hora de Finalización:</th>
+            <td>[00:00 AM/PM]</td>
+        </tr>
+        <tr>
+            <th>Lugar / Modalidad:</th>
+            <td>[Presencial (Sala de Juntas) / Virtual (Google Meet, Teams, etc.)]</td>
+        </tr>
+        <tr>
+            <th>Elaborado por:</th>
+            <td>Yesid Javier Piedrahita Correa</td>
+        </tr>
+    </table>
+
+    <h3>1. ASISTENTES</h3>
+    <ul>
+        <li>[Nombre de asistente 1] - [Cargo]</li>
+        <li>[Nombre de asistente 2] - [Cargo]</li>
+        <li>[Nombre de asistente 3] - [Cargo]</li>
+        <li>Yesid Javier Piedrahita Correa - [Tu Cargo / Desarrollador]</li>
+    </ul>
+
+    <h3>2. ORDEN DEL DÍA</h3>
+    <ol>
+        <li>Presentación del alcance y objetivos del nuevo Sistema de Gestión.</li>
+        <li>Demostración del módulo de Creación y Administración de Contratos (incluyendo modificaciones, adiciones y prórrogas).</li>
+        <li>Demostración del flujo de radicación de Cuentas de Cobro desde el rol del Contratista.</li>
+        <li>Revisión del proceso de supervisión, aprobación y devolución de cuentas.</li>
+        <li>Exhibición de la generación automática de documentos (Excel, Word, PDF) y su sincronización en la nube (Google Drive).</li>
+        <li>Preguntas, observaciones y retroalimentación de los asistentes.</li>
+        <li>Conclusiones y pasos a seguir.</li>
+    </ol>
+
+    <h3>3. DESARROLLO DE LA REUNIÓN</h3>
+    <p>
+        El Ing. Yesid Piedrahita da inicio a la reunión explicando detalladamente las bondades del nuevo "Sistema de Gestión de Prestadores y Cuentas de Cobro". Durante su intervención, el Ing. Yesid destacó cómo la plataforma logra optimizar los tiempos de respuesta, estandarizar los procesos documentales y asegurar el flujo correcto en la radicación y revisión de las cuentas de cobro de los contratistas. Además, subrayó los mecanismos de seguridad recientes, como la prevención de radicaciones duplicadas.
+    </p>
+    <p>
+        Posteriormente, Jetsabel tomó la palabra para hacer la explicación y demostración del módulo de Combinación. Durante su exposición, fue enfática en aclarar que la parte clave y más delicada en este módulo radica en la correcta <strong>selección de los periodos</strong>. Jetsabel explicó paso a paso cómo una selección precisa de estos periodos asegura que la generación de las plantillas ("Cuenta de Cobro", "Informe de Supervisión" e "Informe de Gestión") extraiga la información contable y técnica correcta de la base de datos, evitando reprocesos en la cadena de revisión.
+    </p>
+    <p>
+        Seguidamente, se realizó la exhibición detallada de la <strong>generación automática de documentos y su sincronización en la nube</strong>. Se demostró cómo, una vez validados los datos, el sistema ensambla y produce de forma automática los archivos en formatos Excel, Word y PDF, listos para su revisión y firma. Simultáneamente, se comprobó la integración transparente con Google Drive: el sistema crea la estructura de carpetas correspondiente y nombra cada archivo siguiendo estrictamente los estándares y consecutivos de la entidad. Esto garantiza que tanto las evidencias cargadas por el contratista como los informes generados por el sistema queden debidamente organizados, respaldados y disponibles para auditoría, eliminando la intervención manual y mitigando el riesgo de pérdida de información.
+    </p>
+    <p>
+        La demostración práctica fluyó de manera exitosa, permitiendo a los asistentes visualizar el entorno desde los distintos perfiles (Administrador, Supervisor y Contratista), comprobando la facilidad de uso de la herramienta.
+    </p>
+
+    <h3>4. OBSERVACIONES Y PREGUNTAS</h3>
+    <ul>
+        <li><strong>Propuesta de mejora:</strong> Durante el espacio de retroalimentación, Rubén sugirió proyectar a futuro la creación e integración de un módulo de "Reevaluación de Proveedores". Explicó que esto permitiría no solo sistematizar el control de las cuentas de cobro, sino también medir objetivamente el desempeño y cumplimiento de los contratistas, cerrando así el ciclo completo de gestión de calidad en la contratación.</li>
+        <li><strong>Calidad de la información:</strong> El Ing. Yesid hizo especial énfasis en que el éxito, precisión y correcto funcionamiento de todo el ecosistema dependerá directamente de la rigurosidad y buena alimentación de la matriz de datos inicial. Reiteró que la calidad, actualización y revisión de la información ingresada desde un comienzo es el pilar fundamental para evitar errores en las plantillas y en las etapas de pago.</li>
+    </ul>
+
+    <h3>5. CONCLUSIONES Y COMPROMISOS</h3>
+    <table style="margin-top: 10px;">
+        <tr>
+            <th style="width: 70%;">Compromiso / Decisión</th>
+            <th style="width: 30%;">Responsable</th>
+        </tr>
+        <tr>
+            <td><strong>Manejo de consecutivos:</strong> La Dra. Johhana determina que el proceso para los consecutivos continuará de la forma en que se viene manejando actualmente; es decir, cada contratista debe ser el responsable de digitar su propio consecutivo en el sistema al momento de generar su cuenta.</td>
+            <td>Dra. Johhana / Contratistas</td>
+        </tr>
+        <tr>
+            <td><strong>Presentación Directiva:</strong> Solicitar y agendar una reunión con la Dra. Ana Catalina para hacerle la presentación oficial de las bondades y flujo del sistema.</td>
+            <td>Dra. Johhana</td>
+        </tr>
+        <tr>
+            <td><strong>Autorización de Pruebas Piloto:</strong> Durante la reunión con la Dra. Ana Catalina, se buscará su visto bueno y autorización oficial para iniciar la fase de pruebas prácticas del sistema, la cual se ejecutará capacitando e involucrando a los contratistas divididos por grupos.</td>
+            <td>Dra. Ana Catalina / Dra. Johhana</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <p style="text-align: left;"><strong>Cierre de la reunión:</strong></p>
+        <p style="text-align: justify;">
+            Habiéndose agotado el orden del día y al no haber intervenciones ni observaciones adicionales por parte de los asistentes, se da por terminada la reunión de presentación y socialización del sistema siendo las <strong>[00:00 AM/PM]</strong> del día estipulado en el encabezado. En constancia de lo tratado y de los compromisos adquiridos, firman los asistentes que en ella intervinieron.
+        </p>
+        
+        <table style="border: none; margin-top: 60px;">
+            <tr style="border: none;">
+                <td style="border: none; text-align: center;">
+                    <div class="signature-line"></div>
+                    <strong>Yesid Javier Piedrahita Correa</strong><br>
+                    [Cargo]
+                </td>
+                <td style="border: none; text-align: center;">
+                    <div class="signature-line"></div>
+                    <strong>[Nombre del aprobador/jefe]</strong><br>
+                    [Cargo]
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
