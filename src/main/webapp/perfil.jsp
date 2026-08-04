@@ -98,9 +98,23 @@
                             <label class="form-label">Email</label>
                             <input type="email" name="correo" class="form-control" value="${sessionScope.usuario.correo}" required>
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="form-label">No. de contacto</label>
                             <input type="text" name="celular" class="form-control" value="${sessionScope.usuario.celular}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" name="direccion" class="form-control" value="${contratistaInfo.direccion}">
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${contratistaInfo.fechaNacimiento}" onchange="calcularEdad()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Edad</label>
+                                <input type="number" id="edad" name="edad" class="form-control" value="${contratistaInfo.edad}" readonly style="background-color: #f8f9fa;">
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-blue shadow-sm">
                             <i class="bi bi-save me-2"></i> Guardar datos
@@ -192,6 +206,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function calcularEdad() {
+            var fecha = $('#fechaNacimiento').val();
+            if (fecha) {
+                var hoy = new Date();
+                var cumpleanos = new Date(fecha);
+                cumpleanos.setMinutes(cumpleanos.getMinutes() + cumpleanos.getTimezoneOffset());
+                var edad = hoy.getFullYear() - cumpleanos.getFullYear();
+                var m = hoy.getMonth() - cumpleanos.getMonth();
+                if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
+                    edad--;
+                }
+                $('#edad').val(edad);
+            }
+        }
+
         // Estilo solicitado: icono de llave rotado
         $('.rotate-45').css('transform', 'rotate(-45deg)');
 

@@ -39,6 +39,10 @@ public class UsuarioServlet extends HttpServlet {
         // --- SEGURIDAD ABSOLUTA: Si no es ruta /admin/, BLOQUEAR todo excepto el perfil propio ---
         if (!uri.contains("/admin/")) {
             if ("profile".equals(action)) {
+                Usuario logged = (Usuario) request.getSession().getAttribute("usuario");
+                if (logged != null && logged.getCedula() != null) {
+                    request.setAttribute("contratistaInfo", new com.combinacion.dao.ContratistaDAO().obtenerPorCedula(logged.getCedula()));
+                }
                 request.getRequestDispatcher("/perfil.jsp").forward(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado. No tiene permisos para esta zona.");
@@ -67,6 +71,10 @@ public class UsuarioServlet extends HttpServlet {
                 mostrarPermisosUsuario(request, response);
                 break;
             case "profile":
+                Usuario logged2 = (Usuario) request.getSession().getAttribute("usuario");
+                if (logged2 != null && logged2.getCedula() != null) {
+                    request.setAttribute("contratistaInfo", new com.combinacion.dao.ContratistaDAO().obtenerPorCedula(logged2.getCedula()));
+                }
                 request.getRequestDispatcher("/perfil.jsp").forward(request, response);
                 break;
             case "data":
@@ -143,9 +151,27 @@ public class UsuarioServlet extends HttpServlet {
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
         String celular = request.getParameter("celular");
+        String direccion = request.getParameter("direccion");
+        String fechaNacimientoStr = request.getParameter("fecha_nacimiento");
+        String edadStr = request.getParameter("edad");
 
         String error = usuarioService.actualizarPerfil(logged.getId(), nombre, correo, celular);
         
+        if (logged.getCedula() != null && !logged.getCedula().trim().isEmpty()) {
+            com.combinacion.dao.ContratistaDAO cDao = new com.combinacion.dao.ContratistaDAO();
+            com.combinacion.models.Contratista c = cDao.obtenerPorCedula(logged.getCedula());
+            if (c != null) {
+                if (direccion != null) c.setDireccion(direccion);
+                if (fechaNacimientoStr != null && !fechaNacimientoStr.isEmpty()) {
+                    try { c.setFechaNacimiento(java.sql.Date.valueOf(fechaNacimientoStr)); } catch (Exception e) {}
+                }
+                if (edadStr != null && !edadStr.isEmpty()) {
+                    try { c.setEdad(Integer.parseInt(edadStr)); } catch (Exception e) {}
+                }
+                cDao.actualizar(c);
+            }
+        }
+
         Map<String, Object> res = new HashMap<>();
         if (error == null) {
             // Actualizar objeto en sesión
