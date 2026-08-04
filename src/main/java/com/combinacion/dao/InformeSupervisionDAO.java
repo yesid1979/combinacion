@@ -8,6 +8,29 @@ import java.util.List;
 
 public class InformeSupervisionDAO {
 
+    /**
+     * Verifica si ya existe una cuenta de cobro con el mismo contrato, período, tipo e número de cuota.
+     * @return true si ya existe un registro duplicado
+     */
+    public boolean existeDuplicado(int contratoId, String periodoInforme, String tipoInforme, String numeroCuota) {
+        String sql = "SELECT COUNT(*) FROM informes_supervision WHERE contrato_id = ? AND periodo_informe = ? AND tipo_informe = ? AND numero_cuota = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratoId);
+            ps.setString(2, periodoInforme);
+            ps.setString(3, tipoInforme);
+            ps.setString(4, numeroCuota);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public String insertar(InformeSupervision info) {
         crearTablaSiNoExiste();
         String sql = "INSERT INTO informes_supervision (" +

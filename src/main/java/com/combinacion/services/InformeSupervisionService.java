@@ -40,6 +40,10 @@ public class InformeSupervisionService {
             if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                 info.setEstadoRadicacion("BORRADOR");
             }
+            // Validar duplicado: misma combinación de contrato, período, tipo e número de cuota
+            if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(), info.getNumeroCuota())) {
+                return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
+            }
             String daoResult = informeDAO.insertar(info);
             if (daoResult == null) {
                 return null; // Éxito
