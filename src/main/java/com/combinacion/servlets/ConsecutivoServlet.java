@@ -65,12 +65,6 @@ public class ConsecutivoServlet extends HttpServlet {
             return;
         }
         
-        if ("clean".equals(action)) {
-             consecutivoDAO.vaciarTabla(); // Asumo que el método se llama vaciarTabla() en el DAO
-             response.sendRedirect("consecutivos?action=list&status=cleaned");
-             return;
-        }
-        
         request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
     }
 
@@ -97,6 +91,9 @@ public class ConsecutivoServlet extends HttpServlet {
         json.append("\"recordsFiltered\": ").append(recordsFiltered).append(", ");
         json.append("\"data\": [");
         
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
+        
         for (int i = 0; i < data.size(); i++) {
             ConsecutivoCobro c = data.get(i);
             json.append("{");
@@ -105,7 +102,7 @@ public class ConsecutivoServlet extends HttpServlet {
             json.append("\"contrato\": \"").append(escapeJson(c.getContrato())).append("\", ");
             json.append("\"numeroCuota\": \"").append(escapeJson(c.getNumeroCuota())).append("\", ");
             json.append("\"consecutivo\": \"").append(escapeJson(c.getConsecutivo())).append("\", ");
-            json.append("\"fechaCarga\": \"").append(c.getFechaCarga() != null ? c.getFechaCarga().toString() : "").append("\"");
+            json.append("\"fechaCarga\": \"").append(c.getFechaCarga() != null ? sdf.format(c.getFechaCarga()) : "").append("\"");
             json.append("}");
             if (i < data.size() - 1) json.append(",");
         }

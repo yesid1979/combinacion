@@ -58,11 +58,8 @@
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">Últimos consecutivos cargados</h5>
                 <div>
-                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark me-2">
+                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark">
                         <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
-                    </button>
-                    <button onclick="confirmarLimpiar()" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash-fill me-1"></i>Limpiar todos
                     </button>
                 </div>
             </div>
@@ -191,22 +188,6 @@
             });
         }
 
-        function confirmarLimpiar() {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Esto eliminará TODOS los consecutivos de la base de datos de forma permanente.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, limpiar todo',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '${pageContext.request.contextPath}/consecutivos?action=clean';
-                }
-            });
-        }
     </script>
 </body>
 </html>
