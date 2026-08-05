@@ -20,14 +20,17 @@ public class ConsecutivoDAO {
                           "UNIQUE (cedula, contrato, numero_cuota)" +
                           ")";
                           
-        String sqlPermiso = "INSERT INTO permisos (nombre, descripcion) " +
-                            "SELECT 'CONSECUTIVOS_GESTIONAR', 'Permite cargar masivamente y gestionar los consecutivos de cobro' " +
+        String sqlPermiso = "INSERT INTO permisos (nombre, descripcion, modulo) " +
+                            "SELECT 'CONSECUTIVOS_GESTIONAR', 'Permite cargar masivamente y gestionar los consecutivos de cobro', 'CONSECUTIVOS' " +
                             "WHERE NOT EXISTS (SELECT 1 FROM permisos WHERE nombre = 'CONSECUTIVOS_GESTIONAR')";
+                            
+        String sqlUpdatePermiso = "UPDATE permisos SET modulo = 'CONSECUTIVOS' WHERE nombre = 'CONSECUTIVOS_GESTIONAR'";
                             
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sqlTable);
             stmt.executeUpdate(sqlPermiso);
+            stmt.executeUpdate(sqlUpdatePermiso);
         } catch (SQLException e) {
             e.printStackTrace();
         }
