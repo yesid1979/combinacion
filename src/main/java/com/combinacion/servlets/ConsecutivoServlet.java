@@ -91,7 +91,7 @@ public class ConsecutivoServlet extends HttpServlet {
         json.append("\"recordsFiltered\": ").append(recordsFiltered).append(", ");
         json.append("\"data\": [");
         
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
         
         for (int i = 0; i < data.size(); i++) {
