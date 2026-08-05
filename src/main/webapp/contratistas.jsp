@@ -31,9 +31,14 @@
             <div class="container container-main mt-4 mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
-                    <a href="contratistas?action=new" class="btn text-white fw-bold px-4" style="background-color: #198754;">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contratista
-                    </a>
+                    <div>
+                        <a href="contratistas?action=exportExcel" class="btn btn-outline-success fw-bold px-3 me-2">
+                            <i class="bi bi-file-earmark-excel-fill me-1"></i>Exportar a Excel
+                        </a>
+                        <a href="contratistas?action=new" class="btn text-white fw-bold px-4" style="background-color: #198754;">
+                            <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contratista
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card border-0 shadow-sm">

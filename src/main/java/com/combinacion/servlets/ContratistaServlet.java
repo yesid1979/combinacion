@@ -30,6 +30,7 @@ public class ContratistaServlet extends HttpServlet {
     private static final String ACTION_DELETE = "delete";
     private static final String ACTION_INSERT = "insert";
     private static final String ACTION_UPDATE = "update";
+    private static final String ACTION_EXPORT = "exportExcel";
 
     // Constantes para permisos
     private static final String PERMISO_CREAR = "CONTRATISTAS_CREAR";
@@ -60,6 +61,9 @@ public class ContratistaServlet extends HttpServlet {
                 break;
             case ACTION_DATA:
                 responderDatosTabla(request, response);
+                break;
+            case ACTION_EXPORT:
+                exportarExcel(request, response);
                 break;
             case ACTION_NEW:
                 if (authService.tienePermiso(u, PERMISO_CREAR)) {
@@ -134,6 +138,58 @@ public class ContratistaServlet extends HttpServlet {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error al listar contratistas", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al listar contratistas");
+        }
+    }
+
+    private void exportarExcel(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Listado_Contratistas.xlsx\"");
+
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Contratistas");
+
+            // Header
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+            String[] headers = {"Cédula", "Nombres y Apellidos", "Correo", "Teléfono", "Dirección", "Fecha Nacimiento", "Edad", "Título", "T. Profesional"};
+            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Data
+            List<Contratista> list = contratistaService.listarTodos();
+            int rowNum = 1;
+            for (Contratista c : list) {
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(c.getCedula() != null ? c.getCedula() : "");
+                row.createCell(1).setCellValue(c.getNombre() != null ? c.getNombre() : "");
+                row.createCell(2).setCellValue(c.getCorreo() != null ? c.getCorreo() : "");
+                row.createCell(3).setCellValue(c.getTelefono() != null ? c.getTelefono() : "");
+                row.createCell(4).setCellValue(c.getDireccion() != null ? c.getDireccion() : "");
+                if (c.getFechaNacimiento() != null) {
+                    row.createCell(5).setCellValue(c.getFechaNacimiento().toString());
+                } else {
+                    row.createCell(5).setCellValue("");
+                }
+                row.createCell(6).setCellValue(c.getEdad());
+                row.createCell(7).setCellValue(c.getFormacionTitulo() != null ? c.getFormacionTitulo() : "");
+                row.createCell(8).setCellValue(c.getTarjetaProfesional() != null ? c.getTarjetaProfesional() : "");
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(response.getOutputStream());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error al exportar contratistas a Excel", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al exportar contratistas");
         }
     }
 
