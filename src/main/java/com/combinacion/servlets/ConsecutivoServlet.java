@@ -142,6 +142,9 @@ public class ConsecutivoServlet extends HttpServlet {
 
     private void eliminarMultiples(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String[] idsStr = request.getParameterValues("ids[]");
+        if (idsStr == null) {
+            idsStr = request.getParameterValues("ids");
+        }
         if (idsStr == null || idsStr.length == 0) {
             response.getWriter().write("{\"success\": false}");
             return;
