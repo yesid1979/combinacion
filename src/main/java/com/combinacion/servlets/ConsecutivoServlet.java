@@ -235,12 +235,8 @@ public class ConsecutivoServlet extends HttpServlet {
 
     private String getCellValue(Cell cell) {
         if (cell == null) return "";
-        if (cell.getCellType() == CellType.STRING) {
-            return cell.getStringCellValue();
-        } else if (cell.getCellType() == CellType.NUMERIC) {
-            return String.valueOf((long) cell.getNumericCellValue());
-        }
-        return cell.toString();
+        org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
+        return formatter.formatCellValue(cell);
     }
 
     private void descargarPlantilla(HttpServletRequest request, HttpServletResponse response) throws IOException {
