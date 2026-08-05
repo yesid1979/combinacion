@@ -39,6 +39,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Contratistas registrados</h3>
             <div>
+                <a href="${pageContext.request.contextPath}/contratistas?action=exportExcel" class="btn btn-outline-success fw-bold me-2">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i>Exportar Excel
+                </a>
                 <a href="${pageContext.request.contextPath}/masivo-usuarios" class="btn text-white fw-bold me-2" style="background-color: #004884;">
                     <i class="bi bi-people-fill me-1"></i>Generar Usuarios
                 </a>
