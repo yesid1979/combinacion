@@ -33,7 +33,7 @@
                     </li>
                     </c:if>
                     
-                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER') || sessionScope.usuario.tienePermiso('REVISORES_VER') || sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || sessionScope.usuario.tienePermiso('VERBOS_VER') || sessionScope.usuario.tienePermiso('CONSECUTIVOS_GESTIONAR')}">
+                    <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISORES_VER') || sessionScope.usuario.tienePermiso('ORDENADORES_VER') || sessionScope.usuario.tienePermiso('REVISORES_VER') || sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || sessionScope.usuario.tienePermiso('VERBOS_VER') || sessionScope.usuario.tienePermiso('CONSECUTIVOS_VER')}">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-bold px-3 py-2 d-flex align-items-center" 
                            style="color: #004884; font-size: 0.9rem;"
@@ -41,7 +41,7 @@
                             <i class="bi bi-database-fill-add me-2"></i>Datos maestros
                         </a>
                         <ul class="dropdown-menu border-0 shadow-sm mt-3 p-2">
-                            <c:if test="${sessionScope.usuario.tienePermiso('CONSECUTIVOS_GESTIONAR')}">
+                            <c:if test="${sessionScope.usuario.tienePermiso('CONSECUTIVOS_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/consecutivos"><i class="bi bi-123 me-2"></i>Consecutivos</a></li>
                             </c:if>
                             <c:if test="${sessionScope.usuario.tienePermiso('CONTRATISTAS_VER')}">

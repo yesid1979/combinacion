@@ -25,7 +25,7 @@ public class ConsecutivoServlet extends HttpServlet {
 
     private final ConsecutivoDAO consecutivoDAO = new ConsecutivoDAO();
     private final AuthService authService = new AuthService();
-    private static final String PERMISO = "CONSECUTIVOS_GESTIONAR";
+    private static final String PERMISO = "CONSECUTIVOS_VER";
 
     @Override
     public void init() throws ServletException {
