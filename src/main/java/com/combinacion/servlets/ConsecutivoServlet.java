@@ -1,0 +1,210 @@
+package com.combinacion.servlets;
+
+import com.combinacion.dao.ConsecutivoDAO;
+import com.combinacion.models.ConsecutivoCobro;
+import com.combinacion.models.Usuario;
+import com.combinacion.services.AuthService;
+import org.apache.poi.ss.usermodel.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+@WebServlet(name = "ConsecutivoServlet", urlPatterns = {"/consecutivos"})
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+    maxFileSize = 1024 * 1024 * 10,      // 10 MB
+    maxRequestSize = 1024 * 1024 * 15    // 15 MB
+)
+public class ConsecutivoServlet extends HttpServlet {
+
+    private final ConsecutivoDAO consecutivoDAO = new ConsecutivoDAO();
+    private final AuthService authService = new AuthService();
+    private static final String PERMISO = "CONSECUTIVOS_GESTIONAR";
+
+    @Override
+    public void init() throws ServletException {
+        // Inicializa la tabla y el permiso si no existen
+        consecutivoDAO.inicializarTabla();
+    }
+
+    private Usuario getUsuario(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return (session != null) ? (Usuario) session.getAttribute("usuario") : null;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        Usuario u = getUsuario(request);
+        if (u == null || !authService.tienePermiso(u, PERMISO)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "No tiene permiso para gestionar consecutivos.");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        
+        if ("template".equals(action)) {
+            descargarPlantilla(request, response);
+            return;
+        }
+
+        if ("list".equals(action)) {
+            List<ConsecutivoCobro> lista = consecutivoDAO.listarTodos();
+            request.setAttribute("listaConsecutivos", lista);
+            request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
+            return;
+        }
+        
+        if ("clean".equals(action)) {
+             consecutivoDAO.eliminarTodos();
+             response.sendRedirect("consecutivos?action=list&status=cleaned");
+             return;
+        }
+        
+        List<ConsecutivoCobro> lista = consecutivoDAO.listarTodos();
+        request.setAttribute("listaConsecutivos", lista);
+        request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        Usuario u = getUsuario(request);
+        if (u == null || !authService.tienePermiso(u, PERMISO)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "No tiene permiso para gestionar consecutivos.");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if ("upload".equals(action)) {
+            procesarCarga(request, response, u.getId());
+        } else if ("check".equals(action)) {
+            consultarConsecutivo(request, response);
+        } else {
+            response.sendRedirect("consecutivos?action=list");
+        }
+    }
+
+    private void procesarCarga(HttpServletRequest request, HttpServletResponse response, int cargadoPor) 
+            throws ServletException, IOException {
+        Part filePart = request.getPart("fileExcel");
+        if (filePart == null || filePart.getSize() == 0) {
+            response.sendRedirect("consecutivos?action=list&error=no_file");
+            return;
+        }
+
+        List<ConsecutivoCobro> list = new ArrayList<>();
+        try (InputStream fileContent = filePart.getInputStream();
+             Workbook workbook = WorkbookFactory.create(fileContent)) {
+             
+            Sheet sheet = workbook.getSheetAt(0);
+            boolean firstRow = true;
+            for (Row row : sheet) {
+                if (firstRow) {
+                    firstRow = false;
+                    continue; // Saltar encabezados
+                }
+                
+                String cedula = getCellValue(row.getCell(0));
+                String contrato = getCellValue(row.getCell(1));
+                String cuota = getCellValue(row.getCell(2));
+                String consecutivo = getCellValue(row.getCell(3));
+                
+                if (cedula != null && !cedula.trim().isEmpty() &&
+                    contrato != null && !contrato.trim().isEmpty() &&
+                    cuota != null && !cuota.trim().isEmpty() &&
+                    consecutivo != null && !consecutivo.trim().isEmpty()) {
+                    
+                    ConsecutivoCobro c = new ConsecutivoCobro();
+                    c.setCedula(cedula.trim());
+                    c.setContrato(contrato.trim());
+                    c.setNumeroCuota(cuota.trim());
+                    c.setConsecutivo(consecutivo.trim());
+                    list.add(c);
+                }
+            }
+            
+            if (list.isEmpty()) {
+                response.sendRedirect("consecutivos?action=list&error=empty_or_invalid");
+                return;
+            }
+            
+            boolean success = consecutivoDAO.guardarMasivo(list, cargadoPor);
+            if (success) {
+                response.sendRedirect("consecutivos?action=list&status=uploaded&count=" + list.size());
+            } else {
+                response.sendRedirect("consecutivos?action=list&error=db_error");
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("consecutivos?action=list&error=parse_error");
+        }
+    }
+
+    private void consultarConsecutivo(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String cedula = request.getParameter("cedula");
+        String contrato = request.getParameter("contrato");
+        String cuota = request.getParameter("cuota");
+        
+        String consecutivo = consecutivoDAO.obtenerConsecutivo(cedula, contrato, cuota);
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (consecutivo != null) {
+            response.getWriter().write("{\"success\":true, \"consecutivo\":\"" + consecutivo + "\"}");
+        } else {
+            response.getWriter().write("{\"success\":false}");
+        }
+    }
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) return "";
+        if (cell.getCellType() == CellType.STRING) {
+            return cell.getStringCellValue();
+        } else if (cell.getCellType() == CellType.NUMERIC) {
+            return String.valueOf((long) cell.getNumericCellValue());
+        }
+        return cell.toString();
+    }
+
+    private void descargarPlantilla(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Plantilla_Consecutivos.xlsx\"");
+
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Consecutivos");
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+            
+            String[] headers = {"Cédula", "Contrato", "Cuota", "Consecutivo"};
+            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Datos de ejemplo
+            org.apache.poi.ss.usermodel.Row example = sheet.createRow(1);
+            example.createCell(0).setCellValue("12345678");
+            example.createCell(1).setCellValue("4143.010.27.1.100-2026");
+            example.createCell(2).setCellValue("8");
+            example.createCell(3).setCellValue("150");
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            workbook.write(response.getOutputStream());
+        }
+    }
+}

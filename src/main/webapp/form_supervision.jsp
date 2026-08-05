@@ -1563,6 +1563,44 @@
                     }
                 });
             }
+
+            $(document).ready(function() {
+                // Autocompletar Consecutivo de Cobro desde el módulo masivo
+                function fetchConsecutivo() {
+                    var cedula = '${sessionScope.usuario.cedula}';
+                    var contrato = '${contrato.numeroContrato}';
+                    var cuota = $('[name="numero_cuota"]').val();
+                    
+                    if (cedula && contrato && cuota) {
+                        $.post('${pageContext.request.contextPath}/consecutivos', {
+                            action: 'check',
+                            cedula: cedula,
+                            contrato: contrato,
+                            cuota: cuota
+                        }, function(response) {
+                            if (response && response.success && response.consecutivo) {
+                                var inputCons = $('[name="consecutivo_cobro"]');
+                                // Solo reemplazar si está vacío o si el usuario no ha forzado uno diferente
+                                if (!inputCons.val() || inputCons.hasClass('auto-filled')) {
+                                    inputCons.val(response.consecutivo)
+                                             .addClass('auto-filled is-valid')
+                                             .attr('readonly', true)
+                                             .attr('title', 'Consecutivo cargado automáticamente por el administrador');
+                                }
+                            }
+                        }, 'json');
+                    }
+                }
+
+                $('[name="numero_cuota"]').on('change keyup', function() {
+                    fetchConsecutivo();
+                });
+                
+                // Ejecutar al cargar la página si la cuota ya está seleccionada y consecutivo vacío
+                if ($('[name="numero_cuota"]').val() && !$('[name="consecutivo_cobro"]').val()) {
+                    fetchConsecutivo();
+                }
+            });
         </script>
     </body>
 </html>
