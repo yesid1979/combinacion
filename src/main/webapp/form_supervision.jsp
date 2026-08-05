@@ -1571,6 +1571,8 @@
                     var contrato = '${contrato.numeroContrato}';
                     var cuota = $('[name="numero_cuota"]').val();
                     
+                    alert('DEBUG: Intentando buscar consecutivo.\nCédula: ' + cedula + '\nContrato: ' + contrato + '\nCuota seleccionada: ' + cuota);
+                    
                     if (cedula && contrato && cuota) {
                         $.post('${pageContext.request.contextPath}/consecutivos', {
                             action: 'check',
@@ -1578,6 +1580,7 @@
                             contrato: contrato,
                             cuota: cuota
                         }, function(response) {
+                            alert('DEBUG: Respuesta del servidor recibida.\nSuccess: ' + response.success + '\nConsecutivo: ' + response.consecutivo);
                             if (response && response.success && response.consecutivo) {
                                 var inputCons = $('[name="consecutivo_cobro"]');
                                 // Solo reemplazar si está vacío o si el usuario no ha forzado uno diferente
@@ -1588,7 +1591,11 @@
                                              .attr('title', 'Consecutivo cargado automáticamente por el administrador');
                                 }
                             }
-                        }, 'json');
+                        }, 'json').fail(function(xhr, status, error) {
+                            alert('DEBUG: Falló la petición AJAX al servidor.\nStatus: ' + status + '\nError: ' + error + '\nStatus Code: ' + xhr.status);
+                        });
+                    } else {
+                        alert('DEBUG: Faltan datos para hacer la búsqueda.\nCédula, Contrato o Cuota están vacíos.');
                     }
                 }
 
