@@ -88,16 +88,15 @@ public class ConsecutivoDAO {
     }
 
     public String obtenerConsecutivo(String cedula, String contrato, String numeroCuota) {
-        if (cedula == null || contrato == null || numeroCuota == null) return null;
+        if (contrato == null || numeroCuota == null) return null;
         
         String sql = "SELECT consecutivo FROM consecutivos_cobro " +
-                     "WHERE cedula = ? AND contrato LIKE ? AND numero_cuota = ? " +
+                     "WHERE contrato LIKE ? AND numero_cuota = ? " +
                      "ORDER BY id DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, cedula.trim());
-            ps.setString(2, "%" + contrato.trim() + "%");
-            ps.setString(3, numeroCuota.trim());
+            ps.setString(1, "%" + contrato.trim() + "%");
+            ps.setString(2, numeroCuota.trim());
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
