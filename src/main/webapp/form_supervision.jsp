@@ -1571,8 +1571,6 @@
                     var contrato = '${contrato.numeroContrato}';
                     var cuota = $('[name="numero_cuota"]').val();
                     
-                    alert('DEBUG: Intentando buscar consecutivo.\nCédula: ' + cedula + '\nContrato: ' + contrato + '\nCuota seleccionada: ' + cuota);
-                    
                     if (cedula && contrato && cuota) {
                         $.post('${pageContext.request.contextPath}/consecutivos', {
                             action: 'check',
@@ -1580,9 +1578,8 @@
                             contrato: contrato,
                             cuota: cuota
                         }, function(response) {
-                            alert('DEBUG: Respuesta del servidor recibida.\nSuccess: ' + response.success + '\nConsecutivo: ' + response.consecutivo);
+                            var inputCons = $('[name="consecutivo_cobro"]');
                             if (response && response.success && response.consecutivo) {
-                                var inputCons = $('[name="consecutivo_cobro"]');
                                 // Solo reemplazar si está vacío o si el usuario no ha forzado uno diferente
                                 if (!inputCons.val() || inputCons.hasClass('auto-filled')) {
                                     inputCons.val(response.consecutivo)
@@ -1590,12 +1587,16 @@
                                              .attr('readonly', true)
                                              .attr('title', 'Consecutivo cargado automáticamente por el administrador');
                                 }
+                            } else {
+                                // Si no encuentra consecutivo y el campo había sido autocompletado antes, lo limpiamos y lo desbloqueamos
+                                if (inputCons.hasClass('auto-filled')) {
+                                    inputCons.val('')
+                                             .removeClass('auto-filled is-valid')
+                                             .attr('readonly', false)
+                                             .removeAttr('title');
+                                }
                             }
-                        }, 'json').fail(function(xhr, status, error) {
-                            alert('DEBUG: Falló la petición AJAX al servidor.\nStatus: ' + status + '\nError: ' + error + '\nStatus Code: ' + xhr.status);
-                        });
-                    } else {
-                        alert('DEBUG: Faltan datos para hacer la búsqueda.\nCédula, Contrato o Cuota están vacíos.');
+                        }, 'json');
                     }
                 }
 
