@@ -120,4 +120,99 @@ public class ConsecutivoDAO {
             return false;
         }
     }
+
+    public boolean eliminarVarios(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return false;
+        
+        StringBuilder sb = new StringBuilder("DELETE FROM consecutivos_cobro WHERE id IN (");
+        for (int i = 0; i < ids.size(); i++) {
+            sb.append("?");
+            if (i < ids.size() - 1) sb.append(",");
+        }
+        sb.append(")");
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sb.toString())) {
+            
+            for (int i = 0; i < ids.size(); i++) {
+                ps.setInt(i + 1, ids.get(i));
+            }
+            return ps.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<ConsecutivoCobro> obtenerTodosPaginados(int start, int length, String search) {
+        List<ConsecutivoCobro> lista = new ArrayList<>();
+        String sql = "SELECT * FROM consecutivos_cobro ";
+        
+        if (search != null && !search.trim().isEmpty()) {
+            sql += "WHERE cedula ILIKE ? OR contrato ILIKE ? OR numero_cuota ILIKE ? OR consecutivo ILIKE ? ";
+        }
+        
+        sql += "ORDER BY fecha_carga DESC LIMIT ? OFFSET ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            int paramIndex = 1;
+            if (search != null && !search.trim().isEmpty()) {
+                String likeSearch = "%" + search + "%";
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+            }
+            
+            ps.setInt(paramIndex++, length);
+            ps.setInt(paramIndex++, start);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ConsecutivoCobro c = new ConsecutivoCobro();
+                    c.setId(rs.getInt("id"));
+                    c.setCedula(rs.getString("cedula"));
+                    c.setContrato(rs.getString("contrato"));
+                    c.setNumeroCuota(rs.getString("numero_cuota"));
+                    c.setConsecutivo(rs.getString("consecutivo"));
+                    c.setFechaCarga(rs.getTimestamp("fecha_carga"));
+                    c.setCargadoPor(rs.getInt("cargado_por"));
+                    lista.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+    public int contarTodos(String search) {
+        String sql = "SELECT COUNT(*) FROM consecutivos_cobro ";
+        
+        if (search != null && !search.trim().isEmpty()) {
+            sql += "WHERE cedula ILIKE ? OR contrato ILIKE ? OR numero_cuota ILIKE ? OR consecutivo ILIKE ? ";
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            if (search != null && !search.trim().isEmpty()) {
+                String likeSearch = "%" + search + "%";
+                ps.setString(1, likeSearch);
+                ps.setString(2, likeSearch);
+                ps.setString(3, likeSearch);
+                ps.setString(4, likeSearch);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

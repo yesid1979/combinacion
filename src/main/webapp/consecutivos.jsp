@@ -5,9 +5,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Consecutivos - DAGJP</title>
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 
@@ -55,14 +57,22 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">Últimos consecutivos cargados</h5>
-                <button onclick="confirmarLimpiar()" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-trash-fill me-1"></i>Limpiar todos
-                </button>
+                <div>
+                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark me-2">
+                        <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
+                    </button>
+                    <button onclick="confirmarLimpiar()" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash-fill me-1"></i>Limpiar todos
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <table class="table table-striped table-hover w-100">
+                <table id="consecutivosTable" class="table table-striped table-hover w-100">
                     <thead class="table-dark">
                         <tr>
+                            <th style="width: 40px;" class="text-center">
+                                <input type="checkbox" class="form-check-input" id="checkAll">
+                            </th>
                             <th>Cédula</th>
                             <th>Contrato</th>
                             <th>No. Cuota</th>
@@ -71,24 +81,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <c:choose>
-                            <c:when test="${not empty listaConsecutivos}">
-                                <c:forEach items="${listaConsecutivos}" var="c">
-                                    <tr>
-                                        <td><strong>${c.cedula}</strong></td>
-                                        <td>${c.contrato}</td>
-                                        <td>${c.numeroCuota}</td>
-                                        <td><span class="badge bg-success" style="font-size: 14px;">${c.consecutivo}</span></td>
-                                        <td>${c.fechaCarga}</td>
-                                    </tr>
-                                </c:forEach>
-                            </c:when>
-                            <c:otherwise>
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No hay consecutivos cargados actualmente en el sistema.</td>
-                                </tr>
-                            </c:otherwise>
-                        </c:choose>
                     </tbody>
                 </table>
             </div>
@@ -99,7 +91,10 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
         $(document).ready(function () {
             const urlParams = new URLSearchParams(window.location.search);
@@ -107,11 +102,8 @@
             const error = urlParams.get('error');
             const count = urlParams.get('count');
 
-            if (status === 'uploaded') {
-                Swal.fire('¡Éxito!', count + ' consecutivos han sido cargados o actualizados correctamente.', 'success');
-            } else if (status === 'cleaned') {
-                Swal.fire('¡Limpieza completa!', 'Todos los consecutivos han sido eliminados de la base de datos.', 'success');
-            }
+            if (status === 'uploaded') Swal.fire('¡Éxito!', count + ' consecutivos han sido cargados o actualizados correctamente.', 'success');
+            else if (status === 'cleaned') Swal.fire('¡Limpieza completa!', 'Todos los consecutivos han sido eliminados de la base de datos.', 'success');
             
             if (error === 'no_file') Swal.fire('Error', 'Debe seleccionar un archivo.', 'error');
             else if (error === 'empty_or_invalid') Swal.fire('Archivo Vacío', 'El archivo no tiene datos o el formato no es válido.', 'warning');
@@ -119,7 +111,85 @@
             else if (error === 'parse_error') Swal.fire('Error', 'El formato del archivo Excel es incorrecto o está dañado.', 'error');
 
             if (status || error) window.history.replaceState({}, document.title, window.location.pathname);
+
+            // Inicializar DataTables Server-Side
+            var table = $('#consecutivosTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": "${pageContext.request.contextPath}/consecutivos?action=list_ajax",
+                "columns": [
+                    { 
+                        "data": "id",
+                        "orderable": false,
+                        "searchable": false,
+                        "render": function(data) {
+                            return '<div class="text-center"><input type="checkbox" class="form-check-input check-item" value="' + data + '"></div>';
+                        }
+                    },
+                    { "data": "cedula", "render": function(data) { return '<strong>' + data + '</strong>'; } },
+                    { "data": "contrato" },
+                    { "data": "numeroCuota" },
+                    { "data": "consecutivo", "render": function(data) { return '<span class="badge bg-success" style="font-size: 14px;">' + data + '</span>'; } },
+                    { "data": "fechaCarga", "orderable": false }
+                ],
+                "order": [[5, 'desc']],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                }
+            });
+
+            // Seleccionar/Deseleccionar todos
+            $('#checkAll').on('click', function() {
+                $('.check-item').prop('checked', this.checked);
+            });
+            
+            // Actualizar el estado del checkbox general si se cambian los individuales
+            $('#consecutivosTable tbody').on('change', '.check-item', function() {
+                if ($('.check-item:checked').length === $('.check-item').length) {
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('#checkAll').prop('checked', false);
+                }
+            });
         });
+
+        function eliminarSeleccionados() {
+            var selected = [];
+            $('.check-item:checked').each(function() {
+                selected.push($(this).val());
+            });
+
+            if (selected.length === 0) {
+                Swal.fire('Atención', 'Debe seleccionar al menos un consecutivo para eliminar.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Vas a eliminar " + selected.length + " registro(s). Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminarlos',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('${pageContext.request.contextPath}/consecutivos', {
+                        action: 'delete_multiple',
+                        ids: selected
+                    }, function(response) {
+                        if (response.success) {
+                            Swal.fire('¡Eliminados!', 'Los registros fueron eliminados.', 'success');
+                            $('#consecutivosTable').DataTable().ajax.reload();
+                            $('#checkAll').prop('checked', false);
+                        } else {
+                            Swal.fire('Error', 'Hubo un problema al eliminar los registros.', 'error');
+                        }
+                    }, 'json');
+                }
+            });
+        }
 
         function confirmarLimpiar() {
             Swal.fire({

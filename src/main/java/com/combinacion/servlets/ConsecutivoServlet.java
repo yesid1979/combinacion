@@ -54,22 +54,72 @@ public class ConsecutivoServlet extends HttpServlet {
             return;
         }
 
+        if ("list_ajax".equals(action)) {
+            procesarListAjax(request, response);
+            return;
+        }
+
         if ("list".equals(action)) {
-            List<ConsecutivoCobro> lista = consecutivoDAO.listarTodos();
-            request.setAttribute("listaConsecutivos", lista);
+            // Ya no cargamos todos a la vez, sino que enviamos la vista vacía.
             request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
             return;
         }
         
         if ("clean".equals(action)) {
-             consecutivoDAO.eliminarTodos();
+             consecutivoDAO.vaciarTabla(); // Asumo que el método se llama vaciarTabla() en el DAO
              response.sendRedirect("consecutivos?action=list&status=cleaned");
              return;
         }
         
-        List<ConsecutivoCobro> lista = consecutivoDAO.listarTodos();
-        request.setAttribute("listaConsecutivos", lista);
         request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
+    }
+
+    private void procesarListAjax(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int draw = 1;
+        int start = 0;
+        int length = 10;
+        String search = "";
+        
+        try { draw = Integer.parseInt(request.getParameter("draw")); } catch (Exception e) {}
+        try { start = Integer.parseInt(request.getParameter("start")); } catch (Exception e) {}
+        try { length = Integer.parseInt(request.getParameter("length")); } catch (Exception e) {}
+        
+        search = request.getParameter("search[value]");
+        
+        int recordsTotal = consecutivoDAO.contarTodos(null);
+        int recordsFiltered = consecutivoDAO.contarTodos(search);
+        List<ConsecutivoCobro> data = consecutivoDAO.obtenerTodosPaginados(start, length, search);
+        
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"draw\": ").append(draw).append(", ");
+        json.append("\"recordsTotal\": ").append(recordsTotal).append(", ");
+        json.append("\"recordsFiltered\": ").append(recordsFiltered).append(", ");
+        json.append("\"data\": [");
+        
+        for (int i = 0; i < data.size(); i++) {
+            ConsecutivoCobro c = data.get(i);
+            json.append("{");
+            json.append("\"id\": ").append(c.getId()).append(", ");
+            json.append("\"cedula\": \"").append(escapeJson(c.getCedula())).append("\", ");
+            json.append("\"contrato\": \"").append(escapeJson(c.getContrato())).append("\", ");
+            json.append("\"numeroCuota\": \"").append(escapeJson(c.getNumeroCuota())).append("\", ");
+            json.append("\"consecutivo\": \"").append(escapeJson(c.getConsecutivo())).append("\", ");
+            json.append("\"fechaCarga\": \"").append(c.getFechaCarga() != null ? c.getFechaCarga().toString() : "").append("\"");
+            json.append("}");
+            if (i < data.size() - 1) json.append(",");
+        }
+        
+        json.append("]}");
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(json.toString());
+    }
+
+    private String escapeJson(String input) {
+        if (input == null) return "";
+        return input.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
     }
 
     @Override
@@ -86,9 +136,28 @@ public class ConsecutivoServlet extends HttpServlet {
             procesarCarga(request, response, u.getId());
         } else if ("check".equals(action)) {
             consultarConsecutivo(request, response);
+        } else if ("delete_multiple".equals(action)) {
+            eliminarMultiples(request, response);
         } else {
             response.sendRedirect("consecutivos?action=list");
         }
+    }
+
+    private void eliminarMultiples(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String[] idsStr = request.getParameterValues("ids[]");
+        if (idsStr == null || idsStr.length == 0) {
+            response.getWriter().write("{\"success\": false}");
+            return;
+        }
+        
+        List<Integer> ids = new ArrayList<>();
+        for (String id : idsStr) {
+            try { ids.add(Integer.parseInt(id)); } catch (Exception e) {}
+        }
+        
+        boolean ok = consecutivoDAO.eliminarVarios(ids);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"success\": " + ok + "}");
     }
 
     private void procesarCarga(HttpServletRequest request, HttpServletResponse response, int cargadoPor) 
