@@ -91,12 +91,12 @@ public class ConsecutivoDAO {
         if (cedula == null || contrato == null || numeroCuota == null) return null;
         
         String sql = "SELECT consecutivo FROM consecutivos_cobro " +
-                     "WHERE cedula = ? AND contrato = ? AND numero_cuota = ? " +
+                     "WHERE cedula = ? AND contrato LIKE ? AND numero_cuota = ? " +
                      "ORDER BY id DESC LIMIT 1";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cedula.trim());
-            ps.setString(2, contrato.trim());
+            ps.setString(2, "%" + contrato.trim() + "%");
             ps.setString(3, numeroCuota.trim());
             
             try (ResultSet rs = ps.executeQuery()) {
