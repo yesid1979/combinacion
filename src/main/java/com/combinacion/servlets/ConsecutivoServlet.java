@@ -123,12 +123,23 @@ public class ConsecutivoServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Usuario u = getUsuario(request);
-        if (u == null || !authService.tienePermiso(u, PERMISO)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "No tiene permiso para gestionar consecutivos.");
+        if (u == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Debe iniciar sesión.");
             return;
         }
 
         String action = request.getParameter("action");
+        
+        if ("check".equals(action)) {
+            consultarConsecutivo(request, response);
+            return;
+        }
+
+        if (!authService.tienePermiso(u, PERMISO)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "No tiene permiso para gestionar consecutivos.");
+            return;
+        }
+
         if ("upload".equals(action)) {
             procesarCarga(request, response, u.getId());
         } else if ("check".equals(action)) {
