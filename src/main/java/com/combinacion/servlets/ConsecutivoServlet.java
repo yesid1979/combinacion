@@ -131,6 +131,7 @@ public class ConsecutivoServlet extends HttpServlet {
         String action = request.getParameter("action");
         
         if ("check".equals(action)) {
+            System.out.println("[ConsecutivoServlet] DEBUG CHECK -> Cedula: " + request.getParameter("cedula") + ", Contrato: " + request.getParameter("contrato") + ", Cuota: " + request.getParameter("cuota"));
             consultarConsecutivo(request, response);
             return;
         }
@@ -234,6 +235,7 @@ public class ConsecutivoServlet extends HttpServlet {
         String cuota = request.getParameter("cuota");
         
         String consecutivo = consecutivoDAO.obtenerConsecutivo(cedula, contrato, cuota);
+        System.out.println("[ConsecutivoServlet] DEBUG RESULTADO -> Consecutivo encontrado: " + consecutivo);
         
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
