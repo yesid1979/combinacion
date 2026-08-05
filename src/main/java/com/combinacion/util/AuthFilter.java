@@ -73,6 +73,14 @@ public class AuthFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
+        
+        // 3.6 EXCEPCIÓN: Todos los contratistas pueden consultar su consecutivo
+        if (path.equals("/consecutivos") && "check".equals(action)) {
+            System.out.println("[FILTER] Acceso a check de consecutivo permitido.");
+            request.setAttribute("usuarioLogueado", usuario);
+            chain.doFilter(request, response);
+            return;
+        }
 
         // 4. VALIDACIÓN DE SEGURIDAD
         boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
