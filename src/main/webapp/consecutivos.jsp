@@ -27,9 +27,9 @@
             </ol>
         </nav>
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <h3 class="fw-bold text-dark mb-0">Gestión Masiva de Consecutivos</h3>
-            <div class="d-flex gap-3 align-items-center">
+            <div class="d-flex gap-3 align-items-center flex-wrap">
                 <select id="filtroAnio" class="form-select fw-bold" style="width: 120px;">
                     <c:forEach var="anioItem" items="${aniosDisponibles}">
                         <option value="${anioItem}" <c:if test="${anioItem == anioActual}">selected</c:if>>${anioItem}</option>

@@ -35,13 +35,15 @@
                     <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-file-earmark-text me-1"></i>Contratos</li>
                 </ol>
             </nav>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <h3 class="fw-bold text-dark mb-0">Contratos registrados</h3>
-            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_CREAR')}">
-                <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
-                </a>
-            </c:if>
+            <div class="d-flex flex-wrap gap-2">
+                <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_CREAR')}">
+                    <a href="contratos?action=new" class="btn text-white px-4 fw-bold" style="background-color: #198754; border-radius: 8px;">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Nuevo Contrato
+                    </a>
+                </c:if>
+            </div>
         </div>
 
                     <div class="card shadow-sm border-0">
