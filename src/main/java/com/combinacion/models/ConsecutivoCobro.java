@@ -12,6 +12,7 @@ public class ConsecutivoCobro implements Serializable {
     private Date fechaCarga;
     private Integer cargadoPor;
     private String nombre;
+    private Integer anio;
 
     public ConsecutivoCobro() {}
 
@@ -38,4 +39,7 @@ public class ConsecutivoCobro implements Serializable {
 
     public Integer getCargadoPor() { return cargadoPor; }
     public void setCargadoPor(Integer cargadoPor) { this.cargadoPor = cargadoPor; }
+
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
 }

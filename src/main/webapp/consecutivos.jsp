@@ -29,8 +29,16 @@
         
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="fw-bold text-dark mb-0">Gestión Masiva de Consecutivos</h3>
-            <div>
-                <a href="${pageContext.request.contextPath}/consecutivos?action=template" class="btn btn-outline-success fw-bold px-3 me-2">
+            <div class="d-flex gap-3 align-items-center">
+                <select id="filtroAnio" class="form-select fw-bold" style="width: 120px;">
+                    <c:forEach var="anioItem" items="${aniosDisponibles}">
+                        <option value="${anioItem}" <c:if test="${anioItem == anioActual}">selected</c:if>>${anioItem}</option>
+                    </c:forEach>
+                    <c:if test="${empty aniosDisponibles}">
+                        <option value="2026">2026</option>
+                    </c:if>
+                </select>
+                <a href="#" id="btnDescargarPlantilla" class="btn btn-outline-success fw-bold px-3">
                     <i class="bi bi-file-earmark-excel-fill me-1"></i>Descargar Plantilla
                 </a>
             </div>
@@ -40,6 +48,7 @@
             <div class="card-body bg-white rounded">
                 <form action="consecutivos" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
                     <input type="hidden" name="action" value="upload">
+                    <input type="hidden" name="anio_carga" id="anio_carga" value="2026">
                     <div class="flex-grow-1">
                         <label for="fileExcel" class="form-label fw-bold">Seleccionar archivo Excel</label>
                         <input class="form-control" type="file" id="fileExcel" name="fileExcel" accept=".xlsx,.xls" required>
@@ -110,11 +119,21 @@
 
             if (status || error) window.history.replaceState({}, document.title, window.location.pathname);
 
+            // Configuración inicial del enlace de descarga y el input de subida
+            var initialAnio = $('#filtroAnio').val();
+            $('#btnDescargarPlantilla').attr('href', '${pageContext.request.contextPath}/consecutivos?action=template&anio=' + initialAnio);
+            $('#anio_carga').val(initialAnio);
+
             // Inicializar DataTables Server-Side
             var table = $('#consecutivosTable').DataTable({
                 "processing": true,
                 "serverSide": true,
-                "ajax": "${pageContext.request.contextPath}/consecutivos?action=list_ajax",
+                "ajax": {
+                    "url": "${pageContext.request.contextPath}/consecutivos?action=list_ajax",
+                    "data": function ( d ) {
+                        d.anio = $('#filtroAnio').val();
+                    }
+                },
                 "columns": [
                     { 
                         "data": "id",
@@ -135,6 +154,14 @@
                 "language": {
                     "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
                 }
+            });
+
+            // Evento cuando se cambia el año en el menú
+            $('#filtroAnio').on('change', function() {
+                var anio = $(this).val();
+                $('#btnDescargarPlantilla').attr('href', '${pageContext.request.contextPath}/consecutivos?action=template&anio=' + anio);
+                $('#anio_carga').val(anio);
+                table.ajax.reload();
             });
 
             // Seleccionar/Deseleccionar todos

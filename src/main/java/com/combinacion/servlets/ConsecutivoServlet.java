@@ -60,11 +60,14 @@ public class ConsecutivoServlet extends HttpServlet {
         }
 
         if ("list".equals(action)) {
-            // Ya no cargamos todos a la vez, sino que enviamos la vista vacía.
+            request.setAttribute("aniosDisponibles", consecutivoDAO.obtenerAniosDisponibles());
+            request.setAttribute("anioActual", java.time.Year.now().getValue());
             request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
             return;
         }
         
+        request.setAttribute("aniosDisponibles", consecutivoDAO.obtenerAniosDisponibles());
+        request.setAttribute("anioActual", java.time.Year.now().getValue());
         request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
     }
 
@@ -80,9 +83,15 @@ public class ConsecutivoServlet extends HttpServlet {
         
         search = request.getParameter("search[value]");
         
-        int recordsTotal = consecutivoDAO.contarTodos(null);
-        int recordsFiltered = consecutivoDAO.contarTodos(search);
-        List<ConsecutivoCobro> data = consecutivoDAO.obtenerTodosPaginados(start, length, search);
+        Integer anio = null;
+        String anioStr = request.getParameter("anio");
+        if (anioStr != null && !anioStr.trim().isEmpty()) {
+            try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+        }
+        
+        int recordsTotal = consecutivoDAO.contarTodos(null, anio);
+        int recordsFiltered = consecutivoDAO.contarTodos(search, anio);
+        List<ConsecutivoCobro> data = consecutivoDAO.obtenerTodosPaginados(start, length, search, anio);
         
         StringBuilder json = new StringBuilder();
         json.append("{");
@@ -181,6 +190,12 @@ public class ConsecutivoServlet extends HttpServlet {
             return;
         }
 
+        Integer anio = null;
+        String anioStr = request.getParameter("anio_carga");
+        if (anioStr != null && !anioStr.trim().isEmpty()) {
+            try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+        }
+
         List<ConsecutivoCobro> list = new ArrayList<>();
         try (InputStream fileContent = filePart.getInputStream();
              Workbook workbook = WorkbookFactory.create(fileContent)) {
@@ -212,6 +227,7 @@ public class ConsecutivoServlet extends HttpServlet {
                     c.setContrato(contrato.trim());
                     c.setNumeroCuota(cuota.trim());
                     c.setConsecutivo(consecutivo.trim());
+                    c.setAnio(anio);
                     list.add(c);
                 }
             }
@@ -277,24 +293,40 @@ public class ConsecutivoServlet extends HttpServlet {
                 cell.setCellStyle(headerStyle);
             }
 
+            Integer anio = null;
+            String anioStr = request.getParameter("anio");
+            if (anioStr != null && !anioStr.trim().isEmpty()) {
+                try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+            }
+
             String sql = "SELECT ct.cedula, ct.nombre, c.numero_contrato " +
                          "FROM contratos c " +
                          "JOIN contratistas ct ON c.contratista_id = ct.id " +
-                         "WHERE c.fecha_terminacion >= CURRENT_DATE " +
-                         "ORDER BY c.numero_contrato ASC";
+                         "WHERE c.fecha_terminacion >= CURRENT_DATE ";
+            
+            if (anio != null) {
+                sql += "AND c.anio = ? ";
+            }
+            
+            sql += "ORDER BY c.numero_contrato ASC";
             
             int rowNum = 1;
             try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
-                 java.sql.PreparedStatement ps = conn.prepareStatement(sql);
-                 java.sql.ResultSet rs = ps.executeQuery()) {
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
                  
-                 while (rs.next()) {
+                 if (anio != null) {
+                     ps.setInt(1, anio);
+                 }
+                 
+                 try (java.sql.ResultSet rs = ps.executeQuery()) {
+                     while (rs.next()) {
                      org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
                      row.createCell(0).setCellValue(rs.getString("cedula"));
                      row.createCell(1).setCellValue(rs.getString("nombre"));
                      row.createCell(2).setCellValue(rs.getString("numero_contrato"));
                      row.createCell(3).setCellValue(""); // Cuota
                      row.createCell(4).setCellValue(""); // Consecutivo
+                     }
                  }
             } catch (Exception e) {
                 e.printStackTrace();

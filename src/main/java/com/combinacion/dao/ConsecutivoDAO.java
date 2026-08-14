@@ -37,10 +37,10 @@ public class ConsecutivoDAO {
     }
 
     public boolean guardarMasivo(List<ConsecutivoCobro> lista, int cargadoPor) {
-        String sql = "INSERT INTO consecutivos_cobro (cedula, contrato, numero_cuota, consecutivo, cargado_por) " +
-                     "VALUES (?, ?, ?, ?, ?) " +
+        String sql = "INSERT INTO consecutivos_cobro (cedula, contrato, numero_cuota, consecutivo, cargado_por, anio) " +
+                     "VALUES (?, ?, ?, ?, ?, ?) " +
                      "ON CONFLICT (cedula, contrato, numero_cuota) " +
-                     "DO UPDATE SET consecutivo = EXCLUDED.consecutivo, fecha_carga = CURRENT_TIMESTAMP, cargado_por = EXCLUDED.cargado_por";
+                     "DO UPDATE SET consecutivo = EXCLUDED.consecutivo, fecha_carga = CURRENT_TIMESTAMP, cargado_por = EXCLUDED.cargado_por, anio = EXCLUDED.anio";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -52,6 +52,11 @@ public class ConsecutivoDAO {
                 ps.setString(3, c.getNumeroCuota());
                 ps.setString(4, c.getConsecutivo());
                 ps.setInt(5, cargadoPor);
+                if (c.getAnio() != null) {
+                    ps.setInt(6, c.getAnio());
+                } else {
+                    ps.setNull(6, java.sql.Types.INTEGER);
+                }
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -144,14 +149,19 @@ public class ConsecutivoDAO {
         }
     }
 
-    public List<ConsecutivoCobro> obtenerTodosPaginados(int start, int length, String search) {
+    public List<ConsecutivoCobro> obtenerTodosPaginados(int start, int length, String search, Integer anio) {
         List<ConsecutivoCobro> lista = new ArrayList<>();
         String sql = "SELECT cc.*, c.nombre as nombre_contratista " +
                      "FROM consecutivos_cobro cc " +
-                     "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') ";
+                     "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') " +
+                     "WHERE 1=1 ";
+        
+        if (anio != null) {
+            sql += "AND cc.anio = ? ";
+        }
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "WHERE cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? ";
+            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ?) ";
         }
         
         sql += "ORDER BY cc.fecha_carga DESC LIMIT ? OFFSET ?";
@@ -160,6 +170,10 @@ public class ConsecutivoDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
              
             int paramIndex = 1;
+            if (anio != null) {
+                ps.setInt(paramIndex++, anio);
+            }
+            
             if (search != null && !search.trim().isEmpty()) {
                 String likeSearch = "%" + search + "%";
                 ps.setString(paramIndex++, likeSearch);
@@ -183,6 +197,12 @@ public class ConsecutivoDAO {
                     c.setFechaCarga(rs.getTimestamp("fecha_carga"));
                     c.setCargadoPor(rs.getInt("cargado_por"));
                     c.setNombre(rs.getString("nombre_contratista"));
+                    
+                    try {
+                        int anioDb = rs.getInt("anio");
+                        if (!rs.wasNull()) c.setAnio(anioDb);
+                    } catch (java.sql.SQLException e) {}
+                    
                     lista.add(c);
                 }
             }
@@ -192,24 +212,34 @@ public class ConsecutivoDAO {
         return lista;
     }
 
-    public int contarTodos(String search) {
-        String sql = "SELECT COUNT(*) FROM consecutivos_cobro cc ";
+    public int contarTodos(String search, Integer anio) {
+        String sql = "SELECT COUNT(*) FROM consecutivos_cobro cc " +
+                     "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') " +
+                     "WHERE 1=1 ";
+                     
+        if (anio != null) {
+            sql += "AND cc.anio = ? ";
+        }
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') ";
-            sql += "WHERE cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? ";
+            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ?) ";
         }
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
              
+            int paramIndex = 1;
+            if (anio != null) {
+                ps.setInt(paramIndex++, anio);
+            }
+            
             if (search != null && !search.trim().isEmpty()) {
                 String likeSearch = "%" + search + "%";
-                ps.setString(1, likeSearch);
-                ps.setString(2, likeSearch);
-                ps.setString(3, likeSearch);
-                ps.setString(4, likeSearch);
-                ps.setString(5, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
+                ps.setString(paramIndex++, likeSearch);
             }
             
             try (ResultSet rs = ps.executeQuery()) {
@@ -219,5 +249,26 @@ public class ConsecutivoDAO {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public List<Integer> obtenerAniosDisponibles() {
+        List<Integer> anios = new ArrayList<>();
+        String sql = "SELECT anio FROM contratos WHERE anio IS NOT NULL " +
+                     "UNION " +
+                     "SELECT anio FROM consecutivos_cobro WHERE anio IS NOT NULL " +
+                     "ORDER BY anio DESC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                anios.add(rs.getInt("anio"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (anios.isEmpty()) {
+            anios.add(java.time.Year.now().getValue());
+        }
+        return anios;
     }
 }
