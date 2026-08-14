@@ -27,13 +27,13 @@
 <body>
     <div style="text-align: center; margin-bottom: 40px;">
         <h1 style="margin-bottom: 5px;">DOCUMENTO DE ARQUITECTURA DE SOFTWARE (SAD)</h1>
-        <p style="font-size: 16pt; color: #666; margin-top: 0;">Sistema de Gestión de Prestadores DAGJP</p>
+        <p style="font-size: 16pt; color: #666; margin-top: 0;">Sistema de Gestión Contractual del DAGJP</p>
         <p><strong>Versión:</strong> 1.0 | <strong>Fecha:</strong> 13 de Agosto de 2026</p>
     </div>
 
     <div class="card">
         <h2 style="margin-top:0;">1. Resumen Ejecutivo</h2>
-        <p style="text-align: justify;">El sistema <strong>Combinación (DAGJP)</strong> es una plataforma web transaccional diseñada para la gestión, seguimiento y supervisión de contratistas, contratos, cobros y presupuestos de la Alcaldía. El sistema opera sobre una arquitectura tradicional monolítica de n-capas utilizando el patrón de diseño <strong>MVC (Modelo-Vista-Controlador)</strong>, lo cual garantiza una alta escalabilidad, mantenimiento simplificado y estricta separación de responsabilidades.</p>
+        <p style="text-align: justify;">El <strong>Sistema de Gestión Contractual del DAGJP</strong> es una plataforma web transaccional diseñada para la gestión, seguimiento y supervisión de contratistas, contratos, cobros y presupuestos de la Alcaldía. El sistema opera sobre una arquitectura tradicional monolítica de n-capas utilizando el patrón de diseño <strong>MVC (Modelo-Vista-Controlador)</strong>, lo cual garantiza una alta escalabilidad, mantenimiento simplificado y estricta separación de responsabilidades.</p>
     </div>
 
     <h2>2. Stack Tecnológico (Tecnologías Base)</h2>
