@@ -10,6 +10,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
+    </style>
     <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 
@@ -46,7 +50,7 @@
 
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body bg-white rounded">
-                <form action="consecutivos" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-3">
+                <form action="consecutivos" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-md-row align-items-md-center gap-3 w-100">
                     <input type="hidden" name="action" value="upload">
                     <input type="hidden" name="anio_carga" id="anio_carga" value="2026">
                     <div class="flex-grow-1">
@@ -55,7 +59,7 @@
                         <div class="form-text">Asegúrese de usar la plantilla descargada con las columnas Cédula, Contrato, Cuota y Consecutivo.</div>
                     </div>
                     <div class="mt-3">
-                        <button type="submit" class="btn text-white fw-bold px-4" style="background-color: #004884;">
+                        <button type="submit" class="btn text-white fw-bold px-4 w-100 w-md-auto" style="background-color: #004884;">
                             <i class="bi bi-cloud-arrow-up-fill me-2"></i>Subir Archivo
                         </button>
                     </div>
@@ -64,16 +68,16 @@
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h5 class="fw-bold mb-0">Últimos consecutivos cargados</h5>
                 <div>
-                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark">
+                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark w-100 w-md-auto">
                         <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
                     </button>
                 </div>
             </div>
             <div class="card-body">
-                <table id="consecutivosTable" class="table table-striped table-hover w-100">
+                <table id="consecutivosTable" class="table table-striped table-hover w-100 nowrap">
                     <thead class="table-dark">
                         <tr>
                             <th style="width: 40px;" class="text-center">
@@ -100,6 +104,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
@@ -128,6 +134,7 @@
             var table = $('#consecutivosTable').DataTable({
                 "processing": true,
                 "serverSide": true,
+                "responsive": true,
                 "ajax": {
                     "url": "${pageContext.request.contextPath}/consecutivos?action=list_ajax",
                     "data": function ( d ) {
