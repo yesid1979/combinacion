@@ -1,0 +1,89 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <meta charset="utf-8">
+    <title>Documento de Arquitectura de Software</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        body { font-family: 'Segoe UI', Calibri, sans-serif; line-height: 1.6; color: #333; margin: 40px; }
+        h1 { color: #004884; font-size: 26pt; border-bottom: 2px solid #004884; padding-bottom: 10px; text-align: center; }
+        h2 { color: #004884; font-size: 16pt; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        h3 { color: #555; font-size: 14pt; margin-top: 20px; }
+        .card { border: 1px solid #ccc; padding: 20px; margin: 20px 0; background: #f9f9f9; border-radius: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #004884; color: white; font-weight: bold; }
+        .layer-box { border: 2px solid #004884; background: #e8f4f8; padding: 15px; margin: 10px 0; text-align: center; font-weight: bold; font-size: 12pt; border-radius: 8px; }
+        .arrow { text-align: center; font-size: 24pt; color: #004884; line-height: 0.5; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="margin-bottom: 5px;">DOCUMENTO DE ARQUITECTURA DE SOFTWARE (SAD)</h1>
+        <p style="font-size: 16pt; color: #666; margin-top: 0;">Sistema de Gestión de Prestadores DAGJP</p>
+        <p><strong>Versión:</strong> 1.0 | <strong>Fecha:</strong> 13 de Agosto de 2026</p>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-top:0;">1. Resumen Ejecutivo</h2>
+        <p style="text-align: justify;">El sistema <strong>Combinación (DAGJP)</strong> es una plataforma web transaccional diseñada para la gestión, seguimiento y supervisión de contratistas, contratos, cobros y presupuestos de la Alcaldía. El sistema opera sobre una arquitectura tradicional monolítica de n-capas utilizando el patrón de diseño <strong>MVC (Modelo-Vista-Controlador)</strong>, lo cual garantiza una alta escalabilidad, mantenimiento simplificado y estricta separación de responsabilidades.</p>
+    </div>
+
+    <h2>2. Stack Tecnológico (Tecnologías Base)</h2>
+    <table>
+        <tr>
+            <th style="width: 25%;">Capa</th>
+            <th>Tecnologías Utilizadas</th>
+        </tr>
+        <tr>
+            <td><strong>Frontend (Cliente)</strong></td>
+            <td>HTML5, CSS3, JavaScript (ES6)<br>Framework UI: <strong>Bootstrap 5.3</strong><br>Grillas/Tablas: <strong>jQuery DataTables</strong> (con procesamiento Server-Side para alta volumetría).</td>
+        </tr>
+        <tr>
+            <td><strong>Backend (Servidor)</strong></td>
+            <td>Lenguaje: <strong>Java (JDK 8+)</strong><br>Especificación: <strong>Java EE (Servlets & JSP)</strong><br>Plantillas: <strong>JSTL (JavaServer Pages Standard Tag Library)</strong></td>
+        </tr>
+        <tr>
+            <td><strong>Base de Datos</strong></td>
+            <td>Motor: <strong>PostgreSQL</strong><br>Conectividad: JDBC nativo a través de un Pool de Conexiones JNDI administrado por el contenedor.</td>
+        </tr>
+        <tr>
+            <td><strong>Servidor de Aplicaciones</strong></td>
+            <td><strong>Apache Tomcat</strong> (Contenedor de Servlets y JSP).</td>
+        </tr>
+    </table>
+
+    <h2>3. Arquitectura Lógica (Patrón MVC)</h2>
+    <p style="text-align: justify;">El flujo de información atraviesa de forma orquestada las siguientes capas de abstracción:</p>
+    
+    <div class="layer-box">VISTA (View): JSP + Bootstrap + DataTables<br><span style="font-size:10pt; font-weight:normal;">Renderiza la interfaz, valida datos de entrada (HTML5) e invoca peticiones AJAX.</span></div>
+    <div class="arrow">↓ ↑</div>
+    <div class="layer-box">CONTROLADOR (Controller): Servlets (Ej: UsuarioServlet, ConsecutivoServlet)<br><span style="font-size:10pt; font-weight:normal;">Interceptan las peticiones, gestionan la seguridad (AuthFilter) y delegan la lógica de negocio.</span></div>
+    <div class="arrow">↓ ↑</div>
+    <div class="layer-box">MODELO Y DAO (Data Access Object)<br><span style="font-size:10pt; font-weight:normal;">Clases transaccionales (Ej: ConsecutivoDAO) que ejecutan PreparedStatements hacia la DB.</span></div>
+    <div class="arrow">↓ ↑</div>
+    <div class="layer-box" style="background:#d4edda; border-color:#28a745;">BASE DE DATOS (PostgreSQL)<br><span style="font-size:10pt; font-weight:normal;">Almacenamiento persistente, pool administrado por JNDI (java:comp/env/jdbc/combinacion).</span></div>
+
+    <h2>4. Mecanismos de Seguridad Arquitectónica</h2>
+    <ul>
+        <li><strong>Autenticación y Autorización:</strong> Gestionada centralmente por <code>AuthFilter.java</code>. Intercepta todas las peticiones a nivel de contexto (<code>/*</code>) validando la sesión HTTP activa y el rol del usuario.</li>
+        <li><strong>Prevención de Inyecciones (SQLi):</strong> Implementación absoluta de consultas pre-compiladas (<code>PreparedStatement</code>) en la capa DAO.</li>
+        <li><strong>Protección XSS:</strong> Sanitización de salidas en formularios web mediante <code>fn:escapeXml()</code>.</li>
+        <li><strong>Hashing Criptográfico:</strong> Las contraseñas en PostgreSQL se almacenan utilizando <code>SHA-256</code> acopladas a un vector de inicialización "Salt" aleatorio de 32 bytes (implementado en <code>PasswordUtils.java</code>).</li>
+    </ul>
+
+    <h2>5. Escalabilidad y Procesamiento de Datos</h2>
+    <p style="text-align: justify;">Para garantizar que el sistema no colapse bajo grandes volúmenes de contratos y usuarios, se ha implementado la estrategia <strong>Server-Side Processing</strong>. La capa de presentación (DataTables) no carga los miles de registros en el navegador; en su lugar, se comunica vía AJAX (JSON) con los DAOs en el Backend, delegando la paginación, el ordenamiento y las búsquedas algorítmicas directamente al motor de base de datos PostgreSQL, minimizando radicalmente el consumo de RAM del servidor Tomcat y del cliente.</p>
+
+    <div style="margin-top: 50px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; color: #666;">
+        Reporte de Arquitectura generado automáticamente para Alcaldía de Santiago de Cali.
+    </div>
+</body>
+</html>
