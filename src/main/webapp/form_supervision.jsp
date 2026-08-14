@@ -1570,13 +1570,19 @@
                     var cedula = '${sessionScope.usuario.cedula}';
                     var contrato = '${contrato.numeroContrato}';
                     var cuota = $('[name="numero_cuota"]').val();
+                    var fechaTerminacion = '${contrato.fechaTerminacion}';
+                    var anio = '';
+                    if (fechaTerminacion && fechaTerminacion.length >= 4) {
+                        anio = fechaTerminacion.substring(0, 4); // YYYY-MM-DD
+                    }
                     
                     if (cedula && contrato && cuota) {
                         $.post('${pageContext.request.contextPath}/consecutivos', {
                             action: 'check',
                             cedula: cedula,
                             contrato: contrato,
-                            cuota: cuota
+                            cuota: cuota,
+                            anio: anio
                         }, function(response) {
                             var inputCons = $('[name="consecutivo_cobro"]');
                             if (response && response.success && response.consecutivo) {

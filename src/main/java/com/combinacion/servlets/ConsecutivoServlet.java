@@ -254,8 +254,17 @@ public class ConsecutivoServlet extends HttpServlet {
         String cedula = request.getParameter("cedula");
         String contrato = request.getParameter("contrato");
         String cuota = request.getParameter("cuota");
+        String anioStr = request.getParameter("anio");
+        Integer anio = null;
+        if (anioStr != null && !anioStr.isEmpty()) {
+            try {
+                anio = Integer.parseInt(anioStr);
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
         
-        String consecutivo = consecutivoDAO.obtenerConsecutivo(cedula, contrato, cuota);
+        String consecutivo = consecutivoDAO.obtenerConsecutivo(cedula, contrato, cuota, anio);
         System.out.println("[ConsecutivoServlet] DEBUG RESULTADO -> Consecutivo encontrado: " + consecutivo);
         
         response.setContentType("application/json");

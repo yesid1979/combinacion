@@ -92,16 +92,24 @@ public class ConsecutivoDAO {
         return lista;
     }
 
-    public String obtenerConsecutivo(String cedula, String contrato, String numeroCuota) {
+    public String obtenerConsecutivo(String cedula, String contrato, String numeroCuota, Integer anio) {
         if (contrato == null || numeroCuota == null) return null;
         
         String sql = "SELECT consecutivo FROM consecutivos_cobro " +
-                     "WHERE contrato LIKE ? AND numero_cuota = ? " +
-                     "ORDER BY id DESC LIMIT 1";
+                     "WHERE contrato LIKE ? AND numero_cuota = ? ";
+        if (anio != null) {
+            sql += " AND anio = ? ";
+        }
+        sql += "ORDER BY id DESC LIMIT 1";
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             ps.setString(1, "%" + contrato.trim() + "%");
             ps.setString(2, numeroCuota.trim());
+            if (anio != null) {
+                ps.setInt(3, anio);
+            }
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
