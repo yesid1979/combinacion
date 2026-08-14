@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -88,32 +89,32 @@
                     <form id="formUpdateProfile">
                         <div class="mb-3">
                             <label class="form-label">No. de documento</label>
-                            <input type="text" class="form-control" value="${sessionScope.usuario.cedula}" readonly>
+                            <input type="text" class="form-control" value="${fn:escapeXml(sessionScope.usuario.cedula)}" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Nombres y apellidos</label>
-                            <input type="text" name="nombre" class="form-control" value="${sessionScope.usuario.nombreCompleto}" required>
+                            <input type="text" name="nombre" class="form-control" value="${fn:escapeXml(sessionScope.usuario.nombreCompleto)}" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="correo" class="form-control" value="${sessionScope.usuario.correo}" required>
+                            <input type="email" name="correo" class="form-control" value="${fn:escapeXml(sessionScope.usuario.correo)}" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">No. de contacto</label>
-                            <input type="text" name="celular" class="form-control" value="${sessionScope.usuario.celular}">
+                            <input type="text" name="celular" class="form-control" value="${fn:escapeXml(sessionScope.usuario.celular)}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Dirección</label>
-                            <input type="text" name="direccion" class="form-control" value="${contratistaInfo.direccion}">
+                            <input type="text" name="direccion" class="form-control" value="${fn:escapeXml(contratistaInfo.direccion)}">
                         </div>
                         <div class="row mb-4">
                             <div class="col-md-8">
                                 <label class="form-label">Fecha de Nacimiento</label>
-                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${contratistaInfo.fechaNacimiento}" onchange="calcularEdad()">
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${fn:escapeXml(contratistaInfo.fechaNacimiento)}" onchange="calcularEdad()">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Edad</label>
-                                <input type="number" id="edad" name="edad" class="form-control" value="${contratistaInfo.edad}" readonly style="background-color: #f8f9fa;">
+                                <input type="number" id="edad" name="edad" class="form-control" value="${fn:escapeXml(contratistaInfo.edad)}" readonly style="background-color: #f8f9fa;">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-blue shadow-sm">
