@@ -11,8 +11,12 @@ public class ConsecutivoCobro implements Serializable {
     private String consecutivo;
     private Date fechaCarga;
     private Integer cargadoPor;
+    private String nombre;
 
     public ConsecutivoCobro() {}
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }

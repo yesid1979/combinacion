@@ -99,6 +99,7 @@ public class ConsecutivoServlet extends HttpServlet {
             json.append("{");
             json.append("\"id\": ").append(c.getId()).append(", ");
             json.append("\"cedula\": \"").append(escapeJson(c.getCedula())).append("\", ");
+            json.append("\"nombre\": \"").append(escapeJson(c.getNombre() != null ? c.getNombre() : "")).append("\", ");
             json.append("\"contrato\": \"").append(escapeJson(c.getContrato())).append("\", ");
             json.append("\"numeroCuota\": \"").append(escapeJson(c.getNumeroCuota())).append("\", ");
             json.append("\"consecutivo\": \"").append(escapeJson(c.getConsecutivo())).append("\", ");
@@ -193,9 +194,13 @@ public class ConsecutivoServlet extends HttpServlet {
                 }
                 
                 String cedula = getCellValue(row.getCell(0));
-                String contrato = getCellValue(row.getCell(1));
-                String cuota = getCellValue(row.getCell(2));
-                String consecutivo = getCellValue(row.getCell(3));
+                if (cedula != null) {
+                    cedula = cedula.replaceAll("[^0-9]", "");
+                }
+                // String nombre = getCellValue(row.getCell(1)); // Ignorado
+                String contrato = getCellValue(row.getCell(2));
+                String cuota = getCellValue(row.getCell(3));
+                String consecutivo = getCellValue(row.getCell(4));
                 
                 if (cedula != null && !cedula.trim().isEmpty() &&
                     contrato != null && !contrato.trim().isEmpty() &&
@@ -260,7 +265,7 @@ public class ConsecutivoServlet extends HttpServlet {
             org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Consecutivos");
             org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
             
-            String[] headers = {"Cédula", "Contrato", "Cuota", "Consecutivo"};
+            String[] headers = {"Cédula", "Nombre", "Contrato", "Cuota", "Consecutivo"};
             org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font font = workbook.createFont();
             font.setBold(true);
@@ -272,12 +277,38 @@ public class ConsecutivoServlet extends HttpServlet {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Datos de ejemplo
-            org.apache.poi.ss.usermodel.Row example = sheet.createRow(1);
-            example.createCell(0).setCellValue("12345678");
-            example.createCell(1).setCellValue("4143.010.27.1.100-2026");
-            example.createCell(2).setCellValue("8");
-            example.createCell(3).setCellValue("150");
+            String sql = "SELECT ct.cedula, ct.nombre, c.numero_contrato " +
+                         "FROM contratos c " +
+                         "JOIN contratistas ct ON c.contratista_id = ct.id " +
+                         "WHERE c.fecha_terminacion >= CURRENT_DATE " +
+                         "ORDER BY c.numero_contrato ASC";
+            
+            int rowNum = 1;
+            try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
+                 java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+                 java.sql.ResultSet rs = ps.executeQuery()) {
+                 
+                 while (rs.next()) {
+                     org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+                     row.createCell(0).setCellValue(rs.getString("cedula"));
+                     row.createCell(1).setCellValue(rs.getString("nombre"));
+                     row.createCell(2).setCellValue(rs.getString("numero_contrato"));
+                     row.createCell(3).setCellValue(""); // Cuota
+                     row.createCell(4).setCellValue(""); // Consecutivo
+                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // Si no hay contratos vigentes, poner un ejemplo
+            if (rowNum == 1) {
+                org.apache.poi.ss.usermodel.Row example = sheet.createRow(1);
+                example.createCell(0).setCellValue("12345678");
+                example.createCell(1).setCellValue("Juan Perez");
+                example.createCell(2).setCellValue("4143.010.27.1.100-2026");
+                example.createCell(3).setCellValue("8");
+                example.createCell(4).setCellValue("150");
+            }
 
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);

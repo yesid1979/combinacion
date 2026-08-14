@@ -146,13 +146,15 @@ public class ConsecutivoDAO {
 
     public List<ConsecutivoCobro> obtenerTodosPaginados(int start, int length, String search) {
         List<ConsecutivoCobro> lista = new ArrayList<>();
-        String sql = "SELECT * FROM consecutivos_cobro ";
+        String sql = "SELECT cc.*, c.nombre as nombre_contratista " +
+                     "FROM consecutivos_cobro cc " +
+                     "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') ";
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "WHERE cedula ILIKE ? OR contrato ILIKE ? OR numero_cuota ILIKE ? OR consecutivo ILIKE ? ";
+            sql += "WHERE cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? ";
         }
         
-        sql += "ORDER BY fecha_carga DESC LIMIT ? OFFSET ?";
+        sql += "ORDER BY cc.fecha_carga DESC LIMIT ? OFFSET ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -160,6 +162,7 @@ public class ConsecutivoDAO {
             int paramIndex = 1;
             if (search != null && !search.trim().isEmpty()) {
                 String likeSearch = "%" + search + "%";
+                ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
@@ -179,6 +182,7 @@ public class ConsecutivoDAO {
                     c.setConsecutivo(rs.getString("consecutivo"));
                     c.setFechaCarga(rs.getTimestamp("fecha_carga"));
                     c.setCargadoPor(rs.getInt("cargado_por"));
+                    c.setNombre(rs.getString("nombre_contratista"));
                     lista.add(c);
                 }
             }
@@ -189,10 +193,11 @@ public class ConsecutivoDAO {
     }
 
     public int contarTodos(String search) {
-        String sql = "SELECT COUNT(*) FROM consecutivos_cobro ";
+        String sql = "SELECT COUNT(*) FROM consecutivos_cobro cc ";
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "WHERE cedula ILIKE ? OR contrato ILIKE ? OR numero_cuota ILIKE ? OR consecutivo ILIKE ? ";
+            sql += "LEFT JOIN contratistas c ON regexp_replace(cc.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') ";
+            sql += "WHERE cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? ";
         }
         
         try (Connection conn = DBConnection.getConnection();
@@ -204,6 +209,7 @@ public class ConsecutivoDAO {
                 ps.setString(2, likeSearch);
                 ps.setString(3, likeSearch);
                 ps.setString(4, likeSearch);
+                ps.setString(5, likeSearch);
             }
             
             try (ResultSet rs = ps.executeQuery()) {

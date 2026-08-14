@@ -71,6 +71,7 @@
                                 <input type="checkbox" class="form-check-input" id="checkAll">
                             </th>
                             <th>Cédula</th>
+                            <th>Nombre</th>
                             <th>Contrato</th>
                             <th>No. Cuota</th>
                             <th>Consecutivo Asignado</th>
@@ -124,14 +125,15 @@
                         }
                     },
                     { "data": "cedula", "render": function(data) { return '<strong>' + data + '</strong>'; } },
+                    { "data": "nombre" },
                     { "data": "contrato" },
                     { "data": "numeroCuota" },
                     { "data": "consecutivo", "render": function(data) { return '<span class="badge bg-success" style="font-size: 14px;">' + data + '</span>'; } },
                     { "data": "fechaCarga", "orderable": false }
                 ],
-                "order": [[5, 'desc']],
+                "order": [[6, 'desc']],
                 "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                    "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
                 }
             });
 
