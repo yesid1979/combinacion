@@ -82,6 +82,41 @@
     <h2>5. Escalabilidad y Procesamiento de Datos</h2>
     <p style="text-align: justify;">Para garantizar que el sistema no colapse bajo grandes volúmenes de contratos y usuarios, se ha implementado la estrategia <strong>Server-Side Processing</strong>. La capa de presentación (DataTables) no carga los miles de registros en el navegador; en su lugar, se comunica vía AJAX (JSON) con los DAOs en el Backend, delegando la paginación, el ordenamiento y las búsquedas algorítmicas directamente al motor de base de datos PostgreSQL, minimizando radicalmente el consumo de RAM del servidor Tomcat y del cliente.</p>
 
+    <h2>6. Arquitectura de Despliegue (Física)</h2>
+    <p style="text-align: justify;">El esquema de infraestructura en los servidores (topología de red) define cómo se conectan los clientes con los servicios core:</p>
+    
+    <div style="text-align: center; margin: 30px 0; font-family: Arial, sans-serif;">
+        <table style="width:100%; border:none; margin: 0 auto; text-align: center;">
+            <tr style="border:none;">
+                <td style="border:none; width:30%; vertical-align: middle;">
+                    <div style="border: 3px solid #4a90e2; border-radius: 10px; padding: 20px; display:inline-block;">
+                        <h1 style="border:none; margin:0; font-size:40pt; color:#4a90e2;">💻</h1>
+                    </div>
+                    <h3 style="margin-top:10px; color:#333;">Cualquier equipo<br>de cómputo</h3>
+                </td>
+                <td style="border:none; width:30%; vertical-align: middle; color: #4a90e2; font-weight:bold;">
+                    <div style="font-size:14pt; color:#333;">Flujos de<br>las peticiones</div>
+                    <div style="font-size:30pt;">&#10132;</div>
+                </td>
+                <td style="border:none; width:40%; vertical-align: middle;">
+                    <div style="background-color: #4a90e2; color: white; border-radius: 10px; padding: 20px; display:inline-block; width:180px;">
+                        <h1 style="border:none; margin:0; font-size:40pt; color:white;">🗄️</h1>
+                        <h2 style="border:none; margin:10px 0 0 0; color:white; font-size:16pt;">Backend</h2>
+                    </div>
+                    <h3 style="margin-top:10px; color:#000;">10.30.80.50</h3>
+                    
+                    <div style="font-size:30pt; color: #4a90e2; font-weight:bold; margin: 10px 0;">&#11015;</div>
+                    
+                    <div style="background-color: #4a90e2; color: white; border-radius: 10px; padding: 20px; display:inline-block; width:180px;">
+                        <h1 style="border:none; margin:0; font-size:40pt; color:white;">💽</h1>
+                        <h2 style="border:none; margin:10px 0 0 0; color:white; font-size:16pt;">Base de Datos</h2>
+                    </div>
+                    <h3 style="margin-top:10px; color:#000;">10.30.80.53</h3>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <div style="margin-top: 50px; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; color: #666;">
         Reporte de Arquitectura generado automáticamente para Alcaldía de Santiago de Cali.
     </div>
