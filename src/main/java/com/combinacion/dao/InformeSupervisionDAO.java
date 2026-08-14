@@ -39,8 +39,8 @@ public class InformeSupervisionDAO {
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
-                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -82,6 +82,11 @@ public class InformeSupervisionDAO {
                 ps.setInt(33, info.getIdRevisorAsignado());
             } else {
                 ps.setNull(33, Types.INTEGER);
+            }
+            if (info.getAnio() != null) {
+                ps.setInt(34, info.getAnio());
+            } else {
+                ps.setNull(34, Types.INTEGER);
             }
 
             if (ps.executeUpdate() > 0) {
@@ -202,6 +207,12 @@ public class InformeSupervisionDAO {
                 info.setIdRevisorAsignado(revId);
             }
         } catch (SQLException e) {}
+        try {
+            int anio = rs.getInt("anio");
+            if (!rs.wasNull()) {
+                info.setAnio(anio);
+            }
+        } catch (SQLException e) {}
 
         // Map contract info if available in the result set
         try {
@@ -227,7 +238,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
-                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ? " +
+                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -269,7 +280,12 @@ public class InformeSupervisionDAO {
             } else {
                 ps.setNull(32, Types.INTEGER);
             }
-            ps.setInt(33, info.getId());
+            if (info.getAnio() != null) {
+                ps.setInt(33, info.getAnio());
+            } else {
+                ps.setNull(33, Types.INTEGER);
+            }
+            ps.setInt(34, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -379,6 +395,7 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN id_revisor_asignado INTEGER REFERENCES usuarios(id)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN observaciones_financieras TEXT"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN pago_seguridad_social VARCHAR(50)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN anio INTEGER"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

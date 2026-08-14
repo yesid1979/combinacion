@@ -40,6 +40,18 @@ public class InformeSupervisionService {
             if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                 info.setEstadoRadicacion("BORRADOR");
             }
+            // Asignar el año desde el contrato
+            Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
+            if (contrato != null) {
+                if (contrato.getAnio() != null && contrato.getAnio() > 0) {
+                    info.setAnio(contrato.getAnio());
+                } else if (contrato.getFechaTerminacion() != null) {
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.setTime(contrato.getFechaTerminacion());
+                    info.setAnio(cal.get(java.util.Calendar.YEAR));
+                }
+            }
+
             // Validar duplicado: misma combinación de contrato, período, tipo e número de cuota
             if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(), info.getNumeroCuota())) {
                 return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
@@ -61,6 +73,18 @@ public class InformeSupervisionService {
             InformeSupervision info = mapFormToModel(form);
             info.setId(id);
             
+            // Asignar el año desde el contrato
+            Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
+            if (contrato != null) {
+                if (contrato.getAnio() != null && contrato.getAnio() > 0) {
+                    info.setAnio(contrato.getAnio());
+                } else if (contrato.getFechaTerminacion() != null) {
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.setTime(contrato.getFechaTerminacion());
+                    info.setAnio(cal.get(java.util.Calendar.YEAR));
+                }
+            }
+
             // Preserve fields that might not come in the form
             InformeSupervision existente = informeDAO.obtenerPorId(id);
             if (existente != null) {

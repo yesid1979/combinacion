@@ -58,6 +58,8 @@ public class InformeSupervision implements Serializable {
     private Date fechaRadicacion;
     private Integer idRevisorAsignado;
     private String observacionesRevision;
+    private Date fechaActualizacion;
+    private Integer anio;
     
     // Relación con Contrato (opcional para el modelo)
     private Contrato contrato;
@@ -170,6 +172,12 @@ public class InformeSupervision implements Serializable {
     public String getEstadoRadicacion() { return estadoRadicacion; }
     public void setEstadoRadicacion(String estadoRadicacion) { this.estadoRadicacion = estadoRadicacion; }
     
+    public Date getFechaActualizacion() { return fechaActualizacion; }
+    public void setFechaActualizacion(Date fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
+
     public Date getFechaRadicacion() { return fechaRadicacion; }
     public void setFechaRadicacion(Date fechaRadicacion) { this.fechaRadicacion = fechaRadicacion; }
 
