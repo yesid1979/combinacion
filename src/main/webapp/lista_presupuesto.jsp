@@ -21,7 +21,7 @@
             <style>
                 table { width: 100% !important; }
                 .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
-                .table td { vertical-align: middle; }
+                .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
             </style>
     </head>
 
@@ -37,18 +37,20 @@
                     <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-cash-stack me-1"></i>CDP / RP</li>
                 </ol>
             </nav>
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                     <h3 class="fw-bold text-dark mb-0">Presupuestos registrados</h3>
-                    <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_CREAR')}">
-                        <a href="${pageContext.request.contextPath}/presupuesto?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
-                            <i class="bi bi-plus-circle-fill me-1"></i>Nuevo presupuesto
-                        </a>
-                    </c:if>
+                    <div class="d-flex flex-wrap gap-2">
+                        <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_CREAR')}">
+                            <a href="${pageContext.request.contextPath}/presupuesto?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                                <i class="bi bi-plus-circle-fill me-1"></i>Nuevo presupuesto
+                            </a>
+                        </c:if>
+                    </div>
                 </div>
 
                 <div class="card shadow-sm border-0">
                     <div class="card-body">
-                        <table id="presupuestoTable" class="table table-striped dt-responsive" style="width:100%">
+                        <table id="presupuestoTable" class="table table-striped dt-responsive nowrap" style="width:100%">
                             <thead class="table-dark">
                                 <tr>
                                     <th>No. CDP</th>

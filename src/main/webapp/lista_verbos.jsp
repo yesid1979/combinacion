@@ -10,8 +10,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
+        .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
+    </style>
     <link href="assets/css/styles.css" rel="stylesheet">
-</head>
 <body class="bg-light">
 
     <%@ include file="inc/navbar.jsp" %>
@@ -24,15 +28,17 @@
                 <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-list-task me-1"></i>Verbos</li>
             </ol>
         </nav>
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="bi bi-translate text-primary me-2"></i>Diccionario de Verbos (Conjugación Automática)
             </h1>
-            <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_CREAR') || sessionScope.usuario.tienePermiso('ADMIN_VER')}">
-                <a href="${pageContext.request.contextPath}/verbos?action=new" class="btn btn-primary shadow-sm">
-                    <i class="bi bi-plus-circle me-2"></i>Nuevo Verbo
-                </a>
-            </c:if>
+            <div class="d-flex flex-wrap gap-2">
+                <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_CREAR') || sessionScope.usuario.tienePermiso('ADMIN_VER')}">
+                    <a href="${pageContext.request.contextPath}/verbos?action=new" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i>Nuevo Verbo
+                    </a>
+                </c:if>
+            </div>
         </div>
 
         <c:if test="${not empty sessionScope.successMsg}">
@@ -54,7 +60,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
                 <div class="table-responsive">
-                    <table id="tablaVerbos" class="table table-hover table-striped align-middle" style="width:100%">
+                    <table id="tablaVerbos" class="table table-hover table-striped align-middle nowrap" style="width:100%">
                         <thead class="table-dark">
                             <tr>
                                 <th>3ra Persona (Ej. Realizó)</th>
@@ -75,12 +81,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
     
     <script>
         $(document).ready(function() {
             $('#tablaVerbos').DataTable({
                 "processing": true,
                 "serverSide": true,
+                "responsive": true,
                 "ajax": {
                     "url": "${pageContext.request.contextPath}/verbos",
                     "type": "POST",

@@ -46,7 +46,7 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <table class="table table-striped w-100" id="tablaUsuarios">
+                <table class="table table-striped w-100 nowrap" id="tablaUsuarios">
                     <thead class="table-dark">
                         <tr>
                             <th>No. de Cédula</th>

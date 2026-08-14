@@ -22,7 +22,7 @@
             <style>
                 table { width: 100% !important; }
                 .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
-                .table td { vertical-align: middle; }
+                .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
                 .rol-name { color: #0d6efd; font-weight: bold; text-transform: uppercase; }
                 .dataTables_wrapper .dataTables_filter input { border: 1px solid #dee2e6; border-radius: 4px; padding: 4px 8px; }
             </style>
@@ -39,16 +39,18 @@
                         <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-shield-lock-fill me-1"></i>Roles</li>
                     </ol>
                 </nav>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-dark">Roles registrados</h2>
-                    <a href="${pageContext.request.contextPath}/admin/roles?action=new" class="btn btn-success fw-bold">
-                        <i class="bi bi-plus-circle me-1"></i> Nuevo rol
-                    </a>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                    <h2 class="fw-bold text-dark mb-0">Roles registrados</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="${pageContext.request.contextPath}/admin/roles?action=new" class="btn btn-success fw-bold">
+                            <i class="bi bi-plus-circle me-1"></i> Nuevo rol
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <table class="table table-striped w-100" id="tablaRoles">
+                        <table class="table table-striped w-100 nowrap" id="tablaRoles">
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
