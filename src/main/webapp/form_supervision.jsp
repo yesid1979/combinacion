@@ -135,8 +135,8 @@
 
 
 
-                    <!-- Tabs -->
-                    <ul class="nav nav-tabs mb-4" id="informeTabs" role="tablist">
+                    <!-- Tabs responsivos: No hacen salto de linea en móviles, permiten scroll horizontal -->
+                    <ul class="nav nav-tabs mb-4 flex-nowrap overflow-x-auto" id="informeTabs" role="tablist" style="white-space: nowrap; padding-bottom: 2px; -webkit-overflow-scrolling: touch;">
                         <li class="nav-item">
                             <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button">General</button>
                         </li>

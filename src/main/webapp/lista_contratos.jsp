@@ -160,14 +160,14 @@
                                     "data": 7, 
                                     "orderable": false,
                                     "render": function (data, type, row) {
-                                        var btns = '<div class="d-flex justify-content-center" style="white-space: nowrap;">' +
-                                                   '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info me-1" title="Ver"><i class="bi bi-eye"></i></a>';
+                                        var btns = '<div class="d-flex justify-content-center flex-wrap gap-1">' +
+                                                   '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver"><i class="bi bi-eye"></i></a>';
                                         
                                         if (canEditContratos) {
                                             btns += '<a href="contratos?action=edit&id=' + data + '" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil-square"></i></a>';
                                         }
                                         
-                                        btns += '<a href="informes?contrato_id=' + data + '" class="btn btn-sm btn-outline-success ms-1" title="Cuentas/Informes"><i class="bi bi-wallet2"></i></a>';
+                                        btns += '<a href="informes?contrato_id=' + data + '" class="btn btn-sm btn-outline-success" title="Cuentas/Informes"><i class="bi bi-wallet2"></i></a>';
                                         
                                         btns += '</div>';
                                         return btns;

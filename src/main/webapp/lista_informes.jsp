@@ -201,18 +201,19 @@
                             let esAdminCuentas = row.esAdminCuentas;
                             
                             // Botón Ver
+                            html += '<div class="d-flex flex-wrap gap-1">';
                             html += '<a href="informes?action=view&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="bi bi-eye"></i></a>';
                             
                             // Botón Editar
                             if (((estado === 'BORRADOR' || estado === 'DEVUELTA') && modo === 'mis_cuentas') || esAdminCuentas) {
-                                html += '<a href="informes?action=edit&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-primary ms-1" title="Editar Informe"><i class="bi bi-pencil-square"></i></a>';
+                                html += '<a href="informes?action=edit&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-primary" title="Editar Informe"><i class="bi bi-pencil-square"></i></a>';
                             }
                             
                             // Botón Descargar
                             if (estado === 'APROBADA PARA IMPRESION') {
-                                html += '<a href="informes?action=download&id=' + id + '" class="btn btn-sm btn-outline-success ms-1" title="Descargar Paquete Final"><i class="bi bi-file-earmark-arrow-down"></i></a>';
+                                html += '<a href="informes?action=download&id=' + id + '" class="btn btn-sm btn-outline-success" title="Descargar Paquete Final"><i class="bi bi-file-earmark-arrow-down"></i></a>';
                             } else {
-                                html += '<button type="button" class="btn btn-sm btn-outline-secondary ms-1" title="La descarga se habilitará cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-secondary" title="La descarga se habilitará cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
                             }
                             
                             // Botón Revisar
@@ -234,14 +235,15 @@
                             }
                             
                             if (mostrarBtnRevisar) {
-                                html += '<button type="button" class="btn btn-sm btn-outline-primary ms-1" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-primary" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
                             }
 
                             // Botón Borrar (solo en estado BORRADOR y si es el dueño o admin)
                             if (estado === 'BORRADOR' && (modo === 'mis_cuentas' || esAdminCuentas)) {
-                                html += '<button type="button" class="btn btn-sm btn-outline-danger ms-1" title="Eliminar Borrador" onclick="confirmarBorrar(' + id + ')"><i class="bi bi-trash3"></i></button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar Borrador" onclick="confirmarBorrar(' + id + ')"><i class="bi bi-trash3"></i></button>';
                             }
                             
+                            html += '</div>';
                             return html;
                         }
                     }
