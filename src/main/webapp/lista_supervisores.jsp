@@ -20,7 +20,7 @@
             <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
             <style>
                 .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
-                .table td { vertical-align: middle; }
+                .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
             </style>
         </head>
 
@@ -36,13 +36,15 @@
                     <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-person-lines-fill me-1"></i>Supervisores</li>
                 </ol>
             </nav>
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                     <h3 class="fw-bold text-dark mb-0">Supervisores registrados</h3>
-                    <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_CREAR')}">
-                        <a href="${pageContext.request.contextPath}/supervisores?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
-                            <i class="bi bi-person-plus-fill me-1"></i>Nuevo supervisor
-                        </a>
-                    </c:if>
+                    <div class="d-flex flex-wrap gap-2">
+                        <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_CREAR')}">
+                            <a href="${pageContext.request.contextPath}/supervisores?action=new" class="btn text-white fw-bold" style="background-color: #198754;">
+                                <i class="bi bi-person-plus-fill me-1"></i>Nuevo supervisor
+                            </a>
+                        </c:if>
+                    </div>
                 </div>
 
                 <script>
@@ -52,7 +54,7 @@
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <table class="table table-striped w-100" id="tablaSupervisores">
+                        <table class="table table-striped w-100 nowrap" id="tablaSupervisores">
                             <thead class="table-dark">
                                 <tr>
                                     <th>Cédula</th>
@@ -75,6 +77,8 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
             <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+            <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+            <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
             <script>

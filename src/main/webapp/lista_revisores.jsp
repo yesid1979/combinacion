@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
@@ -14,7 +14,7 @@
     <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <style>
         .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
-        .table td { vertical-align: middle; }
+        .table td { vertical-align: middle; white-space: normal !important; word-break: break-word; }
     </style>
     <link href="assets/css/styles.css" rel="stylesheet">
 </head>
@@ -31,12 +31,12 @@
                     <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-check-circle-fill me-1"></i>Revisores</li>
                 </ol>
             </nav>
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
                 <h3 class="fw-bold text-dark mb-0">Revisores de Documentos</h3>
                 <p class="text-muted small">Configuración de firmas para los documentos generados en lote.</p>
             </div>
-            <a href="revisores?action=new" class="btn btn-success px-4 fw-bold shadow-sm">
+            <a href="revisores?action=new" class="btn btn-success px-4 fw-bold shadow-sm w-100 w-md-auto">
                 <i class="bi bi-plus-circle me-2"></i>Nuevo Revisor
             </a>
         </div>
