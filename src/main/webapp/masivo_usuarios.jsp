@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link href="assets/css/styles.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <style>
@@ -58,7 +59,7 @@
 
                 <form action="${pageContext.request.contextPath}/masivo-usuarios" method="POST" id="formMasivo">
                     <div class="table-responsive">
-                        <table class="table table-striped w-100" id="tablaMasivo">
+                        <table class="table table-striped w-100 nowrap" id="tablaMasivo">
                             <thead class="table-dark">
                                 <tr>
                                     <th style="width: 40px;" class="text-center">
@@ -102,6 +103,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -110,6 +113,7 @@
                 "language": {
                     "url": "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
                 },
+                "responsive": true,
                 "columnDefs": [
                     { "orderable": false, "targets": 0 }
                 ]
