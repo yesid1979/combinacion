@@ -10,6 +10,7 @@ Automatizar la lectura, extracción de información e inserción en la base de d
 ## 1. Contexto Actual
 - Las cuentas de cobro antiguas están ubicadas en una carpeta específica dentro de la cuenta de Google Drive.
 - **Ventaja clave:** El proyecto actual ya cuenta con integración y credenciales configuradas para conectarse a esa misma cuenta de Google Drive, lo que elimina la necesidad de configurar autenticaciones o permisos desde cero.
+- **Carpeta Única Permanente:** No es necesario descargar ni mover los archivos a otro servidor. Las cuentas antiguas se quedarán en esa misma carpeta de Drive, ya que la idea es que las **nuevas cuentas de cobro** que se generen en el sistema también se sigan guardando allí. Drive seguirá siendo el repositorio oficial.
 
 ---
 
@@ -44,9 +45,9 @@ Para que el script de migración funcione correctamente, se necesita tener a dis
 - Ejecutar una llamada a la **API de Google Drive (`drive.files.list`)** filtrando por el `ID de la Carpeta` padre.
 - Obtener un listado de todos los archivos (IDs y Nombres).
 
-### Fase 2: Descarga y Procesamiento
+### Fase 2: Lectura y Procesamiento (Sin mover archivos)
 - Iterar sobre la lista de archivos.
-- Por cada archivo, descargar el contenido binario (PDF/Imagen) a un directorio temporal local o enviarlo en memoria directamente a la API de IA (Ej. Gemini API).
+- Por cada archivo, enviar su contenido en memoria (o mediante su enlace/ID si la IA lo soporta nativamente) directamente a la API de IA (Ej. Gemini API) sin necesidad de guardarlo localmente.
 - Pedirle a la IA/OCR que analice el documento y retorne un objeto estructurado con las variables de la cuenta de cobro.
 
 ### Fase 3: Validación e Inserción en Base de Datos (BD)
