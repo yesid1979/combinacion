@@ -136,7 +136,7 @@
                                 btnDel = '<button onclick="confirmarEliminar(' + data + ')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></button>';
                             }
 
-                            return '<div class="d-flex justify-content-center gap-2">' + btnView + btnEdit + btnDel + '</div>';
+                            return '<div class="d-flex justify-content-center flex-nowrap gap-2">' + btnView + btnEdit + btnDel + '</div>';
                         }
                     }
                 ],

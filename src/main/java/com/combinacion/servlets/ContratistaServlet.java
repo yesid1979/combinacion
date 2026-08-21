@@ -57,13 +57,13 @@ public class ContratistaServlet extends HttpServlet {
         Usuario u = getUsuario(request);
         switch (action) {
             case ACTION_SEARCH:
-                buscarPorCedula(request, response);
+                contratistaService.buscarPorCedula(request, response);
                 break;
             case ACTION_DATA:
-                responderDatosTabla(request, response);
+                contratistaService.responderDatosTabla(request, response);
                 break;
             case ACTION_EXPORT:
-                exportarExcel(request, response);
+                contratistaService.exportarExcel(request, response);
                 break;
             case ACTION_NEW:
                 if (authService.tienePermiso(u, PERMISO_CREAR)) {
@@ -78,19 +78,19 @@ public class ContratistaServlet extends HttpServlet {
                 if (ACTION_EDIT.equals(action) && !authService.tienePermiso(u, PERMISO_EDITAR)) {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 } else {
-                    mostrarFormularioEdicion(request, response);
+                    contratistaService.mostrarFormularioEdicion(request, response);
                 }
                 break;
             case ACTION_DELETE:
                 if (authService.tienePermiso(u, PERMISO_ELIMINAR)) {
-                    eliminar(request, response);
+                    contratistaService.eliminar(request, response);
                 } else {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 }
                 break;
             case ACTION_LIST:
             default:
-                listar(request, response);
+                contratistaService.listar(request, response);
                 break;
         }
     }
@@ -105,337 +105,29 @@ public class ContratistaServlet extends HttpServlet {
         switch (action) {
             case ACTION_INSERT:
                 if (authService.tienePermiso(u, PERMISO_CREAR)) {
-                    insertar(request, response);
+                    contratistaService.insertar(request, response);
                 } else {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 }
                 break;
             case ACTION_UPDATE:
                 if (authService.tienePermiso(u, PERMISO_EDITAR)) {
-                    actualizar(request, response);
+                    contratistaService.actualizar(request, response);
                 } else {
                     response.sendRedirect("contratistas?error=sin_permiso");
                 }
                 break;
             case ACTION_DATA:
-                responderDatosTabla(request, response);
+                contratistaService.responderDatosTabla(request, response);
                 break;
             case ACTION_SEARCH:
-                buscarPorCedula(request, response);
+                contratistaService.buscarPorCedula(request, response);
                 break;
             default:
-                listar(request, response);
+                contratistaService.listar(request, response);
                 break;
         }
     }
 
-    private void listar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            List<Contratista> list = contratistaService.listarTodos();
-            request.setAttribute("listContratistas", list);
-            request.getRequestDispatcher("lista_contratistas.jsp").forward(request, response);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al listar contratistas", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al listar contratistas");
-        }
-    }
-
-    private void exportarExcel(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=\"Listado_Contratistas.xlsx\"");
-
-        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
-            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Contratistas");
-
-            // Header
-            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
-            String[] headers = {"Cédula", "Nombres y Apellidos", "Correo", "Teléfono", "Dirección", "Fecha Nacimiento", "Edad", "Título", "T. Profesional"};
-            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
-            org.apache.poi.ss.usermodel.Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-
-            for (int i = 0; i < headers.length; i++) {
-                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
-            }
-
-            // Data
-            List<Contratista> list = contratistaService.listarTodos();
-            int rowNum = 1;
-            for (Contratista c : list) {
-                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(c.getCedula() != null ? c.getCedula() : "");
-                row.createCell(1).setCellValue(c.getNombre() != null ? c.getNombre() : "");
-                row.createCell(2).setCellValue(c.getCorreo() != null ? c.getCorreo() : "");
-                row.createCell(3).setCellValue(c.getTelefono() != null ? c.getTelefono() : "");
-                row.createCell(4).setCellValue(c.getDireccion() != null ? c.getDireccion() : "");
-                if (c.getFechaNacimiento() != null) {
-                    row.createCell(5).setCellValue(c.getFechaNacimiento().toString());
-                } else {
-                    row.createCell(5).setCellValue("");
-                }
-                row.createCell(6).setCellValue(c.getEdad());
-                row.createCell(7).setCellValue(c.getFormacionTitulo() != null ? c.getFormacionTitulo() : "");
-                row.createCell(8).setCellValue(c.getTarjetaProfesional() != null ? c.getTarjetaProfesional() : "");
-            }
-
-            for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
-            workbook.write(response.getOutputStream());
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al exportar contratistas a Excel", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al exportar contratistas");
-        }
-    }
-
-    private void responderDatosTabla(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            // Parámetros de DataTables
-            String draw = request.getParameter("draw");
-            int start = parseIntSafe(request.getParameter("start"), 0);
-            int length = parseIntSafe(request.getParameter("length"), 10);
-            String search = request.getParameter("search[value]");
-            int orderCol = parseIntSafe(request.getParameter("order[0][column]"), 1);
-            String orderDir = request.getParameter("order[0][dir]");
-            if (orderDir == null) {
-                orderDir = "asc";
-            }
-
-            String source = request.getParameter("source");
-            boolean soloAdiciones = "true".equals(request.getParameter("filterAdicion"));
-            String periodo = request.getParameter("periodo");
-            String anioParam = request.getParameter("anio");
-            Integer anio = (anioParam != null && !anioParam.isEmpty()) ? Integer.parseInt(anioParam) : null;
-
-            // Validación de parámetros críticos
-            if (source == null || source.isEmpty()) {
-                source = "lista"; // Default source
-            }
-
-            // Resolver columna de ordenamiento
-            String sortCol = resolverColumnaOrden(source, orderCol);
-            if (sortCol == null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Columna de ordenamiento no válida");
-                return;
-            }
-
-            // Log para depuración
-            logger.info(String.format(
-                    "DataTables Request - Draw: %s, Start: %d, Length: %d, Search: %s, Order: %s %s, Source: %s, Periodo: %s, Anio: %s",
-                    draw, start, length, search, sortCol, orderDir, source, periodo, anioParam));
-
-            // Configurar respuesta
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.setHeader("Cache-Control", "no-store");
-
-            // Generar y enviar JSON
-            String jsonResponse = contratistaService.generarJsonDataTables(
-                    parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones, periodo, anio);
-            response.getWriter().write(jsonResponse);
-            response.getWriter().flush();
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al procesar la solicitud DataTables", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al procesar la solicitud");
-        }
-    }
-
-    private void buscarPorCedula(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String cedula = request.getParameter("cedula");
-            if (cedula == null || cedula.trim().isEmpty()) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parámetro 'cedula' es obligatorio");
-                return;
-            }
-
-            Contratista c = contratistaService.obtenerPorCedula(cedula);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(contratistaService.generarJsonBusqueda(c));
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al buscar contratista por cédula", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al buscar contratista");
-        }
-    }
-
-    private void mostrarFormularioEdicion(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String idParam = request.getParameter("id");
-            if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendRedirect("contratistas?action=list&error=invalid_id");
-                return;
-            }
-
-            int id = Integer.parseInt(idParam);
-            Contratista existing = contratistaService.obtenerPorId(id);
-            if (existing != null) {
-                request.setAttribute("contratista", existing);
-                if (ACTION_VIEW.equals(request.getParameter("action"))) {
-                    request.setAttribute("readonly", true);
-                }
-                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
-            } else {
-                response.sendRedirect("contratistas?action=list&error=not_found&id=" + idParam);
-            }
-        } catch (NumberFormatException e) {
-            logger.log(Level.SEVERE, "ID inválido: " + request.getParameter("id"), e);
-            response.sendRedirect("contratistas?action=list&error=invalid_id");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al mostrar formulario de edición", e);
-            response.sendRedirect("contratistas?action=list&error=exception&msg=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
-        }
-    }
-
-    private void insertar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            Contratista c = contratistaService.construirDesdeParametros(
-                    request.getParameter("cedula"),
-                    request.getParameter("dv"),
-                    request.getParameter("nombre"),
-                    request.getParameter("telefono"),
-                    request.getParameter("correo"),
-                    request.getParameter("direccion"),
-                    request.getParameter("fecha_nacimiento"),
-                    request.getParameter("edad"),
-                    request.getParameter("formacion_titulo"),
-                    request.getParameter("descripcion_formacion"),
-                    request.getParameter("experiencia"),
-                    request.getParameter("descripcion_experiencia"),
-                    request.getParameter("tarjeta_profesional"),
-                    request.getParameter("descripcion_tarjeta"),
-                    request.getParameter("restricciones")
-            );
-            String error = contratistaService.insertar(c);
-            if (error != null) {
-                request.setAttribute("error", error);
-                request.setAttribute("contratista", c);
-                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
-            } else {
-                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
-            response.sendRedirect("contratistas?status=created");
-            }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al insertar contratista", e);
-            request.setAttribute("error", "Error interno: " + e.getMessage());
-            request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
-        }
-    }
-
-    private void actualizar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            String idParam = request.getParameter("id");
-            if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendRedirect("contratistas?action=list&error=invalid_id");
-                return;
-            }
-
-            int id = Integer.parseInt(idParam);
-            Contratista c = contratistaService.obtenerPorId(id);
-            if (c == null) {
-                response.sendRedirect("contratistas?action=list");
-                return;
-            }
-
-            c = contratistaService.construirDesdeParametros(
-                    request.getParameter("cedula"),
-                    request.getParameter("dv"),
-                    request.getParameter("nombre"),
-                    request.getParameter("telefono"),
-                    request.getParameter("correo"),
-                    request.getParameter("direccion"),
-                    request.getParameter("fecha_nacimiento"),
-                    request.getParameter("edad"),
-                    request.getParameter("formacion_titulo"),
-                    request.getParameter("descripcion_formacion"),
-                    request.getParameter("experiencia"),
-                    request.getParameter("descripcion_experiencia"),
-                    request.getParameter("tarjeta_profesional"),
-                    request.getParameter("descripcion_tarjeta"),
-                    request.getParameter("restricciones")
-            );
-            c.setId(id);
-            String error = contratistaService.actualizar(id, c);
-            if (error != null) {
-                request.setAttribute("error", error);
-                request.setAttribute("contratista", c);
-                request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
-            } else {
-                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
-            response.sendRedirect("contratistas?status=updated");
-            }
-        } catch (NumberFormatException e) {
-            logger.log(Level.SEVERE, "ID inválido: " + request.getParameter("id"), e);
-            response.sendRedirect("contratistas?action=list&error=invalid_id");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al actualizar contratista", e);
-            request.setAttribute("error", "Error interno: " + e.getMessage());
-            request.getRequestDispatcher("form_contratista.jsp").forward(request, response);
-        }
-    }
-
-    private void eliminar(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            String idParam = request.getParameter("id");
-            if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendRedirect("contratistas?status=error&msg=invalid_id");
-                return;
-            }
-
-            int id = Integer.parseInt(idParam);
-            contratistaService.eliminar(id);
-            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
-            response.sendRedirect("contratistas?status=deleted");
-        } catch (NumberFormatException e) {
-            logger.log(Level.SEVERE, "ID inválido: " + request.getParameter("id"), e);
-            response.sendRedirect("contratistas?status=error&msg=invalid_id");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error al eliminar contratista", e);
-            response.sendRedirect("contratistas?status=error");
-        }
-    }
-
-    private String resolverColumnaOrden(String source, int orderColumn) {
-        if ("combinacion".equals(source)) {
-            switch (orderColumn) {
-                case 1: return "numero_contrato";
-                case 2: return "cedula";
-                case 3: return "nombre";
-                case 4: return "correo";
-                case 5: return "telefono";
-                default: return "numero_contrato";
-            }
-        } else {
-            // Default source or "lista"
-            switch (orderColumn) {
-                case 0: return "cedula";
-                case 1: return "nombre";
-                case 2: return "correo";
-                case 3: return "telefono";
-                default: return "nombre";
-            }
-        }
-    }
-
-    private int parseIntSafe(String val, int defaultVal) {
-        if (val == null) {
-            return defaultVal;
-        }
-        try {
-            return Integer.parseInt(val);
-        } catch (NumberFormatException e) {
-            return defaultVal;
-        }
-    }
+    
 }

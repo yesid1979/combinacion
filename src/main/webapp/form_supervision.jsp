@@ -372,7 +372,7 @@
                                             <input type="date" class="form-control" name="fecha_suscripcion" value="<fmt:formatDate value='${informe.fechaSuscripcion}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                         </c:when>
                                         <c:otherwise>
-                                            <input type="date" class="form-control" name="fecha_suscripcion" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) %>" required ${readonly ? 'readonly' : ''}>
+                                            <input type="date" class="form-control" name="fecha_suscripcion" value="" required ${readonly ? 'readonly' : ''}>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>

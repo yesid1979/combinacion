@@ -1,13 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="com.combinacion.dao.UsuarioDAO" %>
-<%@ page import="com.combinacion.models.Usuario" %>
-<%@ page import="java.util.List" %>
-<%
-    List<Usuario> revisoresList = new UsuarioDAO().listarRevisores();
-    request.setAttribute("revisoresList", revisoresList);
-%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -88,14 +81,14 @@
             <div class="alert alert-success shadow-sm border-0 mb-4">
                 <i class="bi bi-check-circle-fill me-2"></i> ${successMessage}
             </div>
-            <% request.getSession().removeAttribute("successMessage"); %>
+            <c:remove var="successMessage" scope="session" />
         </c:if>
 
         <c:if test="${not empty sessionScope.errorMessage}">
             <div class="alert alert-danger shadow-sm border-0 mb-4">
                 <i class="bi bi-x-circle-fill me-2"></i> ${sessionScope.errorMessage}
             </div>
-            <% request.getSession().removeAttribute("errorMessage"); %>
+            <c:remove var="errorMessage" scope="session" />
         </c:if>
 
         <div class="card border-0 shadow-sm">
@@ -201,7 +194,7 @@
                             let esAdminCuentas = row.esAdminCuentas;
                             
                             // Botón Ver
-                            html += '<div class="d-flex flex-wrap gap-1">';
+                            html += '<div class="d-flex flex-nowrap gap-1">';
                             html += '<a href="informes?action=view&id=' + id + '&modo=' + modo + '" class="btn btn-sm btn-outline-info" title="Ver Detalle"><i class="bi bi-eye"></i></a>';
                             
                             // Botón Editar

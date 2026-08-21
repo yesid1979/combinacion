@@ -162,7 +162,7 @@
                                     "data": 7, 
                                     "orderable": false,
                                     "render": function (data, type, row) {
-                                        var btns = '<div class="d-flex justify-content-center flex-wrap gap-1">' +
+                                        var btns = '<div class="d-flex justify-content-center flex-nowrap gap-1">' +
                                                    '<a href="contratos?action=view&id=' + data + '" class="btn btn-sm btn-outline-info" title="Ver"><i class="bi bi-eye"></i></a>';
                                         
                                         if (canEditContratos) {

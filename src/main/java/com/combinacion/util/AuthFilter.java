@@ -47,6 +47,15 @@ public class AuthFilter implements Filter {
         HttpSession session = request.getSession(false);
         Usuario usuario = (session != null) ? (Usuario) session.getAttribute("usuario") : null;
 
+
+        // Refrescar sesión para tomar cambios de permisos en caliente
+        if (usuario != null) {
+            Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(usuario.getId());
+            if (freshUser != null) {
+                session.setAttribute("usuario", freshUser);
+                usuario = freshUser;
+            }
+        }
         if (usuario == null) {
             System.out.println("[FILTER] Usuario no autenticado. Redirigiendo a login.");
             String requestedWith = request.getHeader("X-Requested-With");

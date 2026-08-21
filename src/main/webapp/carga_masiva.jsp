@@ -144,12 +144,7 @@
                         <a href="index.jsp" class="btn btn-secondary px-5"><i class="bi bi-x-circle me-2"></i> Cerrar / Volver</a>
                     </div>
 
-                    <% if (false && session.getAttribute("debug") != null) { %>
-                        <div class="alert alert-secondary mt-4">
-                            <h6 class="alert-heading"><i class="bi bi-terminal me-2"></i>Log de Procesamiento (Debug)</h6>
-                            <pre class="mb-0" style="white-space: pre-wrap; font-size: 0.80rem; font-family: 'Courier New', monospace; max-height: 500px; overflow-y: auto;"><%= session.getAttribute("debug") %></pre>
-                        </div>
-                        <% session.removeAttribute("debug"); } %>
+                    
                 </div>
             </div>
         </div>
@@ -157,20 +152,30 @@
         <!-- SweetAlert2 -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <!-- Flash Message Handling -->
-        <% String msg=(String) session.getAttribute("message"); String err=(String) session.getAttribute("error");
-            if(msg !=null) session.removeAttribute("message"); if(err !=null) session.removeAttribute("error"); %>
+        <c:if test="${not empty sessionScope.message}">
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: '¡Carga Exitosa!',
+            html: `${sessionScope.message}`,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0d6efd'
+        });
+    </script>
+    <c:remove var="message" scope="session" />
+</c:if>
 
-            <% if (msg !=null) { %>
-                <script>
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Carga Exitosa!',
-                        html: <%= new com.google.gson.Gson().toJson(msg) %>,
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#0d6efd'
-                    });
-                </script>
-            <% } %>
+<c:if test="${not empty sessionScope.error}">
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error en la Carga',
+            text: `${sessionScope.error}`,
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+    <c:remove var="error" scope="session" />
+</c:if>
 
             <% if (err !=null) { %>
                 <script>

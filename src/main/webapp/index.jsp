@@ -1,15 +1,5 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%
-    // Refrescar sesión para tomar cambios de permisos en caliente
-    com.combinacion.models.Usuario sessionUser = (com.combinacion.models.Usuario) session.getAttribute("usuario");
-    if (sessionUser != null) {
-        com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(sessionUser.getId());
-        if (freshUser != null) {
-            session.setAttribute("usuario", freshUser);
-        }
-    }
-%>
 <c:if test="${empty sessionScope.usuario}">
     <c:redirect url="login.jsp" />
 </c:if>
