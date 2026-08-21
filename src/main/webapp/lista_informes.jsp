@@ -40,7 +40,7 @@
                 <c:choose>
                     <c:when test="${not empty misContratos && misContratos.size() > 1}">
                         <div class="dropdown">
-                            <button class="btn btn-success px-4 fw-bold shadow-sm dropdown-toggle w-100 w-md-auto" type="button" id="dropdownNuevoInforme" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-success px-4 fw-bold shadow-sm dropdown-toggle" type="button" id="dropdownNuevoInforme" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-plus-circle me-2"></i>Nuevo Informe
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 w-100" aria-labelledby="dropdownNuevoInforme">
@@ -54,14 +54,14 @@
                         </div>
                     </c:when>
                     <c:when test="${not empty contrato}">
-                        <a href="informes?action=new&contrato_id=${contrato.id}" class="btn btn-success px-4 fw-bold shadow-sm w-100 w-md-auto">
+                        <a href="informes?action=new&contrato_id=${contrato.id}" class="btn btn-success px-4 fw-bold shadow-sm">
                             <i class="bi bi-plus-circle me-2"></i>Nuevo Informe
                         </a>
                     </c:when>
                     <c:otherwise>
                         <c:if test="${esAdminGlobal}">
                             <div class="text-md-end text-start">
-                                <a href="contratos" class="btn btn-outline-secondary px-4 fw-bold shadow-sm w-100 w-md-auto">
+                                <a href="contratos" class="btn btn-outline-secondary px-4 fw-bold shadow-sm">
                                     <i class="bi bi-search me-2"></i>Seleccionar contrato para registrar la cuenta de cobro
                                 </a>
                             </div>

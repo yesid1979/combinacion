@@ -59,7 +59,7 @@
                         <div class="form-text">Asegúrese de usar la plantilla descargada con las columnas Cédula, Contrato, Cuota y Consecutivo.</div>
                     </div>
                     <div class="mt-3">
-                        <button type="submit" class="btn text-white fw-bold px-4 w-100 w-md-auto" style="background-color: #004884;">
+                        <button type="submit" class="btn text-white fw-bold px-4" style="background-color: #004884;">
                             <i class="bi bi-cloud-arrow-up-fill me-2"></i>Subir Archivo
                         </button>
                     </div>
@@ -71,7 +71,7 @@
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h5 class="fw-bold mb-0">Últimos consecutivos cargados</h5>
                 <div>
-                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark w-100 w-md-auto">
+                    <button onclick="eliminarSeleccionados()" class="btn btn-warning btn-sm fw-bold text-dark">
                         <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
                     </button>
                 </div>

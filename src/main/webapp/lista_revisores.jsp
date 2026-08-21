@@ -36,7 +36,7 @@
                 <h3 class="fw-bold text-dark mb-0">Revisores de Documentos</h3>
                 <p class="text-muted small">Configuración de firmas para los documentos generados en lote.</p>
             </div>
-            <a href="revisores?action=new" class="btn btn-success px-4 fw-bold shadow-sm w-100 w-md-auto">
+            <a href="revisores?action=new" class="btn btn-success px-4 fw-bold shadow-sm">
                 <i class="bi bi-plus-circle me-2"></i>Nuevo Revisor
             </a>
         </div>
