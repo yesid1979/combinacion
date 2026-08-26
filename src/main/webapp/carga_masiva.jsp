@@ -1,4 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
     <!DOCTYPE html>
     <html lang="es">
 
@@ -177,16 +178,7 @@
     <c:remove var="error" scope="session" />
 </c:if>
 
-            <% if (err !=null) { %>
-                <script>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en la Carga',
-                        text: <%= new com.google.gson.Gson().toJson(err) %>,
-                        confirmButtonColor: '#dc3545'
-                    });
-                </script>
-            <% } %>
+
 
                             <script>
                                 // Loading Overlay script
