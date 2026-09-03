@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context path="/combinacion">
+<Context antiJARLocking="true" path="/combinacion">
     <!-- Connection Pool Configuration -->
     <!-- Modify username/password as needed -->
     <Resource name="jdbc/combinacion"
