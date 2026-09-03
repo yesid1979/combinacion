@@ -6,7 +6,7 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Combinación de Correspondencia - Gestión de Prestadores</title>
+            <title>Revaluaci&oacute;n de Proveedores</title>
             <!-- Bootstrap 5 CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <!-- Bootstrap Icons CSS -->
@@ -28,15 +28,15 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-premium">
                     <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
-                    <li class="breadcrumb-item active text-muted">Combinación</li>
-                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-files me-1"></i>Generar Documentos</li>
+                    <li class="breadcrumb-item">Gesti&oacute;n de Proveedores</li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-star-fill me-1"></i>Revaluaci&oacute;n</li>
                 </ol>
             </nav>
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Generación de documentos</h2>
+                    <h2>Revaluaci&oacute;n de Proveedores</h2>
                     <div class="d-flex flex-wrap gap-2 justify-content-end">
                         <select id="filterAnio" class="form-select w-auto" onchange="actualizarPeriodosPorAnio(); $('#contratistasTable').DataTable().ajax.reload();">
-                            <option value="">Todos los años</option>
+                            <option value="">Todos los a&ntilde;os</option>
                             <c:forEach var="a" items="${anios}">
                                 <option value="${a}">${a}</option>
                             </c:forEach>
@@ -47,26 +47,14 @@
                                 <option value="${p}">${p}</option>
                             </c:forEach>
                         </select>
-                        <button id="btnFilterAdicion" class="btn btn-outline-warning text-nowrap">
-                            <i class="bi bi-filter"></i> Ver solo otrosí
-                        </button>
-                        <button class="btn btn-warning text-nowrap" onclick="descargarMasivoModificacion()">
-                            <i class="bi bi-file-earmark-text me-1"></i> Modificaciones (ZIP)
-                        </button>
                         <button class="btn btn-success text-nowrap" onclick="descargarMasivo()">
-                            <i class="bi bi-download me-1"></i> Descarga Normal (ZIP)
-                        </button>
-                        <button class="btn btn-info text-white text-nowrap" onclick="descargarMasivoEstructuradores()">
-                            <i class="bi bi-file-earmark-person me-1"></i> Responsables Estructurar (ZIP)
-                        </button>
-                        <button class="btn btn-secondary text-white text-nowrap" onclick="descargarMasivoDesignacion()">
-                            <i class="bi bi-file-earmark-check me-1"></i> Designación Supervisor (ZIP)
+                            <i class="bi bi-file-earmark-excel me-1"></i> Descarga Masiva (ZIP)
                         </button>
                     </div>
                 </div>
 
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="bi bi-info-circle me-2"></i>Seleccione los contratistas para generar sus documentos.
+                <div class="alert alert-info alert-dismissible fade show d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>Seleccione los proveedores/contratistas para generar sus formatos de revaluaci&oacute;n.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
@@ -78,10 +66,10 @@
                                     <th style="width: 40px;"><input type="checkbox" id="selectAll"
                                             class="form-check-input"></th>
                                     <th>No. Contrato</th>
-                                    <th>No. de cédula</th>
+                                        <th>No. de c&eacute;dula</th>
                                     <th>Nombres y Apellidos</th>
                                     <th>Correo</th>
-                                    <th>No. de teléfono</th>
+                                        <th>No. de tel&eacute;fono</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
@@ -125,6 +113,7 @@
                             show = true;
                         } else {
                             var validPeriods = periodosPorAnio[selectedYear] || [];
+                            // Usar trim() en caso de que hayan espacios fantasmas en BD
                             var match = validPeriods.some(function(p) { return $.trim(p) === $.trim(opt.value); });
                             if (match) {
                                 show = true;
@@ -136,6 +125,7 @@
                         }
                     });
                     
+                    // Buscar la opcion de forma segura sin romper jQuery con comillas simples
                     var found = false;
                     $periodoSelect.find("option").each(function() {
                         if ($(this).val() === currentValue) {
@@ -167,7 +157,7 @@
                             "type": "POST",
                             "data": function (d) {
                                 d.action = "data";
-                                d.source = "combinacion";
+                                d.source = "revaluacion";
                                 d.t = new Date().getTime();
                                 d.filterAdicion = $('#btnFilterAdicion').hasClass('active');
                                 d.periodo = $('#filterPeriodo').val();
@@ -198,16 +188,9 @@
                                 "className": "text-end",
                                 "render": function (data, type, row) {
                                     var btnMod = '';
-                                    var adicion = row[6] ? row[6].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : '';
-                                    if (adicion === 'si' || adicion === 'x') {
-                                        btnMod = '<button class="btn btn-sm btn-warning" title="Formatos Modificación" onclick="descargarIndividualModificacion(' + data + ')" style="padding: 0.25rem 0.5rem; line-height: 1;">' +
-                                                 '<i class="bi bi-file-earmark-text"></i></button>';
-                                    }
-
                                     return `
                                     <div class="d-flex justify-content-end gap-1">
-                                        ` + btnMod + `
-                                        <button class="btn btn-sm btn-primary" title="Descargar Documentos" onclick="descargarIndividual(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
+                                        <button class="btn btn-sm btn-primary" title="Descargar Formato de Revaluaci&oacute;n" onclick="descargarIndividual(` + data + `)" style="padding: 0.25rem 0.5rem; line-height: 1;">
                                             <i class="bi bi-download"></i>
                                         </button>
                                     </div>
@@ -258,7 +241,7 @@
                 function descargarIndividual(id) {
                     var periodo = $('#filterPeriodo').val();
                     var anio = $('#filterAnio').val();
-                    window.location.href = 'combinacion?action=generate&id=' + id + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
+                    window.location.href = 'revaluacion?action=generate&id=' + id + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
                 
                 function descargarIndividualModificacion(id) {
@@ -281,7 +264,7 @@
                     // Trigger extraction
                     var periodo = $('#filterPeriodo').val();
                     var anio = $('#filterAnio').val();
-                    window.location.href = 'combinacion?action=downloadZip&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
+                    window.location.href = 'revaluacion?action=downloadZip&ids=' + selected.join(',') + '&periodo=' + encodeURIComponent(periodo) + '&anio=' + encodeURIComponent(anio);
                 }
                 
                 function descargarMasivoModificacion() {

@@ -565,8 +565,16 @@ try {
     }
 
     public List<String> obtenerPeriodosDisponibles() {
+        return obtenerPeriodosDisponibles(null);
+    }
+
+    public List<String> obtenerPeriodosDisponibles(String source) {
         List<String> periodos = new ArrayList<>();
-        String sql = "SELECT DISTINCT periodo FROM contratos WHERE periodo IS NOT NULL AND TRIM(periodo) != '' ORDER BY periodo DESC";
+        String sql = "SELECT DISTINCT periodo FROM contratos WHERE periodo IS NOT NULL AND TRIM(periodo) != '' ";
+        if ("revaluacion".equals(source)) {
+            sql += " AND fecha_terminacion < CURRENT_DATE ";
+        }
+        sql += " ORDER BY periodo DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -580,8 +588,16 @@ try {
     }
 
     public java.util.Map<Integer, java.util.List<String>> obtenerPeriodosPorAnio() {
+        return obtenerPeriodosPorAnio(null);
+    }
+
+    public java.util.Map<Integer, java.util.List<String>> obtenerPeriodosPorAnio(String source) {
         java.util.Map<Integer, java.util.List<String>> map = new java.util.HashMap<>();
-        String sql = "SELECT DISTINCT anio, periodo FROM contratos WHERE anio IS NOT NULL AND periodo IS NOT NULL AND TRIM(periodo) != '' ORDER BY anio DESC, periodo ASC";
+        String sql = "SELECT DISTINCT anio, periodo FROM contratos WHERE anio IS NOT NULL AND periodo IS NOT NULL AND TRIM(periodo) != '' ";
+        if ("revaluacion".equals(source)) {
+            sql += " AND fecha_terminacion < CURRENT_DATE ";
+        }
+        sql += " ORDER BY anio DESC, periodo ASC";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -947,8 +963,16 @@ try {
     }
 
     public java.util.List<Integer> obtenerAniosDisponibles() {
+        return obtenerAniosDisponibles(null);
+    }
+
+    public java.util.List<Integer> obtenerAniosDisponibles(String source) {
         java.util.List<Integer> list = new java.util.ArrayList<>();
-        String sql = "SELECT DISTINCT anio FROM contratos WHERE anio IS NOT NULL ORDER BY anio DESC";
+        String sql = "SELECT DISTINCT anio FROM contratos WHERE anio IS NOT NULL ";
+        if ("revaluacion".equals(source)) {
+            sql += " AND fecha_terminacion < CURRENT_DATE ";
+        }
+        sql += " ORDER BY anio DESC";
         try (Connection conn = DBConnection.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {

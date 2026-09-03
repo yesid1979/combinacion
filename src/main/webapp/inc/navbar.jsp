@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <!-- Navbar Principal Compacto y Equilibrado -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+    <nav class="navbar navbar-expand-xl navbar-light bg-white shadow-sm py-2">
         <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center me-4" href="${pageContext.request.contextPath}/index.jsp">
                 <img src="${pageContext.request.contextPath}/assets/img/logo_alcaldia.png"
@@ -65,6 +65,9 @@
                             <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_VER')}">
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/verbos"><i class="bi bi-translate me-2"></i>Diccionario de Verbos</a></li>
+                            </c:if>
+                            <c:if test="${sessionScope.usuario.tienePermiso('COMBINACION_VER')}">
+                                <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/revaluacion"><i class="bi bi-star-fill me-2"></i>Revaluaci&oacute;n</a></li>
                             </c:if>
                         </ul>
                     </li>

@@ -99,7 +99,7 @@ public class DatabasePatcher {
             }
 
             // Asegurar permisos VER TODO para la mallas dinámica
-            String[] modulosPerms = {"ADMINISTRACION", "CARGA_MASIVA", "COMBINACION", "CONTRATISTAS", "CONTRATOS", "ORDENADORES", "PRESUPUESTO", "SUPERVISORES"};
+            String[] modulosPerms = {"ADMINISTRACION", "CARGA_MASIVA", "COMBINACION", "CONTRATISTAS", "CONTRATOS", "ORDENADORES", "PRESUPUESTO", "SUPERVISORES", "REVALUACION"};
             for (String mod : modulosPerms) {
                 String cod = mod + "_VER_TODO";
                 if (mod.equals("ADMINISTRACION")) cod = "ADMIN_VER_TODO";
@@ -114,6 +114,19 @@ public class DatabasePatcher {
                 stmt.executeUpdate("INSERT INTO permisos (codigo, nombre, modulo, descripcion) " +
                                  "VALUES ('" + ap + "', 'Gestionar admin', 'ADMINISTRACION', 'Permisos de administración') " +
                                  "ON CONFLICT (codigo) DO NOTHING");
+            }
+            
+            // Asegurar permisos para REVALUACION
+            String[][] revaPerms = {
+                {"REVALUACION_VER", "Ver revaluación"}, 
+                {"REVALUACION_CREAR", "Crear revaluación"}, 
+                {"REVALUACION_EDITAR", "Editar revaluación"}, 
+                {"REVALUACION_ELIMINAR", "Eliminar revaluación"}
+            };
+            for (String[] p : revaPerms) {
+                stmt.executeUpdate("INSERT INTO permisos (codigo, nombre, modulo, descripcion) " +
+                                 "VALUES ('" + p[0] + "', '" + p[1] + "', 'REVALUACION', 'Permiso generado para REVALUACION') " +
+                                 "ON CONFLICT (codigo) DO UPDATE SET nombre = EXCLUDED.nombre");
             }
 
             // Asegurar que el rol Administrador tenga TODOS los permisos incluyendo los nuevos

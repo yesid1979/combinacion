@@ -168,6 +168,7 @@ public class AuthService {
         if (path.contains("carga_masiva") || path.contains("upload") || path.contains("google-sync")) return "CARGA_MASIVA";
         if (path.contains("revisor")) return "REVISORES";
         if (path.contains("verbo")) return "VERBOS";
+        if (path.contains("revaluacion")) return "REVALUACION";
         return null;
     }
 

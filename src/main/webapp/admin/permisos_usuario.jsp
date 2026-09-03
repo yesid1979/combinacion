@@ -161,7 +161,7 @@
                                 
                                 <c:choose>
                                     <c:when test="${moduloItem == 'ADMINISTRACION'}">
-                                        <c:set var="label" value="Administración" />
+                                        <c:set var="label" value="Administraci&oacute;n" />
                                         <c:set var="icon" value="bi-gear text-danger" />
                                     </c:when>
                                     <c:when test="${moduloItem == 'CARGA_MASIVA'}">
@@ -169,7 +169,7 @@
                                         <c:set var="icon" value="bi-cloud-upload text-warning" />
                                     </c:when>
                                     <c:when test="${moduloItem == 'COMBINACION'}">
-                                        <c:set var="label" value="Combinación" />
+                                        <c:set var="label" value="Combinaci&oacute;n" />
                                         <c:set var="icon" value="bi-file-earmark-word text-primary" />
                                     </c:when>
                                     <c:when test="${moduloItem == 'CONTRATISTAS'}">
@@ -197,8 +197,12 @@
                                         <c:set var="icon" value="bi-person-check text-warning" />
                                     </c:when>
                                     <c:when test="${moduloItem == 'REVISION_CUENTAS'}">
-                                        <c:set var="label" value="Revisión de Cuentas (Radicadas)" />
+                                        <c:set var="label" value="Revisi&oacute;n de Cuentas (Radicadas)" />
                                         <c:set var="icon" value="bi-check2-all text-primary" />
+                                    </c:when>
+                                    <c:when test="${moduloItem == 'REVALUACION'}">
+                                        <c:set var="label" value="Revaluaci&oacute;n" />
+                                        <c:set var="icon" value="bi-star-fill text-warning" />
                                     </c:when>
                                 </c:choose>
 

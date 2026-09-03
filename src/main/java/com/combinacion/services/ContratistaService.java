@@ -107,7 +107,7 @@ public class ContratistaService {
      * Genera el JSON de respuesta para DataTables.
      */
     public String generarJsonDataTables(int draw, int start, int length,
-            String searchValue, String sortCol, String orderDir, boolean soloAdiciones, String periodo, Integer anio) {
+            String searchValue, String sortCol, String orderDir, boolean soloAdiciones, String periodo, Integer anio, String source) {
 
         System.out.println("[SERVICE] Iniciando generación de JSON para DataTables");
 
@@ -117,8 +117,8 @@ public class ContratistaService {
         }
 
         int total = contratistaDAO.countAll();
-        int filtered = contratistaDAO.countFiltered(searchValue, soloAdiciones, periodo, anio);
-        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir, soloAdiciones, periodo, anio);
+        int filtered = contratistaDAO.countFiltered(searchValue, soloAdiciones, periodo, anio, source);
+        List<Contratista> list = contratistaDAO.findWithPagination(start, length, searchValue, sortCol, orderDir, soloAdiciones, periodo, anio, source);
 
         System.out.println("[SERVICE] Registros obtenidos: " + (list != null ? list.size() : "null"));
 
@@ -309,7 +309,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
             // Generar y enviar JSON
             String jsonResponse = this.generarJsonDataTables(
-                    parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones, periodo, anio);
+                    parseIntSafe(draw, 1), start, length, search, sortCol, orderDir, soloAdiciones, periodo, anio, source);
             response.getWriter().write(jsonResponse);
             response.getWriter().flush();
 

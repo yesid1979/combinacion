@@ -182,6 +182,19 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Revaluacion -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='revaluacion'">
+                            <div class="card-body text-center">
+                                <div class="icon-box mx-auto"
+                                    style="background-color: rgba(250, 204, 21, 0.1) !important; color: #eab308 !important;">
+                                    <i class="bi bi-star-fill fs-2"></i>
+                                </div>
+                                <h5 class="card-title fw-bold">Revaluación</h5>
+                                <p class="card-text text-muted small">Generación de formato de revaluación de proveedores (Excel).</p>
+                            </div>
+                        </div>
+                    </div>
                     </c:if>
 
                     <!-- Administración -->
