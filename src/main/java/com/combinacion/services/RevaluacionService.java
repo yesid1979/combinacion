@@ -170,21 +170,32 @@ public class RevaluacionService {
             }
             variables.put("${NUMERO_CONTRATO}", numContrato);
             
+            // Fecha de Generacion
+            Date fechaGeneracion = new Date();
+            Calendar calGen = Calendar.getInstance();
+            calGen.setTime(fechaGeneracion);
+            variables.put("${DIA}", String.valueOf(calGen.get(Calendar.DAY_OF_MONTH)));
+            variables.put("${MES}", String.valueOf(calGen.get(Calendar.MONTH) + 1));
+            variables.put("${ANIO}", String.valueOf(calGen.get(Calendar.YEAR)));
+            String mesText = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaGeneracion).toUpperCase();
+            variables.put("${MES_TEXT}", mesText);
+
+            // Fecha de Suscripcion
             Date fechaSuscripcion = contrato.getFechaSuscripcion();
             if (fechaSuscripcion != null) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(fechaSuscripcion);
-                variables.put("${DIA}", String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
-                variables.put("${MES}", String.valueOf(cal.get(Calendar.MONTH) + 1));
-                variables.put("${ANIO}", String.valueOf(cal.get(Calendar.YEAR)));
+                Calendar calSusc = Calendar.getInstance();
+                calSusc.setTime(fechaSuscripcion);
+                variables.put("${DIA_SUSC}", String.valueOf(calSusc.get(Calendar.DAY_OF_MONTH)));
+                variables.put("${MES_SUSC}", String.valueOf(calSusc.get(Calendar.MONTH) + 1));
+                variables.put("${ANIO_SUSC}", String.valueOf(calSusc.get(Calendar.YEAR)));
                 
-                String mesText = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaSuscripcion).toUpperCase();
-                variables.put("${MES_TEXT}", mesText);
+                String mesTextSusc = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaSuscripcion).toUpperCase();
+                variables.put("${MES_TEXT_SUSC}", mesTextSusc);
             } else {
-                variables.put("${DIA}", "");
-                variables.put("${MES}", "");
-                variables.put("${ANIO}", "");
-                variables.put("${MES_TEXT}", "");
+                variables.put("${DIA_SUSC}", "");
+                variables.put("${MES_SUSC}", "");
+                variables.put("${ANIO_SUSC}", "");
+                variables.put("${MES_TEXT_SUSC}", "");
             }
 
             String valorTotalLetras = contrato.getValorTotalLetras() != null ? contrato.getValorTotalLetras() : "";
