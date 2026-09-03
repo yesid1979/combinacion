@@ -215,8 +215,8 @@ public class RevaluacionService {
             
             variables.put("${SUPERVISOR}", supervisor != null && supervisor.getNombre() != null ? supervisor.getNombre() : "");
 
-            String templatePath = request.getServletContext().getRealPath("/") + "plantillas/REVALUACION_PROVEEDORES_TEMPLATE.xlsx";
-            if (!new File(templatePath).exists()) {
+            String templatePath = request.getServletContext().getRealPath("/plantillas/REVALUACION_PROVEEDORES_TEMPLATE.xlsx");
+            if (templatePath == null || !new File(templatePath).exists()) {
                 // Try parent path for development environment fallback
                 templatePath = new File(request.getServletContext().getRealPath("/")).getParentFile().getParentFile().getAbsolutePath() + "/plantillas/REVALUACION_PROVEEDORES_TEMPLATE.xlsx";
             }
