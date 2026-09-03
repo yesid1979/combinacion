@@ -170,15 +170,15 @@ public class RevaluacionService {
             }
             variables.put("${NUMERO_CONTRATO}", numContrato);
             
-            Date fechaGeneracion = new Date();
-            if (fechaGeneracion != null) {
+            Date fechaSuscripcion = contrato.getFechaSuscripcion();
+            if (fechaSuscripcion != null) {
                 Calendar cal = Calendar.getInstance();
-                cal.setTime(fechaGeneracion);
+                cal.setTime(fechaSuscripcion);
                 variables.put("${DIA}", String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
                 variables.put("${MES}", String.valueOf(cal.get(Calendar.MONTH) + 1));
                 variables.put("${ANIO}", String.valueOf(cal.get(Calendar.YEAR)));
                 
-                String mesText = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaGeneracion).toUpperCase();
+                String mesText = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaSuscripcion).toUpperCase();
                 variables.put("${MES_TEXT}", mesText);
             } else {
                 variables.put("${DIA}", "");
