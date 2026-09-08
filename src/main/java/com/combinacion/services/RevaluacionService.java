@@ -180,29 +180,41 @@ public class RevaluacionService {
             String mesText = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaGeneracion).toUpperCase();
             variables.put("${MES_TEXT}", mesText);
 
-            // Fecha de Suscripcion
-            Date fechaSuscripcion = contrato.getFechaSuscripcion();
-            if (fechaSuscripcion != null) {
-                Calendar calSusc = Calendar.getInstance();
-                calSusc.setTime(fechaSuscripcion);
-                variables.put("${DIA_SUSC}", String.valueOf(calSusc.get(Calendar.DAY_OF_MONTH)));
-                variables.put("${MES_SUSC}", String.valueOf(calSusc.get(Calendar.MONTH) + 1));
-                variables.put("${ANIO_SUSC}", String.valueOf(calSusc.get(Calendar.YEAR)));
+            // Fecha de Aprobacion
+            Date fechaAprobacion = contrato.getFechaAprobacion();
+            if (fechaAprobacion != null) {
+                Calendar calAprob = Calendar.getInstance();
+                calAprob.setTime(fechaAprobacion);
+                variables.put("${DIA_APROBACION}", String.valueOf(calAprob.get(Calendar.DAY_OF_MONTH)));
+                variables.put("${MES_APROBACION}", String.valueOf(calAprob.get(Calendar.MONTH) + 1));
+                variables.put("${ANIO_APROBACION}", String.valueOf(calAprob.get(Calendar.YEAR)));
                 
-                String mesTextSusc = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaSuscripcion).toUpperCase();
-                variables.put("${MES_TEXT_SUSC}", mesTextSusc);
+                String mesTextAprob = new SimpleDateFormat("MMMM", new Locale("es", "ES")).format(fechaAprobacion).toUpperCase();
+                variables.put("${MES_TEXT_APROBACION}", mesTextAprob);
+                
+                String fechaFormateada = new SimpleDateFormat("dd/MM/yyyy").format(fechaAprobacion);
+                variables.put("${FECHA_APROBACION}", fechaFormateada);
             } else {
-                variables.put("${DIA_SUSC}", "");
-                variables.put("${MES_SUSC}", "");
-                variables.put("${ANIO_SUSC}", "");
-                variables.put("${MES_TEXT_SUSC}", "");
+                variables.put("${DIA_APROBACION}", "");
+                variables.put("${MES_APROBACION}", "");
+                variables.put("${ANIO_APROBACION}", "");
+                variables.put("${MES_TEXT_APROBACION}", "");
+                variables.put("${FECHA_APROBACION}", "");
             }
 
-            String valorTotalLetras = contrato.getValorTotalLetras() != null ? contrato.getValorTotalLetras() : "";
-            java.math.BigDecimal valorTotalNumeros = contrato.getValorTotalNumeros();
-            double valDouble = valorTotalNumeros != null ? valorTotalNumeros.doubleValue() : 0.0;
+            String valorLetras;
+            java.math.BigDecimal valorNumeros;
+            if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) || "Sí".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                valorNumeros = contrato.getValorContratoMasAdicion();
+            } else {
+                valorNumeros = contrato.getValorTotalNumeros();
+            }
+            
+            valorLetras = com.combinacion.util.FormatUtil.convertirMontoALetras(valorNumeros);
+
+            double valDouble = valorNumeros != null ? valorNumeros.doubleValue() : 0.0;
             String valorMoneda = "$" + String.format(Locale.US, "%,.0f", valDouble).replace(',', '.');
-            variables.put("${VALOR}", valorMoneda + " " + valorTotalLetras);
+            variables.put("${VALOR}", valorMoneda + " (" + valorLetras + ")");
             
             variables.put("${OBJETO}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
             variables.put("${CONTRATISTA}", contratista.getNombre() != null ? contratista.getNombre() : "");

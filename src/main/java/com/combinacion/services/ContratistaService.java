@@ -479,7 +479,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     }
 
     public String resolverColumnaOrden(String source, int orderColumn) {
-        if ("combinacion".equals(source)) {
+        if ("combinacion".equals(source) || "revaluacion".equals(source)) {
             switch (orderColumn) {
                 case 1: return "numero_contrato";
                 case 2: return "cedula";
