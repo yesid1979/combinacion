@@ -28,10 +28,21 @@ public class ObligacionesParser {
                 JSONArray arr = new JSONArray(conceptoDb);
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
-                    lista.add(new ObligacionActividad(
-                        obj.optString("obligacion", ""),
-                        obj.optString("actividad", "")
-                    ));
+                    String obligacionDb = obj.optString("obligacion", "");
+                    String actividadDb = obj.optString("actividad", "");
+                    
+                    String[] partes = obligacionDb.split("(?=\\b\\d+\\.(?:[\\sA-Za-záéíóúÁÉÍÓÚñÑ]|$))");
+                    if (partes.length > 1) {
+                        for (int j = 0; j < partes.length; j++) {
+                            String p = partes[j].trim();
+                            if (!p.isEmpty()) {
+                                // Keep the activity text in the first separated obligation to avoid data loss
+                                lista.add(new ObligacionActividad(p, j == 0 ? actividadDb : ""));
+                            }
+                        }
+                    } else {
+                        lista.add(new ObligacionActividad(obligacionDb, actividadDb));
+                    }
                 }
                 return lista;
             } catch (Exception e) {
@@ -64,7 +75,7 @@ public class ObligacionesParser {
             return obligaciones;
         }
 
-        String[] partes = texto.split("(?=\\b\\d+\\.\\s)");
+        String[] partes = texto.split("(?=\\b\\d+\\.(?:[\\sA-Za-záéíóúÁÉÍÓÚñÑ]|$))");
         for (String p : partes) {
             String clean = p.trim();
             if (!clean.isEmpty()) {
