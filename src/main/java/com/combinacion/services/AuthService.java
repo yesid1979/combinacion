@@ -86,6 +86,15 @@ public class AuthService {
             return true;
         }
 
+        // PERMISO ESPECIAL PARA REVISORES EN INFORMES (REVISION DE CUENTAS)
+        if (lowerPath.equals("/informes") && (
+                usuario.tienePermiso("PUEDE_REVISAR_CUENTAS") || 
+                usuario.tienePermiso("REVISION_CUENTAS_VER") || 
+                usuario.tienePermiso("ADMINISTRAR_CUENTAS") || 
+                usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR"))) {
+            return true;
+        }
+
         // Permiso global para que cualquier usuario autenticado use los servlets del editor de texto
         if (lowerPath.equals("/imageuploadservlet") || lowerPath.equals("/imageservlet")) {
             return true;
