@@ -526,7 +526,7 @@
                                 <h5 class="card-title text-success fw-bold"><i class="bi bi-file-earmark-check"></i> Documentos Generados por el Sistema</h5>
                                 <p class="card-text text-muted small">Descargue o previsualice los documentos generados automáticamente con la información actual de esta cuenta.</p>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <c:if test="${contrato.ivaSiNo != 'SI'}">
+                                    <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si'}">
                                         <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=ds&id=${informe.id}" class="btn btn-outline-success" target="_blank">
                                             <i class="bi bi-file-earmark-excel"></i> Cuenta de Cobro (Excel)
                                         </a>
