@@ -948,6 +948,25 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                            
+                            // Asegurar que el RPC esté incluido en el ZIP si no está en esta cuota
+                            if (!soportes.has("file_rpc") && !esCuota1) {
+                                java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(informe.getContratoId());
+                                if (previos != null) {
+                                    for (com.combinacion.models.InformeSupervision prev : previos) {
+                                        if (prev.getSoportesJson() != null && !prev.getSoportesJson().isEmpty()) {
+                                            try {
+                                                org.json.JSONObject sAnteriores = new org.json.JSONObject(prev.getSoportesJson());
+                                                if (sAnteriores.has("file_rpc")) {
+                                                    soportes.put("file_rpc", sAnteriores.getJSONObject("file_rpc"));
+                                                    break; // Se encontró el RPC
+                                                }
+                                            } catch (Exception ignore) {}
+                                        }
+                                    }
+                                }
+                            }
+                            
                             java.util.Set<String> addedEntries = new java.util.HashSet<>();
                             for (String key : soportes.keySet()) {
                                 String zipPath = "";

@@ -975,6 +975,7 @@
                     ['view', ['fullscreen']]
                 ],
                 placeholder: 'Escriba la actividad o pegue aquí una imagen/tabla...',
+                disableDragAndDrop: true,
                     callbacks: {
                         onImageUpload: function(files) {
                             for (let i = 0; i < files.length; i++) {
