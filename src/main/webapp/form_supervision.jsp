@@ -394,20 +394,20 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6 req-cuota-todas">
-                                        <label class="form-label text-primary fw-bold"><i class="bi bi-receipt"></i> Factura Electrónica (Reemplaza Cuenta de Cobro)</label>
+                                        <label class="form-label text-primary fw-bold"><i class="bi bi-receipt"></i> Factura Electrónica (Reemplaza Cuenta de Cobro) <span class="text-danger">*</span></label>
                                         <input type="file" class="form-control border-primary" name="file_factura" accept="application/pdf, text/xml" ${readonly ? 'disabled' : ''}>
                                     </div>
                                 </c:if>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">RUT</label>
+                                    <label class="form-label">RUT <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Cédula</label>
+                                    <label class="form-label">Cédula <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Contrato Secop II</label>
+                                    <label class="form-label">Contrato Secop II <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_secop" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
@@ -423,15 +423,15 @@
                                     <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Ficha Técnica</label>
+                                    <label class="form-label">Ficha Técnica <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_ficha_tecnica" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
-                                    <label class="form-label">Seguridad Social</label>
+                                    <label class="form-label">Seguridad Social <span class="text-danger">*</span></label>
                                     <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : 'required'}>
                                 </div>
                                  <div class="col-md-6 req-cuota-todas">
-                                    <label class="form-label">RPC (Registro Presupuestal)</label>
+                                    <label class="form-label">RPC (Registro Presupuestal) <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-adicion-only" style="display: none;">
@@ -1435,9 +1435,24 @@
                 });
                 
                 // Ejecutar al cargar la página para inicializar los valores si ya hay una cuota preseleccionada
-                if ($('select[name="numero_cuota"]').val()) {
-                    $('select[name="numero_cuota"]').trigger('change');
+                if ($('select[name="numero_cuota"]').val() || $('input[name="numero_cuota"]').val()) {
+                    $('[name="numero_cuota"]').trigger('change');
                 }
+                
+                // Mostrar/Ocultar asteriscos de Cuota 1
+                function actualizarAsteriscosCuota() {
+                    var cuota = parseInt($('[name="numero_cuota"]').val());
+                    if (cuota === 1) {
+                        $('.ast-cuota-1').show();
+                    } else {
+                        $('.ast-cuota-1').hide();
+                    }
+                }
+                
+                $('[name="numero_cuota"]').on('change keyup', function() {
+                    actualizarAsteriscosCuota();
+                });
+                actualizarAsteriscosCuota();
             });
 
             // Función para modal de Revisión
