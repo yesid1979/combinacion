@@ -141,7 +141,7 @@ public class GoogleDriveService {
 
         // 1. Buscar archivos en la carpeta que coincidan con el prefijo
         if (namePrefix != null && !namePrefix.isEmpty() && parentId != null && !parentId.isEmpty()) {
-            String patternQuery = "'" + parentId + "' in parents and trashed=false";
+            String patternQuery = "'" + parentId + "' in parents and trashed=false and mimeType='" + mimeType + "'";
             FileList existing = driveService.files().list()
                     .setQ(patternQuery)
                     .setSpaces("drive")
