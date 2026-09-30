@@ -1118,6 +1118,8 @@
         
         // Validación personalizada con SweetAlert
         $('#informeForm').on('submit', function(e) {
+            var submitBtn = $(this).find('button[type="submit"]');
+            
             // Validar el tamaño de los archivos (Max 100MB por archivo)
             let filesTooLarge = false;
             let largeFileNames = [];
@@ -1218,6 +1220,17 @@
             $('.money-mask').each(function() {
                 var clean = $(this).val().replace(/\./g, '');
                 $(this).val(clean);
+            });
+            
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+            
+            Swal.fire({
+                title: 'Guardando Informe...',
+                text: 'Por favor espere. Esto puede tardar unos minutos mientras se suben los archivos a Google Drive.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
         });
         

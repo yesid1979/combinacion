@@ -46,11 +46,14 @@ public class InformeSupervisionService {
         return info;
     }
 
+    private static final Object INSERT_LOCK = new Object();
+
     public String insertar(InformeFormData form) {
-        try {
-            if (form.contratoId <= 0) {
-                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
-            }
+        synchronized (INSERT_LOCK) {
+            try {
+                if (form.contratoId <= 0) {
+                    return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
+                }
 
             InformeSupervision info = mapFormToModel(form);
             if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
@@ -78,10 +81,12 @@ public class InformeSupervisionService {
             } else {
                 return "No se pudo guardar el informe en la base de datos: " + daoResult;
             }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return "Error al procesar el informe: " + e.getMessage();
         }
+        } // End synchronized
     }
 
     public String actualizar(int id, InformeFormData form) {
