@@ -109,7 +109,7 @@ public class CuentaCobroGenerator {
         if (contrato.getContratista() != null) {
             Row row17 = sheet.getRow(16); if(row17 == null) row17 = sheet.createRow(16);
             Cell cellD17 = row17.getCell(3); if(cellD17 == null) cellD17 = row17.createCell(3);
-            cellD17.setCellValue(toTitleCase(contrato.getContratistaNombre()));
+            cellD17.setCellValue(voltearNombres(toTitleCase(contrato.getContratistaNombre())));
             
             Cell cellH17 = row17.getCell(7); if(cellH17 == null) cellH17 = row17.createCell(7);
             String cedulaStr = contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
@@ -261,6 +261,38 @@ public class CuentaCobroGenerator {
         symbols.setDecimalSeparator(',');
         DecimalFormat formatter = new DecimalFormat("$ #,##0", symbols);
         return formatter.format(valor);
+    }
+
+    private static String voltearNombres(String nombreCompleto) {
+        if (nombreCompleto == null || nombreCompleto.trim().isEmpty()) {
+            return "";
+        }
+        String[] partes = nombreCompleto.trim().split("\\s+");
+        if (partes.length == 1) {
+            return nombreCompleto;
+        }
+        if (partes.length == 2) {
+            return partes[1] + " " + partes[0];
+        }
+        if (partes.length == 3) {
+            // Asumimos 1 nombre, 2 apellidos
+            return partes[1] + " " + partes[2] + " " + partes[0];
+        }
+        if (partes.length == 4) {
+            // Asumimos 2 nombres, 2 apellidos
+            return partes[2] + " " + partes[3] + " " + partes[0] + " " + partes[1];
+        }
+        
+        // Para 5 o más palabras, asumimos que los últimos 2 son apellidos
+        StringBuilder apellidos = new StringBuilder();
+        apellidos.append(partes[partes.length - 2]).append(" ").append(partes[partes.length - 1]);
+        
+        StringBuilder nombres = new StringBuilder();
+        for (int i = 0; i < partes.length - 2; i++) {
+            nombres.append(partes[i]).append(" ");
+        }
+        
+        return apellidos.toString() + " " + nombres.toString().trim();
     }
 
     private static String toTitleCase(String text) {
