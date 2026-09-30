@@ -11,8 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(name = "InformeSupervisionServlet", urlPatterns = { "/informes" })
 @javax.servlet.annotation.MultipartConfig(
     fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
-    maxFileSize = 1024 * 1024 * 10,       // 10MB
-    maxRequestSize = 1024 * 1024 * 50     // 50MB
+    maxFileSize = 1024 * 1024 * 100,      // 100MB
+    maxRequestSize = 1024 * 1024 * 500    // 500MB
 )
 public class InformeSupervisionServlet extends HttpServlet {
 

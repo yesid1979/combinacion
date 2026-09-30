@@ -1118,6 +1118,35 @@
         
         // Validación personalizada con SweetAlert
         $('#informeForm').on('submit', function(e) {
+            // Validar el tamaño de los archivos (Max 100MB por archivo)
+            let filesTooLarge = false;
+            let largeFileNames = [];
+            let maxFileSize = 100 * 1024 * 1024; // 100MB en bytes
+            
+            $(this).find('input[type="file"]').each(function() {
+                if (this.files && this.files.length > 0) {
+                    for (let i = 0; i < this.files.length; i++) {
+                        if (this.files[i].size > maxFileSize) {
+                            filesTooLarge = true;
+                            largeFileNames.push(this.files[i].name);
+                        }
+                    }
+                }
+            });
+            
+            if (filesTooLarge) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Archivo demasiado pesado',
+                    html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
+                          '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
+                          'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente. Si el servidor rechaza los archivos, <b>se perderá la información que has escrito</b>.',
+                    confirmButtonColor: '#007bff'
+                });
+                return false;
+            }
+            
             let isValid = true;
             let firstInvalid = null;
             

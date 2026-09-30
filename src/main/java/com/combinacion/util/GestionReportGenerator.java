@@ -59,25 +59,30 @@ public class GestionReportGenerator {
         return periodo;
     }
 
-    private static final String TEMPLATE_PATH = "plantillas/INFORME_GESTION_TEMPLATE.docx";
+    private static final String TEMPLATE_PATH_NORMAL = "plantillas/INFORME_GESTION_TEMPLATE.docx";
+    private static final String TEMPLATE_PATH_BORRADOR = "plantillas/INFORME_GESTION_TEMPLATE_BORRADOR.docx";
     private static final String OUTPUT_DIR = "generados/informes";
 
     private static byte[] templateCacheBytes = null;
 
     public static String generarDocx(InformeSupervision info, Contrato contrato, String realPath) throws IOException {
+        String currentTemplatePath = ("BORRADOR".equalsIgnoreCase(info.getEstadoRadicacion())) 
+            ? TEMPLATE_PATH_BORRADOR 
+            : TEMPLATE_PATH_NORMAL;
+
         File templateFile = null;
         if (realPath != null) {
-            templateFile = new File(realPath, TEMPLATE_PATH);
+            templateFile = new File(realPath, currentTemplatePath);
         }
         
         if (templateFile == null || !templateFile.exists()) {
-            templateFile = new File(TEMPLATE_PATH);
+            templateFile = new File(currentTemplatePath);
         }
         if (!templateFile.exists()) {
-            templateFile = new File("c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\" + TEMPLATE_PATH);
+            templateFile = new File("c:\\Users\\yesid.piedrahita\\Documents\\NetBeansProjects\\combinacion\\" + currentTemplatePath);
         }
         if (!templateFile.exists()) {
-            throw new IOException("Plantilla no encontrada en: " + (realPath != null ? new File(realPath, TEMPLATE_PATH).getPath() : TEMPLATE_PATH));
+            throw new IOException("Plantilla no encontrada en: " + (realPath != null ? new File(realPath, currentTemplatePath).getPath() : currentTemplatePath));
         }
 
         File outputDir = null;

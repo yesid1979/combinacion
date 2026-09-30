@@ -48,6 +48,10 @@ public class InformeSupervisionService {
 
     public String insertar(InformeFormData form) {
         try {
+            if (form.contratoId <= 0) {
+                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
+            }
+
             InformeSupervision info = mapFormToModel(form);
             if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                 info.setEstadoRadicacion("BORRADOR");
@@ -82,6 +86,10 @@ public class InformeSupervisionService {
 
     public String actualizar(int id, InformeFormData form) {
         try {
+            if (form.contratoId <= 0) {
+                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
+            }
+            
             InformeSupervision info = mapFormToModel(form);
             info.setId(id);
             
@@ -498,9 +506,17 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(contratoId);
                 java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
                 if(previos != null && !previos.isEmpty()){
+                    // Use a Set to avoid double-counting the same quota number si el usuario creó duplicados (ej. una devuelta y una nueva)
+                    // Como viene ordenado DESC por fecha, tomará la versión más reciente de cada cuota.
+                    java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
                     for(com.combinacion.models.InformeSupervision prev : previos){
+                        String numCuota = prev.getNumeroCuota();
+                        if (numCuota != null && cuotasSumadas.contains(numCuota)) {
+                            continue; // Ya sumamos la versión más reciente de esta cuota
+                        }
                         if(prev.getValorCuotaPagar() != null){
                             acumulado = acumulado.add(prev.getValorCuotaPagar());
+                            if (numCuota != null) cuotasSumadas.add(numCuota);
                         }
                     }
                 }

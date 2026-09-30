@@ -19,8 +19,11 @@ public class CuentaCobroGenerator {
     private static byte[] templateCacheBytes = null;
 
     public static String generarExcel(InformeSupervision informe, Contrato contrato, String realPath) throws Exception {
-        // Asume que hay una plantilla base llamada "CUENTA_COBRO.xlsx" en la carpeta plantillas/
-        String templatePath = realPath + File.separator + "plantillas" + File.separator + "CUENTA_COBRO.xlsx";
+        // Asume que hay una plantilla base en la carpeta plantillas/
+        String templateName = ("BORRADOR".equalsIgnoreCase(informe.getEstadoRadicacion())) 
+            ? "CUENTA_COBRO_BORRADOR.xlsx" 
+            : "CUENTA_COBRO.xlsx";
+        String templatePath = realPath + File.separator + "plantillas" + File.separator + templateName;
         File templateFile = new File(templatePath);
         
         if (!templateFile.exists()) {
