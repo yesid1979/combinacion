@@ -81,7 +81,6 @@ public class InformeSupervisionService {
             } else {
                 return "No se pudo guardar el informe en la base de datos: " + daoResult;
             }
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return "Error al procesar el informe: " + e.getMessage();
