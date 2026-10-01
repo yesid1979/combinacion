@@ -1108,13 +1108,25 @@
                                 cleanHtml = cleanHtml.replace(/^(<br\s*\/?>|\s|&nbsp;)+/i, "");
                                 
                                 setTimeout(function () {
-                                    $(textarea).summernote('pasteHTML', cleanHtml);
+                                    var currentContent = $(textarea).summernote('code');
+                                    // Si el editor está completamente vacío o solo tiene el salto de línea por defecto,
+                                    // reemplazamos todo para no crear una línea vacía arriba.
+                                    if (!currentContent || currentContent === '<p><br></p>' || currentContent.trim() === '') {
+                                        $(textarea).summernote('code', cleanHtml);
+                                    } else {
+                                        $(textarea).summernote('pasteHTML', cleanHtml);
+                                    }
                                 }, 10);
                             } else if (text) {
                                 e.preventDefault();
                                 setTimeout(function () {
-                                    // Insertar texto puro cambiando saltos de línea por <br>
-                                    $(textarea).summernote('pasteHTML', text.replace(/\n/g, "<br>"));
+                                    var textHtml = text.replace(/\n/g, "<br>");
+                                    var currentContent = $(textarea).summernote('code');
+                                    if (!currentContent || currentContent === '<p><br></p>' || currentContent.trim() === '') {
+                                        $(textarea).summernote('code', textHtml);
+                                    } else {
+                                        $(textarea).summernote('pasteHTML', textHtml);
+                                    }
                                 }, 10);
                             }
                         }
