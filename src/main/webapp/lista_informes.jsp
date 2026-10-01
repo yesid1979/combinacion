@@ -81,6 +81,14 @@
             <div class="alert alert-success shadow-sm border-0 mb-4">
                 <i class="bi bi-check-circle-fill me-2"></i> ${successMessage}
             </div>
+            <script>
+                // Limpiar cualquier borrador guardado en localStorage porque la operación fue exitosa
+                Object.keys(localStorage).forEach(function(key){
+                   if (key.startsWith('autosave_')) {
+                       localStorage.removeItem(key);
+                   }
+                });
+            </script>
             <c:remove var="successMessage" scope="session" />
         </c:if>
 

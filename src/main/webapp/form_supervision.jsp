@@ -1691,6 +1691,98 @@
                 if ($('[name="numero_cuota"]').val() && !$('[name="consecutivo_cobro"]').val()) {
                     fetchConsecutivo();
                 }
+
+                // ==========================================
+                // AUTOSAVE Y RECUPERACION DE DATOS
+                // ==========================================
+                if (!'${readonly}' || '${readonly}' === 'false' || '${readonly}' === '') {
+                    var contratoId = '${contrato.id}';
+                    var informeId = '${informe != null ? informe.id : "0"}';
+                    var autoSaveKey = 'autosave_contrato_' + contratoId + '_informe_' + informeId;
+                    
+                    // Función para guardar datos
+                    function guardarBorradorLocal() {
+                        var formData = {};
+                        // Guardar inputs normales (text, number, date, etc) y selects
+                        $('#informeForm').find('input:not([type="file"]):not([type="hidden"]), select, textarea:not(.summernote-editor)').each(function() {
+                            var name = $(this).attr('name');
+                            if (name) {
+                                formData[name] = $(this).val();
+                            }
+                        });
+                        // Guardar Summernote
+                        $('.summernote-editor').each(function(index) {
+                            formData['summernote_' + index] = $(this).summernote('code');
+                        });
+                        
+                        localStorage.setItem(autoSaveKey, JSON.stringify({
+                            time: new Date().getTime(),
+                            data: formData
+                        }));
+                    }
+
+                    // Autoguardado cada 10 segundos
+                    setInterval(guardarBorradorLocal, 10000);
+                    
+                    // Guardar también justo antes de enviar el formulario por si falla
+                    $('#informeForm').on('submit', function() {
+                        guardarBorradorLocal();
+                    });
+
+                    // Limpiar autosave SI el servidor responde exitosamente (no hay error)
+                    var serverError = '${error}';
+                    var serverSuccess = '${successMessage}';
+                    if (serverSuccess && serverSuccess.trim() !== '') {
+                        localStorage.removeItem(autoSaveKey);
+                    } else {
+                        // Intentar recuperar si existe y no acabamos de guardar exitosamente
+                        var guardado = localStorage.getItem(autoSaveKey);
+                        if (guardado) {
+                            try {
+                                var parseado = JSON.parse(guardado);
+                                var timeDiff = (new Date().getTime() - parseado.time) / (1000 * 60 * 60); // Horas
+                                
+                                // Si hay datos guardados hace menos de 24h, y hay un error crítico o la página está vacía
+                                if (timeDiff < 24) {
+                                    Swal.fire({
+                                        title: 'Recuperación de datos',
+                                        text: 'El sistema detectó información que estabas escribiendo y que no se guardó correctamente. ¿Deseas restaurar esa información en el formulario?',
+                                        icon: 'info',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Sí, restaurar',
+                                        cancelButtonText: 'No, descartar'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            var d = parseado.data;
+                                            // Restaurar inputs y textareas normales
+                                            $('#informeForm').find('input:not([type="file"]):not([type="hidden"]), select, textarea:not(.summernote-editor)').each(function() {
+                                                var name = $(this).attr('name');
+                                                if (name && d[name] !== undefined && d[name] !== null) {
+                                                    $(this).val(d[name]);
+                                                }
+                                            });
+                                            // Restaurar Summernotes
+                                            $('.summernote-editor').each(function(index) {
+                                                var html = d['summernote_' + index];
+                                                if (html) {
+                                                    $(this).summernote('code', html);
+                                                }
+                                            });
+                                            
+                                            // Trigger recalcular
+                                            calcularSaldo();
+                                            Swal.fire('¡Restaurado!', 'La información ha sido recuperada.', 'success');
+                                        } else {
+                                            localStorage.removeItem(autoSaveKey);
+                                        }
+                                    });
+                                }
+                            } catch (e) {
+                                console.error('Error recuperando autosave', e);
+                            }
+                        }
+                    }
+                }
             });
         </script>
     </body>
