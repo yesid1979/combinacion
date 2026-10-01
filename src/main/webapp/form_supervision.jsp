@@ -1052,25 +1052,45 @@
                         onPaste: function (e) {
                             var clipboardData = (e.originalEvent || e).clipboardData || window.clipboardData;
                             var html = clipboardData.getData('text/html');
-                            // Si detectamos basura de Word, la limpiamos antes de pegarla
-                            if (html && (html.indexOf('mso-') !== -1 || html.indexOf('class="Mso') !== -1)) {
+                            var text = clipboardData.getData('text/plain');
+                            
+                            if (html) {
                                 e.preventDefault();
                                 var temp = document.createElement("div");
                                 temp.innerHTML = html;
+                                
+                                // Eliminar atributos problemáticos de todos los nodos
                                 var allNodes = temp.getElementsByTagName("*");
                                 for (var k = 0, max = allNodes.length; k < max; k++) {
                                     var node = allNodes[k];
-                                    if(node) {
+                                    if (node && node.nodeType === 1) { // Asegurar que es un elemento
                                         node.removeAttribute("style");
                                         node.removeAttribute("class");
                                         node.removeAttribute("lang");
+                                        node.removeAttribute("dir");
+                                        node.removeAttribute("width");
+                                        node.removeAttribute("height");
+                                        node.removeAttribute("align");
                                     }
                                 }
+                                
                                 var cleanHtml = temp.innerHTML;
-                                // Remover comentarios XML de Word
+                                // Remover comentarios XML/HTML (basura de Word/Excel)
                                 cleanHtml = cleanHtml.replace(/<!--[\s\S]*?-->/g, "");
+                                // Remover espacios y párrafos vacíos que generan huecos gigantes
+                                cleanHtml = cleanHtml.replace(/<p>\s*<\/p>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<div>\s*<\/div>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<span>\s*<\/span>/gi, "");
+                                
                                 setTimeout(function () {
                                     $(textarea).summernote('pasteHTML', cleanHtml);
+                                }, 10);
+                            } else if (text) {
+                                e.preventDefault();
+                                setTimeout(function () {
+                                    // Insertar texto puro cambiando saltos de línea por <br>
+                                    $(textarea).summernote('pasteHTML', text.replace(/\n/g, "<br>"));
                                 }, 10);
                             }
                         }
