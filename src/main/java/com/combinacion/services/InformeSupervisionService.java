@@ -411,13 +411,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
         }
         
-        // Ordenar por Fecha de Registro (antiguas primero)
-        listaFinal.sort((a, b) -> {
-            if (a.getFechaCreacion() == null && b.getFechaCreacion() == null) return 0;
-            if (a.getFechaCreacion() == null) return 1;
-            if (b.getFechaCreacion() == null) return -1;
-            return b.getFechaCreacion().compareTo(a.getFechaCreacion());
-        });
+        // Se elimina el ordenamiento en Java para respetar estrictamente el orden de la base de datos (SQL)
+        // que ya implementa la lógica de la Fila India (FIFO) por estado y por fecha de radicación.
         
         request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
         request.setAttribute("esAdminGlobal", esAdmin);
