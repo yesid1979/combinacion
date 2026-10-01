@@ -107,7 +107,18 @@ public class InformeSupervisionDAO {
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
-                "WHERE i.contrato_id = ? ORDER BY i.fecha_creacion DESC";
+                "WHERE i.contrato_id = ? " +
+                "ORDER BY " +
+                "  CASE i.estado_radicacion " +
+                "    WHEN 'RADICADA' THEN 1 " +
+                "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
+                "    WHEN 'EN REVISION FINAL' THEN 3 " +
+                "    WHEN 'DEVUELTA' THEN 4 " +
+                "    WHEN 'BORRADOR' THEN 5 " +
+                "    ELSE 6 " +
+                "  END ASC, " +
+                "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
+                "  i.fecha_creacion DESC";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -131,7 +142,17 @@ public class InformeSupervisionDAO {
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
-                "ORDER BY i.fecha_creacion DESC";
+                "ORDER BY " +
+                "  CASE i.estado_radicacion " +
+                "    WHEN 'RADICADA' THEN 1 " +
+                "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
+                "    WHEN 'EN REVISION FINAL' THEN 3 " +
+                "    WHEN 'DEVUELTA' THEN 4 " +
+                "    WHEN 'BORRADOR' THEN 5 " +
+                "    ELSE 6 " +
+                "  END ASC, " +
+                "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
+                "  i.fecha_creacion DESC";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql);

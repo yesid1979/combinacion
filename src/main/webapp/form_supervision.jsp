@@ -528,7 +528,7 @@
                                 <div class="d-flex gap-2 flex-wrap">
                                     <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si'}">
                                         <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=ds&id=${informe.id}" class="btn btn-outline-success" target="_blank">
-                                            <i class="bi bi-file-earmark-excel"></i> Cuenta de Cobro (Excel)
+                                            <i class="bi bi-file-earmark-excel"></i> Equivalente (Excel)
                                         </a>
                                     </c:if>
                                     <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=supervision&id=${informe.id}" class="btn btn-outline-primary" target="_blank">
