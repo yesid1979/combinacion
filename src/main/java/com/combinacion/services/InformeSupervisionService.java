@@ -195,8 +195,8 @@ public class InformeSupervisionService {
             java.util.List<InformeSupervision> previos = this.listarPorContrato(info.getContratoId());
             java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
             
+            java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
             if(previos != null && !previos.isEmpty()) {
-                java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
                 for(InformeSupervision prev : previos) {
                     if (prev.getId() != null && info.getId() != null && prev.getId().equals(info.getId())) {
                         continue;
@@ -213,6 +213,14 @@ public class InformeSupervisionService {
                         }
                     }
                 }
+            }
+            
+            // Garantizar precisión matemática si faltan cuotas históricas en la base de datos
+            int cuotasFaltantes = (currentCuota - 1) - cuotasSumadas.size();
+            if (cuotasFaltantes > 0) {
+                java.math.BigDecimal cuotaActual = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar() : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal historicoFaltante = cuotaActual.multiply(new java.math.BigDecimal(cuotasFaltantes));
+                acumulado = acumulado.add(historicoFaltante);
             }
             
             info.setValorAccumuladoPagado(acumulado);
