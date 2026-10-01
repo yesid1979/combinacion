@@ -1755,9 +1755,17 @@
                     var contratoId = '${contrato.id}';
                     var informeId = '${informe != null ? informe.id : "0"}';
                     var autoSaveKey = 'autosave_contrato_' + contratoId + '_informe_' + informeId;
+                    var formHasChanges = false;
+                    
+                    // Detectar si el usuario escribe algo
+                    $('#informeForm').on('input change keyup paste', 'input, select, textarea', function() {
+                        formHasChanges = true;
+                    });
                     
                     // Función para guardar datos
                     function guardarBorradorLocal() {
+                        if (!formHasChanges) return; // Solo guardar si realmente modificaron algo en esta sesión
+                        
                         var formData = {};
                         // Guardar inputs normales (text, number, date, etc) y selects
                         $('#informeForm').find('input:not([type="file"]):not([type="hidden"]), select, textarea:not(.summernote-editor)').each(function() {
@@ -1827,6 +1835,7 @@
                                             
                                             // Trigger recalcular
                                             calcularSaldo();
+                                            formHasChanges = true; // Mantener vivo el autograbado después de restaurar
                                             Swal.fire('¡Restaurado!', 'La información ha sido recuperada.', 'success');
                                         } else {
                                             localStorage.removeItem(autoSaveKey);
@@ -1838,6 +1847,13 @@
                             }
                         }
                     }
+                    
+                    // Asegurar que Summernote también marque cambios
+                    setTimeout(function() {
+                        $('.summernote-editor').on('summernote.change', function() {
+                            formHasChanges = true;
+                        });
+                    }, 1000);
                 }
             });
         </script>
