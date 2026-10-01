@@ -1054,22 +1054,40 @@
                             var html = clipboardData.getData('text/html');
                             var text = clipboardData.getData('text/plain');
                             
+                            // Si están pegando una imagen directa del portapapeles (sin HTML), dejamos que Summernote la procese
+                            if (!html && e.originalEvent.clipboardData && e.originalEvent.clipboardData.files && e.originalEvent.clipboardData.files.length > 0) {
+                                return; // Salir de esta función para que el onImageUpload tome el control
+                            }
+                            
                             if (html) {
                                 e.preventDefault();
                                 var temp = document.createElement("div");
                                 temp.innerHTML = html;
                                 
-                                // Eliminar atributos problemáticos de todos los nodos
+                                // Eliminar atributos problemáticos de todos los nodos, pero salvando cuadros/imágenes
                                 var allNodes = temp.getElementsByTagName("*");
                                 for (var k = 0, max = allNodes.length; k < max; k++) {
                                     var node = allNodes[k];
                                     if (node && node.nodeType === 1) { // Asegurar que es un elemento
+                                        var tagName = node.tagName.toLowerCase();
+                                        
+                                        // A las tablas les ponemos las clases de Bootstrap para que se vean bonitas y con bordes
+                                        if (tagName === 'table') {
+                                            node.className = "table table-bordered table-sm";
+                                        } else {
+                                            node.removeAttribute("class");
+                                        }
+                                        
+                                        // Quitamos estilos raros que desordenan todo
                                         node.removeAttribute("style");
-                                        node.removeAttribute("class");
                                         node.removeAttribute("lang");
                                         node.removeAttribute("dir");
-                                        node.removeAttribute("width");
-                                        node.removeAttribute("height");
+                                        
+                                        // Protegemos el ancho/alto de imágenes, tablas y celdas
+                                        if (tagName !== 'img' && tagName !== 'table' && tagName !== 'td' && tagName !== 'th') {
+                                            node.removeAttribute("width");
+                                            node.removeAttribute("height");
+                                        }
                                         node.removeAttribute("align");
                                     }
                                 }
