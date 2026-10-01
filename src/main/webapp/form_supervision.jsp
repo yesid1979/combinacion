@@ -1098,8 +1098,14 @@
                                 // Remover espacios y párrafos vacíos que generan huecos gigantes
                                 cleanHtml = cleanHtml.replace(/<p>\s*<\/p>/gi, "");
                                 cleanHtml = cleanHtml.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<p>\s*<br\s*\/?>\s*<\/p>/gi, "");
                                 cleanHtml = cleanHtml.replace(/<div>\s*<\/div>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<div>\s*<br\s*\/?>\s*<\/div>/gi, "");
+                                cleanHtml = cleanHtml.replace(/<div>\s*&nbsp;\s*<\/div>/gi, "");
                                 cleanHtml = cleanHtml.replace(/<span>\s*<\/span>/gi, "");
+                                
+                                // Eliminar múltiples saltos de línea al principio del texto
+                                cleanHtml = cleanHtml.replace(/^(<br\s*\/?>|\s|&nbsp;)+/i, "");
                                 
                                 setTimeout(function () {
                                     $(textarea).summernote('pasteHTML', cleanHtml);
