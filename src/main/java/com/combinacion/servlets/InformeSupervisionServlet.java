@@ -47,6 +47,10 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "delete":
                 informeService.eliminar(request, response);
                 break;
+            case "fixall":
+                com.combinacion.util.FixAllPostgres.main(null);
+                response.getWriter().write("Base de datos recalculada con exito.");
+                break;
             default:
                 informeService.listar(request, response);
                 break;
