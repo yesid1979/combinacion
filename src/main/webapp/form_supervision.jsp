@@ -1257,6 +1257,25 @@
                 calcularSaldo();
             }
             
+            var cuotasValores = ${empty cuotasValoresJson ? '{}' : cuotasValoresJson};
+            
+            // Recalcular el valor acumulado en tiempo real al cambiar de cuota
+            $('select[name="numero_cuota"]').change(function() {
+                var cuota = parseInt($(this).val());
+                if (cuota === 1) {
+                    $('#valor_acumulado').val('0').trigger('input');
+                } else if (!isNaN(cuota)) {
+                    var nuevoAcumulado = 0;
+                    for (var i = 1; i < cuota; i++) {
+                        var key = i.toString();
+                        if (cuotasValores[key]) {
+                            nuevoAcumulado += parseFloat(cuotasValores[key]);
+                        }
+                    }
+                    $('#valor_acumulado').val(formatMoney(nuevoAcumulado)).trigger('input');
+                }
+            });
+            
             // Lógica de arrastrar y soltar para inputs tipo file (delegación de eventos para inputs dinámicos)
             $(document).on('dragover dragenter', 'input[type="file"]', function(e) {
                 if ($(this).prop('disabled')) return;

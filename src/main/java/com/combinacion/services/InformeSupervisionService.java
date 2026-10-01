@@ -75,6 +75,10 @@ public class InformeSupervisionService {
             if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(), info.getNumeroCuota())) {
                 return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
             }
+            
+            // Recalcular valores financieros de manera segura antes de guardar
+            recalcularValoresFinancieros(info);
+            
             String daoResult = informeDAO.insertar(info);
             if (daoResult == null) {
                 return null; // Éxito
@@ -122,6 +126,9 @@ public class InformeSupervisionService {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
                 }
             }
+            
+            // Recalcular valores financieros de manera segura antes de actualizar
+            recalcularValoresFinancieros(info);
             
             String daoResult = informeDAO.actualizar(info);
             if (daoResult == null) {
@@ -177,6 +184,59 @@ public class InformeSupervisionService {
         info.setIdRevisorAsignado(f.idRevisorAsignado);
         
         return info;
+    }
+
+    private void recalcularValoresFinancieros(InformeSupervision info) {
+        if (info == null || info.getContratoId() == null || info.getNumeroCuota() == null) return;
+        try {
+            int currentCuota = ParseUtils.parseInt(info.getNumeroCuota());
+            if (currentCuota <= 0) return;
+
+            java.util.List<InformeSupervision> previos = this.listarPorContrato(info.getContratoId());
+            java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
+            
+            if(previos != null && !previos.isEmpty()) {
+                java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
+                for(InformeSupervision prev : previos) {
+                    if (prev.getId() != null && info.getId() != null && prev.getId().equals(info.getId())) {
+                        continue;
+                    }
+                    int prevCuota = ParseUtils.parseInt(prev.getNumeroCuota());
+                    if (prevCuota > 0 && prevCuota < currentCuota) {
+                        String numCuota = prev.getNumeroCuota();
+                        if (numCuota != null && cuotasSumadas.contains(numCuota)) {
+                            continue;
+                        }
+                        if(prev.getValorCuotaPagar() != null){
+                            acumulado = acumulado.add(prev.getValorCuotaPagar());
+                            if (numCuota != null) cuotasSumadas.add(numCuota);
+                        }
+                    }
+                }
+            }
+            
+            info.setValorAccumuladoPagado(acumulado);
+            
+            Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
+            if (contrato != null) {
+                java.math.BigDecimal total = contrato.getValorTotalNumeros();
+                int cuotasNormales = contrato.getNumCuotasNumero();
+                if (cuotasNormales > 0 && currentCuota >= cuotasNormales && contrato.getValorTotalAdicion() != null && contrato.getValorTotalAdicion().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    total = contrato.getValorTotalAdicion();
+                }
+                
+                if (total != null) {
+                    java.math.BigDecimal cuota = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal saldo = total.subtract(acumulado).subtract(cuota);
+                    if (saldo.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                        saldo = java.math.BigDecimal.ZERO;
+                    }
+                    info.setSaldoPorCancelar(saldo);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error recalculando valores financieros: " + e.getMessage());
+        }
     }
 
     public static class InformeFormData {
@@ -509,9 +569,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 // Calcular acumulado previo y número de cuota sugerido
                 java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(contratoId);
                 java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
+                com.google.gson.JsonObject cuotasValores = new com.google.gson.JsonObject();
+                
                 if(previos != null && !previos.isEmpty()){
-                    // Use a Set to avoid double-counting the same quota number si el usuario creó duplicados (ej. una devuelta y una nueva)
-                    // Como viene ordenado DESC por fecha, tomará la versión más reciente de cada cuota.
                     java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
                     for(com.combinacion.models.InformeSupervision prev : previos){
                         String numCuota = prev.getNumeroCuota();
@@ -520,11 +580,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                         if(prev.getValorCuotaPagar() != null){
                             acumulado = acumulado.add(prev.getValorCuotaPagar());
-                            if (numCuota != null) cuotasSumadas.add(numCuota);
+                            if (numCuota != null) {
+                                cuotasSumadas.add(numCuota);
+                                cuotasValores.addProperty(numCuota, prev.getValorCuotaPagar().toString());
+                            }
                         }
                     }
                 }
                 request.setAttribute("acumuladoPrevio", acumulado);
+                request.setAttribute("cuotasValoresJson", cuotasValores.toString());
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 

@@ -275,8 +275,9 @@ public class CuentaCobroGenerator {
             return partes[1] + " " + partes[0];
         }
         if (partes.length == 3) {
-            // Asumimos 1 nombre, 2 apellidos
-            return partes[1] + " " + partes[2] + " " + partes[0];
+            // Asumimos 2 nombres, 1 apellido (es más común, ej. Beatriz Eugenia Arenas)
+            // partes[0] = Nombre 1, partes[1] = Nombre 2, partes[2] = Apellido
+            return partes[2] + " " + partes[0] + " " + partes[1];
         }
         if (partes.length == 4) {
             // Asumimos 2 nombres, 2 apellidos
