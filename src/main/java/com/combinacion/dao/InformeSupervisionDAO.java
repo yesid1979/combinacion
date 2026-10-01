@@ -103,7 +103,8 @@ public class InformeSupervisionDAO {
     public List<InformeSupervision> listarPorContrato(int contratoId) {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
-        String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre " +
+        String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
+                "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
@@ -138,7 +139,8 @@ public class InformeSupervisionDAO {
     public List<InformeSupervision> listarTodos() {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
-        String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre " +
+        String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
+                "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
@@ -248,6 +250,8 @@ public class InformeSupervisionDAO {
         } catch (SQLException e) {
             // numero_contrato might not be in the result set for some queries
         }
+        
+        try { info.setFechaRadicacion(rs.getTimestamp("fecha_radicacion_calculada")); } catch (SQLException e) {}
 
         return info;
     }

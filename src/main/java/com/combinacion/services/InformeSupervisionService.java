@@ -523,9 +523,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             // 4: Cuota
             row.addProperty("cuota", info.getNumeroCuota());
             
-            // 5: Fecha Registro
-            row.addProperty("fechaRegistro", info.getFechaCreacion() != null ? sdf.format(info.getFechaCreacion()) : "");
-            row.addProperty("fechaRegistroTime", info.getFechaCreacion() != null ? info.getFechaCreacion().getTime() : 0);
+            // 5: Fecha Registro (Si está radicada o en revisión, mostrar la fecha de su último cambio de estado para que coincida con el orden de la fila india)
+            String estadoLabel = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion().toUpperCase();
+            java.util.Date dateToShow = info.getFechaCreacion();
+            if (("RADICADA".equals(estadoLabel) || "VISTO BUENO CONTRATACION".equals(estadoLabel) || "EN REVISION FINAL".equals(estadoLabel)) && info.getFechaRadicacion() != null) {
+                dateToShow = info.getFechaRadicacion();
+            }
+            row.addProperty("fechaRegistro", dateToShow != null ? sdf.format(dateToShow) : "");
+            row.addProperty("fechaRegistroTime", dateToShow != null ? dateToShow.getTime() : 0);
             
             // 6: Valor Cuota
             row.addProperty("valorCuota", info.getValorCuotaPagar() != null ? nf.format(info.getValorCuotaPagar()) : "$ 0");

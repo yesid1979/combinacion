@@ -122,7 +122,7 @@
                             <th>Periodo</th>
                             <th>Tipo</th>
                             <th>Cuota</th>
-                            <th>Fecha Registro</th>
+                            <th>Turno/Fecha</th>
                             <th>Valor Cuota</th>
                             <th>Estado</th>
                             <th class="text-center">Acciones</th>
