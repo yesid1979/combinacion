@@ -265,7 +265,7 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Valor Acumulado Cancelado ($)</label>
                                     <input type="text" id="valor_acumulado" class="form-control money-mask" name="valor_acumulado_pagado" 
-                                           value="${empty informe.id ? acumuladoPrevio : informe.valorAccumuladoPagado}" placeholder="0" ${readonly ? 'readonly' : ''}>
+                                           value="${(empty informe.valorAccumuladoPagado || informe.valorAccumuladoPagado == 0) ? acumuladoPrevio : informe.valorAccumuladoPagado}" placeholder="0" ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Saldo por Cancelar ($)</label>

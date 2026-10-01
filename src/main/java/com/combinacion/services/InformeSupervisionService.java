@@ -726,8 +726,30 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 
                 // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la primera cuota de adición)
                 String currentJson = informe.getSoportesJson();
+                java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(informe.getContratoId());
+                
+                // Calcular acumulado previo si el actual es 0 (para borradores viejos)
+                java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
+                com.google.gson.JsonObject cuotasValores = new com.google.gson.JsonObject();
+                if (previos != null && !previos.isEmpty()) {
+                    java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
+                    for (com.combinacion.models.InformeSupervision prev : previos) {
+                        if (prev.getId() == informe.getId()) continue; // Skip itself
+                        String numCuota = prev.getNumeroCuota();
+                        if (numCuota != null && cuotasSumadas.contains(numCuota)) continue;
+                        if (prev.getValorCuotaPagar() != null) {
+                            acumulado = acumulado.add(prev.getValorCuotaPagar());
+                            if (numCuota != null) {
+                                cuotasSumadas.add(numCuota);
+                                cuotasValores.addProperty(numCuota, prev.getValorCuotaPagar().toString());
+                            }
+                        }
+                    }
+                }
+                request.setAttribute("acumuladoPrevio", acumulado);
+                request.setAttribute("cuotasValoresJson", cuotasValores.toString());
+                
                 if (!esPrimeraCuotaAdicion) {
-                    java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(informe.getContratoId());
                     if (previos != null && !previos.isEmpty()) {
                         org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
                         boolean foundRpc = currentObj.has("file_rpc");
