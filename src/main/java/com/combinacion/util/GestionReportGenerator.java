@@ -187,6 +187,11 @@ public class GestionReportGenerator {
                                 String tCap = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
                                 String pCap = p.substring(0, 1).toUpperCase() + p.substring(1).toLowerCase();
                                 ac = ac.replaceAll("\\b" + tCap + "\\b", pCap);
+                                
+                                // Toda en Mayúsculas
+                                String tAllCap = t.toUpperCase();
+                                String pAllCap = p.toUpperCase();
+                                ac = ac.replaceAll("\\b" + tAllCap + "\\b", pAllCap);
                             }
                         }
 
