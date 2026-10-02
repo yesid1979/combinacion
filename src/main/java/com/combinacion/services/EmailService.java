@@ -103,4 +103,29 @@ public class EmailService {
             return false;
         }
     }
+
+    public static boolean sendEmailHtml(String toEmailAddress, String subject, String bodyHtml) {
+        try {
+            Gmail service = getGmailService();
+
+            Properties props = new Properties();
+            Session session = Session.getDefaultInstance(props, null);
+
+            MimeMessage email = new MimeMessage(session);
+            email.setFrom(new InternetAddress("me"));
+            email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(toEmailAddress));
+            email.setSubject(subject);
+            email.setContent(bodyHtml, "text/html; charset=utf-8");
+
+            Message message = createMessageWithEmail(email);
+            message = service.users().messages().send("me", message).execute();
+
+            System.out.println("Email HTML enviado correctamente. Message ID: " + message.getId());
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

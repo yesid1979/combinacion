@@ -81,6 +81,7 @@ public class InformeSupervisionService {
             
             String daoResult = informeDAO.insertar(info);
             if (daoResult == null) {
+                manejarNotificacionesCorreos(info, null);
                 return null; // Éxito
             } else {
                 return "No se pudo guardar el informe en la base de datos: " + daoResult;
@@ -132,6 +133,7 @@ public class InformeSupervisionService {
             
             String daoResult = informeDAO.actualizar(info);
             if (daoResult == null) {
+                manejarNotificacionesCorreos(info, existente != null ? existente.getEstadoRadicacion() : null);
                 return null; // Éxito
             } else {
                 return "No se pudo actualizar el informe en la base de datos: " + daoResult;
@@ -139,6 +141,109 @@ public class InformeSupervisionService {
         } catch (Exception e) {
             e.printStackTrace();
             return "Error al procesar la actualización del informe: " + e.getMessage();
+        }
+    }
+
+    private void manejarNotificacionesCorreos(InformeSupervision info, String estadoAnterior) {
+        String estadoNuevo = info.getEstadoRadicacion();
+        if (estadoNuevo == null || estadoNuevo.equals(estadoAnterior)) {
+            return;
+        }
+
+        Contrato contrato = this.obtenerContrato(info.getContratoId());
+        if (contrato == null) return;
+        
+        String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
+        String nombreContratista = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "";
+        String periodo = com.combinacion.util.ParseUtils.formatearPeriodo(info.getPeriodoInforme());
+        String cuota = info.getNumeroCuota() != null ? info.getNumeroCuota() : "";
+
+        try {
+            if ("RADICADA".equals(estadoNuevo)) {
+                if (info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() > 0) {
+                    com.combinacion.dao.UsuarioDAO usuarioDAO = new com.combinacion.dao.UsuarioDAO();
+                    com.combinacion.models.Usuario revisor = usuarioDAO.obtenerPorId(info.getIdRevisorAsignado());
+                    if (revisor != null && revisor.getCorreo() != null && !revisor.getCorreo().isEmpty()) {
+                        String subject = "🔔 Nueva Cuenta Radicada - Contrato " + numContrato;
+                        String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                + "<div style='background-color: #1976D2; color: #fff; padding: 20px; text-align: center;'>"
+                                + "<h2 style='margin: 0;'>Nueva Cuenta Radicada</h2>"
+                                + "</div>"
+                                + "<div style='padding: 20px;'>"
+                                + "<p>Hola <strong>" + revisor.getNombreCompleto() + "</strong>,</p>"
+                                + "<p>Se ha radicado una cuenta de cobro que requiere de su revisión en la plataforma.</p>"
+                                + "<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + nombreContratista + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + numContrato + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + periodo + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + cuota + "</td></tr>"
+                                + "</table>"
+                                + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para realizar la revisión correspondiente.</p>"
+                                + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #1976D2; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
+                                + "</div>"
+                                + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                + "</div></div></body></html>";
+                        EmailService.sendEmailHtml(revisor.getCorreo(), subject, bodyHtml);
+                    }
+                }
+            } else if ("DEVUELTA".equals(estadoNuevo)) {
+                com.combinacion.models.Contratista contratista = contrato.getContratista();
+                if (contratista != null && contratista.getCorreo() != null && !contratista.getCorreo().isEmpty()) {
+                    String subject = "⚠️ Su Cuenta de Cobro fue Devuelta - Contrato " + numContrato;
+                    String obsHtml = "";
+                    java.util.List<InformeSupervision.ObservacionItem> obsList = info.getHistorialObservaciones();
+                    if (obsList != null && !obsList.isEmpty()) {
+                        InformeSupervision.ObservacionItem ultima = obsList.get(obsList.size() - 1);
+                        obsHtml = "<div style='background-color: #ffebee; border-left: 4px solid #D32F2F; padding: 15px; margin-top: 20px;'>"
+                                + "<h4 style='margin-top: 0; color: #D32F2F;'>Motivo de devolución:</h4>"
+                                + "<p style='margin-bottom: 0;'><em>\"" + ultima.getMensaje() + "\"</em></p>"
+                                + "</div>";
+                    }
+
+                    String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                            + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                            + "<div style='background-color: #D32F2F; color: #fff; padding: 20px; text-align: center;'>"
+                            + "<h2 style='margin: 0;'>Cuenta de Cobro Devuelta</h2>"
+                            + "</div>"
+                            + "<div style='padding: 20px;'>"
+                            + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
+                            + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota " + cuota + ") ha sido revisada y <strong>devuelta con observaciones</strong>.</p>"
+                            + obsHtml
+                            + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para verificar las correcciones solicitadas y vuelva a radicarla una vez ajustada.</p>"
+                            + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #D32F2F; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ver Detalles e Ingresar</a></div>"
+                            + "</div>"
+                            + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                            + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                            + "</div></div></body></html>";
+                    EmailService.sendEmailHtml(contratista.getCorreo(), subject, bodyHtml);
+                }
+            } else if ("VISTO BUENO CONTRATACION".equals(estadoNuevo) || "EN REVISION FINAL".equals(estadoNuevo)) {
+                if (!"VISTO BUENO CONTRATACION".equals(estadoAnterior) && !"EN REVISION FINAL".equals(estadoAnterior)) {
+                    com.combinacion.models.Contratista contratista = contrato.getContratista();
+                    if (contratista != null && contratista.getCorreo() != null && !contratista.getCorreo().isEmpty()) {
+                        String subject = "✅ Cuenta de Cobro Aprobada - Contrato " + numContrato;
+                        String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                + "<div style='background-color: #388E3C; color: #fff; padding: 20px; text-align: center;'>"
+                                + "<h2 style='margin: 0;'>Cuenta de Cobro Aprobada</h2>"
+                                + "</div>"
+                                + "<div style='padding: 20px;'>"
+                                + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
+                                + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota " + cuota + ") ha superado exitosamente la revisión.</p>"
+                                + "<p style='margin-top: 20px;'>Este mensaje es una confirmación de que el trámite continúa su curso normal en la entidad.</p>"
+                                + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #388E3C; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
+                                + "</div>"
+                                + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                + "</div></div></body></html>";
+                        EmailService.sendEmailHtml(contratista.getCorreo(), subject, bodyHtml);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("Error enviando notificacion correo: " + ex.getMessage());
         }
     }
 
