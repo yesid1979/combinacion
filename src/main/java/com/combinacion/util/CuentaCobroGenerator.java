@@ -94,7 +94,9 @@ public class CuentaCobroGenerator {
         if (contrato.getOrdenadorGasto() != null) {
             Row row14 = sheet.getRow(13); if(row14 == null) row14 = sheet.createRow(13);
             Cell cellD14 = row14.getCell(3); if(cellD14 == null) cellD14 = row14.createCell(3);
-            cellD14.setCellValue(toTitleCase(contrato.getOrdenadorGasto().getOrganismo()));
+            String textoOrganismo = toTitleCase(contrato.getOrdenadorGasto().getOrganismo());
+            cellD14.setCellValue(textoOrganismo);
+            ajustarAltoFila(row14, textoOrganismo, 35);
         }
         
         // Dirección - Organismo (D15)
@@ -102,14 +104,18 @@ public class CuentaCobroGenerator {
             Row row15 = sheet.getRow(14); if(row15 == null) row15 = sheet.createRow(14);
             Cell cellD15 = row15.getCell(3); if(cellD15 == null) cellD15 = row15.createCell(3);
             String direccionOrganismo = contrato.getOrdenadorGasto().getDireccionOrganismo();
-            cellD15.setCellValue(direccionOrganismo != null ? direccionOrganismo : "");
+            String texto = direccionOrganismo != null ? direccionOrganismo : "";
+            cellD15.setCellValue(texto);
+            ajustarAltoFila(row15, texto, 35);
         }
 
         // DATOS CONTRATISTA
         if (contrato.getContratista() != null) {
             Row row17 = sheet.getRow(16); if(row17 == null) row17 = sheet.createRow(16);
             Cell cellD17 = row17.getCell(3); if(cellD17 == null) cellD17 = row17.createCell(3);
-            cellD17.setCellValue(voltearNombres(toTitleCase(contrato.getContratistaNombre())));
+            String textoNombres = voltearNombres(toTitleCase(contrato.getContratistaNombre()));
+            cellD17.setCellValue(textoNombres);
+            ajustarAltoFila(row17, textoNombres, 35);
             
             Cell cellH17 = row17.getCell(7); if(cellH17 == null) cellH17 = row17.createCell(7);
             String cedulaStr = contrato.getContratista().getCedula() != null ? contrato.getContratista().getCedula() : "";
@@ -124,7 +130,9 @@ public class CuentaCobroGenerator {
             
             Row row18 = sheet.getRow(17); if(row18 == null) row18 = sheet.createRow(17);
             Cell cellD18 = row18.getCell(3); if(cellD18 == null) cellD18 = row18.createCell(3);
-            cellD18.setCellValue(contrato.getContratista().getDireccion());
+            String textoDireccion = contrato.getContratista().getDireccion();
+            cellD18.setCellValue(textoDireccion);
+            ajustarAltoFila(row18, textoDireccion, 35);
             try {
                 org.apache.poi.ss.usermodel.CellStyle style = wb.createCellStyle();
                 style.cloneStyleFrom(cellD18.getCellStyle());
@@ -150,7 +158,9 @@ public class CuentaCobroGenerator {
         String tipoContrato = (contrato.getTipoContrato() != null && !contrato.getTipoContrato().trim().isEmpty()) 
                                 ? contrato.getTipoContrato().trim() 
                                 : "Prestación de Servicios Profesionales";
-        cellD21.setCellValue(tipoContrato + " Cuota " + convertirNumeroALetras(com.combinacion.util.ParseUtils.parseInt(numeroCuotaStr)).toLowerCase() + " (" + numeroCuotaStr + ")");
+        String textoConcepto = tipoContrato + " Cuota " + convertirNumeroALetras(com.combinacion.util.ParseUtils.parseInt(numeroCuotaStr)).toLowerCase() + " (" + numeroCuotaStr + ")";
+        cellD21.setCellValue(textoConcepto);
+        ajustarAltoFila(row21, textoConcepto, 100);
 
         // Valor a pagar (D23 y F23)
         Row row23 = sheet.getRow(22); if(row23 == null) row23 = sheet.createRow(22);
@@ -205,6 +215,7 @@ public class CuentaCobroGenerator {
         // Eliminar saltos de línea justo antes de una comilla final (para evitar la comilla sola en otra línea)
         objeto = objeto.replaceAll("[\\r\\n]+(?=\"$)", "");
         cellD27.setCellValue(objeto);
+        ajustarAltoFila(row27, objeto, 100);
         try {
             org.apache.poi.ss.usermodel.CellStyle style = wb.createCellStyle();
             style.cloneStyleFrom(cellD27.getCellStyle());
@@ -362,5 +373,25 @@ public class CuentaCobroGenerator {
             letras += UNIDADES[(int)numero];
         }
         return letras.trim();
+    }
+
+    private static void ajustarAltoFila(org.apache.poi.ss.usermodel.Row row, String texto, int maxCharsPorLinea) {
+        if (texto == null || texto.isEmpty()) return;
+        int totalLineas = 0;
+        String[] lineasReales = texto.split("\n");
+        for (String linea : lineasReales) {
+            if (linea.isEmpty()) {
+                totalLineas += 1;
+            } else {
+                totalLineas += (int) Math.ceil((double) linea.length() / maxCharsPorLinea);
+            }
+        }
+        
+        if (totalLineas > 1) {
+            float nuevaAltura = totalLineas * 18.0f;
+            if (nuevaAltura > row.getHeightInPoints()) {
+                row.setHeightInPoints(nuevaAltura);
+            }
+        }
     }
 }
