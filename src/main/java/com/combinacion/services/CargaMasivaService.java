@@ -1204,7 +1204,11 @@ public class CargaMasivaService {
             }
             
             // Siempre actualizar campos desde el Excel
-            contratista.setDv(get(row, map, "contratista_dv"));
+            String valDv = get(row, map, "contratista_dv");
+            if (valDv != null && valDv.endsWith(".0")) {
+                valDv = valDv.substring(0, valDv.length() - 2);
+            }
+            contratista.setDv(valDv);
             contratista.setNombre(nombre.isEmpty() ? "Sin Nombre" : nombre);
             contratista.setTelefono(get(row, map, "contratista_telefono"));
             contratista.setCorreo(get(row, map, "contratista_correo"));
@@ -1358,9 +1362,13 @@ public class CargaMasivaService {
                     return String.valueOf(cell.getBooleanCellValue());
                 case FORMULA:
                     try {
-                        return String.valueOf(cell.getNumericCellValue());
+                        double d2 = cell.getNumericCellValue();
+                        if (d2 == (long) d2) {
+                            return String.valueOf((long) d2);
+                        }
+                        return String.valueOf(d2);
                     } catch (Exception ex) {
-                        return cell.getStringCellValue();
+                        return cell.getStringCellValue().trim();
                     }
                 default:
                     return "";

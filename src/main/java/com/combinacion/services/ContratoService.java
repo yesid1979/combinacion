@@ -469,6 +469,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         ContratoFormData f = new ContratoFormData();
         f.contratistaCedula            = r.getParameter("contratista_cedula");
         f.contratistaDv                = r.getParameter("contratista_dv");
+        if (f.contratistaDv != null && f.contratistaDv.endsWith(".0")) {
+            f.contratistaDv = f.contratistaDv.substring(0, f.contratistaDv.length() - 2);
+        }
         f.contratistaNombre            = r.getParameter("contratista_nombre");
         f.contratistaTelefono          = r.getParameter("contratista_telefono");
         f.contratistaCorreo            = r.getParameter("contratista_correo");

@@ -184,6 +184,9 @@ public class ContratistaService {
 
         Contratista c = new Contratista();
         c.setCedula(cedula);
+        if (dv != null && dv.endsWith(".0")) {
+            dv = dv.substring(0, dv.length() - 2);
+        }
         c.setDv(dv);
         c.setNombre(nombre);
         c.setTelefono(telefono);
