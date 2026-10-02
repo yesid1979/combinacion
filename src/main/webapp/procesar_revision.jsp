@@ -116,27 +116,52 @@
                                     
                                     if (emailContratista != null && !emailContratista.trim().isEmpty()) {
                                         String subject;
-                                        String body;
+                                        String bodyHtml;
+                                        String systemLink = "https://juridica.cali.gov.co/combinacion/";
+                                        
                                         if ("DEVUELTA".equals(accion)) {
-                                            subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido DEVUELTA";
-                                            body = "Estimado(a) " + nombreContratista + " contratista del DAGJP,\n\n" +
-                                                   "Le informamos que su cuenta de cobro correspondiente a la cuota " + numCuota + " del Contrato No. " + numContrato + " ha sido DEVUELTA con la siguiente observacion:\n\n" +
-                                                   observacion + "\n\n" +
-                                                   "Por favor, ingrese a la plataforma para realizar las correcciones necesarias.\n\n" +
-                                                   "Atentamente,\nGrupo de contratacion - DAGJP";
+                                            subject = "⚠️ Su Cuenta de Cobro fue Devuelta - Contrato " + numContrato;
+                                            bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                                    + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                                    + "<div style='background-color: #D32F2F; color: #fff; padding: 20px; text-align: center;'>"
+                                                    + "<h2 style='margin: 0;'>Cuenta de Cobro Devuelta</h2>"
+                                                    + "</div>"
+                                                    + "<div style='padding: 20px;'>"
+                                                    + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
+                                                    + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente a la <strong>Cuota " + numCuota + "</strong> ha sido revisada y <strong>devuelta con observaciones</strong>.</p>"
+                                                    + "<div style='background-color: #ffebee; border-left: 4px solid #D32F2F; padding: 15px; margin-top: 20px;'>"
+                                                    + "<h4 style='margin-top: 0; color: #D32F2F;'>Motivo de devolución:</h4>"
+                                                    + "<p style='margin-bottom: 0;'><em>\"" + observacion + "\"</em></p>"
+                                                    + "</div>"
+                                                    + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para verificar las correcciones solicitadas y vuelva a radicarla una vez ajustada.</p>"
+                                                    + "<div style='text-align: center; margin-top: 30px;'><a href='" + systemLink + "' style='background-color: #D32F2F; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ver Detalles e Ingresar</a></div>"
+                                                    + "</div>"
+                                                    + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                                    + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                                    + "</div></div></body></html>";
                                         } else {
-                                            subject = "Su cuenta de cobro (Cuota " + numCuota + ") ha sido APROBADA";
-                                            body = "Estimado(a) " + nombreContratista + " contratista del DAGJP,\n\n" +
-                                                   "Nos complace informarle que su cuenta de cobro correspondiente a la cuota " + numCuota + " del Contrato No. " + numContrato + " ha superado la revision exitosamente y ha sido APROBADA PARA IMPRESION.\n\n" +
-                                                   "Ya puede ingresar a la plataforma, descargar los formatos (Informe de Supervision y de Gestion), imprimirlos, firmarlos y continuar con el tramite correspondiente.\n\n" +
-                                                   "Atentamente,\nGrupo de contratacion - DAGJP";
+                                            subject = "✅ Cuenta de Cobro Aprobada - Contrato " + numContrato;
+                                            bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                                    + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                                    + "<div style='background-color: #388E3C; color: #fff; padding: 20px; text-align: center;'>"
+                                                    + "<h2 style='margin: 0;'>Cuenta de Cobro Aprobada</h2>"
+                                                    + "</div>"
+                                                    + "<div style='padding: 20px;'>"
+                                                    + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
+                                                    + "<p>Nos complace informarle que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente a la <strong>Cuota " + numCuota + "</strong> ha superado la revisión exitosamente y ha sido APROBADA PARA IMPRESIÓN.</p>"
+                                                    + "<p style='margin-top: 20px;'>Ya puede ingresar a la plataforma, descargar los formatos (Informe de Supervisión y de Gestión), imprimirlos, firmarlos y continuar con el trámite correspondiente.</p>"
+                                                    + "<div style='text-align: center; margin-top: 30px;'><a href='" + systemLink + "' style='background-color: #388E3C; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
+                                                    + "</div>"
+                                                    + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                                    + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                                    + "</div></div></body></html>";
                                         }
                                         
                                         final String finalEmail = emailContratista;
                                         final String finalSubject = subject;
-                                        final String finalBody = body;
+                                        final String finalBody = bodyHtml;
                                         new Thread(() -> {
-                                            com.combinacion.services.EmailService.sendEmail(finalEmail, finalSubject, finalBody);
+                                            com.combinacion.services.EmailService.sendEmailHtml(finalEmail, finalSubject, finalBody);
                                         }).start();
                                     }
                                 } catch (Exception ex) {
