@@ -168,30 +168,23 @@ public class GestionReportGenerator {
             TemplateGenerator.replacePlaceholders(doc, reps);
             
             if (lista != null) {
+                com.combinacion.dao.VerboConjugacionDAO verboDao = new com.combinacion.dao.VerboConjugacionDAO();
+                java.util.List<com.combinacion.models.VerboConjugacion> verbos = verboDao.obtenerActivos();
+                if (verbos != null) {
+                    // Ordenar por longitud descendente para que frases compuestas se reemplacen antes que verbos simples
+                    verbos.sort((v1, v2) -> {
+                        int len1 = v1.getTerceraPersona() != null ? v1.getTerceraPersona().length() : 0;
+                        int len2 = v2.getTerceraPersona() != null ? v2.getTerceraPersona().length() : 0;
+                        return Integer.compare(len2, len1);
+                    });
+                }
+
                 for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                     if (item.actividad != null && !item.actividad.isEmpty()) {
                         String ac = item.actividad;
-                        com.combinacion.dao.VerboConjugacionDAO verboDao = new com.combinacion.dao.VerboConjugacionDAO();
-                        java.util.List<com.combinacion.models.VerboConjugacion> verbos = verboDao.obtenerActivos();
                         if (verbos != null) {
                             for (com.combinacion.models.VerboConjugacion v : verbos) {
-                                String t = v.getTerceraPersona();
-                                String p = v.getPrimeraPersona();
-                                
-                                // Minúscula
-                                String tMin = t.toLowerCase();
-                                String pMin = p.toLowerCase();
-                                ac = ac.replaceAll("\\b" + tMin + "\\b", pMin);
-                                
-                                // Capitalizada (Primera letra mayúscula)
-                                String tCap = t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase();
-                                String pCap = p.substring(0, 1).toUpperCase() + p.substring(1).toLowerCase();
-                                ac = ac.replaceAll("\\b" + tCap + "\\b", pCap);
-                                
-                                // Toda en Mayúsculas
-                                String tAllCap = t.toUpperCase();
-                                String pAllCap = p.toUpperCase();
-                                ac = ac.replaceAll("\\b" + tAllCap + "\\b", pAllCap);
+                                ac = aplicarConjugacion(ac, v.getTerceraPersona(), v.getPrimeraPersona());
                             }
                         }
 
@@ -282,5 +275,108 @@ public class GestionReportGenerator {
         }
 
         return outputFile.getAbsolutePath();
+    }
+
+    private static String aplicarConjugacion(String text, String targetVerb, String replacementVerb) {
+        if (text == null || targetVerb == null || targetVerb.trim().isEmpty() || replacementVerb == null) {
+            return text;
+        }
+        String regex = buildRegexForPhrase(targetVerb);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String matched = matcher.group();
+            String adapted = adaptCasing(matched, replacementVerb);
+            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(adapted));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    private static String buildRegexForPhrase(String phrase) {
+        String[] words = phrase.trim().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        sb.append("(?<!\\p{L})");
+        for (int i = 0; i < words.length; i++) {
+            if (i > 0) {
+                sb.append("\\s+");
+            }
+            sb.append(buildRegexForWord(words[i]));
+        }
+        sb.append("(?!\\p{L})");
+        return sb.toString();
+    }
+
+    private static String buildRegexForWord(String word) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
+            char lower = Character.toLowerCase(c);
+            switch (lower) {
+                case 'a':
+                case '\u00e1':
+                case '\u00e0':
+                    sb.append("[a\u00e1\u00e0A\u00c1\u00c0]");
+                    break;
+                case 'e':
+                case '\u00e9':
+                case '\u00e8':
+                    sb.append("[e\u00e9\u00e8E\u00c9\u00c8]");
+                    break;
+                case 'i':
+                case '\u00ed':
+                case '\u00ec':
+                    sb.append("[i\u00ed\u00ecI\u00cd\u00cc]");
+                    break;
+                case 'o':
+                case '\u00f3':
+                case '\u00f2':
+                    sb.append("[o\u00f3\u00f2O\u00d3\u00d2]");
+                    break;
+                case 'u':
+                case '\u00fa':
+                case '\u00f9':
+                case '\u00fc':
+                    sb.append("[u\u00fa\u00f9\u00fcU\u00da\u00d9\u00dc]");
+                    break;
+                case 'n':
+                case '\u00f1':
+                    sb.append("[n\u00f1N\u00d1]");
+                    break;
+                default:
+                    if (Character.isLetterOrDigit(c)) {
+                        sb.append(c);
+                    } else {
+                        sb.append(java.util.regex.Pattern.quote(String.valueOf(c)));
+                    }
+                    break;
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String adaptCasing(String matched, String replacement) {
+        if (matched == null || matched.isEmpty() || replacement == null || replacement.isEmpty()) {
+            return replacement;
+        }
+        boolean isAllUpper = true;
+        for (int i = 0; i < matched.length(); i++) {
+            char c = matched.charAt(i);
+            if (Character.isLetter(c) && !Character.isUpperCase(c)) {
+                isAllUpper = false;
+                break;
+            }
+        }
+        if (isAllUpper) {
+            return replacement.toUpperCase();
+        }
+        if (Character.isUpperCase(matched.charAt(0))) {
+            if (replacement.length() == 1) {
+                return replacement.toUpperCase();
+            }
+            return Character.toUpperCase(replacement.charAt(0)) + replacement.substring(1);
+        }
+        return replacement.toLowerCase();
     }
 }
