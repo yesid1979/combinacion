@@ -23,11 +23,8 @@ public class HtmlToWordXmlConverter {
             return "<w:p><w:r><w:t></w:t></w:r></w:p>";
         }
         
-        // Limpiar espacios de más, saltos redundantes y párrafos vacíos
-        html = cleanHtmlSpaces(html);
-        if (html.isEmpty()) {
-            return "<w:p><w:r><w:t></w:t></w:r></w:p>";
-        }
+        // Remove zero-width spaces or weird characters from Summernote
+        html = html.replace("&nbsp;", " ").replace("\u200B", "");
         
         org.jsoup.nodes.Document jsoupDoc = Jsoup.parseBodyFragment(html);
         StringBuilder xml = new StringBuilder();
@@ -132,10 +129,6 @@ public class HtmlToWordXmlConverter {
                     inlineGroup.clear();
                 }
             } else {
-                // Si el elemento bloque no tiene contenido, no emitir párrafo vacío
-                if (isBlockEmpty(el)) {
-                    return;
-                }
                 // Elemento hoja (párrafo o encabezado o texto plano)
                 String align = extractAlign(el, inheritedAlign);
                 boolean isBold = inheritedBold || tagName.startsWith("h") || tagName.equals("b") || tagName.equals("strong");
@@ -463,125 +456,5 @@ public class HtmlToWordXmlConverter {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&apos;");
-    }
-
-    public static String cleanHtmlSpaces(String html) {
-        if (html == null || html.trim().isEmpty()) {
-            return "";
-        }
-
-        // 1. Reemplazar caracteres invisibles y no separables
-        html = html.replace("\u200B", "")
-                   .replace("\uFEFF", "")
-                   .replace("\u200C", "")
-                   .replace("\u200D", "")
-                   .replace("&nbsp;", " ")
-                   .replace("\u00A0", " ");
-
-        org.jsoup.nodes.Document doc = Jsoup.parseBodyFragment(html);
-        Element body = doc.body();
-
-        // 2. Limpiar espacios múltiples y saltos innecesarios dentro de nodos
-        cleanNodes(body);
-
-        // 3. Eliminar bloques vacíos redundantes (párrafos sin texto, imágenes ni tablas)
-        cleanEmptyBlocks(body);
-
-        return body.html();
-    }
-
-    private static void cleanNodes(Node parent) {
-        List<Node> toRemove = new ArrayList<>();
-        Node prevChild = null;
-
-        for (Node child : new ArrayList<>(parent.childNodes())) {
-            if (child instanceof TextNode) {
-                TextNode tn = (TextNode) child;
-                String text = tn.getWholeText();
-                // Colapsar espacios múltiples horizontales a uno solo
-                text = text.replaceAll("[ \\t\\u00A0]{2,}", " ");
-                // Si es el primer inline de un bloque, recortar espacios iniciales
-                if (isFirstInline(child)) {
-                    text = text.replaceAll("^[ \\t\\u00A0]+", "");
-                }
-                // Si es el último inline de un bloque, recortar espacios finales
-                if (isLastInline(child)) {
-                    text = text.replaceAll("[ \\t\\u00A0]+$", "");
-                }
-                if (text.isEmpty()) {
-                    toRemove.add(child);
-                } else {
-                    tn.text(text);
-                }
-            } else if (child instanceof Element) {
-                Element el = (Element) child;
-                String tag = el.tagName().toLowerCase();
-
-                // Reducir etiquetas <br> consecutivas o <br> al inicio/final de un párrafo
-                if (tag.equals("br")) {
-                    if (isFirstInline(child) || isLastInline(child) || (prevChild != null && isBr(prevChild))) {
-                        toRemove.add(child);
-                    }
-                } else {
-                    cleanNodes(el);
-                }
-            }
-            if (!toRemove.contains(child)) {
-                prevChild = child;
-            }
-        }
-
-        for (Node n : toRemove) {
-            n.remove();
-        }
-    }
-
-    private static boolean isBr(Node node) {
-        return (node instanceof Element) && ((Element) node).tagName().equalsIgnoreCase("br");
-    }
-
-    private static boolean isFirstInline(Node node) {
-        Node cur = node.previousSibling();
-        while (cur != null) {
-            if (cur instanceof TextNode && !((TextNode) cur).text().trim().isEmpty()) return false;
-            if (cur instanceof Element && !((Element) cur).tagName().equalsIgnoreCase("br")) return false;
-            cur = cur.previousSibling();
-        }
-        return true;
-    }
-
-    private static boolean isLastInline(Node node) {
-        Node cur = node.nextSibling();
-        while (cur != null) {
-            if (cur instanceof TextNode && !((TextNode) cur).text().trim().isEmpty()) return false;
-            if (cur instanceof Element && !((Element) cur).tagName().equalsIgnoreCase("br")) return false;
-            cur = cur.nextSibling();
-        }
-        return true;
-    }
-
-    private static void cleanEmptyBlocks(Element root) {
-        for (Element child : new ArrayList<>(root.children())) {
-            String tag = child.tagName().toLowerCase();
-            // Proteger estructura de tablas para no descuadrar celdas
-            if (tag.equals("table") || tag.equals("tbody") || tag.equals("thead") || 
-                tag.equals("tfoot") || tag.equals("tr") || tag.equals("td") || tag.equals("th")) {
-                cleanEmptyBlocks(child);
-                continue;
-            }
-            if (isBlockEmpty(child)) {
-                child.remove();
-            } else {
-                cleanEmptyBlocks(child);
-            }
-        }
-    }
-
-    private static boolean isBlockEmpty(Element el) {
-        if (!el.select("img, table, ul, ol, hr, iframe").isEmpty()) {
-            return false;
-        }
-        String text = el.text().replace("\u00A0", " ").trim();
-        return text.isEmpty();
     }
 }

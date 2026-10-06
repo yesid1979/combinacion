@@ -181,7 +181,7 @@ public class GestionReportGenerator {
 
                 for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                     if (item.actividad != null && !item.actividad.isEmpty()) {
-                        String ac = HtmlToWordXmlConverter.cleanHtmlSpaces(item.actividad);
+                        String ac = item.actividad;
                         if (verbos != null) {
                             for (com.combinacion.models.VerboConjugacion v : verbos) {
                                 ac = aplicarConjugacion(ac, v.getTerceraPersona(), v.getPrimeraPersona());
