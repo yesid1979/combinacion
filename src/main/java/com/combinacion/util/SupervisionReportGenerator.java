@@ -215,7 +215,7 @@ public class SupervisionReportGenerator {
             if (lista != null) {
                 for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                     if (item.actividad != null && !item.actividad.isEmpty()) {
-                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(item.actividad, doc);
+                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(item.actividad, doc, 300.0);
                     }
                 }
             }

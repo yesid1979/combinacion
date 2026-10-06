@@ -195,7 +195,7 @@ public class GestionReportGenerator {
                             }
                         }
 
-                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(ac, doc);
+                        item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(ac, doc, 460.0);
                     }
                 }
             }

@@ -51,6 +51,10 @@ public class InformeSupervisionServlet extends HttpServlet {
                 com.combinacion.util.FixAllPostgres.main(null);
                 response.getWriter().write("Base de datos recalculada con exito.");
                 break;
+            case "fixsoportes":
+                com.combinacion.util.FixDuplicateSoportes.main(null);
+                response.getWriter().write("Duplicados de documentos saneados con exito en toda la base de datos.");
+                break;
             default:
                 informeService.listar(request, response);
                 break;

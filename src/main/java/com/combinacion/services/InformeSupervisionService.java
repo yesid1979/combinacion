@@ -1599,13 +1599,51 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         fileData.put("id", fileId);
                         fileData.put("url", "https://drive.google.com/file/d/" + fileId + "/view");
                         
-                        String soportesKey = partName;
-                        if (soportes.has(soportesKey)) {
+                        if (partName != null && !partName.startsWith("evidencia_")) {
+                            // Para documentos soporte individuales (ej: paz y salvo, rpc, rut, etc.),
+                            // reemplazar la versión previa y eliminar sufijos acumulados (_1, _2...)
+                            soportes.remove(partName);
                             int k = 1;
-                            while (soportes.has(partName + "_" + k)) k++;
-                            soportesKey = partName + "_" + k;
+                            while (soportes.has(partName + "_" + k)) {
+                                soportes.remove(partName + "_" + k);
+                                k++;
+                            }
+                            soportes.put(partName, fileData);
+                        } else {
+                            // Para evidencias de actividades se permite acumular múltiples archivos,
+                            // pero si ya existe un archivo con el mismo ID o mismo nombre para esta actividad,
+                            // se actualiza la clave existente sin crear duplicados (_1, _2...)
+                            String existingKey = null;
+                            if (soportes.has(partName)) {
+                                org.json.JSONObject existingObj = soportes.optJSONObject(partName);
+                                if (existingObj != null && (fileId.equals(existingObj.optString("id")) || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
+                                    existingKey = partName;
+                                }
+                            }
+                            if (existingKey == null) {
+                                int k = 1;
+                                while (soportes.has(partName + "_" + k)) {
+                                    org.json.JSONObject existingObj = soportes.optJSONObject(partName + "_" + k);
+                                    if (existingObj != null && (fileId.equals(existingObj.optString("id")) || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
+                                        existingKey = partName + "_" + k;
+                                        break;
+                                    }
+                                    k++;
+                                }
+                            }
+
+                            if (existingKey != null) {
+                                soportes.put(existingKey, fileData);
+                            } else {
+                                String soportesKey = partName;
+                                if (soportes.has(soportesKey)) {
+                                    int k = 1;
+                                    while (soportes.has(partName + "_" + k)) k++;
+                                    soportesKey = partName + "_" + k;
+                                }
+                                soportes.put(soportesKey, fileData);
+                            }
                         }
-                        soportes.put(soportesKey, fileData);
                     } catch (Exception ex) {
                         System.err.println("Error subiendo archivo " + submittedFileName + ": " + ex.getMessage());
                     }
@@ -1764,6 +1802,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     private InformeFormData construirFormData(HttpServletRequest r) {
         InformeFormData f = new InformeFormData();
         f.contratoId = ParseUtils.parseInt(r.getParameter("contrato_id"));
+        if (f.contratoId <= 0) {
+            int idParam = ParseUtils.parseInt(r.getParameter("id"));
+            if (idParam > 0) {
+                InformeSupervision exist = informeDAO.obtenerPorId(idParam);
+                if (exist != null && exist.getContratoId() != null) {
+                    f.contratoId = exist.getContratoId();
+                }
+            }
+        }
         f.periodoInforme = r.getParameter("periodo_informe");
         f.tipoInforme = r.getParameter("tipo_informe");
         f.numeroCuota = r.getParameter("numero_cuota");

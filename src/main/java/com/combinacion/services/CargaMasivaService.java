@@ -818,7 +818,7 @@ public class CargaMasivaService {
                 map.put("contratista_nombre", i);
             } else if (h.contains("cedula") && h.contains("contratista")) {
                 map.put("contratista_cedula", i);
-            } else if (h.contains("dv") && !h.contains("cdp")) {
+            } else if ((h.contains("dv") || (h.contains("digito") && h.contains("verificacion"))) && !h.contains("cdp")) {
                 map.put("contratista_dv", i);
             } else if (h.contains("telefono") || h.contains("telefonico")) {
                 map.put("contratista_telefono", i);
@@ -1208,7 +1208,11 @@ public class CargaMasivaService {
             if (valDv != null && valDv.endsWith(".0")) {
                 valDv = valDv.substring(0, valDv.length() - 2);
             }
-            contratista.setDv(valDv);
+            if (!valDv.isEmpty()) {
+                contratista.setDv(valDv);
+            } else if (!exists) {
+                contratista.setDv("");
+            }
             contratista.setNombre(nombre.isEmpty() ? "Sin Nombre" : nombre);
             contratista.setTelefono(get(row, map, "contratista_telefono"));
             contratista.setCorreo(get(row, map, "contratista_correo"));

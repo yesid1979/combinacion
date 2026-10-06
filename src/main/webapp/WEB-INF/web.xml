@@ -124,6 +124,21 @@
         <url-pattern>/combinacion</url-pattern>
     </servlet-mapping>
 
+    <!-- Informes de Supervisión -->
+    <servlet>
+        <servlet-name>InformeSupervisionServlet</servlet-name>
+        <servlet-class>com.combinacion.servlets.InformeSupervisionServlet</servlet-class>
+        <multipart-config>
+            <max-file-size>104857600</max-file-size> <!-- 100MB por archivo -->
+            <max-request-size>524288000</max-request-size> <!-- 500MB en total -->
+            <file-size-threshold>2097152</file-size-threshold> <!-- 2MB -->
+        </multipart-config>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InformeSupervisionServlet</servlet-name>
+        <url-pattern>/informes</url-pattern>
+    </servlet-mapping>
+
     <!-- 3. OTROS RECURSOS -->
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>

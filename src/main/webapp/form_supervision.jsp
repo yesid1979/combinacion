@@ -109,7 +109,7 @@
                     <span class="badge bg-primary px-3 py-2">${contrato.contratistaNombre}</span>
                 </div>
 
-                <form action="informes?action=${action}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
+                <form action="informes?action=${action}&contrato_id=${contrato.id}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
@@ -762,6 +762,42 @@
                     // Reemplazamos entidades xml en caso de que fn:escapeXml las haya codificado
                     var decodedStr = $('<textarea/>').html(soportesJsonStr).text();
                     var soportesObj = JSON.parse(decodedStr);
+                    // Limpiar duplicados históricos de campos de un solo archivo y evidencias
+                    var baseKeyMap = {};
+                    var evidenciaSeen = {};
+                    var keysToDelete = [];
+                    for (var k in soportesObj) {
+                        var fileData = soportesObj[k];
+                        var bKey = k;
+                        if (k.match(/^evidencia_\d+_\d+/)) {
+                            bKey = k.match(/^evidencia_\d+_\d+/)[0];
+                        } else if (k.match(/_[0-9]+$/)) {
+                            bKey = k.replace(/_[0-9]+$/, '');
+                        }
+
+                        if (!bKey.startsWith("evidencia_")) {
+                            if (baseKeyMap[bKey]) {
+                                keysToDelete.push(baseKeyMap[bKey]);
+                            }
+                            baseKeyMap[bKey] = k;
+                        } else {
+                            if (!evidenciaSeen[bKey]) {
+                                evidenciaSeen[bKey] = { ids: {}, names: {} };
+                            }
+                            var fId = (fileData && fileData.id) ? String(fileData.id).trim() : '';
+                            var fName = (fileData && fileData.name) ? String(fileData.name).trim().toLowerCase() : '';
+                            if ((fId && evidenciaSeen[bKey].ids[fId]) || (fName && evidenciaSeen[bKey].names[fName])) {
+                                keysToDelete.push(k);
+                            } else {
+                                if (fId) evidenciaSeen[bKey].ids[fId] = true;
+                                if (fName) evidenciaSeen[bKey].names[fName] = true;
+                            }
+                        }
+                    }
+                    for (var d = 0; d < keysToDelete.length; d++) {
+                        delete soportesObj[keysToDelete[d]];
+                    }
+                    $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
                     
                     for (var key in soportesObj) {
                         var fileData = soportesObj[key];
@@ -916,12 +952,29 @@
                 var actualizarTexto = function() {
                     if(fileInput.files.length > 0) {
                         var names = [];
+                        var totalBytes = 0;
+                        var hasOverlimit = false;
                         for(var k=0; k<fileInput.files.length; k++) {
-                            names.push(fileInput.files[k].name);
+                            var f = fileInput.files[k];
+                            var sizeMB = (f.size / (1024 * 1024)).toFixed(2);
+                            totalBytes += f.size;
+                            if (f.size > 100 * 1024 * 1024) {
+                                hasOverlimit = true;
+                                names.push('<span class="text-danger fw-bold">' + f.name + ' (' + sizeMB + ' MB - Excede 100MB)</span>');
+                            } else {
+                                names.push(f.name + ' (' + sizeMB + ' MB)');
+                            }
                         }
-                        dropZone.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i><br><span class="text-success fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s)</span><br><small class="text-muted d-block mt-1" style="word-break: break-all;">' + names.join(', ') + '</small>';
-                        dropZone.style.borderColor = "#198754";
-                        dropZone.style.backgroundColor = "#e8f5e9";
+                        var totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+                        if (hasOverlimit) {
+                            dropZone.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i><br><span class="text-danger fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s) (' + totalMB + ' MB)</span><br><small class="text-danger d-block mt-1" style="word-break: break-all;">' + names.join('<br>') + '</small>';
+                            dropZone.style.borderColor = "#dc3545";
+                            dropZone.style.backgroundColor = "#f8d7da";
+                        } else {
+                            dropZone.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i><br><span class="text-success fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s) (' + totalMB + ' MB)</span><br><small class="text-muted d-block mt-1" style="word-break: break-all;">' + names.join(', ') + '</small>';
+                            dropZone.style.borderColor = "#198754";
+                            dropZone.style.backgroundColor = "#e8f5e9";
+                        }
                     } else {
                         dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                         dropZone.style.borderColor = "#0d6efd";
@@ -1267,7 +1320,7 @@
             
             // Eliminar los nombres de TODOS los inputs de tipo file que estén vacíos
             $('input[type="file"]').each(function() {
-                if (!$(this).val()) {
+                if (!$(this).val() && (!this.files || this.files.length === 0)) {
                     $(this).removeAttr('name');
                 }
             });
