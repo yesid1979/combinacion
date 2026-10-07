@@ -263,7 +263,7 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
-                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ? " +
+                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ?, soportes_json = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -310,7 +310,8 @@ public class InformeSupervisionDAO {
             } else {
                 ps.setNull(33, Types.INTEGER);
             }
-            ps.setInt(34, info.getId());
+            ps.setString(34, info.getSoportesJson());
+            ps.setInt(35, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;

@@ -421,10 +421,31 @@ public class HtmlToWordXmlConverter {
         }
     }
 
+    private static String wrapLongTokens(String text) {
+        if (text == null || text.length() < 30) return text;
+        String[] parts = text.split(" ");
+        boolean changed = false;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) sb.append(" ");
+            String token = parts[i];
+            if (token.length() > 30 && (token.startsWith("http://") || token.startsWith("https://") || token.contains("/") || token.contains("="))) {
+                // Insert zero-width space \u200B after /, ?, &, =, _, -, . to allow Word to break lines cleanly
+                String broken = token.replaceAll("([/?&=_\\-.])", "$1\u200B");
+                sb.append(broken);
+                changed = true;
+            } else {
+                sb.append(token);
+            }
+        }
+        return changed ? sb.toString() : text;
+    }
+
     private static void processInlineNode(Node node, StringBuilder xml, XWPFDocument doc, boolean bold, boolean italic, boolean underline, int fontSize) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
             if (text.isEmpty()) return;
+            text = wrapLongTokens(text);
             xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/>");
             if (bold) xml.append("<w:b/>");
             if (italic) xml.append("<w:i/>");

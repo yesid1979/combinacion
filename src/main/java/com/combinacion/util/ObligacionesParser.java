@@ -31,18 +31,7 @@ public class ObligacionesParser {
                     String obligacionDb = obj.optString("obligacion", "");
                     String actividadDb = obj.optString("actividad", "");
                     
-                    String[] partes = obligacionDb.split("(?=\\b\\d+\\.(?:[\\sA-Za-záéíóúÁÉÍÓÚñÑ]|$))");
-                    if (partes.length > 1) {
-                        for (int j = 0; j < partes.length; j++) {
-                            String p = partes[j].trim();
-                            if (!p.isEmpty()) {
-                                // Keep the activity text in the first separated obligation to avoid data loss
-                                lista.add(new ObligacionActividad(p, j == 0 ? actividadDb : ""));
-                            }
-                        }
-                    } else {
-                        lista.add(new ObligacionActividad(obligacionDb, actividadDb));
-                    }
+                    lista.add(new ObligacionActividad(obligacionDb, actividadDb));
                 }
                 return lista;
             } catch (Exception e) {

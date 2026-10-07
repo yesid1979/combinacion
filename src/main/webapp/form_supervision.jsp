@@ -115,14 +115,7 @@
                     <c:if test="${action == 'update'}">
                         <input type="hidden" name="id" value="${informe.id}">
                     </c:if>
-                    <c:choose>
-                        <c:when test="${not empty informe.soportesJson}">
-                            <input type="hidden" name="soportes_json" value="${fn:escapeXml(informe.soportesJson)}">
-                        </c:when>
-                        <c:when test="${not empty soportesJsonPreCargados}">
-                            <input type="hidden" name="soportes_json" value="${fn:escapeXml(soportesJsonPreCargados)}">
-                        </c:when>
-                    </c:choose>
+                    <input type="hidden" name="soportes_json" id="soportes_json" value="${fn:escapeXml(not empty informe.soportesJson ? informe.soportesJson : (not empty soportesJsonPreCargados ? soportesJsonPreCargados : '{}'))}">
 
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
@@ -671,9 +664,15 @@
             var obligacionesCount = ${fn:length(listaObligaciones) > 0 ? fn:length(listaObligaciones) : 0};
             for(var i=0; i<obligacionesCount; i++) {
                 var rawText = document.getElementById("raw_actividad_" + i).value;
-                if (rawText && !rawText.includes('<p>') && !rawText.includes('<table') && !rawText.includes('<ul')) {
-                    // Si es texto plano antiguo, reemplazar saltos de línea por <br> para que Summernote lo entienda
-                    rawText = rawText.replace(/\n/g, '<br>');
+                if (rawText) {
+                    var tieneHtml = /<\s*(p|div|table|ul|ol|li|span|h[1-6]|br|b|i|strong|em)\b[^>]*>/i.test(rawText);
+                    if (!tieneHtml) {
+                        // Si es texto plano puro, reemplazar saltos de línea por <br>
+                        rawText = rawText.replace(/\n/g, '<br>');
+                    } else {
+                        // Limpiar saltos <br> excesivos acumulados
+                        rawText = rawText.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+                    }
                 }
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
@@ -1229,14 +1228,17 @@
         $('#informeForm').on('submit', function(e) {
             var submitBtn = $(this).find('button[type="submit"]');
             
-            // Validar el tamaño de los archivos (Max 100MB por archivo)
+            // Validar el tamaño de los archivos (Max 100MB por archivo y Max 450MB en total)
             let filesTooLarge = false;
             let largeFileNames = [];
             let maxFileSize = 100 * 1024 * 1024; // 100MB en bytes
+            let totalFilesSize = 0;
+            let maxTotalSize = 450 * 1024 * 1024; // 450MB en total
             
             $(this).find('input[type="file"]').each(function() {
                 if (this.files && this.files.length > 0) {
                     for (let i = 0; i < this.files.length; i++) {
+                        totalFilesSize += this.files[i].size;
                         if (this.files[i].size > maxFileSize) {
                             filesTooLarge = true;
                             largeFileNames.push(this.files[i].name);
@@ -1252,7 +1254,20 @@
                     title: 'Archivo demasiado pesado',
                     html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
                           '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
-                          'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente. Si el servidor rechaza los archivos, <b>se perderá la información que has escrito</b>.',
+                          'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente.',
+                    confirmButtonColor: '#007bff'
+                });
+                return false;
+            }
+
+            if (totalFilesSize > maxTotalSize) {
+                e.preventDefault();
+                let totalMB = (totalFilesSize / (1024 * 1024)).toFixed(1);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Carga total demasiado grande',
+                    html: 'El tamaño acumulado de todos los archivos seleccionados es de <b>' + totalMB + ' MB</b>, lo cual supera el límite permitido (máximo 450 MB combinados).<br><br>' + 
+                          'Por favor, sube las evidencias en grupos o comprime los documentos PDF antes de guardar.',
                     confirmButtonColor: '#007bff'
                 });
                 return false;
@@ -1308,15 +1323,25 @@
                 
                 var acts = [];
                 $('textarea[name="actividad_' + i + '"]').each(function() {
-                    acts.push($(this).val());
-                    $(this).removeAttr('name'); // Evitar que se envíe como parte individual
+                    var code = '';
+                    try {
+                        code = $(this).summernote('code');
+                    } catch(err) {
+                        code = $(this).val();
+                    }
+                    if (!code || code === '<p><br></p>' || code.trim() === '') {
+                        var fb = $(this).val();
+                        if (fb && fb !== '<p><br></p>' && fb.trim() !== '') code = fb;
+                        else code = '';
+                    }
+                    acts.push(code);
                 });
                 obj.actividad = acts.join("\n");
                 
                 obligacionesJson.push(obj);
             }
+            $('#informeForm').find('input[name="concepto_supervisor_json"]').remove();
             $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
-            $('input[name="obligaciones_count"]').removeAttr('name'); // Tampoco enviar este
             
             // Eliminar los nombres de TODOS los inputs de tipo file que estén vacíos
             $('input[type="file"]').each(function() {

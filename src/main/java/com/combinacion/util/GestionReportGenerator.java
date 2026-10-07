@@ -295,9 +295,28 @@ public class GestionReportGenerator {
     }
 
     private static String buildRegexForPhrase(String phrase) {
-        String[] words = phrase.trim().split("\\s+");
+        String trimmed = phrase.trim();
+        String[] words = trimmed.split("\\s+");
         StringBuilder sb = new StringBuilder();
         sb.append("(?<!\\p{L})");
+
+        // Protección especial para sustantivos comunes que coinciden con verbos (ej: "apoyo", "soporte", "trámite", "control", "pago", "cobro")
+        // Si va precedido de un verbo de acción (brindó/brindé, prestó/presté, dio/di...) o preposición/artículo (de, el, un...),
+        // funciona como sustantivo y NO debe conjugarse (evita "brindé apoyé").
+        if (words.length == 1) {
+            String wLower = trimmed.toLowerCase();
+            if (wLower.equals("apoyó") || wLower.equals("apoyo") || 
+                wLower.equals("soporte") || wLower.equals("soportó") ||
+                wLower.equals("trámite") || wLower.equals("tramitó") ||
+                wLower.equals("control") || wLower.equals("controló") ||
+                wLower.equals("pago") || wLower.equals("pagó") ||
+                wLower.equals("cobro") || wLower.equals("cobró") ||
+                wLower.equals("registro") || wLower.equals("registró") ||
+                wLower.equals("cargo") || wLower.equals("cargó")) {
+                sb.append("(?<!(?i)(?:brind[oóé]|prest[oóé]|di[oó]?|dar|brindar|prestar|realiz[oóé]|ejerci[oó]|ejerc[ií]|llev[oóé]|efectu[oóé]|de|del|el|la|los|las|al|un|una|unos|unas|en|con|como|sin|para|por|su|sus)\\s+)");
+            }
+        }
+
         for (int i = 0; i < words.length; i++) {
             if (i > 0) {
                 sb.append("\\s+");

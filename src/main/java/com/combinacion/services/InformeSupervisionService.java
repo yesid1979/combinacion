@@ -51,7 +51,7 @@ public class InformeSupervisionService {
     public String insertar(InformeFormData form) {
         synchronized (INSERT_LOCK) {
             try {
-                if (form.contratoId <= 0) {
+                if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
                     return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
                 }
 
@@ -95,8 +95,8 @@ public class InformeSupervisionService {
 
     public String actualizar(int id, InformeFormData form) {
         try {
-            if (form.contratoId <= 0) {
-                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
+            if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
+                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. La información existente en la base de datos se mantuvo protegida.";
             }
             
             InformeSupervision info = mapFormToModel(form);
@@ -114,7 +114,7 @@ public class InformeSupervisionService {
                 }
             }
 
-            // Preserve fields that might not come in the form
+            // Preserve fields that might not come in the form or might have been omitted
             InformeSupervision existente = informeDAO.obtenerPorId(id);
             if (existente != null) {
                 if (info.getUrlDriveEvidencias() == null || info.getUrlDriveEvidencias().isEmpty()) {
@@ -125,6 +125,21 @@ public class InformeSupervisionService {
                 }
                 if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
+                }
+                if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
+                    info.setConceptoSupervisor(existente.getConceptoSupervisor());
+                }
+                if (info.getValorCuotaPagar() == null && existente.getValorCuotaPagar() != null) {
+                    info.setValorCuotaPagar(existente.getValorCuotaPagar());
+                }
+                if (info.getFechaInicioPeriodo() == null && existente.getFechaInicioPeriodo() != null) {
+                    info.setFechaInicioPeriodo(existente.getFechaInicioPeriodo());
+                }
+                if (info.getFechaFinPeriodo() == null && existente.getFechaFinPeriodo() != null) {
+                    info.setFechaFinPeriodo(existente.getFechaFinPeriodo());
+                }
+                if ((info.getPeriodoInforme() == null || info.getPeriodoInforme().trim().isEmpty()) && existente.getPeriodoInforme() != null) {
+                    info.setPeriodoInforme(existente.getPeriodoInforme());
                 }
             }
             
@@ -1903,8 +1918,11 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             html = html.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)o:p", "span"); // Reemplazar tags <o:p> de word
+            html = html.replaceAll("(?i)<meta[^>]*>", "");
             
             org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(html);
+            docHtml.outputSettings().prettyPrint(false); // NO agregar saltos de linea o sangrias artificiales
+            
             for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
                 String style = e.attr("style");
                 if (style != null && !style.isEmpty()) {
@@ -1918,6 +1936,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
                 e.removeAttr("class");
                 e.removeAttr("lang");
+                if (e.hasAttr("id") && e.attr("id").startsWith("docs-internal-guid")) {
+                    e.removeAttr("id");
+                }
             }
             // Remover comentarios HTML (basura de Word)
             String finalHtml = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
@@ -1927,9 +1948,20 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             finalHtml = finalHtml.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
             finalHtml = finalHtml.replaceAll("(?i)font-size:[^;\"'>]+;?", "");
             finalHtml = finalHtml.replaceAll("(?i)line-height:[^;\"'>]+;?", "");
+            finalHtml = finalHtml.replaceAll("(?i)<meta[^>]*>", "");
+            finalHtml = finalHtml.replaceAll("(?i)<b id=\"docs-internal-guid-[^\"]*\"></b>", "");
             
             // Eliminar tags span vacíos o basura que quedó
             finalHtml = finalHtml.replaceAll("(?i)<span[^>]*>\\s*</span>", "");
+            
+            // Colapsar saltos de linea br excesivos consecutivos (maximo 1)
+            finalHtml = finalHtml.replaceAll("(?i)(<br\\s*/?>\\s*){2,}", "<br>");
+            // Eliminar parrafos o divs completamente vacios
+            finalHtml = finalHtml.replaceAll("(?i)<p>\\s*(&nbsp;|<br\\s*/?>)?\\s*</p>", "");
+            finalHtml = finalHtml.replaceAll("(?i)<div>\\s*(&nbsp;|<br\\s*/?>)?\\s*</div>", "");
+            
+            // Eliminar br al inicio o fin del texto
+            finalHtml = finalHtml.replaceAll("(?i)^(\\s*<br\\s*/?>)+", "").replaceAll("(?i)(<br\\s*/?>\\s*)+$", "").trim();
             
             return finalHtml;
         } catch (Exception ex) {

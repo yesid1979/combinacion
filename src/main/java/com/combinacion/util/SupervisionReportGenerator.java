@@ -310,16 +310,17 @@ public class SupervisionReportGenerator {
                         tablaXml.append("<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("</w:tblBorders>");
-                        tablaXml.append("<w:tblW w:w=\"5000\" w:type=\"pct\"/>"); // 100% width
+                        tablaXml.append("<w:tblW w:w=\"10000\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:tblLayout w:type=\"fixed\"/>");
                         tablaXml.append("</w:tblPr>");
                         
                         tablaXml.append("<w:tblGrid>");
-                        tablaXml.append("<w:gridCol w:w=\"4000\"/>");
-                        tablaXml.append("<w:gridCol w:w=\"6000\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"4200\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"5800\"/>");
                         tablaXml.append("</w:tblGrid>");
                         
                         // Header
-                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
+                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"4200\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"5800\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
                         
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
@@ -332,12 +333,12 @@ public class SupervisionReportGenerator {
                             tablaXml.append("<w:tr>");
                             
                             // Cell Obligacion
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"pct\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"4200\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
                             // Cell Actividad (ya es Word XML)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3000\" w:type=\"pct\"/></w:tcPr>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5800\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr>")
                                     .append(acXml)
                                     .append("</w:tc>");
                                     
