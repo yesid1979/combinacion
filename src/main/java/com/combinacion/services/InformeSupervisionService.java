@@ -55,8 +55,32 @@ public class InformeSupervisionService {
     public String insertar(InformeFormData form, InformeSupervision[] outCreated) {
         synchronized (INSERT_LOCK) {
             try {
-                if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
-                    return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. Verifique el tamaño de sus archivos e intente nuevamente.";
+                if (form.contratoId <= 0) {
+                    return "Error: No se identificó el contrato para registrar la cuenta de cobro.";
+                }
+
+                boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
+                if (esRadicacion) {
+                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
+                        StringBuilder faltantes = new StringBuilder();
+                        if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
+                        if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
+                        return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
+                    }
+                } else {
+                    // Modo BORRADOR: permitir guardar sin trabas, asignando valores por defecto si no vienen
+                    if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
+                        java.util.List<InformeSupervision> previos = this.listarPorContrato(form.contratoId);
+                        int sig = (previos != null) ? previos.size() + 1 : 1;
+                        form.numeroCuota = String.valueOf(sig);
+                    }
+                    if (form.tipoInforme == null || form.tipoInforme.trim().isEmpty()) {
+                        form.tipoInforme = "PARCIAL";
+                    }
+                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) {
+                        java.time.LocalDate now = java.time.LocalDate.now();
+                        form.periodoInforme = String.format("%d-%02d", now.getYear(), now.getMonthValue());
+                    }
                 }
 
             InformeSupervision info = mapFormToModel(form);
@@ -115,8 +139,8 @@ public class InformeSupervisionService {
                 }
             }
             
-            if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
-                return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. La información existente en la base de datos se mantuvo protegida.";
+            if (form.contratoId <= 0) {
+                return "Error: No se identificó el contrato asociado a esta cuenta de cobro.";
             }
             
             InformeSupervision info = mapFormToModel(form);

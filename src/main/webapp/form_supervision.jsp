@@ -1378,8 +1378,8 @@
             let isValid = true;
             let firstInvalid = null;
             
-            // Solo validar campos requeridos si se está Radicando la cuenta
-            if ($('#radicar_input').val() === 'true') {
+            var esRadicacion = ($('#radicar_input').val() === 'true');
+            if (esRadicacion) {
                 $(this).find('[required]').each(function() {
                     var $el = $(this);
                     if ($el.is('input[type="file"]')) {
@@ -1398,6 +1398,17 @@
                         }
                     }
                 });
+            } else {
+                // Al guardar borrador, verificar únicamente los datos mínimos de identificación (Período y Cuota)
+                var $periodo = $('input[name="periodo_informe"]');
+                var $cuota = $('select[name="numero_cuota"], input[name="numero_cuota"]');
+                if (!$periodo.val() || $periodo.val().trim() === '') {
+                    isValid = false;
+                    firstInvalid = $periodo;
+                } else if (!$cuota.val() || $cuota.val().trim() === '') {
+                    isValid = false;
+                    firstInvalid = $cuota;
+                }
             }
             
             if (!isValid) {
@@ -1411,10 +1422,15 @@
                     tabTrigger.show();
                 }
                 
+                var alertTitle = esRadicacion ? '¡Faltan datos para radicar!' : '¡Faltan datos para el borrador!';
+                var errorMsg = esRadicacion ? 
+                    'Por favor, diligencia todos los campos obligatorios antes de radicar la cuenta.' : 
+                    'Para guardar el borrador, debes indicar al menos el <b>Período del informe (Mes y Año)</b> y el <b>Número de cuota</b>.';
+                
                 Swal.fire({
                     icon: 'warning',
-                    title: '¡Faltan datos!',
-                    text: 'Por favor, diligencia todos los campos obligatorios antes de guardar el informe.',
+                    title: alertTitle,
+                    html: errorMsg,
                     confirmButtonColor: '#007bff'
                 }).then(() => {
                     setTimeout(() => firstInvalid.focus(), 300);
@@ -1449,6 +1465,7 @@
                         else code = '';
                     }
                     acts.push(code);
+                    $(this).removeAttr('name'); // Ya empacado en JSON
                 });
                 obj.actividad = acts.join("\n");
                 
@@ -1456,6 +1473,16 @@
             }
             $('#informeForm').find('input[name="concepto_supervisor_json"]').remove();
             $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
+            $('input[name="obligaciones_count"]').removeAttr('name');
+            
+            // Eliminar los nombres de TODOS los inputs de tipo file que estén realmente vacíos
+            // para no saturar las partes multipart de Tomcat
+            $('input[type="file"]').each(function() {
+                var hasFiles = this.files && this.files.length > 0;
+                if (!$(this).val() && !hasFiles) {
+                    $(this).removeAttr('name');
+                }
+            });
             
             // Quitar puntos antes de enviar el formulario para que Java (BigDecimal) no se rompa
             $('.money-mask').each(function() {
