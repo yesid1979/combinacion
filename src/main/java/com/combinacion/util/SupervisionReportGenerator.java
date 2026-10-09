@@ -169,10 +169,11 @@ public class SupervisionReportGenerator {
         reps.put("${VALOR_ACUMULADO}", info.getValorAccumuladoPagado() != null ? "$ " + nf.format(info.getValorAccumuladoPagado()).replace(',', '.') : "$ 0");
         reps.put("${SALDO_CANCELAR}", info.getSaldoPorCancelar() != null ? "$ " + nf.format(info.getSaldoPorCancelar()).replace(',', '.') : "$ 0");
         
-        reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero());
-        reps.put("${PLANILLA_PIN}", info.getPlanillaPin());
-        reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador());
-        reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaLarga(info.getPlanillaFechaPago()));
+        boolean esNuevo = "SI".equalsIgnoreCase(info.getEsContratistaNuevo());
+        reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero() != null && !info.getPlanillaNumero().trim().isEmpty() ? info.getPlanillaNumero() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_PIN}", info.getPlanillaPin() != null && !info.getPlanillaPin().trim().isEmpty() ? info.getPlanillaPin() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador() != null && !info.getPlanillaOperador().trim().isEmpty() ? info.getPlanillaOperador() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_FECHA_PAGO}", (info.getPlanillaFechaPago() != null && !esNuevo) ? formatearFechaLarga(info.getPlanillaFechaPago()) : "N/A");
         reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
         
         String concepto = info.getConceptoSupervisor();

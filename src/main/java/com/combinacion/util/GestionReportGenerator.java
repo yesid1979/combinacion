@@ -138,10 +138,11 @@ public class GestionReportGenerator {
         reps.put("${FECHA_INFORME}", formatearFechaLarga(fechaInforme));
         
         // Planilla
-        reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero() != null ? info.getPlanillaNumero() : "");
-        reps.put("${PLANILLA_PIN}", info.getPlanillaPin() != null ? info.getPlanillaPin() : "");
-        reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador() != null ? info.getPlanillaOperador() : "");
-        reps.put("${PLANILLA_FECHA_PAGO}", formatearFechaLarga(info.getPlanillaFechaPago()));
+        boolean esNuevo = "SI".equalsIgnoreCase(info.getEsContratistaNuevo());
+        reps.put("${PLANILLA_NUMERO}", info.getPlanillaNumero() != null && !info.getPlanillaNumero().trim().isEmpty() ? info.getPlanillaNumero() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_PIN}", info.getPlanillaPin() != null && !info.getPlanillaPin().trim().isEmpty() ? info.getPlanillaPin() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador() != null && !info.getPlanillaOperador().trim().isEmpty() ? info.getPlanillaOperador() : (esNuevo ? "N/A" : ""));
+        reps.put("${PLANILLA_FECHA_PAGO}", (info.getPlanillaFechaPago() != null && !esNuevo) ? formatearFechaLarga(info.getPlanillaFechaPago()) : "N/A");
         reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
         
         String concepto = info.getConceptoSupervisor();
