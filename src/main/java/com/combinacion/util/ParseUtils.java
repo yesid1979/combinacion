@@ -21,8 +21,20 @@ public class ParseUtils {
             return BigDecimal.ZERO;
         }
         try {
-            return new BigDecimal(numStr);
-        } catch (NumberFormatException e) {
+            String clean = numStr.replaceAll("[^0-9,.-]", "").trim();
+            if (clean.isEmpty()) return BigDecimal.ZERO;
+            if (clean.contains(".") && clean.contains(",")) {
+                clean = clean.replace(".", "").replace(",", ".");
+            } else if (clean.contains(".") && !clean.contains(",")) {
+                int lastDot = clean.lastIndexOf(".");
+                if (clean.indexOf(".") != lastDot || clean.length() - lastDot - 1 == 3) {
+                    clean = clean.replace(".", "");
+                }
+            } else if (clean.contains(",")) {
+                clean = clean.replace(",", ".");
+            }
+            return new BigDecimal(clean);
+        } catch (Exception e) {
             return BigDecimal.ZERO;
         }
     }

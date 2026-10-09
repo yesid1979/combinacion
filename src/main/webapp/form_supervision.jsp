@@ -692,7 +692,7 @@
                         }
                     } else {
                         $div.hide();
-                        $div.find('input[type="file"]').val('').prop('required', false);
+                        $div.find('input[type="file"]').prop('required', false);
                     }
                 });
             }
@@ -1535,8 +1535,12 @@
             .on('drop', 'input[type="file"]', function(e) {
                 if ($(this).prop('disabled')) return;
                 var files = e.originalEvent.dataTransfer.files;
-                if (files.length > 0) {
-                    $(this).prop('files', files);
+                if (files && files.length > 0) {
+                    try {
+                        this.files = files;
+                    } catch(err) {
+                        $(this).prop('files', files);
+                    }
                     $(this).trigger('change');
                 }
             });
@@ -1976,29 +1980,32 @@
                     // Autoguardado cada 10 segundos
                     setInterval(guardarBorradorLocal, 10000);
                     
-                    // Guardar también justo antes de enviar el formulario por si falla
+                    // Al enviar el formulario, limpiar el borrador local ya que se está guardando en el servidor
                     $('#informeForm').on('submit', function() {
-                        guardarBorradorLocal();
+                        try { localStorage.removeItem(autoSaveKey); } catch(e) {}
+                        formHasChanges = false;
                     });
 
-                    // Limpiar autosave SI el servidor responde exitosamente (no hay error)
+                    // Limpiar autosave en formularios de edición si no hay un error devuelto por el servidor
                     var serverError = '${error}';
-                    var serverSuccess = '${successMessage}';
-                    if (serverSuccess && serverSuccess.trim() !== '') {
-                        localStorage.removeItem(autoSaveKey);
-                    } else {
-                        // Intentar recuperar si existe y no acabamos de guardar exitosamente
+                    var isEditing = ('${action}' === 'update');
+
+                    // Si estamos editando un informe existente que viene de la base de datos y no hubo error del servidor,
+                    // la base de datos es la única fuente de verdad; descartamos borradores viejos.
+                    if (isEditing && (!serverError || serverError.trim() === '')) {
+                        try { localStorage.removeItem(autoSaveKey); } catch(e) {}
+                    } else if (serverError && serverError.trim() !== '') {
+                        // Solo si hubo un error devuelto por el servidor intentamos avisar de recuperación
                         var guardado = localStorage.getItem(autoSaveKey);
                         if (guardado) {
                             try {
                                 var parseado = JSON.parse(guardado);
                                 var timeDiff = (new Date().getTime() - parseado.time) / (1000 * 60 * 60); // Horas
                                 
-                                // Si hay datos guardados hace menos de 24h, y hay un error crítico o la página está vacía
                                 if (timeDiff < 24) {
                                     Swal.fire({
                                         title: 'Recuperación de datos',
-                                        text: 'El sistema detectó información que estabas escribiendo y que no se guardó correctamente. ¿Deseas restaurar esa información en el formulario?',
+                                        text: 'El sistema detectó un inconveniente con el guardado en el servidor. ¿Deseas restaurar la información que estabas escribiendo?',
                                         icon: 'info',
                                         showCancelButton: true,
                                         confirmButtonText: 'Sí, restaurar',
@@ -2023,7 +2030,7 @@
                                             
                                             // Trigger recalcular
                                             calcularSaldo();
-                                            formHasChanges = true; // Mantener vivo el autograbado después de restaurar
+                                            formHasChanges = true;
                                             Swal.fire('¡Restaurado!', 'La información ha sido recuperada.', 'success');
                                         } else {
                                             localStorage.removeItem(autoSaveKey);
