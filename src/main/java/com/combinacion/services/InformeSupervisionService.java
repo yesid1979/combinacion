@@ -819,32 +819,6 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             }
                         }
                     }
-                    
-                    // Precargar todos los documentos soporte permanentes de Cuota 1 o previas
-                    String[] permanentKeys = {
-                        "file_cedula", "file_rut", "file_secop", "file_ficha_tecnica",
-                        "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"
-                    };
-                    for (String pk : permanentKeys) {
-                        if (!newSoportes.has(pk)) {
-                            for (int i = 0; i < previos.size(); i++) {
-                                String sJson = previos.get(i).getSoportesJson();
-                                if (sJson != null && !sJson.isEmpty()) {
-                                    try {
-                                        org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                        org.json.JSONObject fileData = getLatestFile(sAnteriores, pk);
-                                        if (fileData != null) {
-                                            org.json.JSONObject copyObj = new org.json.JSONObject(fileData.toString());
-                                            copyObj.put("needs_copy", true);
-                                            newSoportes.put(pk, copyObj);
-                                            break;
-                                        }
-                                    } catch (Exception ignore) {}
-                                }
-                            }
-                        }
-                    }
-                    
                     if (newSoportes.length() > 0) {
                         System.out.println("FINAL PRECARGADOS: " + newSoportes.toString());
                         request.setAttribute("soportesJsonPreCargados", newSoportes.toString());
@@ -993,32 +967,6 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 } catch (Exception e) {}
                             }
                         }
-                        // Precargar todos los documentos soporte permanentes de Cuota 1 o previas si faltan
-                        String[] permanentKeys = {
-                            "file_cedula", "file_rut", "file_secop", "file_ficha_tecnica",
-                            "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"
-                        };
-                        for (String pk : permanentKeys) {
-                            if (!currentObj.has(pk)) {
-                                for (int i = 0; i < previos.size(); i++) {
-                                    if (previos.get(i).getId() == informe.getId()) continue;
-                                    String sJson = previos.get(i).getSoportesJson();
-                                    if (sJson != null && !sJson.isEmpty()) {
-                                        try {
-                                            org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                            org.json.JSONObject fileData = getLatestFile(sAnteriores, pk);
-                                            if (fileData != null) {
-                                                org.json.JSONObject copyObj = new org.json.JSONObject(fileData.toString());
-                                                copyObj.put("needs_copy", true);
-                                                currentObj.put(pk, copyObj);
-                                                break;
-                                            }
-                                        } catch (Exception ignore) {}
-                                    }
-                                }
-                            }
-                        }
-
                         if (currentObj.length() > 0) {
                             informe.setSoportesJson(currentObj.toString());
                         }
@@ -1488,29 +1436,23 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null && informe.getNumeroCuota().equals(String.valueOf(contrato.getNumCuotasNumero())));
             boolean esCuotaAdicionPosterior = (esAdicion && informe.getNumeroCuota() != null && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato.getNumCuotasNumero());
 
-            // HERENCIA GENERAL DE DOCUMENTOS SOPORTE PERMANENTES DE CUOTA 1 PARA TODAS LAS CUOTAS > 1
-            if (!esCuota1) {
+            // HERENCIA GENERAL DE RPC DE CUOTA 1 O PREVIAS PARA TODAS LAS CUOTAS > 1
+            if (!esCuota1 && !soportes.has("file_rpc")) {
                 java.util.List<com.combinacion.models.InformeSupervision> previosList = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
-                String[] permanentKeys = {
-                    "file_cedula", "file_rut", "file_secop", "file_ficha_tecnica", "file_rpc",
-                    "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"
-                };
-                for (String pk : permanentKeys) {
-                    if (!soportes.has(pk) && previosList != null) {
-                        for (com.combinacion.models.InformeSupervision prevInf : previosList) {
-                            if (prevInf.getId() != null && prevInf.getId().equals(informe.getId())) continue;
-                            if (prevInf.getSoportesJson() != null && !prevInf.getSoportesJson().isEmpty()) {
-                                try {
-                                    org.json.JSONObject prevJson = new org.json.JSONObject(prevInf.getSoportesJson());
-                                    org.json.JSONObject fileData = getLatestFile(prevJson, pk);
-                                    if (fileData != null) {
-                                        org.json.JSONObject copyObj = new org.json.JSONObject(fileData.toString());
-                                        copyObj.put("needs_copy", true);
-                                        soportes.put(pk, copyObj);
-                                        break;
-                                    }
-                                } catch (Exception ignore) {}
-                            }
+                if (previosList != null) {
+                    for (com.combinacion.models.InformeSupervision prevInf : previosList) {
+                        if (prevInf.getId() != null && prevInf.getId().equals(informe.getId())) continue;
+                        if (prevInf.getSoportesJson() != null && !prevInf.getSoportesJson().isEmpty()) {
+                            try {
+                                org.json.JSONObject prevJson = new org.json.JSONObject(prevInf.getSoportesJson());
+                                org.json.JSONObject fileData = getLatestFile(prevJson, "file_rpc");
+                                if (fileData != null) {
+                                    org.json.JSONObject copyObj = new org.json.JSONObject(fileData.toString());
+                                    copyObj.put("needs_copy", true);
+                                    soportes.put("file_rpc", copyObj);
+                                    break;
+                                }
+                            } catch (Exception ignore) {}
                         }
                     }
                 }
