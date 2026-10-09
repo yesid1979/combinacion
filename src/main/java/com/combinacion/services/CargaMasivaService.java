@@ -559,14 +559,14 @@ public class CargaMasivaService {
 
     private String parseBooleanCheck(String val) {
         if (val == null)
-            return "No";
+            return "NO";
         val = val.trim();
         if (val.equalsIgnoreCase("x") || val.equalsIgnoreCase("si") || val.equalsIgnoreCase("sí")
                 || val.equalsIgnoreCase("s") || val.equalsIgnoreCase("1") || val.equalsIgnoreCase("true"))
-            return "Si";
+            return "SI";
         if (val.isEmpty() || val.equalsIgnoreCase("no") || val.equalsIgnoreCase("0") || val.equalsIgnoreCase("false"))
-            return "No";
-        return val;
+            return "NO";
+        return val.toUpperCase();
     }
 
     private void safePut(Map<String, Integer> map, String key, int index) {
@@ -1669,9 +1669,9 @@ public class CargaMasivaService {
             String tipoC = get(row, map, "tipo_contrato");
             // Si la columna principal esta vacia, intentamos por columnas individuales (Checkboxes)
             if (tipoC.isEmpty()) {
-                if (parseBooleanCheck(get(row, map, "tipo_contrato_profesional")).equals("Si")) {
+                if (parseBooleanCheck(get(row, map, "tipo_contrato_profesional")).equalsIgnoreCase("si")) {
                     tipoC = "PROFESIONAL";
-                } else if (parseBooleanCheck(get(row, map, "tipo_contrato_apoyo")).equals("Si")) {
+                } else if (parseBooleanCheck(get(row, map, "tipo_contrato_apoyo")).equalsIgnoreCase("si")) {
                     tipoC = "APOYO A LA GESTION";
                 }
             }
