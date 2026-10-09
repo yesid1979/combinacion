@@ -215,4 +215,14 @@ public class Contrato {
     private String facturadorElectronico;
     public String getFacturadorElectronico() { return facturadorElectronico; }
     public void setFacturadorElectronico(String facturadorElectronico) { this.facturadorElectronico = facturadorElectronico; }
+
+    public boolean isFacturadorElectronicoOConIva() {
+        boolean conIva = ivaSiNo != null && ("SI".equalsIgnoreCase(ivaSiNo.trim()) || "Si".equalsIgnoreCase(ivaSiNo.trim()));
+        boolean facturador = facturadorElectronico != null && ("SI".equalsIgnoreCase(facturadorElectronico.trim()) || "Si".equalsIgnoreCase(facturadorElectronico.trim()));
+        return conIva || facturador;
+    }
+
+    public boolean isEsFacturadorElectronico() {
+        return facturadorElectronico != null && ("SI".equalsIgnoreCase(facturadorElectronico.trim()) || "Si".equalsIgnoreCase(facturadorElectronico.trim()));
+    }
 }

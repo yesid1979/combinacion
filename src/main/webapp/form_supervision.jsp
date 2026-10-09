@@ -196,7 +196,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label" title="Para la cuenta de cobro">Consecutivo</label>
-                                    <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si'}">required</c:if> ${readonly ? 'readonly' : ''}>
+                                    <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si' && contrato.facturadorElectronico != 'SI' && contrato.facturadorElectronico != 'Si' && contrato.facturadorElectronico != 'si'}">required</c:if> ${readonly ? 'readonly' : ''}>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha de inicio</label>
@@ -382,11 +382,11 @@
                                 <i class="bi bi-info-circle-fill me-2"></i> Los documentos requeridos cambian dependiendo de si es la Cuota 1 o una cuota posterior.
                             </div>
                             <div class="row g-3">
-                                <c:if test="${contrato.ivaSiNo == 'SI' || contrato.ivaSiNo == 'Si' || contrato.ivaSiNo == 'si'}">
+                                <c:if test="${contrato.ivaSiNo == 'SI' || contrato.ivaSiNo == 'Si' || contrato.ivaSiNo == 'si' || contrato.facturadorElectronico == 'SI' || contrato.facturadorElectronico == 'Si' || contrato.facturadorElectronico == 'si'}">
                                     <div class="col-md-12 mb-2">
                                         <div class="alert alert-warning mb-0 border-start border-warning border-4 shadow-sm">
                                             <i class="bi bi-exclamation-triangle-fill me-2 text-warning fs-5"></i>
-                                            <strong>Atención:</strong> El contratista es <strong>Responsable de IVA</strong>. En lugar de generar el formato de cuenta de cobro en Excel (DS), debe cargar su factura electrónica a continuación.
+                                            <strong>Atención:</strong> El contratista es <strong><c:choose><c:when test="${contrato.ivaSiNo == 'SI' || contrato.ivaSiNo == 'Si' || contrato.ivaSiNo == 'si'}">Responsable de IVA</c:when><c:otherwise>Facturador Electrónico</c:otherwise></c:choose></strong>. En lugar de generar el formato de cuenta de cobro en Excel (DS), debe cargar su factura electrónica a continuación.
                                         </div>
                                     </div>
                                     <div class="col-md-6 req-cuota-todas">
@@ -522,7 +522,7 @@
                                 <h5 class="card-title text-success fw-bold"><i class="bi bi-file-earmark-check"></i> Documentos Generados por el Sistema</h5>
                                 <p class="card-text text-muted small">Descargue o previsualice los documentos generados automáticamente con la información actual de esta cuenta.</p>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si'}">
+                                    <c:if test="${contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si' && contrato.facturadorElectronico != 'SI' && contrato.facturadorElectronico != 'Si' && contrato.facturadorElectronico != 'si'}">
                                         <a href="${pageContext.request.contextPath}/informes?action=descargar_doc&tipo=ds&id=${informe.id}" class="btn btn-outline-success" target="_blank">
                                             <i class="bi bi-file-earmark-excel"></i> Equivalente DS (Excel)
                                         </a>

@@ -1018,7 +1018,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         java.io.File file = null;
         String fileName = "";
         String mime = "";
-        boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+        boolean tieneIva = contrato != null && contrato.isFacturadorElectronicoOConIva();
         
         try {
             if ("ds".equals(tipo)) {
@@ -1087,7 +1087,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
 
             boolean esCuota1 = "1".equals(informe.getNumeroCuota());
-            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+            boolean tieneIva = contrato != null && contrato.isFacturadorElectronicoOConIva();
 
             boolean esCuotaAdicion = false;
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
@@ -1400,7 +1400,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
 
             boolean esCuota1 = "1".equals(informe.getNumeroCuota());
-            boolean tieneIva = "SI".equalsIgnoreCase(contrato.getIvaSiNo());
+            boolean tieneIva = contrato != null && contrato.isFacturadorElectronicoOConIva();
 
             boolean esCuotaAdicion = false;
             if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
