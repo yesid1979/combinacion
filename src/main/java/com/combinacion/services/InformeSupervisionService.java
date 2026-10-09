@@ -127,8 +127,34 @@ public class InformeSupervisionService {
                 if (info.getUrlDriveEvidencias() == null || info.getUrlDriveEvidencias().isEmpty()) {
                     info.setUrlDriveEvidencias(existente.getUrlDriveEvidencias());
                 }
-                if (info.getSoportesJson() == null || info.getSoportesJson().isEmpty()) {
-                    info.setSoportesJson(existente.getSoportesJson());
+                String dbSoportes = existente.getSoportesJson();
+                String inSoportes = info.getSoportesJson();
+                if (inSoportes == null || inSoportes.trim().isEmpty() || "{}".equals(inSoportes.trim())) {
+                    info.setSoportesJson(dbSoportes);
+                } else if (dbSoportes != null && !dbSoportes.trim().isEmpty() && !"{}".equals(dbSoportes.trim())) {
+                    try {
+                        org.json.JSONObject dbObj = new org.json.JSONObject(dbSoportes);
+                        org.json.JSONObject inObj = new org.json.JSONObject(inSoportes);
+                        
+                        java.util.Set<String> eliminados = new java.util.HashSet<>();
+                        if (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty()) {
+                            for (String s : form.soportesEliminados.split(",")) {
+                                if (!s.trim().isEmpty()) eliminados.add(s.trim());
+                            }
+                        }
+                        
+                        // Preservar todas las llaves de la BD que no fueron explícitamente eliminadas
+                        java.util.Iterator<String> it = dbObj.keys();
+                        while (it.hasNext()) {
+                            String k = it.next();
+                            if (!eliminados.contains(k) && !inObj.has(k)) {
+                                inObj.put(k, dbObj.get(k));
+                            }
+                        }
+                        info.setSoportesJson(inObj.toString());
+                    } catch (Exception ex) {
+                        info.setSoportesJson(dbSoportes);
+                    }
                 }
                 if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
@@ -407,6 +433,7 @@ public class InformeSupervisionService {
         public String fechaSuscripcion;
         public String urlDriveEvidencias;
         public String soportesJson;
+        public String soportesEliminados;
         public String estadoRadicacion;
         public Integer idRevisorAsignado;
     }
@@ -1970,6 +1997,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.recomendaciones = cleanWordHtml(r.getParameter("recomendaciones"));
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
         f.soportesJson = r.getParameter("soportes_json");
+        f.soportesEliminados = r.getParameter("soportes_eliminados");
         
         // Manejo de radicacion
         String radicar = r.getParameter("radicar");

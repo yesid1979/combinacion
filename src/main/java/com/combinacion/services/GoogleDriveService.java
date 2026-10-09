@@ -107,21 +107,25 @@ public class GoogleDriveService {
         }
 
         Drive driveService = getDriveService();
-        String query = "mimeType='application/vnd.google-apps.folder' and name='" + folderName.replace("'", "\\'") + "' and trashed=false";
+        String cleanFolderName = folderName.replace("\\", "\\\\").replace("'", "\\'");
+        String query = "mimeType='application/vnd.google-apps.folder' and name='" + cleanFolderName + "' and trashed=false";
         if (parentId != null && !parentId.isEmpty()) {
             query += " and '" + parentId + "' in parents";
-        } else {
-            query += " and 'root' in parents";
         }
         
-        final String finalQuery = query;
-        FileList result = executeWithRetry(() -> driveService.files().list()
-                .setQ(finalQuery)
-                .setSpaces("drive")
-                .setFields("files(id, name)")
-                .execute());
+        FileList result = null;
+        try {
+            final String finalQuery = query;
+            result = executeWithRetry(() -> driveService.files().list()
+                    .setQ(finalQuery)
+                    .setSpaces("drive")
+                    .setFields("files(id, name)")
+                    .execute());
+        } catch (Exception qEx) {
+            System.err.println("Aviso Drive: No se pudo buscar carpeta '" + folderName + "': " + qEx.getMessage());
+        }
 
-        if (result.getFiles() != null && !result.getFiles().isEmpty()) {
+        if (result != null && result.getFiles() != null && !result.getFiles().isEmpty()) {
             String folderId = result.getFiles().get(0).getId();
             FOLDER_CACHE.put(cacheKey, folderId);
             return folderId;
@@ -162,21 +166,25 @@ public class GoogleDriveService {
 
         FileContent mediaContent = new FileContent(mimeType, file);
         if (result != null && result.getFiles() != null && !result.getFiles().isEmpty()) {
-            // Existe con el mismo nombre, lo actualizamos
-            String fileId = result.getFiles().get(0).getId();
-            File updatedFile = new File();
-            File newFile = executeWithRetry(() -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
-            return newFile.getId();
-        } else {
-            // No existe, lo creamos
-            File fileMetadata = new File();
-            fileMetadata.setName(fileName);
-            if (parentId != null && !parentId.isEmpty()) {
-                fileMetadata.setParents(Collections.singletonList(parentId));
+            try {
+                // Existe con el mismo nombre, lo actualizamos
+                String fileId = result.getFiles().get(0).getId();
+                File updatedFile = new File();
+                File newFile = executeWithRetry(() -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
+                return newFile.getId();
+            } catch (Exception updEx) {
+                System.err.println("Aviso Drive: No se pudo actualizar '" + fileName + "', creando archivo nuevo: " + updEx.getMessage());
             }
-            File newFile = executeWithRetry(() -> driveService.files().create(fileMetadata, mediaContent).setFields("id").execute());
-            return newFile.getId();
         }
+
+        // No existe o falló la actualización, lo creamos
+        File fileMetadata = new File();
+        fileMetadata.setName(fileName);
+        if (parentId != null && !parentId.isEmpty()) {
+            fileMetadata.setParents(Collections.singletonList(parentId));
+        }
+        File newFile = executeWithRetry(() -> driveService.files().create(fileMetadata, mediaContent).setFields("id").execute());
+        return newFile.getId();
     }
 
     /**

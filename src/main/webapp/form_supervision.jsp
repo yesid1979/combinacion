@@ -116,6 +116,7 @@
                         <input type="hidden" name="id" value="${informe.id}">
                     </c:if>
                     <input type="hidden" name="soportes_json" id="soportes_json" value="${fn:escapeXml(not empty informe.soportesJson ? informe.soportesJson : (not empty soportesJsonPreCargados ? soportesJsonPreCargados : '{}'))}">
+                    <input type="hidden" name="soportes_eliminados" id="soportes_eliminados" value="">
                     <input type="hidden" name="periodo_informe_fallback" value="${fn:escapeXml(informe.periodoInforme)}">
                     <input type="hidden" name="numero_cuota_fallback" value="${fn:escapeXml(informe.numeroCuota)}">
 
@@ -423,7 +424,7 @@
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">Seguridad Social <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : 'required'}>
+                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                  <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">RPC (Registro Presupuestal) <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
@@ -733,11 +734,13 @@
             function actualizarAsteriscosArchivos() {
                 setTimeout(function() {
                     $('input[type="file"]').each(function() {
-                        var $input = $(this);
                         var $label = $input.prevAll('.form-label, small.fw-bold').first();
+                        if ($label.length === 0) {
+                            $label = $input.closest('div').find('.form-label, small.fw-bold').first();
+                        }
                         
                         // Si ya esta cargado, ya no es requerido
-                        if ($label.find('.badge.bg-success').length > 0) {
+                        if ($label.find('.badge.bg-success').length > 0 || $input.prevAll('.alert-secondary').length > 0 || $input.closest('div').find('.alert-secondary').length > 0) {
                             $input.prop('required', false);
                         }
                         
@@ -875,6 +878,8 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         var key = $btn.data('key');
+                        var prevElim = $('#soportes_eliminados').val();
+                        $('#soportes_eliminados').val(prevElim ? prevElim + ',' + key : key);
                         if (typeof soportesObj !== 'undefined' && soportesObj[key]) {
                             delete soportesObj[key];
                             $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
@@ -950,8 +955,11 @@
                 dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                 
                 dropZone.onclick = function() {
-                    try { fileInput.value = ''; } catch(e) {}
                     fileInput.click();
+                };
+                fileInput.onclick = function(e) {
+                    e.stopPropagation();
+                    this.value = null;
                 };
                 
                 // Acumulador persistente de archivos (DataTransfer) para soportar múltiples tandas sin sobreescribir
@@ -1353,9 +1361,21 @@
             // Solo validar campos requeridos si se está Radicando la cuenta
             if ($('#radicar_input').val() === 'true') {
                 $(this).find('[required]').each(function() {
-                    if (!$(this).val() || $(this).val().trim() === '') {
-                        isValid = false;
-                        if (!firstInvalid) firstInvalid = $(this);
+                    var $el = $(this);
+                    if ($el.is('input[type="file"]')) {
+                        var hasExisting = $el.prevAll('.alert-secondary').length > 0 || 
+                                          $el.prevAll('.form-label, small.fw-bold').find('.badge.bg-success').length > 0 ||
+                                          ($el.closest('div').find('.badge.bg-success').length > 0);
+                        var hasNewFile = this.files && this.files.length > 0;
+                        if (!hasExisting && !hasNewFile) {
+                            isValid = false;
+                            if (!firstInvalid) firstInvalid = $el;
+                        }
+                    } else {
+                        if (!$el.val() || $el.val().trim() === '') {
+                            isValid = false;
+                            if (!firstInvalid) firstInvalid = $el;
+                        }
                     }
                 });
             }
@@ -1416,14 +1436,6 @@
             }
             $('#informeForm').find('input[name="concepto_supervisor_json"]').remove();
             $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
-            
-            // Eliminar los nombres de TODOS los inputs de tipo file que estén realmente vacíos
-            $('input[type="file"]').each(function() {
-                var hasFiles = this.files && this.files.length > 0;
-                if (!$(this).val() && !hasFiles) {
-                    $(this).removeAttr('name');
-                }
-            });
             
             // Quitar puntos antes de enviar el formulario para que Java (BigDecimal) no se rompa
             $('.money-mask').each(function() {
