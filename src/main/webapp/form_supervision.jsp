@@ -646,6 +646,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            <c:if test="${not empty sessionScope.successMessage}">
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Guardado!',
+                    text: '${fn:escapeXml(sessionScope.successMessage)}',
+                    timer: 3500,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
+                <c:remove var="successMessage" scope="session" />
+            </c:if>
+
             // Agregar asterisco rojo a los labels de campos requeridos
             $('input[required], select[required], textarea[required]').each(function() {
                 var label = $(this).siblings('.form-label');

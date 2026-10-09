@@ -1917,8 +1917,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
                 procesarArchivosDrive(informeId, request);
             }
-            request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
-            response.sendRedirect("informes");
+            if (guardado != null && "RADICADA".equals(guardado.getEstadoRadicacion())) {
+                request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+                response.sendRedirect("informes");
+            } else {
+                request.getSession().setAttribute("successMessage", "El borrador ha sido guardado exitosamente.");
+                String modoParam = request.getParameter("modo");
+                String urlRedirect = "informes?action=edit&id=" + informeId + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
+                response.sendRedirect(urlRedirect);
+            }
         }
     }
 
@@ -1952,8 +1959,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
             // Procesar Drive después de actualizar exitosamente
             procesarArchivosDrive(id, request);
-            request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido actualizado correctamente.");
-            response.sendRedirect("informes");
+            
+            if ("RADICADA".equals(form.estadoRadicacion)) {
+                request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+                response.sendRedirect("informes");
+            } else {
+                request.getSession().setAttribute("successMessage", "La información ha sido actualizada correctamente.");
+                String modoParam = request.getParameter("modo");
+                String urlRedirect = "informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
+                response.sendRedirect(urlRedirect);
+            }
         }
     }
 
