@@ -954,16 +954,18 @@
                 dropZone.style.backgroundColor = "#f8f9fa";
                 dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                 
+                var tempPicker = document.createElement("input");
+                tempPicker.type = "file";
+                tempPicker.multiple = true;
+                tempPicker.className = "d-none";
+                
                 dropZone.onclick = function() {
-                    fileInput.click();
-                };
-                fileInput.onclick = function(e) {
-                    e.stopPropagation();
-                    this.value = null;
+                    tempPicker.click();
                 };
                 
                 // Acumulador persistente de archivos (DataTransfer) para soportar múltiples tandas sin sobreescribir
                 var dt = new DataTransfer();
+                fileInput._dt = dt;
                 
                 var renderSelectedFiles = function() {
                     filesListContainer.innerHTML = '';
@@ -1025,6 +1027,7 @@
                                     }
                                 }
                                 dt = newDt;
+                                fileInput._dt = dt;
                                 try { fileInput.files = dt.files; } catch(err) {}
                                 renderSelectedFiles();
                             };
@@ -1051,6 +1054,7 @@
                             dt.items.add(f);
                         }
                     }
+                    fileInput._dt = dt;
                     try {
                         fileInput.files = dt.files;
                     } catch(err) {
@@ -1059,10 +1063,11 @@
                     renderSelectedFiles();
                 };
                 
-                fileInput.addEventListener('change', function() {
+                tempPicker.addEventListener('change', function() {
                     if (this.files && this.files.length > 0) {
                         agregarNuevosArchivos(this.files);
                     }
+                    this.value = ''; // Limpiar el selector temporal para permitir seleccionar el mismo archivo si fue eliminado
                 });
                 
                 dropZone.addEventListener('dragover', function(e) {
@@ -1094,6 +1099,9 @@
             divFile.appendChild(dropZone);
             divFile.appendChild(filesListContainer);
             divFile.appendChild(fileInput);
+            if (typeof tempPicker !== 'undefined') {
+                divFile.appendChild(tempPicker);
+            }
             wrapper.appendChild(divFile);
             
             container.appendChild(wrapper);
@@ -1310,6 +1318,17 @@
         $('#informeForm').on('submit', function(e) {
             var submitBtn = $(this).find('button[type="submit"]');
             
+            // Sincronizar todos los inputs de evidencias con su acumulador DataTransfer
+            $('.file-input-evidencia').each(function() {
+                if (this._dt && this._dt.files) {
+                    try {
+                        this.files = this._dt.files;
+                    } catch(err) {
+                        console.error("Error sincronizando acumulador:", err);
+                    }
+                }
+            });
+            
             // Validar el tamaño de los archivos (Max 100MB por archivo y Max 450MB en total)
             let filesTooLarge = false;
             let largeFileNames = [];
@@ -1517,6 +1536,7 @@
                 var files = e.originalEvent.dataTransfer.files;
                 if (files.length > 0) {
                     $(this).prop('files', files);
+                    $(this).trigger('change');
                 }
             });
         });
