@@ -365,7 +365,7 @@ public class InformeSupervisionService {
             info.setPlanillaNumero((f.planillaNumero != null && !f.planillaNumero.trim().isEmpty()) ? f.planillaNumero : "N/A");
             info.setPlanillaPin((f.planillaPin != null && !f.planillaPin.trim().isEmpty()) ? f.planillaPin : "N/A");
             info.setPlanillaOperador((f.planillaOperador != null && !f.planillaOperador.trim().isEmpty()) ? f.planillaOperador : "N/A");
-            info.setPlanillaPeriodo((f.planillaPeriodo != null && !f.planillaPeriodo.trim().isEmpty()) ? f.planillaPeriodo : "N/A");
+            info.setPlanillaPeriodo("N/A");
             info.setPlanillaFechaPago(null);
             info.setPagoSeguridadSocial("N/A");
             if (f.observacionesFinancieras == null || f.observacionesFinancieras.trim().isEmpty()) {

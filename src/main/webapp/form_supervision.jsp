@@ -1893,7 +1893,7 @@
                         $('#planilla_fecha_pago').prop('required', false).val('');
                         $('#col_planilla_fecha_pago').hide();
 
-                        $('#planilla_periodo').prop('required', false);
+                        $('#planilla_periodo').prop('required', false).val('');
                         $('#col_planilla_periodo').hide();
 
                         $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo').each(function() {

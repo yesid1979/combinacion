@@ -174,7 +174,7 @@ public class SupervisionReportGenerator {
         reps.put("${PLANILLA_PIN}", info.getPlanillaPin() != null && !info.getPlanillaPin().trim().isEmpty() ? info.getPlanillaPin() : (esNuevo ? "N/A" : ""));
         reps.put("${PLANILLA_OPERADOR}", info.getPlanillaOperador() != null && !info.getPlanillaOperador().trim().isEmpty() ? info.getPlanillaOperador() : (esNuevo ? "N/A" : ""));
         reps.put("${PLANILLA_FECHA_PAGO}", (info.getPlanillaFechaPago() != null && !esNuevo) ? formatearFechaLarga(info.getPlanillaFechaPago()) : "N/A");
-        reps.put("${PLANILLA_PERIODO}", formatearPeriodo(info.getPlanillaPeriodo()));
+        reps.put("${PLANILLA_PERIODO}", (esNuevo || info.getPlanillaPeriodo() == null || info.getPlanillaPeriodo().trim().isEmpty() || "N/A".equalsIgnoreCase(info.getPlanillaPeriodo())) ? "N/A" : formatearPeriodo(info.getPlanillaPeriodo()));
         
         String concepto = info.getConceptoSupervisor();
         if (concepto == null || concepto.trim().isEmpty()) {
