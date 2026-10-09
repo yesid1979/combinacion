@@ -286,9 +286,9 @@ public class CuentaCobroGenerator {
             return partes[1] + " " + partes[0];
         }
         if (partes.length == 3) {
-            // Asumimos 2 nombres, 1 apellido (es más común, ej. Beatriz Eugenia Arenas)
-            // partes[0] = Nombre 1, partes[1] = Nombre 2, partes[2] = Apellido
-            return partes[2] + " " + partes[0] + " " + partes[1];
+            // En Colombia para 3 palabras lo estándar es 1 nombre y 2 apellidos (ej. Nicolas Veloz Garcia -> Veloz Garcia Nicolas)
+            // partes[0] = Nombre, partes[1] = Primer Apellido, partes[2] = Segundo Apellido
+            return partes[1] + " " + partes[2] + " " + partes[0];
         }
         if (partes.length == 4) {
             // Asumimos 2 nombres, 2 apellidos

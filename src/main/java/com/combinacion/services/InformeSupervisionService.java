@@ -1105,9 +1105,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
-            if (parts.length >= 3) {
+            if (parts.length >= 4) {
                 nombreCorto = parts[0] + " " + parts[2];
-            } else if (parts.length == 2) {
+            } else if (parts.length >= 2) {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
@@ -1418,9 +1418,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
-            if (parts.length >= 3) {
+            if (parts.length >= 4) {
                 nombreCorto = parts[0] + " " + parts[2];
-            } else if (parts.length == 2) {
+            } else if (parts.length >= 2) {
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
