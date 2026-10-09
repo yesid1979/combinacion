@@ -63,7 +63,49 @@ public class GoogleDriveService {
         return driveServiceInstance;
     }
 
+    private static final java.util.Map<String, String> FOLDER_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public interface DriveCallable<T> {
+        T call() throws Exception;
+    }
+
+    public static <T> T executeWithRetry(DriveCallable<T> callable) throws Exception {
+        int maxRetries = 3;
+        long waitTime = 1000;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return callable.call();
+            } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException ge) {
+                int code = ge.getStatusCode();
+                boolean isRateLimit = (code == 429 || code == 503 || code == 500)
+                        || (code == 403 && ge.getMessage() != null && (ge.getMessage().contains("rateLimit") || ge.getMessage().contains("userRateLimitExceeded") || ge.getMessage().contains("quotaExceeded")));
+                if (isRateLimit && attempt < maxRetries) {
+                    System.err.println("Google Drive API limit/error (" + code + "). Reintento " + attempt + "/" + maxRetries + " en " + waitTime + "ms...");
+                    Thread.sleep(waitTime);
+                    waitTime *= 2;
+                } else {
+                    throw ge;
+                }
+            } catch (java.io.IOException ioe) {
+                if (attempt < maxRetries) {
+                    System.err.println("Google Drive IO error: " + ioe.getMessage() + ". Reintento " + attempt + "/" + maxRetries + " en " + waitTime + "ms...");
+                    Thread.sleep(waitTime);
+                    waitTime *= 2;
+                } else {
+                    throw ioe;
+                }
+            }
+        }
+        return callable.call();
+    }
+
     public static String getOrCreateFolder(String folderName, String parentId) throws Exception {
+        String cacheKey = (parentId != null && !parentId.isEmpty() ? parentId : "root") + "::" + folderName;
+        String cachedId = FOLDER_CACHE.get(cacheKey);
+        if (cachedId != null && !cachedId.trim().isEmpty()) {
+            return cachedId;
+        }
+
         Drive driveService = getDriveService();
         String query = "mimeType='application/vnd.google-apps.folder' and name='" + folderName.replace("'", "\\'") + "' and trashed=false";
         if (parentId != null && !parentId.isEmpty()) {
@@ -72,14 +114,17 @@ public class GoogleDriveService {
             query += " and 'root' in parents";
         }
         
-        FileList result = driveService.files().list()
-                .setQ(query)
+        final String finalQuery = query;
+        FileList result = executeWithRetry(() -> driveService.files().list()
+                .setQ(finalQuery)
                 .setSpaces("drive")
                 .setFields("files(id, name)")
-                .execute();
+                .execute());
 
         if (result.getFiles() != null && !result.getFiles().isEmpty()) {
-            return result.getFiles().get(0).getId();
+            String folderId = result.getFiles().get(0).getId();
+            FOLDER_CACHE.put(cacheKey, folderId);
+            return folderId;
         }
 
         File fileMetadata = new File();
@@ -89,29 +134,38 @@ public class GoogleDriveService {
             fileMetadata.setParents(Collections.singletonList(parentId));
         }
 
-        File folder = driveService.files().create(fileMetadata).setFields("id").execute();
-        return folder.getId();
+        File folder = executeWithRetry(() -> driveService.files().create(fileMetadata).setFields("id").execute());
+        String folderId = folder.getId();
+        FOLDER_CACHE.put(cacheKey, folderId);
+        return folderId;
     }
 
     public static String uploadOrUpdateFile(java.io.File file, String fileName, String mimeType, String parentId) throws Exception {
         Drive driveService = getDriveService();
-        String query = "name='" + fileName.replace("'", "\\'") + "' and trashed=false";
+        String cleanQueryName = fileName.replace("\\", "\\\\").replace("'", "\\'");
+        String query = "name='" + cleanQueryName + "' and trashed=false";
         if (parentId != null && !parentId.isEmpty()) {
             query += " and '" + parentId + "' in parents";
         }
 
-        FileList result = driveService.files().list()
-                .setQ(query)
-                .setSpaces("drive")
-                .setFields("files(id, name)")
-                .execute();
+        FileList result = null;
+        try {
+            final String finalQuery = query;
+            result = executeWithRetry(() -> driveService.files().list()
+                    .setQ(finalQuery)
+                    .setSpaces("drive")
+                    .setFields("files(id, name)")
+                    .execute());
+        } catch (Exception qEx) {
+            System.err.println("Aviso Drive: No se pudo consultar archivo previo '" + fileName + "': " + qEx.getMessage());
+        }
 
         FileContent mediaContent = new FileContent(mimeType, file);
-        if (result.getFiles() != null && !result.getFiles().isEmpty()) {
+        if (result != null && result.getFiles() != null && !result.getFiles().isEmpty()) {
             // Existe con el mismo nombre, lo actualizamos
             String fileId = result.getFiles().get(0).getId();
             File updatedFile = new File();
-            File newFile = driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute();
+            File newFile = executeWithRetry(() -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
             return newFile.getId();
         } else {
             // No existe, lo creamos
@@ -120,7 +174,7 @@ public class GoogleDriveService {
             if (parentId != null && !parentId.isEmpty()) {
                 fileMetadata.setParents(Collections.singletonList(parentId));
             }
-            File newFile = driveService.files().create(fileMetadata, mediaContent).setFields("id").execute();
+            File newFile = executeWithRetry(() -> driveService.files().create(fileMetadata, mediaContent).setFields("id").execute());
             return newFile.getId();
         }
     }
@@ -168,35 +222,20 @@ public class GoogleDriveService {
     }
 
     public static String uploadStreamToDrive(java.io.InputStream in, long length, String fileName, String mimeType, String parentId) throws Exception {
-        Drive driveService = getDriveService();
-        String query = "name='" + fileName.replace("'", "\\'") + "' and trashed=false";
-        if (parentId != null && !parentId.isEmpty()) {
-            query += " and '" + parentId + "' in parents";
-        }
-
-        FileList result = driveService.files().list()
-                .setQ(query)
-                .setSpaces("drive")
-                .setFields("files(id, name)")
-                .execute();
-
-        InputStreamContent mediaContent = new InputStreamContent(mimeType, in);
-        mediaContent.setLength(length);
-        if (result.getFiles() != null && !result.getFiles().isEmpty()) {
-            // Existe, lo actualizamos
-            String fileId = result.getFiles().get(0).getId();
-            File updatedFile = new File();
-            File newFile = driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute();
-            return newFile.getId();
-        } else {
-            // No existe, lo creamos
-            File fileMetadata = new File();
-            fileMetadata.setName(fileName);
-            if (parentId != null && !parentId.isEmpty()) {
-                fileMetadata.setParents(Collections.singletonList(parentId));
+        java.io.File tempFile = java.io.File.createTempFile("gdrive_up_", ".tmp");
+        try {
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFile)) {
+                byte[] buf = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = in.read(buf)) != -1) {
+                    fos.write(buf, 0, bytesRead);
+                }
             }
-            File newFile = driveService.files().create(fileMetadata, mediaContent).setFields("id").execute();
-            return newFile.getId();
+            return uploadOrUpdateFile(tempFile, fileName, mimeType, parentId);
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
     }
 

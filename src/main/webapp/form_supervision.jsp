@@ -116,6 +116,8 @@
                         <input type="hidden" name="id" value="${informe.id}">
                     </c:if>
                     <input type="hidden" name="soportes_json" id="soportes_json" value="${fn:escapeXml(not empty informe.soportesJson ? informe.soportesJson : (not empty soportesJsonPreCargados ? soportesJsonPreCargados : '{}'))}">
+                    <input type="hidden" name="periodo_informe_fallback" value="${fn:escapeXml(informe.periodoInforme)}">
+                    <input type="hidden" name="numero_cuota_fallback" value="${fn:escapeXml(informe.numeroCuota)}">
 
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
@@ -934,9 +936,12 @@
             fileInput.multiple = true;
             
             var dropZone = document.createElement("div");
+            var filesListContainer = document.createElement("div");
+            filesListContainer.className = "mt-2 file-list-selected";
             
             if (isReadonly) {
                 dropZone.style.display = "none";
+                filesListContainer.style.display = "none";
             } else {
                 dropZone.className = "border rounded p-3 text-center transition-all dropzone-evidencia";
                 dropZone.style.border = "2px dashed #0d6efd";
@@ -945,43 +950,112 @@
                 dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                 
                 dropZone.onclick = function() {
+                    try { fileInput.value = ''; } catch(e) {}
                     fileInput.click();
                 };
                 
-                var actualizarTexto = function() {
-                    if(fileInput.files.length > 0) {
-                        var names = [];
-                        var totalBytes = 0;
-                        var hasOverlimit = false;
-                        for(var k=0; k<fileInput.files.length; k++) {
-                            var f = fileInput.files[k];
-                            var sizeMB = (f.size / (1024 * 1024)).toFixed(2);
-                            totalBytes += f.size;
-                            if (f.size > 100 * 1024 * 1024) {
-                                hasOverlimit = true;
-                                names.push('<span class="text-danger fw-bold">' + f.name + ' (' + sizeMB + ' MB - Excede 100MB)</span>');
-                            } else {
-                                names.push(f.name + ' (' + sizeMB + ' MB)');
-                            }
-                        }
-                        var totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
-                        if (hasOverlimit) {
-                            dropZone.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i><br><span class="text-danger fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s) (' + totalMB + ' MB)</span><br><small class="text-danger d-block mt-1" style="word-break: break-all;">' + names.join('<br>') + '</small>';
-                            dropZone.style.borderColor = "#dc3545";
-                            dropZone.style.backgroundColor = "#f8d7da";
-                        } else {
-                            dropZone.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i><br><span class="text-success fw-bold">' + fileInput.files.length + ' archivo(s) seleccionado(s) (' + totalMB + ' MB)</span><br><small class="text-muted d-block mt-1" style="word-break: break-all;">' + names.join(', ') + '</small>';
-                            dropZone.style.borderColor = "#198754";
-                            dropZone.style.backgroundColor = "#e8f5e9";
-                        }
-                    } else {
+                // Acumulador persistente de archivos (DataTransfer) para soportar múltiples tandas sin sobreescribir
+                var dt = new DataTransfer();
+                
+                var renderSelectedFiles = function() {
+                    filesListContainer.innerHTML = '';
+                    if (dt.files.length === 0) {
                         dropZone.innerHTML = '<i class="bi bi-cloud-arrow-up fs-3 text-primary"></i><br><span class="text-primary fw-semibold">Haz clic aquí o arrastra los archivos (puedes subir varios)</span>';
                         dropZone.style.borderColor = "#0d6efd";
                         dropZone.style.backgroundColor = "#f8f9fa";
+                        return;
+                    }
+                    
+                    var totalBytes = 0;
+                    var hasOverlimit = false;
+                    for (var k = 0; k < dt.files.length; k++) {
+                        totalBytes += dt.files[k].size;
+                        if (dt.files[k].size > 100 * 1024 * 1024) {
+                            hasOverlimit = true;
+                        }
+                    }
+                    var totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+                    
+                    if (hasOverlimit) {
+                        dropZone.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i><br><span class="text-danger fw-bold">' + dt.files.length + ' archivo(s) seleccionado(s) (' + totalMB + ' MB)</span><br><small class="text-danger">Uno o más archivos superan el límite de 100MB. Quítalos de la lista abajo.</small>';
+                        dropZone.style.borderColor = "#dc3545";
+                        dropZone.style.backgroundColor = "#f8d7da";
+                    } else {
+                        dropZone.innerHTML = '<i class="bi bi-check-circle-fill text-success fs-3"></i><br><span class="text-success fw-bold">' + dt.files.length + ' archivo(s) listo(s) (' + totalMB + ' MB)</span><br><small class="text-primary fw-semibold"><i class="bi bi-plus-circle"></i> Haz clic aquí o arrastra más archivos para seguir sumando</small>';
+                        dropZone.style.borderColor = "#198754";
+                        dropZone.style.backgroundColor = "#e8f5e9";
+                    }
+                    
+                    // Renderizar cada archivo seleccionado con botón para removerlo individualmente
+                    for (var i = 0; i < dt.files.length; i++) {
+                        (function(idx) {
+                            var file = dt.files[idx];
+                            var sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                            var isTooBig = file.size > 100 * 1024 * 1024;
+                            
+                            var item = document.createElement("div");
+                            item.className = "alert " + (isTooBig ? "alert-danger" : "alert-light border") + " py-1 px-2 my-1 d-flex justify-content-between align-items-center shadow-sm";
+                            item.style.fontSize = "0.85rem";
+                            
+                            var safeName = $('<div>').text(file.name).html();
+                            var textSpan = document.createElement("span");
+                            textSpan.className = "text-truncate me-2";
+                            textSpan.style.maxWidth = "85%";
+                            textSpan.innerHTML = '<i class="bi bi-file-earmark-check me-1 text-primary"></i> <b>' + safeName + '</b> <span class="text-muted">(' + (file.size > 1024 * 1024 ? sizeMB + ' MB' : (file.size / 1024).toFixed(1) + ' KB') + ')</span>' + (isTooBig ? ' <span class="badge bg-danger ms-1">Excede 100MB</span>' : '');
+                            
+                            var removeBtn = document.createElement("button");
+                            removeBtn.type = "button";
+                            removeBtn.className = "btn btn-sm btn-outline-danger py-0 px-2";
+                            removeBtn.title = "Quitar este archivo";
+                            removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+                            removeBtn.onclick = function(e) {
+                                e.stopPropagation();
+                                var newDt = new DataTransfer();
+                                for (var j = 0; j < dt.files.length; j++) {
+                                    if (j !== idx) {
+                                        newDt.items.add(dt.files[j]);
+                                    }
+                                }
+                                dt = newDt;
+                                try { fileInput.files = dt.files; } catch(err) {}
+                                renderSelectedFiles();
+                            };
+                            
+                            item.appendChild(textSpan);
+                            item.appendChild(removeBtn);
+                            filesListContainer.appendChild(item);
+                        })(i);
                     }
                 };
                 
-                fileInput.addEventListener('change', actualizarTexto);
+                var agregarNuevosArchivos = function(nuevosArchivos) {
+                    if (!nuevosArchivos || nuevosArchivos.length === 0) return;
+                    for (var k = 0; k < nuevosArchivos.length; k++) {
+                        var f = nuevosArchivos[k];
+                        var yaExiste = false;
+                        for (var j = 0; j < dt.files.length; j++) {
+                            if (dt.files[j].name === f.name && dt.files[j].size === f.size) {
+                                yaExiste = true;
+                                break;
+                            }
+                        }
+                        if (!yaExiste) {
+                            dt.items.add(f);
+                        }
+                    }
+                    try {
+                        fileInput.files = dt.files;
+                    } catch(err) {
+                        console.error("Error asignando files:", err);
+                    }
+                    renderSelectedFiles();
+                };
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        agregarNuevosArchivos(this.files);
+                    }
+                });
                 
                 dropZone.addEventListener('dragover', function(e) {
                     e.preventDefault();
@@ -992,7 +1066,7 @@
                 dropZone.addEventListener('dragleave', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if(fileInput.files.length === 0) {
+                    if(dt.files.length === 0) {
                         dropZone.style.backgroundColor = "#f8f9fa";
                     } else {
                         dropZone.style.backgroundColor = "#e8f5e9";
@@ -1002,15 +1076,15 @@
                 dropZone.addEventListener('drop', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                        fileInput.files = e.dataTransfer.files;
-                        actualizarTexto();
+                    if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        agregarNuevosArchivos(e.dataTransfer.files);
                     }
                 });
             }
             
             divFile.appendChild(fileLabel);
             divFile.appendChild(dropZone);
+            divFile.appendChild(filesListContainer);
             divFile.appendChild(fileInput);
             wrapper.appendChild(divFile);
             
@@ -1343,9 +1417,10 @@
             $('#informeForm').find('input[name="concepto_supervisor_json"]').remove();
             $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
             
-            // Eliminar los nombres de TODOS los inputs de tipo file que estén vacíos
+            // Eliminar los nombres de TODOS los inputs de tipo file que estén realmente vacíos
             $('input[type="file"]').each(function() {
-                if (!$(this).val() && (!this.files || this.files.length === 0)) {
+                var hasFiles = this.files && this.files.length > 0;
+                if (!$(this).val() && !hasFiles) {
                     $(this).removeAttr('name');
                 }
             });
@@ -1356,7 +1431,9 @@
                 $(this).val(clean);
             });
             
-            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+            setTimeout(function() {
+                submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+            }, 50);
             
             Swal.fire({
                 title: 'Guardando Informe...',

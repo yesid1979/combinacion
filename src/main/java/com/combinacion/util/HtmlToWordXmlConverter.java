@@ -278,7 +278,7 @@ public class HtmlToWordXmlConverter {
            .append("<w:bottom w:w=\"80\" w:type=\"dxa\"/>")
            .append("<w:right w:w=\"120\" w:type=\"dxa\"/>")
            .append("</w:tblCellMar>");
-        xml.append("<w:jc w:val=\"center\"/><w:tblLayout w:type=\"autofit\"/><w:tblW w:w=\"5000\" w:type=\"pct\"/>");
+        xml.append("<w:jc w:val=\"center\"/><w:tblW w:w=\"5000\" w:type=\"pct\"/><w:tblLayout w:type=\"fixed\"/>");
         xml.append("</w:tblPr>");
 
         // Calcular número de columnas teniendo en cuenta colspans
@@ -299,10 +299,13 @@ public class HtmlToWordXmlConverter {
         }
         if (maxCols == 0) maxCols = 1;
 
+        int containerWidthDxa = (maxImageWidth <= 320.0) ? 5800 : 9900;
+        int colWidthDxa = containerWidthDxa / maxCols;
+
         xml.append("<w:tblGrid>");
-        int colWidth = 10000 / maxCols;
         for (int i = 0; i < maxCols; i++) {
-            xml.append("<w:gridCol w:w=\"").append(colWidth).append("\"/>");
+            int w = (i == maxCols - 1) ? (containerWidthDxa - (colWidthDxa * (maxCols - 1))) : colWidthDxa;
+            xml.append("<w:gridCol w:w=\"").append(w).append("\"/>");
         }
         xml.append("</w:tblGrid>");
 
@@ -323,7 +326,10 @@ public class HtmlToWordXmlConverter {
 
                 String align = extractAlign(cell, isHeader ? "center" : "");
 
-                xml.append("<w:tc><w:tcPr><w:tcW w:w=\"0\" w:type=\"auto\"/>");
+                int cellPct = (5000 * span) / maxCols;
+                xml.append("<w:tc><w:tcPr>");
+                xml.append("<w:tcW w:w=\"").append(cellPct).append("\" w:type=\"pct\"/>");
+                xml.append("<w:noWrap w:val=\"0\"/>");
                 if (span > 1) {
                     xml.append("<w:gridSpan w:val=\"").append(span).append("\"/>");
                 }

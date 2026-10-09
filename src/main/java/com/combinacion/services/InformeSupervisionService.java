@@ -49,6 +49,10 @@ public class InformeSupervisionService {
     private static final Object INSERT_LOCK = new Object();
 
     public String insertar(InformeFormData form) {
+        return insertar(form, null);
+    }
+
+    public String insertar(InformeFormData form, InformeSupervision[] outCreated) {
         synchronized (INSERT_LOCK) {
             try {
                 if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
@@ -81,6 +85,9 @@ public class InformeSupervisionService {
             
             String daoResult = informeDAO.insertar(info);
             if (daoResult == null) {
+                if (outCreated != null && outCreated.length > 0) {
+                    outCreated[0] = info;
+                }
                 manejarNotificacionesCorreos(info, null);
                 return null; // Éxito
             } else {
@@ -1376,75 +1383,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             informe.setUrlDriveEvidencias(driveUrl);
             new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
-            // 5. Generar archivos localmente
-            String docxName;
-            String xlsxName;
-            String gestionName;
-            
-            if (esCuota1) {
-                docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
-                xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
-                gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
-            } else if (esCuotaAdicion) {
-                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-            } else {
-                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-            }
 
-            String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-            File docxFile = new File(docxPath);
-            
-            File xlsxFile = null;
-            File xlsxPdfFile = null;
-            String xlsxPdfName = null;
-            if (!tieneIva) {
-                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
-                xlsxFile = new File(xlsxPath);
-                if (xlsxFile.exists()) {
-                    String pdfPath = xlsxPath.replaceAll("(?i)\\.xlsx$", ".pdf");
-                    xlsxPdfFile = new File(pdfPath);
-                    com.combinacion.util.PdfGenerator.convertExcelToPdf(xlsxFile, xlsxPdfFile);
-                    xlsxPdfName = xlsxName.replaceAll("(?i)\\.xlsx$", ".pdf");
-                }
-            }
-            
-            String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-            File gestionFile = new File(gestionPath);
-            File gestionPdfFile = null;
-            String gestionPdfName = null;
-            if (gestionFile.exists()) {
-                String gestionPdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
-                gestionPdfFile = new File(gestionPdfPath);
-                com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
-                gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
-            }
-            
-            // 6. Subir archivos a Drive (Docs y Excel)
-            if (docxFile != null && docxFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
-            }
-            if (xlsxFile != null && xlsxFile.exists()) {
-                // Usar prefijo para detectar y eliminar versiones anteriores con diferente consecutivo (ej: XXXX -> 0233)
-                String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
-            }
-            if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
-                // Mismo prefijo para la versión PDF de la cuenta cobro
-                String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
-            }
-            if (gestionFile != null && gestionFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
-            }
-            if (gestionPdfFile != null && gestionPdfFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
-            }
-            
-            // 7. Subir todos los documentos soporte
+            // 2. Cargar soportes actuales
             org.json.JSONObject soportes = new org.json.JSONObject();
             if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                 try { 
@@ -1531,8 +1471,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
             
+            // 3. SUBIR ARCHIVOS ADJUNTOS EN EL FORMULARIO (Soportes y Evidencias) DE INMEDIATO
             java.io.File tempSegSoc = null;
-            
             System.out.println("Iniciando escaneo de partes (archivos adjuntos)...");
             for (Part part : request.getParts()) {
                 String submittedFileName = getFileName(part);
@@ -1593,11 +1533,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     
                     System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
                     String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";
-                    try (java.io.InputStream is = part.getInputStream()) {
+                    try {
                         String fileId;
                         if ("file_seguridad_social".equals(partName) && submittedFileName.toLowerCase().endsWith(".pdf")) {
                             tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
-                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                            try (java.io.InputStream is = part.getInputStream();
+                                 java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
                                 byte[] buf = new byte[8192];
                                 int bytesRead;
                                 while ((bytesRead = is.read(buf)) != -1) {
@@ -1606,7 +1547,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             }
                             fileId = com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(tempSegSoc, submittedFileName, mimeType, targetFolderId);
                         } else {
-                            fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                            try (java.io.InputStream is = part.getInputStream()) {
+                                fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                            }
                         }
                         
                         org.json.JSONObject fileData = new org.json.JSONObject();
@@ -1625,9 +1568,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             }
                             soportes.put(partName, fileData);
                         } else {
-                            // Para evidencias de actividades se permite acumular múltiples archivos,
-                            // pero si ya existe un archivo con el mismo ID o mismo nombre para esta actividad,
-                            // se actualiza la clave existente sin crear duplicados (_1, _2...)
+                            // Para evidencias de actividades se permite acumular múltiples archivos
                             String existingKey = null;
                             if (soportes.has(partName)) {
                                 org.json.JSONObject existingObj = soportes.optJSONObject(partName);
@@ -1659,46 +1600,122 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 soportes.put(soportesKey, fileData);
                             }
                         }
+                        
+                        // Pausa preventiva de 60ms para no saturar el burst rate limit de Google Drive API
+                        try { Thread.sleep(60); } catch (InterruptedException ignore) {}
                     } catch (Exception ex) {
                         System.err.println("Error subiendo archivo " + submittedFileName + ": " + ex.getMessage());
+                        ex.printStackTrace();
                     }
                 }
             }
+            // 4. GUARDAR INMEDIATAMENTE SOPORTES_JSON EN LA BASE DE DATOS PARA QUE NUNCA SE PIERDAN
             informe.setSoportesJson(soportes.toString());
             new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
-            
-            // Logica para merge si no subieron una nueva SS pero existe en JSON
-            if (tempSegSoc == null && soportes.has("file_seguridad_social")) {
-                org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
-                String fileId = ssObj.optString("id");
-                if (fileId != null && !fileId.isEmpty()) {
-                    try {
-                        java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId);
-                        tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
-                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
-                            byte[] buf = new byte[8192];
-                            int bytesRead;
-                            while ((bytesRead = is.read(buf)) != -1) {
-                                fos.write(buf, 0, bytesRead);
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        tempSegSoc = null;
+            System.out.println("Soportes y evidencias actualizados en base de datos con exito para informe ID " + informe.getId());
+
+            // 5. GENERAR Y SUBIR DOCUMENTOS EXCEL, WORD Y PDF (En bloque aislado para no afectar archivos de usuario)
+            try {
+                String docxName;
+                String xlsxName;
+                String gestionName;
+                
+                if (esCuota1) {
+                    docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
+                    xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
+                    gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
+                } else if (esCuotaAdicion) {
+                    docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                } else {
+                    docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                    xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                    gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                }
+
+                String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+                File docxFile = new File(docxPath);
+                
+                File xlsxFile = null;
+                File xlsxPdfFile = null;
+                String xlsxPdfName = null;
+                if (!tieneIva) {
+                    String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+                    xlsxFile = new File(xlsxPath);
+                    if (xlsxFile.exists()) {
+                        String pdfPath = xlsxPath.replaceAll("(?i)\\.xlsx$", ".pdf");
+                        xlsxPdfFile = new File(pdfPath);
+                        com.combinacion.util.PdfGenerator.convertExcelToPdf(xlsxFile, xlsxPdfFile);
+                        xlsxPdfName = xlsxName.replaceAll("(?i)\\.xlsx$", ".pdf");
                     }
                 }
-            }
-            
-            if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
-                String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
-                java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
-                if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
-                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                
+                String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+                File gestionFile = new File(gestionPath);
+                File gestionPdfFile = null;
+                String gestionPdfName = null;
+                if (gestionFile.exists()) {
+                    String gestionPdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
+                    gestionPdfFile = new File(gestionPdfPath);
+                    com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
+                    gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
                 }
-                mergedFile.delete();
-            }
-            if (tempSegSoc != null) {
-                tempSegSoc.delete();
+                
+                if (docxFile != null && docxFile.exists()) {
+                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+                }
+                if (xlsxFile != null && xlsxFile.exists()) {
+                    String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                    com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
+                }
+                if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
+                    String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                    com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
+                }
+                if (gestionFile != null && gestionFile.exists()) {
+                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+                }
+                if (gestionPdfFile != null && gestionPdfFile.exists()) {
+                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
+                }
+                
+                // Lógica para merge con SS
+                if (tempSegSoc == null && soportes.has("file_seguridad_social")) {
+                    org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
+                    String fileId = ssObj.optString("id");
+                    if (fileId != null && !fileId.isEmpty()) {
+                        try {
+                            java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId);
+                            tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                byte[] buf = new byte[8192];
+                                int bytesRead;
+                                while ((bytesRead = is.read(buf)) != -1) {
+                                    fos.write(buf, 0, bytesRead);
+                                }
+                            }
+                        } catch (Exception e) {
+                            tempSegSoc = null;
+                        }
+                    }
+                }
+                
+                if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
+                    String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                    java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
+                    if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
+                        com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                    }
+                    mergedFile.delete();
+                }
+            } catch (Exception docEx) {
+                System.err.println("Aviso generando reportes DOCX/XLSX/PDF en Drive: " + docEx.getMessage());
+                docEx.printStackTrace();
+            } finally {
+                if (tempSegSoc != null) {
+                    tempSegSoc.delete();
+                }
             }
             
             System.out.println("Subida a Drive completada con exito.");
@@ -1709,13 +1726,41 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     }
 
     public String getFileName(Part part) {
-        String contentDisp = part.getHeader("content-disposition");
-        if (contentDisp != null) {
-            for (String cd : contentDisp.split(";")) {
-                if (cd.trim().startsWith("filename")) {
-                    return cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+        String name = null;
+        try {
+            name = part.getSubmittedFileName();
+        } catch (Throwable ignore) {}
+        if (name == null || name.trim().isEmpty()) {
+            String contentDisp = part.getHeader("content-disposition");
+            if (contentDisp != null) {
+                for (String cd : contentDisp.split(";")) {
+                    if (cd.trim().startsWith("filename=")) {
+                        name = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+                        break;
+                    }
                 }
             }
+        }
+        if (name != null) {
+            int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+            if (slash >= 0) {
+                name = name.substring(slash + 1);
+            }
+            name = name.trim();
+            // Limpiar comillas, apóstrofes y saltos de línea que dañan nombres de archivo y consultas API
+            name = name.replace("\"", "").replace("'", "").replace("\r", "").replace("\n", "").trim();
+            
+            // Truncar de forma segura si supera 100 caracteres preservando la extensión
+            if (name.length() > 100) {
+                int dotIdx = name.lastIndexOf('.');
+                String ext = dotIdx > 0 ? name.substring(dotIdx) : "";
+                String base = dotIdx > 0 ? name.substring(0, dotIdx) : name;
+                if (base.length() > 90) {
+                    base = base.substring(0, 90).trim();
+                }
+                name = base + ext;
+            }
+            return name;
         }
         return null;
     }
@@ -1749,30 +1794,39 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     public void insertar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         InformeFormData form = construirFormData(request);
-        String error = this.insertar(form);
+        InformeSupervision[] createdHolder = new InformeSupervision[1];
+        String error = this.insertar(form, createdHolder);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioNuevo(request, response);
         } else {
-            // Procesar Drive después de guardar exitosamente
-            java.util.List<InformeSupervision> lista = this.listarPorContrato(form.contratoId);
-            if (lista != null && !lista.isEmpty()) {
-                InformeSupervision guardado = lista.get(0);
+            // Procesar Drive después de guardar exitosamente usando el ID recién creado garantizado
+            InformeSupervision guardado = createdHolder[0];
+            int informeId = (guardado != null && guardado.getId() != null) ? guardado.getId() : 0;
+            if (informeId <= 0) {
+                java.util.List<InformeSupervision> lista = this.listarPorContrato(form.contratoId);
+                if (lista != null && !lista.isEmpty()) {
+                    guardado = lista.get(0);
+                    informeId = guardado.getId();
+                }
+            }
+            
+            if (informeId > 0) {
                 com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
                 
                 // Auditoría
-                com.combinacion.dao.AuditoriaDAO.registrar(u, "Creación de Cuenta", "Se creó la cuenta de cobro ID " + guardado.getId() + " para el contrato " + form.contratoId, request.getRemoteAddr());
+                com.combinacion.dao.AuditoriaDAO.registrar(u, "Creación de Cuenta", "Se creó la cuenta de cobro ID " + informeId + " para el contrato " + form.contratoId, request.getRemoteAddr());
                 
-                if ("RADICADA".equals(guardado.getEstadoRadicacion())) {
+                if (guardado != null && "RADICADA".equals(guardado.getEstadoRadicacion())) {
                     com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
-                    hr.setIdInforme(guardado.getId());
+                    hr.setIdInforme(informeId);
                     hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
                     hr.setEstadoAnterior("BORRADOR");
                     hr.setEstadoNuevo("RADICADA");
                     hr.setObservaciones("Cuenta radicada por primera vez.");
                     new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
                 }
-                procesarArchivosDrive(guardado.getId(), request);
+                procesarArchivosDrive(informeId, request);
             }
             request.getSession().setAttribute("successMessage", "El informe de supervisión ha sido registrado correctamente.");
             response.sendRedirect("informes");
@@ -1816,19 +1870,41 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
     private InformeFormData construirFormData(HttpServletRequest r) {
         InformeFormData f = new InformeFormData();
+        int idParam = ParseUtils.parseInt(r.getParameter("id"));
+        InformeSupervision exist = null;
+        if (idParam > 0) {
+            exist = informeDAO.obtenerPorId(idParam);
+        }
+        
         f.contratoId = ParseUtils.parseInt(r.getParameter("contrato_id"));
-        if (f.contratoId <= 0) {
-            int idParam = ParseUtils.parseInt(r.getParameter("id"));
-            if (idParam > 0) {
-                InformeSupervision exist = informeDAO.obtenerPorId(idParam);
-                if (exist != null && exist.getContratoId() != null) {
-                    f.contratoId = exist.getContratoId();
-                }
+        if (f.contratoId <= 0 && exist != null && exist.getContratoId() != null) {
+            f.contratoId = exist.getContratoId();
+        }
+        
+        f.periodoInforme = r.getParameter("periodo_informe");
+        if ((f.periodoInforme == null || f.periodoInforme.trim().isEmpty())) {
+            String fallback = r.getParameter("periodo_informe_fallback");
+            if (fallback != null && !fallback.trim().isEmpty()) {
+                f.periodoInforme = fallback;
+            } else if (exist != null) {
+                f.periodoInforme = exist.getPeriodoInforme();
             }
         }
-        f.periodoInforme = r.getParameter("periodo_informe");
+        
         f.tipoInforme = r.getParameter("tipo_informe");
+        if ((f.tipoInforme == null || f.tipoInforme.trim().isEmpty()) && exist != null) {
+            f.tipoInforme = exist.getTipoInforme();
+        }
+        
         f.numeroCuota = r.getParameter("numero_cuota");
+        if ((f.numeroCuota == null || f.numeroCuota.trim().isEmpty())) {
+            String fallback = r.getParameter("numero_cuota_fallback");
+            if (fallback != null && !fallback.trim().isEmpty()) {
+                f.numeroCuota = fallback;
+            } else if (exist != null) {
+                f.numeroCuota = exist.getNumeroCuota();
+            }
+        }
         f.consecutivoCobro = r.getParameter("consecutivo_cobro");
         f.fechaInicioPeriodo = r.getParameter("fecha_inicio_periodo");
         f.fechaFinPeriodo = r.getParameter("fecha_fin_periodo");

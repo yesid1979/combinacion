@@ -39,12 +39,12 @@ public class InformeSupervisionDAO {
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
-                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio, soportes_json" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, info.getContratoId());
             ps.setString(2, info.getPeriodoInforme());
@@ -88,8 +88,15 @@ public class InformeSupervisionDAO {
             } else {
                 ps.setNull(34, Types.INTEGER);
             }
+            ps.setString(35, info.getSoportesJson());
 
-            if (ps.executeUpdate() > 0) {
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        info.setId(rs.getInt(1));
+                    }
+                }
                 return null;
             } else {
                 return "No se insertó ninguna fila.";

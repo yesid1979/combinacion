@@ -66,14 +66,24 @@ public class InformeSupervisionServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if ("insert".equals(action)) {
-            informeService.insertar(request, response);
-        } else if ("update".equals(action)) {
-            informeService.actualizar(request, response);
-        } else if ("data".equals(action)) {
-            informeService.devolverDatosDataTables(request, response);
-        } else {
-            informeService.listar(request, response);
+        try {
+            if ("insert".equals(action)) {
+                informeService.insertar(request, response);
+            } else if ("update".equals(action)) {
+                informeService.actualizar(request, response);
+            } else if ("data".equals(action)) {
+                informeService.devolverDatosDataTables(request, response);
+            } else {
+                informeService.listar(request, response);
+            }
+        } catch (ServletException | IOException ex) {
+            System.err.println("Error en doPost de InformeSupervisionServlet: " + ex.getMessage());
+            ex.printStackTrace();
+            throw ex;
+        } catch (Exception ex) {
+            System.err.println("Error inesperado en doPost de InformeSupervisionServlet: " + ex.getMessage());
+            ex.printStackTrace();
+            throw new ServletException(ex);
         }
     }
 }
