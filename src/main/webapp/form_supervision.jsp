@@ -308,15 +308,15 @@
                                     <p class="text-muted small mb-3">Indique las entidades a las cuales se encuentra formalmente afiliado el contratista para la acreditación de esta primera cuota:</p>
                                     <div class="row g-3">
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold">EPS a la que está afiliado <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-bold">EPS a la que está afiliado</label>
                                             <input type="text" class="form-control" name="eps" id="eps" value="${informe.eps}" placeholder="Ej: Sanitas, Sura, Nueva EPS, Compensar..." ${readonly ? 'readonly' : ''}>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold">Administradora de Pensión (AFP) <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-bold">Administradora de Pensión (AFP)</label>
                                             <input type="text" class="form-control" name="afp_pension" id="afp_pension" value="${informe.afpPension}" placeholder="Ej: Porvenir, Protección, Colpensiones, Skandia..." ${readonly ? 'readonly' : ''}>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label fw-bold">ARL a la que está afiliado <span class="text-danger">*</span></label>
+                                            <label class="form-label fw-bold">ARL a la que está afiliado</label>
                                             <input type="text" class="form-control" name="arl" id="arl" value="${informe.arl}" placeholder="Ej: Positiva, Sura, Seguros Bolívar, Axa Colpatria..." ${readonly ? 'readonly' : ''}>
                                         </div>
                                     </div>
@@ -327,23 +327,23 @@
                             <div id="container_campos_planilla">
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label">Número de Planilla <span class="text-danger req-planilla">*</span></label>
+                                        <label class="form-label">Número de Planilla</label>
                                         <input type="text" class="form-control" name="planilla_numero" id="planilla_numero" value="${informe.planillaNumero}" required ${readonly ? 'readonly' : ''}>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">PIN / Autorización / Referencia <span class="text-danger req-planilla">*</span></label>
+                                        <label class="form-label">PIN / Autorización / Referencia</label>
                                         <input type="text" class="form-control" name="planilla_pin" id="planilla_pin" value="${informe.planillaPin}" required ${readonly ? 'readonly' : ''}>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label">Operador <span class="text-danger req-planilla">*</span></label>
+                                        <label class="form-label">Operador</label>
                                         <input type="text" class="form-control" name="planilla_operador" id="planilla_operador" value="${informe.planillaOperador}" placeholder="Ej: Aportes en Línea" required ${readonly ? 'readonly' : ''}>
                                     </div>
                                     <div class="col-md-6" id="col_planilla_fecha_pago">
-                                        <label class="form-label">Fecha de Pago <span class="text-danger req-planilla">*</span></label>
+                                        <label class="form-label">Fecha de Pago</label>
                                         <input type="date" class="form-control" name="planilla_fecha_pago" id="planilla_fecha_pago" value="<fmt:formatDate value='${informe.planillaFechaPago}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                     </div>
                                     <div class="col-md-6" id="col_planilla_periodo">
-                                        <label class="form-label">Periodo de Pago <span class="text-danger req-planilla">*</span></label>
+                                        <label class="form-label">Periodo de Pago</label>
                                         <input type="month" class="form-control" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}" required ${readonly ? 'readonly' : ''}>
                                     </div>
                                 </div>
@@ -1869,9 +1869,14 @@
                     if (esNuevoActivo) {
                         // Mostrar campos de afiliación
                         $('#container_afiliaciones_nuevo').slideDown(200);
-                        $('#eps, #afp_pension, #arl').prop('required', true);
+                        $('#eps, #afp_pension, #arl').prop('required', true).each(function() {
+                            var lbl = $(this).closest('div').find('.form-label');
+                            if (lbl.find('.req-asterisk').length === 0) {
+                                lbl.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
+                            }
+                        });
 
-                        // En campos de planilla: poner N/A y readonly
+                        // En campos de planilla: poner N/A, readonly y quitar required/asteriscos
                         if (!$('#planilla_numero').val() || $('#planilla_numero').val() === '') {
                             $('#planilla_numero').val('N/A');
                         }
@@ -1882,7 +1887,7 @@
                             $('#planilla_operador').val('N/A');
                         }
                         
-                        $('#planilla_numero, #planilla_pin, #planilla_operador').attr('readonly', true);
+                        $('#planilla_numero, #planilla_pin, #planilla_operador').attr('readonly', true).prop('required', false);
 
                         // Fecha de pago y Periodo de pago: no aplican
                         $('#planilla_fecha_pago').prop('required', false).val('');
@@ -1891,13 +1896,20 @@
                         $('#planilla_periodo').prop('required', false);
                         $('#col_planilla_periodo').hide();
 
-                        $('.req-planilla').hide();
+                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo').each(function() {
+                            var lbl = $(this).closest('div').find('.form-label');
+                            lbl.find('.req-asterisk').remove();
+                        });
+
                         $('#container_pago_seguridad').hide();
                         $('#pago_seguridad_social').prop('required', false);
                     } else {
-                        // Ocultar campos de afiliación
+                        // Ocultar campos de afiliación y quitar asteriscos
                         $('#container_afiliaciones_nuevo').slideUp(200);
-                        $('#eps, #afp_pension, #arl').prop('required', false);
+                        $('#eps, #afp_pension, #arl').prop('required', false).each(function() {
+                            var lbl = $(this).closest('div').find('.form-label');
+                            lbl.find('.req-asterisk').remove();
+                        });
 
                         // Restaurar campos de planilla
                         if (!esReadonlyGeneral) {
@@ -1908,12 +1920,14 @@
                         }
 
                         $('#col_planilla_fecha_pago').show();
-                        $('#planilla_fecha_pago').prop('required', true);
-
                         $('#col_planilla_periodo').show();
-                        $('#planilla_periodo').prop('required', true);
 
-                        $('.req-planilla').show();
+                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo').prop('required', true).each(function() {
+                            var lbl = $(this).closest('div').find('.form-label');
+                            if (lbl.find('.req-asterisk').length === 0) {
+                                lbl.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
+                            }
+                        });
                         
                         if (typeof togglePagoSeguridadSocial === 'function') {
                             togglePagoSeguridadSocial();
