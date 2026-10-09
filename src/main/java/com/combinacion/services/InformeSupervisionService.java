@@ -368,6 +368,12 @@ public class InformeSupervisionService {
             info.setPlanillaPeriodo((f.planillaPeriodo != null && !f.planillaPeriodo.trim().isEmpty()) ? f.planillaPeriodo : "N/A");
             info.setPlanillaFechaPago(null);
             info.setPagoSeguridadSocial("N/A");
+            if (f.observacionesFinancieras == null || f.observacionesFinancieras.trim().isEmpty()) {
+                String epsTxt = (f.eps != null && !f.eps.trim().isEmpty()) ? f.eps.trim() : "EPS";
+                String afpTxt = (f.afpPension != null && !f.afpPension.trim().isEmpty()) ? f.afpPension.trim() : "FONDO DE PENSIÓN";
+                String arlTxt = (f.arl != null && !f.arl.trim().isEmpty()) ? f.arl.trim() : "ARL";
+                f.observacionesFinancieras = "El contratista aporta certificado de afiliación a salud – " + epsTxt + ", Fondo de pensión – " + afpTxt + ", y ARL - " + arlTxt + ", soporte válido para la presentación de la primera cuota del presente contrato";
+            }
         } else {
             info.setPlanillaNumero(f.planillaNumero);
             info.setPlanillaPin(f.planillaPin);

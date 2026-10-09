@@ -271,7 +271,7 @@
                             <div class="row mt-3">
                                 <div class="col-md-12">
                                     <label class="form-label">Observaciones al informe financiero y contable</label>
-                                    <textarea class="form-control" name="observaciones_financieras" rows="2" placeholder="Observaciones adicionales..." ${readonly ? 'readonly' : ''}>${empty informe.observacionesFinancieras ? '' : informe.observacionesFinancieras}</textarea>
+                                    <textarea class="form-control" name="observaciones_financieras" id="observaciones_financieras" rows="2" placeholder="Observaciones adicionales..." ${readonly ? 'readonly' : ''}>${empty informe.observacionesFinancieras ? '' : informe.observacionesFinancieras}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -1935,16 +1935,52 @@
                     }
                 }
 
+                function actualizarTextoObservacionesNuevo() {
+                    if (esReadonlyGeneral) return;
+                    var cuota = parseInt($('[name="numero_cuota"]').val());
+                    var checkNuevo = $('#check_contratista_nuevo');
+                    var esNuevoActivo = (cuota === 1 && checkNuevo.is(':checked'));
+                    var $obs = $('#observaciones_financieras');
+
+                    if (esNuevoActivo) {
+                        var eps = ($('#eps').val() || '').trim();
+                        var afp = ($('#afp_pension').val() || '').trim();
+                        var arl = ($('#arl').val() || '').trim();
+
+                        var epsTxt = eps ? eps : 'EPS';
+                        var afpTxt = afp ? afp : 'FONDO DE PENSIÓN';
+                        var arlTxt = arl ? arl : 'ARL';
+
+                        var textoNuevo = "El contratista aporta certificado de afiliación a salud – " + epsTxt + ", Fondo de pensión – " + afpTxt + ", y ARL - " + arlTxt + ", soporte válido para la presentación de la primera cuota del presente contrato";
+                        
+                        var valActual = $obs.val().trim();
+                        if (!valActual || valActual.startsWith("El contratista aporta certificado de afiliación a salud")) {
+                            $obs.val(textoNuevo);
+                        }
+                    } else {
+                        if ($obs.val().trim().startsWith("El contratista aporta certificado de afiliación a salud")) {
+                            $obs.val('');
+                        }
+                    }
+                }
+
                 $('#check_contratista_nuevo').on('change', function() {
                     actualizarEstadoContratistaNuevo();
+                    actualizarTextoObservacionesNuevo();
+                });
+
+                $('#eps, #afp_pension, #arl').on('input change', function() {
+                    actualizarTextoObservacionesNuevo();
                 });
                 
                 $('[name="numero_cuota"]').on('change keyup', function() {
                     actualizarAsteriscosCuota();
                     actualizarEstadoContratistaNuevo();
+                    actualizarTextoObservacionesNuevo();
                 });
                 actualizarAsteriscosCuota();
                 actualizarEstadoContratistaNuevo();
+                actualizarTextoObservacionesNuevo();
             });
 
             // Función para modal de Revisión
