@@ -39,8 +39,9 @@ public class InformeSupervisionDAO {
                 "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
-                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio, soportes_json" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio, soportes_json, " +
+                "eps, afp_pension, arl, es_contratista_nuevo" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -89,6 +90,10 @@ public class InformeSupervisionDAO {
                 ps.setNull(34, Types.INTEGER);
             }
             ps.setString(35, info.getSoportesJson());
+            ps.setString(36, info.getEps());
+            ps.setString(37, info.getAfpPension());
+            ps.setString(38, info.getArl());
+            ps.setString(39, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -221,6 +226,10 @@ public class InformeSupervisionDAO {
         info.setPlanillaFechaPago(rs.getDate("planilla_fecha_pago"));
         info.setPlanillaPeriodo(rs.getString("planilla_periodo"));
         try { info.setPagoSeguridadSocial(rs.getString("pago_seguridad_social")); } catch(SQLException ignore) {}
+        try { info.setEps(rs.getString("eps")); } catch(SQLException ignore) {}
+        try { info.setAfpPension(rs.getString("afp_pension")); } catch(SQLException ignore) {}
+        try { info.setArl(rs.getString("arl")); } catch(SQLException ignore) {}
+        try { info.setEsContratistaNuevo(rs.getString("es_contratista_nuevo")); } catch(SQLException ignore) {}
         info.setConceptoSupervisor(rs.getString("concepto_supervisor"));
         try { info.setObservacionesFinancieras(rs.getString("observaciones_financieras")); } catch(SQLException ignore) {}
         info.setObservacionesTecnicas(rs.getString("observaciones_tecnicas"));
@@ -270,7 +279,8 @@ public class InformeSupervisionDAO {
                 "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
-                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ?, soportes_json = ? " +
+                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ?, soportes_json = ?, " +
+                "eps = ?, afp_pension = ?, arl = ?, es_contratista_nuevo = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -318,7 +328,11 @@ public class InformeSupervisionDAO {
                 ps.setNull(33, Types.INTEGER);
             }
             ps.setString(34, info.getSoportesJson());
-            ps.setInt(35, info.getId());
+            ps.setString(35, info.getEps());
+            ps.setString(36, info.getAfpPension());
+            ps.setString(37, info.getArl());
+            ps.setString(38, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
+            ps.setInt(39, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -429,6 +443,10 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN observaciones_financieras TEXT"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN pago_seguridad_social VARCHAR(50)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN anio INTEGER"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN eps VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN afp_pension VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN arl VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN es_contratista_nuevo VARCHAR(10) DEFAULT 'NO'"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

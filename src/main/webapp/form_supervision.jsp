@@ -182,7 +182,7 @@
                                     <c:choose>
                                         <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
                                             <c:set var="totalCuotas" value="${contrato.numCuotasNumero + contrato.numeroCuotasAdicion}" />
-                                            <select class="form-select" name="numero_cuota" required>
+                                            <select class="form-select" name="numero_cuota" id="numero_cuota" required>
                                                 <option value="" disabled ${empty informe.numeroCuota && empty siguienteCuota ? 'selected' : ''}>Seleccione...</option>
                                                 <c:forEach var="i" begin="1" end="${totalCuotas}">
                                                     <option value="${i}" ${(not empty informe.numeroCuota && informe.numeroCuota == i) || (empty informe.id && siguienteCuota == i) ? 'selected' : ''}>Cuota ${i}</option>
@@ -190,7 +190,7 @@
                                             </select>
                                         </c:when>
                                         <c:otherwise>
-                                            <input type="text" class="form-control" name="numero_cuota" value="${informe.numeroCuota}" placeholder="Ej: 1" required ${readonly ? 'readonly' : ''}>
+                                            <input type="text" class="form-control" name="numero_cuota" id="numero_cuota" value="${informe.numeroCuota}" placeholder="Ej: 1" required ${readonly ? 'readonly' : ''}>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -279,26 +279,73 @@
                         <!-- Tab 4: Seguridad Social -->
                         <div class="tab-pane fade" id="seguridad" role="tabpanel">
                             <div class="section-title">Información del Pago de Seguridad Social</div>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Número de Planilla</label>
-                                    <input type="text" class="form-control" name="planilla_numero" value="${informe.planillaNumero}" required ${readonly ? 'readonly' : ''}>
+
+                            <!-- Alerta / Switch para Contratista Nuevo (Aplica sólo cuando cuota es 1) -->
+                            <div class="row mb-3" id="container_contratista_nuevo" style="display: none;">
+                                <div class="col-md-12">
+                                    <div class="card border-primary border-opacity-25 bg-light p-3">
+                                        <div class="form-check form-switch fs-6 mb-1">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="check_contratista_nuevo" name="es_contratista_nuevo" value="SI"
+                                                   ${informe.esContratistaNuevo == 'SI' ? 'checked' : ''} ${readonly ? 'disabled' : ''}>
+                                            <label class="form-check-label fw-bold text-primary" for="check_contratista_nuevo">
+                                                <i class="bi bi-person-check-fill me-1"></i> ¿Es contratista nuevo? (Primera cuota - Acredita afiliaciones sin pago de planilla previa)
+                                            </label>
+                                        </div>
+                                        <small class="text-muted ps-4">
+                                            Aplica únicamente para la <strong>Cuota 1</strong>. Al activar esta opción, los campos de pago de planilla quedarán automáticamente en <strong>N/A</strong> y se habilitará el registro de las entidades de afiliación (EPS, Administradora de Pensión y ARL).
+                                        </small>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">PIN / Autorización / Referencia</label>
-                                    <input type="text" class="form-control" name="planilla_pin" value="${informe.planillaPin}" required ${readonly ? 'readonly' : ''}>
+                            </div>
+
+                            <!-- Bloque de Afiliaciones (EPS, AFP Pensión, ARL) para Contratista Nuevo -->
+                            <div id="container_afiliaciones_nuevo" class="mb-3" style="display: none;">
+                                <div class="card border-info bg-white shadow-sm p-3">
+                                    <div class="d-flex align-items-center mb-2 text-info">
+                                        <i class="bi bi-shield-check fs-5 me-2"></i>
+                                        <span class="fw-bold fs-6">Entidades de Afiliación a Seguridad Social (Contratista Nuevo)</span>
+                                    </div>
+                                    <p class="text-muted small mb-3">Indique las entidades a las cuales se encuentra formalmente afiliado el contratista para la acreditación de esta primera cuota:</p>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">EPS a la que está afiliado <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="eps" id="eps" value="${informe.eps}" placeholder="Ej: Sanitas, Sura, Nueva EPS, Compensar..." ${readonly ? 'readonly' : ''}>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Administradora de Pensión (AFP) <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="afp_pension" id="afp_pension" value="${informe.afpPension}" placeholder="Ej: Porvenir, Protección, Colpensiones, Skandia..." ${readonly ? 'readonly' : ''}>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">ARL a la que está afiliado <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="arl" id="arl" value="${informe.arl}" placeholder="Ej: Positiva, Sura, Seguros Bolívar, Axa Colpatria..." ${readonly ? 'readonly' : ''}>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Operador</label>
-                                    <input type="text" class="form-control" name="planilla_operador" value="${informe.planillaOperador}" placeholder="Ej: Aportes en Línea" required ${readonly ? 'readonly' : ''}>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Fecha de Pago</label>
-                                    <input type="date" class="form-control" name="planilla_fecha_pago" value="<fmt:formatDate value='${informe.planillaFechaPago}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Periodo de Pago</label>
-                                    <input type="month" class="form-control" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}" required ${readonly ? 'readonly' : ''}>
+                            </div>
+
+                            <!-- Campos tradicionales de Planilla de Seguridad Social -->
+                            <div id="container_campos_planilla">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Número de Planilla <span class="text-danger req-planilla">*</span></label>
+                                        <input type="text" class="form-control" name="planilla_numero" id="planilla_numero" value="${informe.planillaNumero}" required ${readonly ? 'readonly' : ''}>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">PIN / Autorización / Referencia <span class="text-danger req-planilla">*</span></label>
+                                        <input type="text" class="form-control" name="planilla_pin" id="planilla_pin" value="${informe.planillaPin}" required ${readonly ? 'readonly' : ''}>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Operador <span class="text-danger req-planilla">*</span></label>
+                                        <input type="text" class="form-control" name="planilla_operador" id="planilla_operador" value="${informe.planillaOperador}" placeholder="Ej: Aportes en Línea" required ${readonly ? 'readonly' : ''}>
+                                    </div>
+                                    <div class="col-md-6" id="col_planilla_fecha_pago">
+                                        <label class="form-label">Fecha de Pago <span class="text-danger req-planilla">*</span></label>
+                                        <input type="date" class="form-control" name="planilla_fecha_pago" id="planilla_fecha_pago" value="<fmt:formatDate value='${informe.planillaFechaPago}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
+                                    </div>
+                                    <div class="col-md-6" id="col_planilla_periodo">
+                                        <label class="form-label">Periodo de Pago <span class="text-danger req-planilla">*</span></label>
+                                        <input type="month" class="form-control" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}" required ${readonly ? 'readonly' : ''}>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row mt-3" id="container_pago_seguridad" style="display: none;">
@@ -1797,11 +1844,93 @@
                         $('.ast-cuota-1').hide();
                     }
                 }
+
+                // ========================================================
+                // LOGICA: CONTRATISTA NUEVO (CUOTA 1 - SEGURIDAD SOCIAL)
+                // ========================================================
+                var esReadonlyGeneral = ${readonly ? 'true' : 'false'};
+
+                function actualizarEstadoContratistaNuevo() {
+                    var cuotaVal = $('[name="numero_cuota"]').val();
+                    var cuota = parseInt(cuotaVal);
+                    var checkNuevo = $('#check_contratista_nuevo');
+
+                    if (cuota === 1) {
+                        $('#container_contratista_nuevo').show();
+                    } else {
+                        $('#container_contratista_nuevo').hide();
+                        if (checkNuevo.is(':checked') && !esReadonlyGeneral) {
+                            checkNuevo.prop('checked', false);
+                        }
+                    }
+
+                    var esNuevoActivo = (cuota === 1 && checkNuevo.is(':checked'));
+
+                    if (esNuevoActivo) {
+                        // Mostrar campos de afiliación
+                        $('#container_afiliaciones_nuevo').slideDown(200);
+                        $('#eps, #afp_pension, #arl').prop('required', true);
+
+                        // En campos de planilla: poner N/A y readonly
+                        if (!$('#planilla_numero').val() || $('#planilla_numero').val() === '') {
+                            $('#planilla_numero').val('N/A');
+                        }
+                        if (!$('#planilla_pin').val() || $('#planilla_pin').val() === '') {
+                            $('#planilla_pin').val('N/A');
+                        }
+                        if (!$('#planilla_operador').val() || $('#planilla_operador').val() === '') {
+                            $('#planilla_operador').val('N/A');
+                        }
+                        
+                        $('#planilla_numero, #planilla_pin, #planilla_operador').attr('readonly', true);
+
+                        // Fecha de pago y Periodo de pago: no aplican
+                        $('#planilla_fecha_pago').prop('required', false).val('');
+                        $('#col_planilla_fecha_pago').hide();
+
+                        $('#planilla_periodo').prop('required', false);
+                        $('#col_planilla_periodo').hide();
+
+                        $('.req-planilla').hide();
+                        $('#container_pago_seguridad').hide();
+                        $('#pago_seguridad_social').prop('required', false);
+                    } else {
+                        // Ocultar campos de afiliación
+                        $('#container_afiliaciones_nuevo').slideUp(200);
+                        $('#eps, #afp_pension, #arl').prop('required', false);
+
+                        // Restaurar campos de planilla
+                        if (!esReadonlyGeneral) {
+                            $('#planilla_numero, #planilla_pin, #planilla_operador').removeAttr('readonly');
+                            if ($('#planilla_numero').val() === 'N/A') $('#planilla_numero').val('');
+                            if ($('#planilla_pin').val() === 'N/A') $('#planilla_pin').val('');
+                            if ($('#planilla_operador').val() === 'N/A') $('#planilla_operador').val('');
+                        }
+
+                        $('#col_planilla_fecha_pago').show();
+                        $('#planilla_fecha_pago').prop('required', true);
+
+                        $('#col_planilla_periodo').show();
+                        $('#planilla_periodo').prop('required', true);
+
+                        $('.req-planilla').show();
+                        
+                        if (typeof togglePagoSeguridadSocial === 'function') {
+                            togglePagoSeguridadSocial();
+                        }
+                    }
+                }
+
+                $('#check_contratista_nuevo').on('change', function() {
+                    actualizarEstadoContratistaNuevo();
+                });
                 
                 $('[name="numero_cuota"]').on('change keyup', function() {
                     actualizarAsteriscosCuota();
+                    actualizarEstadoContratistaNuevo();
                 });
                 actualizarAsteriscosCuota();
+                actualizarEstadoContratistaNuevo();
             });
 
             // Función para modal de Revisión
@@ -1998,11 +2127,11 @@
                         if (!formHasChanges) return; // Solo guardar si realmente modificaron algo en esta sesión
                         
                         var formData = {};
-                        // Guardar inputs normales (text, number, date, etc) y selects
+                        // Guardar inputs normales (text, number, date, checkbox, etc) y selects
                         $('#informeForm').find('input:not([type="file"]):not([type="hidden"]), select, textarea:not(.summernote-editor)').each(function() {
                             var name = $(this).attr('name');
                             if (name) {
-                                formData[name] = $(this).val();
+                                formData[name] = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val();
                             }
                         });
                         // Guardar Summernote
@@ -2056,7 +2185,11 @@
                                             $('#informeForm').find('input:not([type="file"]):not([type="hidden"]), select, textarea:not(.summernote-editor)').each(function() {
                                                 var name = $(this).attr('name');
                                                 if (name && d[name] !== undefined && d[name] !== null) {
-                                                    $(this).val(d[name]);
+                                                    if ($(this).is(':checkbox')) {
+                                                        $(this).prop('checked', !!d[name]).trigger('change');
+                                                    } else {
+                                                        $(this).val(d[name]);
+                                                    }
                                                 }
                                             });
                                             // Restaurar Summernotes

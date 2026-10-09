@@ -355,12 +355,27 @@ public class InformeSupervisionService {
         info.setValorAccumuladoPagado(ParseUtils.parseBigDecimal(f.valorAccumuladoPagado));
         info.setSaldoPorCancelar(ParseUtils.parseBigDecimal(f.saldoPorCancelar));
         
-        info.setPlanillaNumero(f.planillaNumero);
-        info.setPlanillaPin(f.planillaPin);
-        info.setPlanillaOperador(f.planillaOperador);
-        info.setPlanillaFechaPago(ParseUtils.parseDate(f.planillaFechaPago));
-        info.setPlanillaPeriodo(f.planillaPeriodo);
-        info.setPagoSeguridadSocial(f.pagoSeguridadSocial);
+        boolean esNuevo = "SI".equalsIgnoreCase(f.esContratistaNuevo) || "true".equalsIgnoreCase(f.esContratistaNuevo) || "on".equalsIgnoreCase(f.esContratistaNuevo);
+        info.setEsContratistaNuevo(esNuevo ? "SI" : "NO");
+        info.setEps(f.eps);
+        info.setAfpPension(f.afpPension);
+        info.setArl(f.arl);
+        
+        if (esNuevo) {
+            info.setPlanillaNumero((f.planillaNumero != null && !f.planillaNumero.trim().isEmpty()) ? f.planillaNumero : "N/A");
+            info.setPlanillaPin((f.planillaPin != null && !f.planillaPin.trim().isEmpty()) ? f.planillaPin : "N/A");
+            info.setPlanillaOperador((f.planillaOperador != null && !f.planillaOperador.trim().isEmpty()) ? f.planillaOperador : "N/A");
+            info.setPlanillaPeriodo((f.planillaPeriodo != null && !f.planillaPeriodo.trim().isEmpty()) ? f.planillaPeriodo : "N/A");
+            info.setPlanillaFechaPago(null);
+            info.setPagoSeguridadSocial("N/A");
+        } else {
+            info.setPlanillaNumero(f.planillaNumero);
+            info.setPlanillaPin(f.planillaPin);
+            info.setPlanillaOperador(f.planillaOperador);
+            info.setPlanillaFechaPago(ParseUtils.parseDate(f.planillaFechaPago));
+            info.setPlanillaPeriodo(f.planillaPeriodo);
+            info.setPagoSeguridadSocial(f.pagoSeguridadSocial);
+        }
         
         info.setConceptoSupervisor(f.conceptoSupervisor);
         info.setObservacionesFinancieras(f.observacionesFinancieras);
@@ -462,6 +477,10 @@ public class InformeSupervisionService {
         public String planillaFechaPago;
         public String planillaPeriodo;
         public String pagoSeguridadSocial;
+        public String eps;
+        public String afpPension;
+        public String arl;
+        public String esContratistaNuevo;
         public String conceptoSupervisor;
         public String observacionesFinancieras;
         public String observacionesTecnicas;
@@ -2030,6 +2049,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.planillaFechaPago = r.getParameter("planilla_fecha_pago");
         f.planillaPeriodo = r.getParameter("planilla_periodo");
         f.pagoSeguridadSocial = r.getParameter("pago_seguridad_social");
+        f.eps = r.getParameter("eps");
+        f.afpPension = r.getParameter("afp_pension");
+        f.arl = r.getParameter("arl");
+        f.esContratistaNuevo = r.getParameter("es_contratista_nuevo");
         
         String conceptoJson = r.getParameter("concepto_supervisor_json");
         if (conceptoJson != null && !conceptoJson.isEmpty()) {

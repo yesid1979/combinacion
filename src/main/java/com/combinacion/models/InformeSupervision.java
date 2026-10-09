@@ -40,6 +40,10 @@ public class InformeSupervision implements Serializable {
     private Date planillaFechaPago;
     private String planillaPeriodo;
     private String pagoSeguridadSocial;
+    private String eps;
+    private String afpPension;
+    private String arl;
+    private String esContratistaNuevo;
     
     // Informe Técnico
     private String observacionesTecnicas;
@@ -153,6 +157,18 @@ public class InformeSupervision implements Serializable {
     
     public String getPagoSeguridadSocial() { return pagoSeguridadSocial; }
     public void setPagoSeguridadSocial(String pagoSeguridadSocial) { this.pagoSeguridadSocial = pagoSeguridadSocial; }
+
+    public String getEps() { return eps; }
+    public void setEps(String eps) { this.eps = eps; }
+
+    public String getAfpPension() { return afpPension; }
+    public void setAfpPension(String afpPension) { this.afpPension = afpPension; }
+
+    public String getArl() { return arl; }
+    public void setArl(String arl) { this.arl = arl; }
+
+    public String getEsContratistaNuevo() { return esContratistaNuevo; }
+    public void setEsContratistaNuevo(String esContratistaNuevo) { this.esContratistaNuevo = esContratistaNuevo; }
 
     public String getObservacionesTecnicas() { return observacionesTecnicas; }
     public void setObservacionesTecnicas(String observacionesTecnicas) { this.observacionesTecnicas = observacionesTecnicas; }

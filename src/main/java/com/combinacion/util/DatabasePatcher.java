@@ -97,6 +97,25 @@ public class DatabasePatcher {
                 }
             }
 
+            // --- NUEVOS CAMPOS PARA CONTRATISTA NUEVO EN INFORMES_SUPERVISION ---
+            String[] columnasSeguridadNuevo = {
+                "eps VARCHAR(150)",
+                "afp_pension VARCHAR(150)",
+                "arl VARCHAR(150)",
+                "es_contratista_nuevo VARCHAR(10) DEFAULT 'NO'"
+            };
+            for (String colInfo : columnasSeguridadNuevo) {
+                String colName = colInfo.split(" ")[0];
+                ResultSet rsS = stmt.executeQuery(
+                        "SELECT column_name FROM information_schema.columns " +
+                        "WHERE table_name='informes_supervision' AND column_name='" + colName + "'");
+                if (!rsS.next()) {
+                    System.out.println("⚠️ Columna '" + colName + "' no encontrada en informes_supervision. Agregándola...");
+                    stmt.executeUpdate("ALTER TABLE informes_supervision ADD COLUMN " + colInfo);
+                    System.out.println("✅ Columna '" + colName + "' agregada.");
+                }
+            }
+
             // Verificar tabla usuario_permisos
             ResultSet rs2 = stmt.executeQuery(
                     "SELECT 1 FROM information_schema.tables WHERE table_name='usuario_permisos'");
