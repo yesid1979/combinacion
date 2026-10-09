@@ -211,4 +211,8 @@ public class Contrato {
     public void setNumeroModificacion(String numeroModificacion) { this.numeroModificacion = numeroModificacion; }
     public Date getFechaModificacion() { return fechaModificacion; }
     public void setFechaModificacion(Date fechaModificacion) { this.fechaModificacion = fechaModificacion; }
+
+    private String facturadorElectronico;
+    public String getFacturadorElectronico() { return facturadorElectronico; }
+    public void setFacturadorElectronico(String facturadorElectronico) { this.facturadorElectronico = facturadorElectronico; }
 }

@@ -754,6 +754,7 @@ public void generarDocumentoIndividual(HttpServletRequest request, HttpServletRe
 
         // Nuevos campos: Adición y SECOP
         replacements.put("{{IVA_SI_NO}}", contrato.getIvaSiNo() != null ? contrato.getIvaSiNo() : "");
+        replacements.put("{{FACTURADOR_ELECTRONICO}}", contrato.getFacturadorElectronico() != null ? contrato.getFacturadorElectronico() : "");
         replacements.put("{{ADICION_SI_NO}}", contrato.getAdicionSiNo() != null ? contrato.getAdicionSiNo() : "");
         replacements.put("{{NUMERO_CUOTAS_ADICION}}", contrato.getNumeroCuotasAdicion() > 0 ? String.valueOf(contrato.getNumeroCuotasAdicion()) : "");
         if (contrato.getNumeroCuotasAdicion() > 0) {

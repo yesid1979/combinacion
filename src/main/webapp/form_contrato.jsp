@@ -286,7 +286,14 @@
                                                     <option value="SI" ${contrato.adicionSiNo == 'SI' ? 'selected' : ''}>SI</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-9">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Facturador Electrónico</label>
+                                                <select class="form-select" name="facturador_electronico" ${readonly ? 'disabled' : ''}>
+                                                    <option value="NO" ${contrato.facturadorElectronico == 'NO' || contrato.facturadorElectronico == 'No' || empty contrato.facturadorElectronico ? 'selected' : ''}>NO</option>
+                                                    <option value="SI" ${contrato.facturadorElectronico == 'SI' || contrato.facturadorElectronico == 'Si' || contrato.facturadorElectronico == 'SÍ' ? 'selected' : ''}>SI</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
                                                 <label class="form-label">
                                                     Enlace SECOP
                                                     <c:if test="${not empty contrato.enlaceSecop}">

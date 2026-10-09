@@ -286,6 +286,7 @@ public class ContratoService {
         contrato.setValorContratoMasAdicion(ParseUtils.parseBigDecimal(f.valorContratoMasAdicion));
         contrato.setValorContratoMasAdicionLetras(f.valorContratoMasAdicionLetras);
         contrato.setEnlaceSecop(f.enlaceSecop);
+        contrato.setFacturadorElectronico(f.facturadorElectronico);
         return contrato;
     }
 
@@ -355,6 +356,7 @@ public class ContratoService {
         public String valorContratoMasAdicion;
         public String valorContratoMasAdicionLetras;
         public String enlaceSecop;
+        public String facturadorElectronico;
     }
 
 public void listar(HttpServletRequest request, HttpServletResponse response)
@@ -518,6 +520,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.valorContratoMasAdicion      = r.getParameter("valor_contrato_mas_adicion");
         f.valorContratoMasAdicionLetras= r.getParameter("valor_contrato_mas_adicion_letras");
         f.enlaceSecop                  = r.getParameter("enlace_secop");
+        f.facturadorElectronico        = r.getParameter("facturador_electronico");
         return f;
     }
 

@@ -17,8 +17,8 @@ public class ContratoDAO {
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop, iva_si_no, anio) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop, iva_si_no, anio, facturador_electronico) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -91,9 +91,10 @@ public class ContratoDAO {
             ps.setString(51, c.getValorContratoMasAdicionLetras());
             ps.setBigDecimal(52, c.getValorContratoMasAdicion());
             ps.setString(53, c.getEnlaceSecop());
-                        ps.setString(54, c.getIvaSiNo());
+            ps.setString(54, c.getIvaSiNo());
             if (c.getAnio() != null) ps.setInt(55, c.getAnio());
             else ps.setNull(55, java.sql.Types.INTEGER);
+            ps.setString(56, c.getFacturadorElectronico());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -131,6 +132,7 @@ try {
                 c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
                 c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                 c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+                try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
 
                 // Set the display field
                 c.setContratistaNombre(rs.getString("contratista_nombre"));
@@ -295,6 +297,7 @@ try {
                     c.setValorTotalNumeros(rs.getBigDecimal("valor_total_numeros"));
                     c.setContratistaNombre(rs.getString("contratista_nombre"));
                     c.setApoyoSupervision(rs.getString("apoyo_supervision"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     lista.add(c);
                 }
             }
@@ -375,6 +378,7 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -396,7 +400,7 @@ try {
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
                 "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
                 "fecha_idoneidad=?, fecha_estructurador=?, adicion_si_no=?, numero_cuotas_adicion=?, valor_total_adicion_letras=?, " +
-                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=?, anio=? " +
+                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=?, anio=?, facturador_electronico=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -475,7 +479,8 @@ try {
             } else {
                 ps.setNull(54, java.sql.Types.INTEGER);
             }
-            ps.setInt(55, c.getId());
+            ps.setString(55, c.getFacturadorElectronico());
+            ps.setInt(56, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -555,6 +560,7 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -641,6 +647,7 @@ try {
                     c.setFechaInicio(rs.getDate("fecha_inicio"));
                     c.setFechaTerminacion(rs.getDate("fecha_terminacion"));
                     c.setPeriodo(rs.getString("periodo"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     list.add(c);
                 }
             }
@@ -720,6 +727,7 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -799,6 +807,7 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -878,6 +887,7 @@ try {
                     c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
+                    try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch(Exception e) {}
                     
                     try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch(Exception e) {}
                     try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch(Exception e) {}
@@ -955,6 +965,7 @@ try {
         c.setValorContratoMasAdicion(rs.getBigDecimal("valor_contrato_mas_adicion"));
         c.setEnlaceSecop(rs.getString("enlace_secop"));
         c.setIvaSiNo(rs.getString("iva_si_no"));
+        try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch(Exception e) {}
         
         try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch(Exception e) {}
         try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch(Exception e) {}

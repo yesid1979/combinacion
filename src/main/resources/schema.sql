@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS contratos (
     liquidacion_articulo VARCHAR(100),
     liquidacion_decreto VARCHAR(100),
     circular_honorarios VARCHAR(100),
+    facturador_electronico VARCHAR(50),
     
     -- Llaves Foraneas
     contratista_id INT REFERENCES contratistas(id),

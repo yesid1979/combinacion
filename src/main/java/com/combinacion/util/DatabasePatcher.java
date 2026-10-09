@@ -54,6 +54,17 @@ public class DatabasePatcher {
                 System.out.println("✅ Columna 'fecha_modificacion' agregada exitosamente.");
             }
 
+            ResultSet rsFact = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                            "WHERE table_name='contratos' AND column_name='facturador_electronico'");
+            if (!rsFact.next()) {
+                System.out.println("⚠️ Columna 'facturador_electronico' no encontrada. Agregándola automáticamente...");
+                stmt.executeUpdate("ALTER TABLE contratos ADD COLUMN facturador_electronico VARCHAR(50)");
+                System.out.println("✅ Columna 'facturador_electronico' agregada exitosamente.");
+            } else {
+                System.out.println("✅ La columna 'facturador_electronico' ya existe.");
+            }
+
             // --- NUEVOS CAMPOS PARA ADICION EN PRESUPUESTO_DETALLES ---
             String[] columnasPresupuesto = {
                 "cdp_adicion TEXT", 
@@ -140,5 +151,9 @@ public class DatabasePatcher {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        ensureSchema();
     }
 }

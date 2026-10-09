@@ -336,6 +336,7 @@ public class CargaMasivaService {
                 logMapping(log, map, "valor_total_letras", "Valor Total (Letras)");
                 logMapping(log, map, "valor_total_numeros", "Valor Total (Números)");
                 logMapping(log, map, "iva_si_no", "IVA SI/NO");
+                logMapping(log, map, "facturador_electronico", "Facturador Electrónico");
                 logMapping(log, map, "numero_modificacion", "No. Modificación");
                 logMapping(log, map, "fecha_modificacion", "Fecha Modificación");
                 logMapping(log, map, "valor_antes_iva_letras", "Valor Antes IVA (Letras)");
@@ -953,6 +954,8 @@ public class CargaMasivaService {
                 map.put("adicion_si_no", i);
             } else if (h.contains("iva") && h.contains("si") && h.contains("no")) {
                 map.put("iva_si_no", i);
+            } else if (h.contains("facturador")) {
+                map.put("facturador_electronico", i);
             } else if (h.contains("modificaci") && h.contains("no") && h.contains(".")) {
                 map.put("numero_modificacion", i);
             } else if (h.contains("modificaci") && h.contains("fecha")) {
@@ -1765,7 +1768,7 @@ public class CargaMasivaService {
             contrato.setValorTotalAdicionLetras(get(row, map, "valor_total_adicion_letras"));
             contrato.setValorContratoMasAdicionLetras(get(row, map, "valor_contrato_mas_adicion_letras"));
             contrato.setEnlaceSecop(get(row, map, "enlace_secop"));
-            contrato.setIvaSiNo(parseBooleanCheck(get(row, map, "iva_si_no")));
+            contrato.setFacturadorElectronico(parseBooleanCheck(get(row, map, "facturador_electronico")));
 
             try {
                 String vtn = cleanCurrency(get(row, map, "valor_total_numeros"));
@@ -1859,6 +1862,9 @@ public class CargaMasivaService {
                 }
                 if (contrato.getPresupuestoId() == 0 && existente.getPresupuestoId() > 0) {
                     contrato.setPresupuestoId(existente.getPresupuestoId());
+                }
+                if (!map.containsKey("facturador_electronico") && existente.getFacturadorElectronico() != null) {
+                    contrato.setFacturadorElectronico(existente.getFacturadorElectronico());
                 }
 
                 // CHECK FOR CONTRACTOR CHANGE WARNING
