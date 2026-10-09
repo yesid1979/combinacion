@@ -734,6 +734,7 @@
             function actualizarAsteriscosArchivos() {
                 setTimeout(function() {
                     $('input[type="file"]').each(function() {
+                        var $input = $(this);
                         var $label = $input.prevAll('.form-label, small.fw-bold').first();
                         if ($label.length === 0) {
                             $label = $input.closest('div').find('.form-label, small.fw-bold').first();

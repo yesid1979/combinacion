@@ -102,6 +102,19 @@ public class InformeSupervisionService {
 
     public String actualizar(int id, InformeFormData form) {
         try {
+            InformeSupervision existente = informeDAO.obtenerPorId(id);
+            if (existente != null) {
+                if (form.contratoId <= 0 && existente.getContratoId() != null) {
+                    form.contratoId = existente.getContratoId();
+                }
+                if ((form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) && existente.getPeriodoInforme() != null) {
+                    form.periodoInforme = existente.getPeriodoInforme();
+                }
+                if ((form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) && existente.getNumeroCuota() != null) {
+                    form.numeroCuota = existente.getNumeroCuota();
+                }
+            }
+            
             if (form.contratoId <= 0 || form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
                 return "Error crítico: No se recibieron los datos del formulario. Esto suele ocurrir si los archivos adjuntos exceden el tamaño máximo permitido (100MB por archivo) o si hubo una interrupción en la red. La información existente en la base de datos se mantuvo protegida.";
             }
@@ -122,7 +135,6 @@ public class InformeSupervisionService {
             }
 
             // Preserve fields that might not come in the form or might have been omitted
-            InformeSupervision existente = informeDAO.obtenerPorId(id);
             if (existente != null) {
                 if (info.getUrlDriveEvidencias() == null || info.getUrlDriveEvidencias().isEmpty()) {
                     info.setUrlDriveEvidencias(existente.getUrlDriveEvidencias());
