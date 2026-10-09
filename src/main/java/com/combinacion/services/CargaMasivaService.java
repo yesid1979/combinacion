@@ -561,11 +561,10 @@ public class CargaMasivaService {
         if (val == null)
             return "No";
         val = val.trim();
-        if (val.equalsIgnoreCase("x"))
+        if (val.equalsIgnoreCase("x") || val.equalsIgnoreCase("si") || val.equalsIgnoreCase("sí")
+                || val.equalsIgnoreCase("s") || val.equalsIgnoreCase("1") || val.equalsIgnoreCase("true"))
             return "Si";
-        if (val.equalsIgnoreCase("si"))
-            return "Si";
-        if (val.isEmpty())
+        if (val.isEmpty() || val.equalsIgnoreCase("no") || val.equalsIgnoreCase("0") || val.equalsIgnoreCase("false"))
             return "No";
         return val;
     }
@@ -584,6 +583,12 @@ public class CargaMasivaService {
                 continue;
 
             String h = normalizeText(header[i]);
+
+            // === BLOQUE DE PRIORIDAD: FACTURADOR ELECTRONICO ===
+            if (h.contains("facturador") || h.contains("facturacion") || (h.contains("factura") && h.contains("electronica"))) {
+                safePut(map, "facturador_electronico", i);
+                continue;
+            }
 
             // === BLOQUE DE PRIORIDAD: ADICIONES ===
             if (h.contains("adicion")) {
@@ -823,7 +828,7 @@ public class CargaMasivaService {
                 map.put("contratista_dv", i);
             } else if (h.contains("telefono") || h.contains("telefonico")) {
                 map.put("contratista_telefono", i);
-            } else if (h.contains("correo") || h.contains("electronico")) {
+            } else if (h.contains("correo") || (h.contains("electronico") && !h.contains("facturador") && !h.contains("factura")) || h.contains("email")) {
                 map.put("contratista_correo", i);
             } else if (h.contains("direccion") && !h.contains("organismo") && !h.startsWith("descri")) {
                 map.put("contratista_direccion", i);
@@ -954,7 +959,7 @@ public class CargaMasivaService {
                 map.put("adicion_si_no", i);
             } else if (h.contains("iva") && h.contains("si") && h.contains("no")) {
                 map.put("iva_si_no", i);
-            } else if (h.contains("facturador")) {
+            } else if (h.contains("facturador") || h.contains("facturacion") || (h.contains("factura") && h.contains("electronica"))) {
                 map.put("facturador_electronico", i);
             } else if (h.contains("modificaci") && h.contains("no") && h.contains(".")) {
                 map.put("numero_modificacion", i);
