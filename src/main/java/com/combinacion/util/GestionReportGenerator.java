@@ -225,7 +225,7 @@ public class GestionReportGenerator {
                                 String acXml = item.actividad != null ? item.actividad : "";
                                 
                                 // Paragraph for the obligation (Numbered, bold)
-                                actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"120\" w:after=\"120\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>")
+                                actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"120\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
                                               .append(ob.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
                                               .append("</w:t></w:r></w:p>");
     

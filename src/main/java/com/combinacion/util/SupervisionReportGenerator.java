@@ -332,22 +332,28 @@ public class SupervisionReportGenerator {
                         tablaXml.append("<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("</w:tblBorders>");
+                        tablaXml.append("<w:tblCellMar>");
+                        tablaXml.append("<w:top w:w=\"80\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:left w:w=\"140\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:bottom w:w=\"80\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:right w:w=\"140\" w:type=\"dxa\"/>");
+                        tablaXml.append("</w:tblCellMar>");
                         tablaXml.append("<w:tblW w:w=\"10000\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:tblLayout w:type=\"fixed\"/>");
                         tablaXml.append("</w:tblPr>");
                         
                         tablaXml.append("<w:tblGrid>");
-                        tablaXml.append("<w:gridCol w:w=\"4200\"/>");
-                        tablaXml.append("<w:gridCol w:w=\"5800\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"4000\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"6000\"/>");
                         tablaXml.append("</w:tblGrid>");
                         
                         // Header
-                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"4200\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"5800\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
+                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"4000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"6000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
                         
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                             String obRaw = item.obligacion != null ? item.obligacion.trim() : "";
-                            String acXml = item.actividad != null ? item.actividad : "<w:p><w:r><w:t></w:t></w:r></w:p>";
+                            String acXml = item.actividad != null ? item.actividad : "<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t></w:t></w:r></w:p>";
                             
                             String ob = obRaw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                             ob = ob.replace("\n", "</w:t><w:br/><w:t>");
@@ -355,12 +361,12 @@ public class SupervisionReportGenerator {
                             tablaXml.append("<w:tr>");
                             
                             // Cell Obligacion
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"4200\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"4000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
                             // Cell Actividad (ya es Word XML)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5800\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"6000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr>")
                                     .append(acXml)
                                     .append("</w:tc>");
                                     

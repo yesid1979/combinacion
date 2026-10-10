@@ -20,13 +20,37 @@ public class HtmlToWordXmlConverter {
 
     public static String convertHtmlToXml(String html, XWPFDocument doc, double maxImageWidth) {
         if (html == null || html.trim().isEmpty()) {
-            return "<w:p><w:r><w:t></w:t></w:r></w:p>";
+            return "<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t></w:t></w:r></w:p>";
         }
         
         // Remove zero-width spaces or weird characters from Summernote
         html = html.replace("&nbsp;", " ").replace("\u200B", "");
         
+        // Limpiar párrafos vacíos o que solo contienen <br> o espacios repetidos (causantes de huecos blancos feos)
+        html = html.replaceAll("(?i)<p[^>]*>(\\s*|<br\\s*/?>|&nbsp;|&#160;)*</p>", "");
+        html = html.replaceAll("(?i)<div[^>]*>(\\s*|<br\\s*/?>|&nbsp;|&#160;)*</div>", "");
+        html = html.replaceAll("(?i)(<br\\s*/?>\\s*){2,}", "<br/>");
+        
         org.jsoup.nodes.Document jsoupDoc = Jsoup.parseBodyFragment(html);
+        
+        // Eliminar elementos vacíos al inicio y al final
+        while (!jsoupDoc.body().children().isEmpty()) {
+            Element last = jsoupDoc.body().children().last();
+            if (last.text().trim().isEmpty() && last.select("img, table").isEmpty()) {
+                last.remove();
+            } else {
+                break;
+            }
+        }
+        while (!jsoupDoc.body().children().isEmpty()) {
+            Element first = jsoupDoc.body().children().first();
+            if (first.text().trim().isEmpty() && first.select("img, table").isEmpty()) {
+                first.remove();
+            } else {
+                break;
+            }
+        }
+        
         StringBuilder xml = new StringBuilder();
         
         List<Node> inlineGroup = new ArrayList<>();
@@ -47,7 +71,7 @@ public class HtmlToWordXmlConverter {
         }
         
         if (xml.length() == 0) {
-            return "<w:p><w:r><w:t></w:t></w:r></w:p>";
+            return "<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t></w:t></w:r></w:p>";
         }
         
         String res = xml.toString().trim();
@@ -90,7 +114,7 @@ public class HtmlToWordXmlConverter {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text().trim();
             if (!text.isEmpty()) {
-                xml.append("<w:p><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/>");
+                xml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/>");
                 if (inheritedBold) xml.append("<w:b/>");
                 xml.append("</w:rPr><w:t xml:space=\"preserve\">")
                    .append(escapeXml(text))
@@ -130,14 +154,23 @@ public class HtmlToWordXmlConverter {
                 }
             } else {
                 // Elemento hoja (párrafo o encabezado o texto plano)
+                // Si está vacío (sin texto, sin imágenes, sin tablas), NO generar párrafo vacío
+                if (el.text().trim().isEmpty() && el.select("img, table").isEmpty()) {
+                    return;
+                }
+
                 String align = extractAlign(el, inheritedAlign);
+                if (align.isEmpty()) {
+                    align = "both"; // Justificado por defecto
+                }
                 boolean isBold = inheritedBold || tagName.startsWith("h") || tagName.equals("b") || tagName.equals("strong");
 
                 xml.append("<w:p>");
-                if (!align.isEmpty()) {
-                    xml.append("<w:pPr><w:jc w:val=\"").append(align).append("\"/></w:pPr>");
-                }
-                processInlineChildren(el, xml, doc, isBold, false, false, -1);
+                xml.append("<w:pPr>");
+                xml.append("<w:jc w:val=\"").append(align).append("\"/>");
+                xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
+                xml.append("</w:pPr>");
+                processInlineChildren(el, xml, doc, isBold, false, false, 22);
                 xml.append("</w:p>");
             }
         }
@@ -151,18 +184,22 @@ public class HtmlToWordXmlConverter {
                 break;
             }
             if (n instanceof Element) {
-                hasContent = true;
-                break;
+                Element e = (Element) n;
+                if (!e.text().trim().isEmpty() || !e.select("img").isEmpty()) {
+                    hasContent = true;
+                    break;
+                }
             }
         }
         if (!hasContent) return;
 
         xml.append("<w:p>");
-        if (!align.isEmpty()) {
-            xml.append("<w:pPr><w:jc w:val=\"").append(align).append("\"/></w:pPr>");
-        }
+        xml.append("<w:pPr>");
+        xml.append("<w:jc w:val=\"").append(align.isEmpty() ? "both" : align).append("\"/>");
+        xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
+        xml.append("</w:pPr>");
         for (Node n : group) {
-            processInlineNode(n, xml, doc, isBold, false, false, -1);
+            processInlineNode(n, xml, doc, isBold, false, false, 22);
         }
         xml.append("</w:p>");
     }
@@ -399,22 +436,24 @@ public class HtmlToWordXmlConverter {
         int counter = 1;
         for (Element li : el.children()) {
             if (li.tagName().equalsIgnoreCase("li")) {
+                if (li.text().trim().isEmpty() && li.select("img, table").isEmpty()) {
+                    continue;
+                }
                 String align = extractAlign(li, ulAlign);
                 xml.append("<w:p><w:pPr>");
+                xml.append("<w:jc w:val=\"").append(align.isEmpty() ? "both" : align).append("\"/>");
+                xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
                 xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
-                if (!align.isEmpty()) {
-                    xml.append("<w:jc w:val=\"").append(align).append("\"/>");
-                }
                 xml.append("</w:pPr>");
                 
-                xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/></w:rPr><w:t>");
+                xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>");
                 if (tagName.equalsIgnoreCase("ol")) {
                     xml.append(counter).append(".");
                 } else {
                     xml.append("•");
                 }
                 xml.append("</w:t></w:r><w:r><w:tab/></w:r>");
-                processInlineChildren(li, xml, doc, false, false, false, -1);
+                processInlineChildren(li, xml, doc, false, false, false, 22);
                 xml.append("</w:p>");
                 counter++;
             }
@@ -452,11 +491,12 @@ public class HtmlToWordXmlConverter {
             String text = ((TextNode) node).text();
             if (text.isEmpty()) return;
             text = wrapLongTokens(text);
+            int sz = (fontSize > 0) ? fontSize : 22;
             xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/>");
             if (bold) xml.append("<w:b/>");
             if (italic) xml.append("<w:i/>");
             if (underline) xml.append("<w:u w:val=\"single\"/>");
-            if (fontSize > 0) xml.append("<w:sz w:val=\"").append(fontSize).append("\"/>");
+            xml.append("<w:sz w:val=\"").append(sz).append("\"/><w:szCs w:val=\"").append(sz).append("\"/>");
             xml.append("</w:rPr><w:t xml:space=\"preserve\">").append(escapeXml(text)).append("</w:t></w:r>");
         } else if (node instanceof Element) {
             Element el = (Element) node;
