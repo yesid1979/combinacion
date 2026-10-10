@@ -794,6 +794,13 @@
                 if (cuotaStr == "1") {
                     manejarVisibilidadReq('.req-cuota-1', true);
                     manejarVisibilidadReq('.req-cuota-adicion-only', false);
+                    
+                    // Hacer requeridos los soportes de la Cuota 1 si no están cargados
+                    $('input[name="file_ficha_tecnica"]').prop('required', true);
+                    $('input[name="file_secop"]').prop('required', true);
+                    $('input[name="file_cedula"]').prop('required', true);
+                    $('input[name="file_rut"]').prop('required', true);
+                    $('input[name="file_rpc"]').prop('required', true);
                 } else if (esFirmaAdicion) {
                     manejarVisibilidadReq('.req-cuota-1', false);
                     
@@ -805,13 +812,16 @@
                     $('input[name="file_modificacion"]').prop('required', true);
                     $('input[name="file_secop"]').prop('required', true);
                     $('input[name="file_ficha_tecnica"]').prop('required', true);
+                    $('input[name="file_cedula"], input[name="file_rut"]').prop('required', false);
                 } else if (esCuotaAdicionPosterior) {
                     manejarVisibilidadReq('.req-cuota-1', false);
                     manejarVisibilidadReq('.req-cuota-adicion-only', false);
+                    $('input[name="file_ficha_tecnica"], input[name="file_secop"], input[name="file_cedula"], input[name="file_rut"], input[name="file_rpc"], input[name="file_modificacion"]').prop('required', false);
                 } else {
                     manejarVisibilidadReq('.req-cuota-1', false);
                     manejarVisibilidadReq('.req-cuota-adicion-only', false);
                     $('input[name="file_secop"]').prop('required', false);
+                    $('input[name="file_ficha_tecnica"], input[name="file_cedula"], input[name="file_rut"], input[name="file_rpc"], input[name="file_modificacion"]').prop('required', false);
                 }
                 actualizarAsteriscosArchivos();
             }
@@ -828,15 +838,20 @@
                         // Si ya esta cargado, ya no es requerido
                         if ($label.find('.badge.bg-success').length > 0 || $input.prevAll('.alert-secondary').length > 0 || $input.closest('div').find('.alert-secondary').length > 0) {
                             $input.prop('required', false);
+                            $label.find('.ast-cuota-1').hide();
                         }
                         
                         // Refrescar asterisco
                         if ($input.prop('required') && $input.is(':visible')) {
-                            if ($label.find('.req-asterisk').length === 0) {
+                            $label.find('.ast-cuota-1').show();
+                            if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1').length === 0) {
                                 $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
                             }
                         } else {
                             $label.find('.req-asterisk').remove();
+                            if (!$input.prop('required')) {
+                                $label.find('.ast-cuota-1').hide();
+                            }
                         }
                     });
                 }, 100);
