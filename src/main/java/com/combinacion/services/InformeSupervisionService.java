@@ -1473,23 +1473,58 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                         ? informe.getConsecutivoCobro().trim() 
                                         : (tieneIva ? "FACTURA" : "XXXX");
 
-            String shortContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().split("\\.")[0] : "";
+            String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
+            String shortContrato = "4121";
             String ultimoBloque = "";
-            if (contrato.getNumeroContrato() != null && contrato.getNumeroContrato().contains(".")) {
-                String[] numParts = contrato.getNumeroContrato().split("\\.");
-                ultimoBloque = numParts[numParts.length - 1];
+            if (!numContrato.isEmpty()) {
+                String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
+                String[] partsNum = cleanNum.split("\\.");
+                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+                if (partsNum.length > 1) {
+                    String last = partsNum[partsNum.length - 1].trim();
+                    if (last.contains("-")) last = last.split("-")[0].trim();
+                    ultimoBloque = last;
+                }
             }
+
+            // Nombre estándar de producción: ej. "4121 - 086 FRANCY JOHANNA FUQUENE CARVAJAL"
+            String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
+                                       + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
+                                       + nombreCompleto.toUpperCase();
             
-            String folderNamePrincipal = shortContrato + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " " + nombreCorto;
-            String folderNameCuota = "Cuota " + informe.getNumeroCuota();
-            
-            // 1. Obtener/crear "pruebas cuenta de cobro"
-            String pruebasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro"), null);
-            // 2. Obtener/crear carpeta principal
-            String principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, pruebasFolderId);
-            // 3. Obtener/crear cuota
-            String cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
-            // 4. Obtener/crear evidencias
+            String cNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota().trim() : "1";
+            String folderNameCuota = "CUOTA " + cNum;
+
+            // 1. Obtener o resolver la carpeta raíz (acepta ID directo, URL de Drive, o nombre de carpeta)
+            String configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+            String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(configuredPruebas, null);
+
+            // 2. Resolver o crear la carpeta principal del contratista con búsqueda inteligente
+            String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
+            String principalFolderId = null;
+            if (!prefixContrato.isEmpty()) {
+                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(pruebasFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+            } else {
+                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(pruebasFolderId, folderNamePrincipal, nombreCompleto);
+            }
+            if (principalFolderId == null) {
+                principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, pruebasFolderId);
+            }
+
+            // 3. Resolver o crear la carpeta de la cuota con búsqueda inteligente (Opción A)
+            // Si Contratación ya la marcó con el número de contrato (ej. "CUOTA 1 086"), se reutiliza
+            String patternConMarca = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNum + " " + ultimoBloque) : null;
+            String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
+                principalFolderId,
+                patternConMarca,
+                "CUOTA " + cNum,
+                "Cuota " + cNum
+            );
+            if (cuotaFolderId == null) {
+                cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
+            }
+
+            // 4. Obtener/crear evidencias dentro de la cuota
             String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
             
             // 4.1. Dar permisos públicos de lectura a TODA la carpeta de la cuota

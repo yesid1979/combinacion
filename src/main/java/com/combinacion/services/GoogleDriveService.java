@@ -144,6 +144,84 @@ public class GoogleDriveService {
         return folderId;
     }
 
+    /**
+     * Resuelve un identificador de carpeta que puede ser un ID directo de Google Drive,
+     * una URL completa de Drive, o el nombre de una carpeta (en cuyo caso la busca o crea).
+     */
+    public static String resolveFolderIdOrGetOrCreate(String folderNameOrId, String parentId) throws Exception {
+        if (folderNameOrId == null || folderNameOrId.trim().isEmpty()) {
+            return getOrCreateFolder("pruebas cuenta de cobro", parentId);
+        }
+        String cleanVal = folderNameOrId.trim();
+
+        // Extraer si es una URL completa de Drive
+        if (cleanVal.contains("folders/")) {
+            int idx = cleanVal.indexOf("folders/") + 8;
+            int end = cleanVal.indexOf("?", idx);
+            if (end == -1) end = cleanVal.indexOf("#", idx);
+            cleanVal = (end != -1) ? cleanVal.substring(idx, end) : cleanVal.substring(idx);
+        }
+
+        // Si parece un ID de Google Drive (alfanumérico de 20+ caracteres sin espacios)
+        final String targetId = cleanVal;
+        if (targetId.matches("^[a-zA-Z0-9_-]{20,}$")) {
+            try {
+                Drive driveService = getDriveService();
+                File f = executeWithRetry(() -> driveService.files().get(targetId)
+                        .setFields("id, name, mimeType, trashed")
+                        .execute());
+                if (f != null && "application/vnd.google-apps.folder".equals(f.getMimeType()) && !Boolean.TRUE.equals(f.getTrashed())) {
+                    return f.getId();
+                }
+            } catch (Exception ex) {
+                System.err.println("Aviso: El valor '" + targetId + "' no pudo ser resuelto como ID directo de Drive: " + ex.getMessage());
+            }
+        }
+
+        // Si no es un ID válido o no se pudo obtener, buscar o crear por nombre
+        return getOrCreateFolder(folderNameOrId, parentId);
+    }
+
+    /**
+     * Busca una carpeta existente dentro de parentId que coincida con alguno de los patrones dados.
+     */
+    public static String findFolderByPatterns(String parentId, String... searchPatterns) throws Exception {
+        if (parentId == null || parentId.trim().isEmpty() || searchPatterns == null) return null;
+        Drive driveService = getDriveService();
+
+        for (String pattern : searchPatterns) {
+            if (pattern == null || pattern.trim().isEmpty()) continue;
+            String clean = pattern.replace("\\", "\\\\").replace("'", "\\'");
+
+            try {
+                // Primero buscar por coincidencia exacta
+                String queryExact = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents and name='" + clean + "'";
+                FileList res = executeWithRetry(() -> driveService.files().list()
+                        .setQ(queryExact)
+                        .setSpaces("drive")
+                        .setFields("files(id, name)")
+                        .execute());
+                if (res != null && res.getFiles() != null && !res.getFiles().isEmpty()) {
+                    return res.getFiles().get(0).getId();
+                }
+
+                // Luego buscar por contenido (name contains '...')
+                String queryContains = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents and name contains '" + clean + "'";
+                res = executeWithRetry(() -> driveService.files().list()
+                        .setQ(queryContains)
+                        .setSpaces("drive")
+                        .setFields("files(id, name)")
+                        .execute());
+                if (res != null && res.getFiles() != null && !res.getFiles().isEmpty()) {
+                    return res.getFiles().get(0).getId();
+                }
+            } catch (Exception e) {
+                System.err.println("Aviso Drive: Error buscando patrón '" + pattern + "': " + e.getMessage());
+            }
+        }
+        return null;
+    }
+
     public static String uploadOrUpdateFile(java.io.File file, String fileName, String mimeType, String parentId) throws Exception {
         Drive driveService = getDriveService();
         String cleanQueryName = fileName.replace("\\", "\\\\").replace("'", "\\'");
