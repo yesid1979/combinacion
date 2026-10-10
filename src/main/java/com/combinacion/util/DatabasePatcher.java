@@ -116,6 +116,16 @@ public class DatabasePatcher {
                 }
             }
 
+            // Verificar columna supervisor_id en informes_supervision
+            ResultSet rsSup = stmt.executeQuery(
+                    "SELECT column_name FROM information_schema.columns " +
+                    "WHERE table_name='informes_supervision' AND column_name='supervisor_id'");
+            if (!rsSup.next()) {
+                System.out.println("⚠️ Columna 'supervisor_id' no encontrada en informes_supervision. Agregándola...");
+                stmt.executeUpdate("ALTER TABLE informes_supervision ADD COLUMN supervisor_id INT REFERENCES supervisores(id)");
+                System.out.println("✅ Columna 'supervisor_id' agregada en informes_supervision.");
+            }
+
             // Verificar tabla usuario_permisos
             ResultSet rs2 = stmt.executeQuery(
                     "SELECT 1 FROM information_schema.tables WHERE table_name='usuario_permisos'");

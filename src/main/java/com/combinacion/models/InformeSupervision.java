@@ -67,8 +67,18 @@ public class InformeSupervision implements Serializable {
     
     // Relación con Contrato (opcional para el modelo)
     private Contrato contrato;
+    
+    // Relación con Supervisor específico de este informe
+    private Integer supervisorId;
+    private Supervisor supervisor;
 
     public InformeSupervision() {}
+
+    public Integer getSupervisorId() { return supervisorId; }
+    public void setSupervisorId(Integer supervisorId) { this.supervisorId = supervisorId; }
+
+    public Supervisor getSupervisor() { return supervisor; }
+    public void setSupervisor(Supervisor supervisor) { this.supervisor = supervisor; }
 
     public String getSoportesJson() { return soportesJson; }
     public void setSoportesJson(String soportesJson) { this.soportesJson = soportesJson; }

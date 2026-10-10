@@ -40,8 +40,8 @@ public class InformeSupervisionDAO {
                 "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
                 "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
                 "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio, soportes_json, " +
-                "eps, afp_pension, arl, es_contratista_nuevo" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "eps, afp_pension, arl, es_contratista_nuevo, supervisor_id" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -94,6 +94,11 @@ public class InformeSupervisionDAO {
             ps.setString(37, info.getAfpPension());
             ps.setString(38, info.getArl());
             ps.setString(39, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
+            if (info.getSupervisorId() != null && info.getSupervisorId() > 0) {
+                ps.setInt(40, info.getSupervisorId());
+            } else {
+                ps.setNull(40, Types.INTEGER);
+            }
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -253,6 +258,13 @@ public class InformeSupervisionDAO {
             }
         } catch (SQLException e) {}
 
+        try {
+            int supId = rs.getInt("supervisor_id");
+            if (!rs.wasNull()) {
+                info.setSupervisorId(supId);
+            }
+        } catch (SQLException e) {}
+
         // Map contract info if available in the result set
         try {
             String numContrato = rs.getString("numero_contrato");
@@ -280,7 +292,7 @@ public class InformeSupervisionDAO {
                 "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
                 "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
                 "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ?, soportes_json = ?, " +
-                "eps = ?, afp_pension = ?, arl = ?, es_contratista_nuevo = ? " +
+                "eps = ?, afp_pension = ?, arl = ?, es_contratista_nuevo = ?, supervisor_id = ? " +
                 "WHERE id = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -332,7 +344,12 @@ public class InformeSupervisionDAO {
             ps.setString(36, info.getAfpPension());
             ps.setString(37, info.getArl());
             ps.setString(38, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
-            ps.setInt(39, info.getId());
+            if (info.getSupervisorId() != null && info.getSupervisorId() > 0) {
+                ps.setInt(39, info.getSupervisorId());
+            } else {
+                ps.setNull(39, Types.INTEGER);
+            }
+            ps.setInt(40, info.getId());
 
             if (ps.executeUpdate() > 0) {
                 return null;
@@ -447,6 +464,7 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN afp_pension VARCHAR(150)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN arl VARCHAR(150)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN es_contratista_nuevo VARCHAR(10) DEFAULT 'NO'"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN supervisor_id INT REFERENCES supervisores(id)"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

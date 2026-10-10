@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS informes_supervision (
     id SERIAL PRIMARY KEY,
     contrato_id INT REFERENCES contratos(id),
+    supervisor_id INT REFERENCES supervisores(id),
     periodo_informe VARCHAR(100), -- Ejemplo: "Enero 2026"
     tipo_informe VARCHAR(20), -- "PARCIAL" o "FINAL"
     numero_cuota VARCHAR(20),

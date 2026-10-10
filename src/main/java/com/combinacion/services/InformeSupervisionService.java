@@ -40,8 +40,15 @@ public class InformeSupervisionService {
 
     public InformeSupervision obtenerPorId(int id) {
         InformeSupervision info = informeDAO.obtenerPorId(id);
-        if (info != null && info.getContratoId() != null) {
-            info.setContrato(contratoDAO.obtenerPorId(info.getContratoId()));
+        if (info != null) {
+            if (info.getContratoId() != null) {
+                info.setContrato(contratoDAO.obtenerPorId(info.getContratoId()));
+            }
+            if (info.getSupervisorId() != null && info.getSupervisorId() > 0) {
+                info.setSupervisor(supervisorDAO.obtenerPorId(info.getSupervisorId()));
+            } else if (info.getContrato() != null && info.getContrato().getSupervisorId() > 0) {
+                info.setSupervisor(supervisorDAO.obtenerPorId(info.getContrato().getSupervisorId()));
+            }
         }
         return info;
     }
@@ -57,6 +64,10 @@ public class InformeSupervisionService {
             try {
                 if (form.contratoId <= 0) {
                     return "Error: No se identificó el contrato para registrar la cuenta de cobro.";
+                }
+
+                if (form.fechaSuscripcion == null || form.fechaSuscripcion.trim().isEmpty()) {
+                    return "El campo 'Fecha de transacción' es obligatorio.";
                 }
 
                 boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
@@ -99,6 +110,11 @@ public class InformeSupervisionService {
                 }
             }
 
+            // Asignar supervisor por defecto del contrato si no se especificó en el informe
+            if ((info.getSupervisorId() == null || info.getSupervisorId() <= 0) && contrato != null && contrato.getSupervisorId() > 0) {
+                info.setSupervisorId(contrato.getSupervisorId());
+            }
+
             // Validar duplicado: misma combinación de contrato, período, tipo e número de cuota
             if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(), info.getNumeroCuota())) {
                 return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
@@ -137,10 +153,17 @@ public class InformeSupervisionService {
                 if ((form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) && existente.getNumeroCuota() != null) {
                     form.numeroCuota = existente.getNumeroCuota();
                 }
+                if ((form.supervisorId == null || form.supervisorId <= 0) && existente.getSupervisorId() != null) {
+                    form.supervisorId = existente.getSupervisorId();
+                }
             }
             
             if (form.contratoId <= 0) {
                 return "Error: No se identificó el contrato asociado a esta cuenta de cobro.";
+            }
+            
+            if (form.fechaSuscripcion == null || form.fechaSuscripcion.trim().isEmpty()) {
+                return "El campo 'Fecha de transacción' es obligatorio.";
             }
             
             InformeSupervision info = mapFormToModel(form);
@@ -155,6 +178,9 @@ public class InformeSupervisionService {
                     java.util.Calendar cal = java.util.Calendar.getInstance();
                     cal.setTime(contrato.getFechaTerminacion());
                     info.setAnio(cal.get(java.util.Calendar.YEAR));
+                }
+                if ((info.getSupervisorId() == null || info.getSupervisorId() <= 0) && contrato.getSupervisorId() > 0) {
+                    info.setSupervisorId(contrato.getSupervisorId());
                 }
             }
 
@@ -334,6 +360,9 @@ public class InformeSupervisionService {
     private InformeSupervision mapFormToModel(InformeFormData f) {
         InformeSupervision info = new InformeSupervision();
         info.setContratoId(f.contratoId);
+        if (f.supervisorId != null && f.supervisorId > 0) {
+            info.setSupervisorId(f.supervisorId);
+        }
         info.setPeriodoInforme(f.periodoInforme);
         info.setTipoInforme(f.tipoInforme);
         info.setNumeroCuota(f.numeroCuota);
@@ -459,6 +488,7 @@ public class InformeSupervisionService {
 
     public static class InformeFormData {
         public int contratoId;
+        public Integer supervisorId;
         public String periodoInforme;
         public String tipoInforme;
         public String numeroCuota;
@@ -887,6 +917,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
         }
         
+        request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "insert");
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
@@ -907,6 +938,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         request.setAttribute("readonly", true);
         request.setAttribute("action", "view");
         request.setAttribute("modo", request.getParameter("modo"));
+        request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
@@ -1024,6 +1056,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
         }
         
+        request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "update");
         request.setAttribute("modo", request.getParameter("modo"));
@@ -2008,6 +2041,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.contratoId = ParseUtils.parseInt(r.getParameter("contrato_id"));
         if (f.contratoId <= 0 && exist != null && exist.getContratoId() != null) {
             f.contratoId = exist.getContratoId();
+        }
+        
+        String supParam = r.getParameter("supervisor_id");
+        if (supParam != null && !supParam.trim().isEmpty()) {
+            int sId = ParseUtils.parseInt(supParam);
+            if (sId > 0) {
+                f.supervisorId = sId;
+            }
+        } else if (exist != null && exist.getSupervisorId() != null) {
+            f.supervisorId = exist.getSupervisorId();
         }
         
         f.periodoInforme = r.getParameter("periodo_informe");

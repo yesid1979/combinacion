@@ -170,14 +170,40 @@
                                     <label class="form-label">Periodo del Informe (Mes y Año)</label>
                                     <input type="month" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" required ${readonly ? 'readonly' : ''}>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-6">
+                                    <label class="form-label d-flex justify-content-between align-items-center">
+                                        <span>Supervisor asignado a este informe</span>
+                                        <c:if test="${not empty informe.supervisorId && not empty contrato.supervisorId && informe.supervisorId != contrato.supervisorId}">
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-person-badge me-1"></i>Por Encargo</span>
+                                        </c:if>
+                                    </label>
+                                    <c:choose>
+                                        <c:when test="${not readonly}">
+                                            <select class="form-select" name="supervisor_id" id="supervisor_id" required>
+                                                <c:forEach var="sup" items="${listaSupervisores}">
+                                                    <c:set var="esSeleccionado" value="${(not empty informe.supervisorId && informe.supervisorId == sup.id) || (empty informe.supervisorId && contrato.supervisorId == sup.id)}" />
+                                                    <option value="${sup.id}" ${esSeleccionado ? 'selected' : ''}>
+                                                        ${sup.nombre}${not empty sup.cargo ? ' - '.concat(sup.cargo) : ''}${contrato.supervisorId == sup.id ? ' (Titular del Contrato)' : ''}
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                            <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                                Por defecto es el titular del contrato. Cámbialo si este periodo fue supervisado por encargo.
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <input type="text" class="form-control bg-light text-muted" value="${not empty informe.supervisor ? informe.supervisor.nombre : contrato.supervisor.nombre}" readonly>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label">Tipo de Informe</label>
                                     <select class="form-select" name="tipo_informe" id="tipo_informe" required ${readonly ? 'disabled' : ''}>
                                         <option value="PARCIAL" ${informe.tipoInforme == 'PARCIAL' ? 'selected' : ''}>INFORME PARCIAL</option>
                                         <option value="FINAL" ${informe.tipoInforme == 'FINAL' ? 'selected' : ''}>INFORME FINAL</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <label class="form-label">Cuota Número</label>
                                     <c:choose>
                                         <c:when test="${not empty contrato.numCuotasNumero && contrato.numCuotasNumero > 0 && not readonly}">
@@ -194,7 +220,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <label class="form-label" title="Para la cuenta de cobro">Consecutivo</label>
                                     <input type="text" class="form-control" name="consecutivo_cobro" value="${informe.consecutivoCobro}" placeholder="Ej: 0411" <c:if test="${!contrato.facturadorElectronicoOConIva && contrato.ivaSiNo != 'SI' && contrato.ivaSiNo != 'Si' && contrato.ivaSiNo != 'si' && contrato.facturadorElectronico != 'SI' && contrato.facturadorElectronico != 'Si' && contrato.facturadorElectronico != 'si'}">required</c:if> ${readonly ? 'readonly' : ''}>
                                 </div>
@@ -409,13 +435,13 @@
                                     <textarea class="form-control" name="recomendaciones" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.id ? 'No se reportan recomendaciones para este periodo' : informe.recomendaciones}</textarea>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Fecha de transacción</label>
+                                    <label class="form-label fw-semibold">Fecha de transacción <span class="text-danger fw-bold req-asterisk">*</span></label>
                                     <c:choose>
                                         <c:when test="${not empty informe.fechaSuscripcion}">
-                                            <input type="date" class="form-control" name="fecha_suscripcion" value="<fmt:formatDate value='${informe.fechaSuscripcion}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
+                                            <input type="date" class="form-control" name="fecha_suscripcion" id="fecha_suscripcion" value="<fmt:formatDate value='${informe.fechaSuscripcion}' pattern='yyyy-MM-dd'/>" required ${readonly ? 'readonly' : ''}>
                                         </c:when>
                                         <c:otherwise>
-                                            <input type="date" class="form-control" name="fecha_suscripcion" value="" required ${readonly ? 'readonly' : ''}>
+                                            <input type="date" class="form-control" name="fecha_suscripcion" id="fecha_suscripcion" value="" required ${readonly ? 'readonly' : ''}>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -1458,15 +1484,19 @@
                     }
                 });
             } else {
-                // Al guardar borrador, verificar únicamente los datos mínimos de identificación (Período y Cuota)
+                // Al guardar borrador, verificar datos mínimos de identificación y Fecha de transacción obligatoria
                 var $periodo = $('input[name="periodo_informe"]');
                 var $cuota = $('select[name="numero_cuota"], input[name="numero_cuota"]');
+                var $fechaSuscripcion = $('input[name="fecha_suscripcion"]');
                 if (!$periodo.val() || $periodo.val().trim() === '') {
                     isValid = false;
                     firstInvalid = $periodo;
                 } else if (!$cuota.val() || $cuota.val().trim() === '') {
                     isValid = false;
                     firstInvalid = $cuota;
+                } else if (!$fechaSuscripcion.val() || $fechaSuscripcion.val().trim() === '') {
+                    isValid = false;
+                    firstInvalid = $fechaSuscripcion;
                 }
             }
             
@@ -1484,7 +1514,7 @@
                 var alertTitle = esRadicacion ? '¡Faltan datos para radicar!' : '¡Faltan datos para el borrador!';
                 var errorMsg = esRadicacion ? 
                     'Por favor, diligencia todos los campos obligatorios antes de radicar la cuenta.' : 
-                    'Para guardar el borrador, debes indicar al menos el <b>Período del informe (Mes y Año)</b> y el <b>Número de cuota</b>.';
+                    'Para guardar el borrador, es obligatorio indicar el <b>Período del informe</b>, el <b>Número de cuota</b> y la <b>Fecha de transacción</b>.';
                 
                 Swal.fire({
                     icon: 'warning',

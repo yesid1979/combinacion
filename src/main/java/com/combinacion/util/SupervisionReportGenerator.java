@@ -115,7 +115,24 @@ public class SupervisionReportGenerator {
             reps.put("${FIRMA_CONTRATISTA}", ""); // Si no hay firma, se deja en blanco
         }
         
-        reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
+        com.combinacion.models.Supervisor supInforme = (info != null && info.getSupervisor() != null) ? info.getSupervisor() : (contrato != null ? contrato.getSupervisor() : null);
+        reps.put("${NOMBRE_SUPERVISOR}", supInforme != null && supInforme.getNombre() != null ? supInforme.getNombre() : "");
+        
+        boolean esEncargado = false;
+        if (supInforme != null) {
+            String cargo = supInforme.getCargo() != null ? supInforme.getCargo() : "";
+            String nombre = supInforme.getNombre() != null ? supInforme.getNombre() : "";
+            if (cargo.contains("(E)") || cargo.contains("(e)") || nombre.contains("(E)") || nombre.contains("(e)")) {
+                esEncargado = true;
+            }
+        }
+        if (info != null && info.getSupervisorId() != null && contrato != null && contrato.getSupervisorId() > 0) {
+            if (!info.getSupervisorId().equals(contrato.getSupervisorId())) {
+                esEncargado = true;
+            }
+        }
+        reps.put("${TEXTO_SUPERVISOR}", esEncargado ? "Nombre y firma del Supervisor (E)" : "Nombre y firma del Supervisor");
+        
         reps.put("${ORGANISMO}", contrato.getOrdenadorGasto() != null && contrato.getOrdenadorGasto().getOrganismo() != null ? contrato.getOrdenadorGasto().getOrganismo() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
         reps.put("${TIPO_CONTRATO}", contrato.getTipoContrato() != null ? contrato.getTipoContrato().toUpperCase() : "");
@@ -246,6 +263,10 @@ public class SupervisionReportGenerator {
                     
                     xml = xml.replace("${X_PARCIAL}", xParcial != null ? xParcial : "  ");
                     xml = xml.replace("${X_FINAL}", xFinal != null ? xFinal : "  ");
+                    
+                    if (esEncargado) {
+                        xml = xml.replace("Nombre y firma del Supervisor", "Nombre y firma del Supervisor (E)");
+                    }
                     
                     // Forzar que TODAS las filas de las tablas puedan dividirse entre páginas 
                     // para evitar que LibreOffice corte el texto cuando es muy largo

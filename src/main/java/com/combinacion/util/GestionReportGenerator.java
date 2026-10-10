@@ -117,7 +117,8 @@ public class GestionReportGenerator {
             reps.put("${FIRMA_CONTRATISTA}", ""); // Si no hay firma, se deja en blanco
         }
         
-        reps.put("${NOMBRE_SUPERVISOR}", contrato.getSupervisor() != null && contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre() : "");
+        com.combinacion.models.Supervisor supInforme = (info != null && info.getSupervisor() != null) ? info.getSupervisor() : (contrato != null ? contrato.getSupervisor() : null);
+        reps.put("${NOMBRE_SUPERVISOR}", supInforme != null && supInforme.getNombre() != null ? supInforme.getNombre() : "");
         reps.put("${OBJETO_CONTRACTUAL}", contrato.getObjeto() != null ? contrato.getObjeto() : "");
         
         // Datos del Informe

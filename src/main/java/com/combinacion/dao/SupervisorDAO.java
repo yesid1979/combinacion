@@ -10,17 +10,25 @@ public class SupervisorDAO {
 
     public List<Supervisor> listarTodos() {
         List<Supervisor> lista = new ArrayList<>();
-        String sql = "SELECT * FROM supervisores ORDER BY nombre";
+        java.util.Set<String> nombresVistos = new java.util.HashSet<>();
+        String sql = "SELECT * FROM supervisores ORDER BY nombre, id";
 
         try (Connection conn = DBConnection.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                String nombre = rs.getString("nombre");
+                String key = (nombre != null) ? nombre.trim().toUpperCase() : "";
+                if (!key.isEmpty() && nombresVistos.contains(key)) {
+                    continue; // Evita mostrar nombres duplicados en los desplegables
+                }
+                nombresVistos.add(key);
+
                 Supervisor s = new Supervisor();
                 s.setId(rs.getInt("id"));
                 s.setCedula(rs.getString("cedula"));
-                s.setNombre(rs.getString("nombre"));
+                s.setNombre(nombre);
                 s.setCargo(rs.getString("cargo"));
                 lista.add(s);
             }
