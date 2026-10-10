@@ -29,11 +29,28 @@
 
     <div class="container mt-4 mb-5 flex-grow-1">
 
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb breadcrumb-premium">
                 <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
-                <li class="breadcrumb-item active text-muted">Administración</li>
-                <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-gear-fill me-1"></i>Configuración del Sistema</li>
+                <li class="breadcrumb-item text-muted">Administración</li>
+                <c:choose>
+                    <c:when test="${param.action == 'new' || not empty configEdit}">
+                        <li class="breadcrumb-item">
+                            <a href="${pageContext.request.contextPath}/admin/configuracion">
+                                <i class="bi bi-gear-fill me-1"></i>Configuración del Sistema
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <c:choose>
+                                <c:when test="${not empty configEdit}"><i class="bi bi-pencil-square me-1"></i>Editar Configuración</c:when>
+                                <c:otherwise><i class="bi bi-plus-circle-fill me-1"></i>Nueva Configuración</c:otherwise>
+                            </c:choose>
+                        </li>
+                    </c:when>
+                    <c:otherwise>
+                        <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-gear-fill me-1"></i>Configuración del Sistema</li>
+                    </c:otherwise>
+                </c:choose>
             </ol>
         </nav>
 
