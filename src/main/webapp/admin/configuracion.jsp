@@ -67,19 +67,34 @@
                 <!-- Tarjeta de Guía Rápida para el Administrador -->
                 <div class="card border-0 shadow-sm mb-4 bg-light border-start border-4 border-primary">
                     <div class="card-body p-3">
-                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-info-circle-fill me-2"></i>Guía de Parámetros del Sistema (Google Drive)</h6>
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-info-circle-fill me-2"></i>Guía de Nombres y Parámetros del Sistema (Google Drive)</h6>
                         <div class="row g-2 small text-muted">
                             <div class="col-md-6">
                                 <ul class="list-unstyled mb-0">
-                                    <li class="mb-1"><strong><code>DRIVE_CARPETA_PRUEBAS</code>:</strong> Carpeta principal en Google Drive para <strong>Informes y Cuentas de Cobro</strong> (cada año se actualiza con el ID de la vigencia actual).</li>
-                                    <li class="mb-1"><strong><code>DRIVE_CARPETA_FIRMAS</code>:</strong> Carpeta en Google Drive donde se guardan las firmas digitalizadas.</li>
-                                    <li class="mb-1"><strong><code>DRIVE_CARPETA_IMAGENES_WEB</code>:</strong> Carpeta para fotos e imágenes subidas en los informes.</li>
+                                    <li class="mb-2">
+                                        <strong><code>DRIVE_CARPETA_CUENTAS_COBRO</code></strong> <span class="badge bg-secondary">o DRIVE_CARPETA_PRUEBAS</span>:<br>
+                                        <span class="text-dark">Carpeta oficial en Google Drive donde se guardan las <strong>Cuentas de Cobro e Informes de Supervisión</strong> de los contratistas. <em>(Se actualiza cada año con el nuevo ID de la vigencia)</em>.</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><code>DRIVE_CARPETA_FIRMAS</code></strong>:<br>
+                                        <span class="text-dark">Carpeta en Google Drive donde se almacenan las firmas digitales de supervisores y contratistas.</span>
+                                    </li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
                                 <ul class="list-unstyled mb-0">
-                                    <li class="mb-1"><strong><code>DRIVE_CARPETA_SISTEMA</code>:</strong> Carpeta raíz general del aplicativo en Google Drive.</li>
-                                    <li class="mb-1"><strong><code>DRIVE_CARPETA_EVIDENCIAS</code>:</strong> Subcarpeta generada en cada cuenta. <span class="badge bg-warning text-dark">Obligatorio</span> El valor debe ser el texto <code>EVIDENCIAS</code> (no poner ID).</li>
+                                    <li class="mb-2">
+                                        <strong><code>DRIVE_CARPETA_IMAGENES_WEB</code></strong>:<br>
+                                        <span class="text-dark">Carpeta en Google Drive para las fotos o evidencias gráficas subidas desde el editor del informe.</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><code>DRIVE_CARPETA_SISTEMA</code></strong>:<br>
+                                        <span class="text-dark">Carpeta raíz principal que contiene la estructura general en Google Drive.</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><code>DRIVE_CARPETA_EVIDENCIAS</code></strong>:<br>
+                                        <span class="text-dark">Nombre del subdirectorio que se genera automáticamente dentro de cada cuota. <span class="badge bg-warning text-dark">Importante</span> Su valor debe ser el texto exacto <code>EVIDENCIAS</code> (no poner ID).</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -92,10 +107,10 @@
                             <input type="hidden" name="action" value="save">
                             <input type="hidden" name="id" value="${configEdit != null ? configEdit.id : ''}">
 
-                            <!-- Campo Clave -->
+                            <!-- Campo 1: Nombre de la Variable / Parámetro -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
-                                    <span>1. Clave del Parámetro (Identificador del Sistema) <span class="text-danger">*</span></span>
+                                    <span>1. Nombre del Parámetro / Variable del Sistema <span class="text-danger">*</span></span>
                                     <span class="badge bg-secondary font-monospace" id="badgeClaveTipo">Seleccione o escriba</span>
                                 </label>
                                 <input type="text" 
@@ -103,55 +118,56 @@
                                        id="inputClave" 
                                        name="clave" 
                                        list="sugerenciasClaves"
-                                       placeholder="Ej: DRIVE_CARPETA_PRUEBAS"
+                                       placeholder="Ej: DRIVE_CARPETA_CUENTAS_COBRO"
                                        value="${configEdit != null ? configEdit.clave : ''}" 
                                        required 
                                        autocomplete="off">
                                 
                                 <datalist id="sugerenciasClaves">
-                                    <option value="DRIVE_CARPETA_PRUEBAS">Carpeta para Informes y Cuentas de Cobro (Google Drive)</option>
+                                    <option value="DRIVE_CARPETA_CUENTAS_COBRO">Carpeta oficial para Informes y Cuentas de Cobro (Google Drive)</option>
+                                    <option value="DRIVE_CARPETA_PRUEBAS">Carpeta para Informes y Cuentas de Cobro (Nombre histórico)</option>
                                     <option value="DRIVE_CARPETA_FIRMAS">Carpeta para Firmas Digitales (Google Drive)</option>
                                     <option value="DRIVE_CARPETA_IMAGENES_WEB">Carpeta para Imágenes del Editor Web (Google Drive)</option>
-                                    <option value="DRIVE_CARPETA_SISTEMA">Carpeta Raíz del Sistema (Google Drive)</option>
-                                    <option value="DRIVE_CARPETA_EVIDENCIAS">Nombre de Subcarpeta de Evidencias (EVIDENCIAS)</option>
+                                    <option value="DRIVE_CARPETA_SISTEMA">Carpeta Raíz General del Sistema (Google Drive)</option>
+                                    <option value="DRIVE_CARPETA_EVIDENCIAS">Subcarpeta de Anexos dentro de cada cuota (EVIDENCIAS)</option>
                                 </datalist>
 
                                 <!-- Botones de sugerencia rápida -->
                                 <div class="mt-2 d-flex flex-wrap gap-1 align-items-center">
-                                    <span class="small text-muted me-1">Sugerencias rápidas:</span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_PRUEBAS" data-desc="Carpeta principal de Google Drive para Informes de Supervisión y Cuentas de Cobro de la vigencia actual.">DRIVE_CARPETA_PRUEBAS</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_FIRMAS" data-desc="Carpeta de Google Drive para almacenar las firmas digitalizadas de supervisores y contratistas.">DRIVE_CARPETA_FIRMAS</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_IMAGENES_WEB" data-desc="Carpeta de Google Drive para imágenes e ilustraciones de informes web.">DRIVE_CARPETA_IMAGENES_WEB</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_SISTEMA" data-desc="Carpeta raíz principal del aplicativo en Google Drive.">DRIVE_CARPETA_SISTEMA</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_EVIDENCIAS" data-valor="EVIDENCIAS" data-desc="Nombre exacto de la subcarpeta de anexos/evidencias creada dentro de cada cuenta de cobro.">DRIVE_CARPETA_EVIDENCIAS</button>
+                                    <span class="small text-muted me-1 fw-bold">Parámetros disponibles:</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_CUENTAS_COBRO" data-desc="Carpeta principal de Google Drive para Informes de Supervisión y Cuentas de Cobro de la vigencia actual.">📁 Cuentas de Cobro / Informes</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_FIRMAS" data-desc="Carpeta de Google Drive para almacenar las firmas digitalizadas de supervisores y contratistas.">✍️ Firmas Digitales</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_IMAGENES_WEB" data-desc="Carpeta de Google Drive para imágenes e ilustraciones de informes web.">🖼️ Imágenes Editor</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_SISTEMA" data-desc="Carpeta raíz principal del aplicativo en Google Drive.">🌐 Carpeta Raíz Sistema</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 btn-sugerencia" data-clave="DRIVE_CARPETA_EVIDENCIAS" data-valor="EVIDENCIAS" data-desc="Nombre exacto de la subcarpeta de evidencias creada dentro de cada cuota.">📎 Subcarpeta Evidencias</button>
                                 </div>
                                 <div class="form-text mt-1 text-muted">
-                                    Nombre único en mayúsculas que el sistema utiliza internamente para reconocer el parámetro.
+                                    <i class="bi bi-info-circle me-1"></i><strong>Nota:</strong> No es una contraseña de acceso. Es el nombre técnico de la opción que el sistema reconoce para saber qué carpeta utilizar.
                                 </div>
                             </div>
 
-                            <!-- Campo Valor -->
+                            <!-- Campo 2: Identificador / Valor -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-dark">
-                                    2. Valor del Parámetro (ID de Google Drive, Enlace web o Texto) <span class="text-danger">*</span>
+                                    2. Identificador / Valor (ID de Google Drive, Enlace Web o Texto) <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" 
                                        class="form-control form-control-lg" 
                                        id="inputValor" 
                                        name="valor" 
-                                       placeholder="Ej: 1G4pkT8wpoTiNTf4SH4_FNudq-21UkVe9"
+                                       placeholder="Pegue aquí el ID o enlace (ej: 1G4pkT8wpoTiNTf4SH4_FNudq-21UkVe9)"
                                        value="${configEdit != null ? configEdit.valor : ''}" 
                                        required>
                                 
                                 <!-- Mensaje contextual de ayuda del valor -->
-                                <div id="ayudaValorDrive" class="mt-2 p-2 rounded bg-light border small">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-info-circle text-primary me-2 fs-5"></i>
+                                <div id="ayudaValorDrive" class="mt-2 p-3 rounded bg-light border small">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-folder-check text-primary me-2 fs-5"></i>
                                         <div>
-                                            <strong>¿Qué colocar en este campo?</strong>
+                                            <strong class="text-dark">¿Qué ingresar en este campo según el parámetro?</strong>
                                             <ul class="mb-0 ps-3 mt-1 text-muted">
-                                                <li><strong>Para carpetas de Drive:</strong> Pegue el <strong>ID de la carpeta</strong> (ej: <code>1G4pkT8wpoTiNTf4SH4_FNudq-21UkVe9</code>) o el <strong>enlace completo</strong> de la carpeta (ej: <code>https://drive.google.com/drive/folders/...</code>). El sistema lo detectará automáticamente.</li>
-                                                <li><strong>Para DRIVE_CARPETA_EVIDENCIAS:</strong> Debe escribir únicamente la palabra <code>EVIDENCIAS</code>.</li>
+                                                <li><strong>Para carpetas de Drive:</strong> Pegue el <strong>ID alfanumérico</strong> de la carpeta (ej: <code>1G4pkT8wpoTiNTf4SH4_FNudq-21UkVe9</code>) o el <strong>enlace completo</strong> de la barra del navegador (ej: <code>https://drive.google.com/drive/folders/1G4pk...</code>). El sistema extrae el ID automáticamente.</li>
+                                                <li><strong>Para DRIVE_CARPETA_EVIDENCIAS:</strong> Escriba únicamente la palabra <code>EVIDENCIAS</code> (este no lleva enlace ni ID de Drive).</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -159,24 +175,24 @@
                                         <span class="badge bg-success me-1"><i class="bi bi-check-circle me-1"></i>ID Detectado:</span>
                                         <code id="driveIdDetectado" class="fw-bold"></code>
                                         <a href="#" id="linkPruebaDrive" target="_blank" class="btn btn-sm btn-outline-primary ms-2 py-0">
-                                            <i class="bi bi-box-arrow-up-right me-1"></i>Probar enlace en Google Drive
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir y verificar carpeta en Google Drive
                                         </a>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Campo Descripción -->
+                            <!-- Campo 3: Descripción -->
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-dark">
-                                    3. Descripción del Parámetro (Explicación para administradores)
+                                    3. Descripción del Parámetro (Propósito y Vigencia)
                                 </label>
                                 <textarea class="form-control" 
                                           id="inputDescripcion" 
                                           name="descripcion" 
                                           rows="3" 
-                                          placeholder="Describa para qué sirve este parámetro, qué vigencia o carpeta representa...">${configEdit != null ? configEdit.descripcion : ''}</textarea>
+                                          placeholder="Ej: Carpeta principal en Google Drive para guardar los informes y cuentas de cobro de los contratistas durante la vigencia 2026.">${configEdit != null ? configEdit.descripcion : ''}</textarea>
                                 <div class="form-text text-muted">
-                                    Especifique con claridad el propósito de esta configuración para que cualquier administrador comprenda su función en el futuro.
+                                    Explique para qué se utiliza este parámetro para que cualquier persona o administrador entienda su función a futuro.
                                 </div>
                             </div>
 
@@ -223,9 +239,9 @@
                         <table class="table table-striped w-100" id="configTableModern">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 25%;">Clave</th>
-                                    <th style="width: 35%;">Valor</th>
-                                    <th style="width: 28%;">Descripción</th>
+                                    <th style="width: 30%;">Parámetro del Sistema</th>
+                                    <th style="width: 32%;">ID / Carpeta en Google Drive</th>
+                                    <th style="width: 26%;">Descripción y Propósito</th>
                                     <th class="text-center" style="width: 12%;">Acciones</th>
                                 </tr>
                             </thead>
@@ -348,8 +364,16 @@
                             "data": 0,
                             "render": function(data, type, row) {
                                 let badge = '';
-                                if (data && data.startsWith('DRIVE_')) {
-                                    badge = ' <span class="badge bg-light text-primary border border-primary small" style="font-size: 0.7rem;">Drive</span>';
+                                if (data === 'DRIVE_CARPETA_CUENTAS_COBRO' || data === 'DRIVE_CARPETA_PRUEBAS') {
+                                    badge = '<div class="small text-primary fw-bold"><i class="bi bi-folder-fill me-1"></i>Cuentas de Cobro / Informes</div>';
+                                } else if (data === 'DRIVE_CARPETA_FIRMAS') {
+                                    badge = '<div class="small text-secondary fw-semibold"><i class="bi bi-pen-fill me-1"></i>Firmas Digitales</div>';
+                                } else if (data === 'DRIVE_CARPETA_IMAGENES_WEB') {
+                                    badge = '<div class="small text-secondary fw-semibold"><i class="bi bi-image-fill me-1"></i>Imágenes Web</div>';
+                                } else if (data === 'DRIVE_CARPETA_SISTEMA') {
+                                    badge = '<div class="small text-secondary fw-semibold"><i class="bi bi-hdd-network-fill me-1"></i>Raíz del Sistema</div>';
+                                } else if (data === 'DRIVE_CARPETA_EVIDENCIAS') {
+                                    badge = '<div class="small text-warning fw-semibold"><i class="bi bi-folder2-open me-1"></i>Subcarpeta de Evidencias</div>';
                                 }
                                 return '<span class="font-monospace fw-bold text-dark">' + data + '</span>' + badge;
                             }

@@ -1496,7 +1496,11 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             String folderNameCuota = "CUOTA " + cNum;
 
             // 1. Obtener o resolver la carpeta raíz (acepta ID directo, URL de Drive, o nombre de carpeta)
-            String configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+            // Soporta el nombre claro 'DRIVE_CARPETA_CUENTAS_COBRO' o el histórico 'DRIVE_CARPETA_PRUEBAS'
+            String configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
+            if (configuredPruebas == null || configuredPruebas.trim().isEmpty()) {
+                configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+            }
             String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(configuredPruebas, null);
 
             // 2. Resolver o crear la carpeta principal del contratista con búsqueda inteligente
