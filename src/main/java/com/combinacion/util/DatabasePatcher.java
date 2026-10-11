@@ -183,6 +183,65 @@ public class DatabasePatcher {
                              "WHERE r.nombre = 'Administrador' " +
                              "ON CONFLICT DO NOTHING");
 
+            // Asegurar creación de las vistas de informes y contratos
+            stmt.executeUpdate(
+                "CREATE OR REPLACE VIEW vista_resumen_contratos_cuotas AS\n" +
+                "SELECT \n" +
+                "    c.id AS contrato_id,\n" +
+                "    c.numero_contrato,\n" +
+                "    c.anio,\n" +
+                "    ct.nombre AS nombres_apellidos,\n" +
+                "    ct.cedula AS cedula_contratista,\n" +
+                "    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor') AS supervisor,\n" +
+                "    STRING_AGG(DISTINCT COALESCE(u.nombre_completo, 'Sin revisor'), ', ') AS revisor,\n" +
+                "    STRING_AGG(inf.id::text, ', ' ORDER BY (CASE WHEN inf.numero_cuota ~ '^[0-9]+$' THEN inf.numero_cuota::int ELSE 9999 END), inf.id) AS ids_informes,\n" +
+                "    STRING_AGG(\n" +
+                "        'Cuota ' || COALESCE(inf.numero_cuota, 'N/A') || ': ' || COALESCE(inf.estado_radicacion, 'BORRADOR'),\n" +
+                "        ' | ' \n" +
+                "        ORDER BY (CASE WHEN inf.numero_cuota ~ '^[0-9]+$' THEN inf.numero_cuota::int ELSE 9999 END), inf.id\n" +
+                "    ) AS cuotas_registradas_estado,\n" +
+                "    COUNT(inf.id) AS total_cuotas_registradas\n" +
+                "FROM contratos c\n" +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
+                "LEFT JOIN supervisores s_con ON c.supervisor_id = s_con.id\n" +
+                "INNER JOIN informes_supervision inf ON inf.contrato_id = c.id\n" +
+                "LEFT JOIN supervisores s_inf ON inf.supervisor_id = s_inf.id\n" +
+                "LEFT JOIN usuarios u ON inf.id_revisor_asignado = u.id\n" +
+                "GROUP BY \n" +
+                "    c.id, \n" +
+                "    c.numero_contrato, \n" +
+                "    c.anio, \n" +
+                "    ct.nombre, \n" +
+                "    ct.cedula,\n" +
+                "    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor')\n" +
+                "ORDER BY c.id DESC"
+            );
+
+            stmt.executeUpdate(
+                "CREATE OR REPLACE VIEW vista_informes_cuotas_detalle AS\n" +
+                "SELECT \n" +
+                "    inf.id AS id_informe,\n" +
+                "    c.id AS contrato_id,\n" +
+                "    c.numero_contrato,\n" +
+                "    c.anio,\n" +
+                "    ct.nombre AS nombres_apellidos,\n" +
+                "    ct.cedula AS cedula_contratista,\n" +
+                "    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor') AS supervisor,\n" +
+                "    COALESCE(u.nombre_completo, 'Sin revisor') AS revisor,\n" +
+                "    inf.numero_cuota,\n" +
+                "    COALESCE(inf.estado_radicacion, 'BORRADOR') AS estado_radicacion,\n" +
+                "    inf.periodo_informe,\n" +
+                "    inf.fecha_creacion\n" +
+                "FROM informes_supervision inf\n" +
+                "INNER JOIN contratos c ON inf.contrato_id = c.id\n" +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
+                "LEFT JOIN supervisores s_con ON c.supervisor_id = s_con.id\n" +
+                "LEFT JOIN supervisores s_inf ON inf.supervisor_id = s_inf.id\n" +
+                "LEFT JOIN usuarios u ON inf.id_revisor_asignado = u.id\n" +
+                "ORDER BY inf.id DESC"
+            );
+
+            System.out.println("✅ Vistas 'vista_resumen_contratos_cuotas' y 'vista_informes_cuotas_detalle' aseguradas.");
             System.out.println("✅ Todos los permisos de ADMINISTRACION asegurados.");
 
         } catch (Exception e) {
