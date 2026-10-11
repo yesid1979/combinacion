@@ -269,19 +269,22 @@ public class DatabasePatcher {
                 "    END AS situacion,\n" +
                 "    c.fecha_inicio,\n" +
                 "    c.fecha_terminacion,\n" +
+                "    (c.fecha_terminacion - CURRENT_DATE) AS dias_para_vencer,\n" +
                 "    c.plazo_ejecucion AS plazo,\n" +
                 "    c.valor_total_numeros AS valor_contrato\n" +
                 "FROM contratos c\n" +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
                 "LEFT JOIN supervisores s ON c.supervisor_id = s.id\n" +
                 "LEFT JOIN informes_supervision inf ON inf.contrato_id = c.id\n" +
-                "WHERE NOT EXISTS (\n" +
-                "    SELECT 1 \n" +
-                "    FROM informes_supervision inf_rad \n" +
-                "    WHERE inf_rad.contrato_id = c.id \n" +
-                "      AND inf_rad.estado_radicacion IS NOT NULL \n" +
-                "      AND inf_rad.estado_radicacion != 'BORRADOR'\n" +
-                ")\n" +
+                "WHERE c.estado NOT IN ('CERRADO', 'ANULADO', 'TERMINADO ANTICIPADO')\n" +
+                "  AND (c.fecha_terminacion IS NULL OR c.fecha_terminacion >= CURRENT_DATE)\n" +
+                "  AND NOT EXISTS (\n" +
+                "      SELECT 1 \n" +
+                "      FROM informes_supervision inf_rad \n" +
+                "      WHERE inf_rad.contrato_id = c.id \n" +
+                "        AND inf_rad.estado_radicacion IS NOT NULL \n" +
+                "        AND inf_rad.estado_radicacion != 'BORRADOR'\n" +
+                "  )\n" +
                 "GROUP BY \n" +
                 "    c.id, c.numero_contrato, c.anio, ct.cedula, ct.nombre, ct.telefono, ct.correo, s.nombre, c.estado, c.fecha_inicio, c.fecha_terminacion, c.plazo_ejecucion, c.valor_total_numeros\n" +
                 "ORDER BY c.anio DESC, c.numero_contrato ASC"
