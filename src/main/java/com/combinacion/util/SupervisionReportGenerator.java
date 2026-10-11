@@ -52,7 +52,7 @@ public class SupervisionReportGenerator {
     private static final String TEMPLATE_PATH_BORRADOR = "plantillas/INFORME_SUPERVISION_TEMPLATE_BORRADOR.docx";
     private static final String OUTPUT_DIR = "generados/informes";
 
-    private static byte[] templateCacheBytes = null;
+    private static final java.util.Map<String, byte[]> templateCacheMap = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static String generarDocx(InformeSupervision info, Contrato contrato) throws IOException {
         return generarDocx(info, contrato, null);
@@ -218,13 +218,16 @@ public class SupervisionReportGenerator {
         }
         
         // 1. Cargar plantilla en cache de memoria
-        if (templateCacheBytes == null) {
-            templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+        String cacheKey = templateFile.getAbsolutePath() + "_" + templateFile.lastModified();
+        byte[] tplBytes = templateCacheMap.get(cacheKey);
+        if (tplBytes == null) {
+            tplBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+            templateCacheMap.put(cacheKey, tplBytes);
         }
 
         ByteArrayOutputStream docxMemoryStream = new ByteArrayOutputStream();
 
-        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(templateCacheBytes);
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(tplBytes);
              org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(bais)) {
             
             TemplateGenerator.replacePlaceholders(doc, reps);
@@ -324,6 +327,9 @@ public class SupervisionReportGenerator {
                         
                         tablaXml.append("<w:tbl>");
                         tablaXml.append("<w:tblPr>");
+                        tablaXml.append("<w:tblStyle w:val=\"ac\"/>");
+                        tablaXml.append("<w:tblW w:w=\"9958\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:tblInd w:w=\"0\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:tblBorders>");
                         tablaXml.append("<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
@@ -332,23 +338,26 @@ public class SupervisionReportGenerator {
                         tablaXml.append("<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("<w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>");
                         tablaXml.append("</w:tblBorders>");
+                        // Orden obligatorio del esquema OOXML: tblLayout ANTES de tblCellMar
+                        tablaXml.append("<w:tblLayout w:type=\"fixed\"/>");
                         tablaXml.append("<w:tblCellMar>");
                         tablaXml.append("<w:top w:w=\"80\" w:type=\"dxa\"/>");
-                        tablaXml.append("<w:left w:w=\"140\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:left w:w=\"100\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:bottom w:w=\"80\" w:type=\"dxa\"/>");
-                        tablaXml.append("<w:right w:w=\"140\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:right w:w=\"100\" w:type=\"dxa\"/>");
                         tablaXml.append("</w:tblCellMar>");
-                        tablaXml.append("<w:tblW w:w=\"10000\" w:type=\"dxa\"/>");
-                        tablaXml.append("<w:tblLayout w:type=\"fixed\"/>");
                         tablaXml.append("</w:tblPr>");
                         
                         tablaXml.append("<w:tblGrid>");
-                        tablaXml.append("<w:gridCol w:w=\"4000\"/>");
-                        tablaXml.append("<w:gridCol w:w=\"6000\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"3818\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"6140\"/>");
                         tablaXml.append("</w:tblGrid>");
                         
-                        // Header
-                        tablaXml.append("<w:tr><w:tc><w:tcPr><w:tcW w:w=\"4000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w=\"6000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/><w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"F2F2F2\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc></w:tr>");
+                        // Header Row
+                        tablaXml.append("<w:tr>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3818\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"6140\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("</w:tr>");
                         
                         // Rows
                         for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
@@ -361,12 +370,12 @@ public class SupervisionReportGenerator {
                             tablaXml.append("<w:tr>");
                             
                             // Cell Obligacion
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"4000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"3818\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"40\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
                             // Cell Actividad (ya es Word XML)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"6000\" w:type=\"dxa\"/><w:noWrap w:val=\"0\"/></w:tcPr>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"6140\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr>")
                                     .append(acXml)
                                     .append("</w:tc>");
                                     

@@ -2207,6 +2207,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (html == null || html.isEmpty()) return html;
         try {
             // Limpieza cruda antes de Jsoup para atributos mal formados sin comillas
+            html = html.replaceAll("(?i)<link[^>]*>", "");
+            html = html.replaceAll("(?i)<style[^>]*>[\\s\\S]*?</style>", "");
+            html = html.replaceAll(",(?=[^\\s<])", ", "); // Separar comas pegadas a textos/números para evitar que Word comprima columnas
             html = html.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)o:p", "span"); // Reemplazar tags <o:p> de word

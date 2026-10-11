@@ -26,10 +26,19 @@ public class HtmlToWordXmlConverter {
         // Remove zero-width spaces or weird characters from Summernote
         html = html.replace("&nbsp;", " ").replace("\u200B", "");
         
+        // Limpiar basura de portapapeles de Word (mso, clip_filelist, links locales, styles)
+        html = html.replaceAll("(?i)<link[^>]*>", "");
+        html = html.replaceAll("(?i)<style[^>]*>[\\s\\S]*?</style>", "");
+        
+        // Separar comas pegadas a texto/números sin espacio (ej. radicados "123,456,789") que crean tokens gigantescos
+        // y fuerzan al motor de tablas de Word a encoger la columna de obligaciones
+        html = html.replaceAll(",(?=[^\\s<])", ", ");
+        
         // Limpiar párrafos vacíos o que solo contienen <br> o espacios repetidos (causantes de huecos blancos feos)
         html = html.replaceAll("(?i)<p[^>]*>(\\s*|<br\\s*/?>|&nbsp;|&#160;)*</p>", "");
         html = html.replaceAll("(?i)<div[^>]*>(\\s*|<br\\s*/?>|&nbsp;|&#160;)*</div>", "");
         html = html.replaceAll("(?i)(<br\\s*/?>\\s*){2,}", "<br/>");
+        html = html.replaceAll("(?i)<br\\s*/?>([\\s\\u00A0]*[•●·▪▫○⁃\\u2022\\u25cf\\u00b7\\u25aa\\u25ab\\u25cb\\u2043\\?])", "</p><p>$1");
         
         org.jsoup.nodes.Document jsoupDoc = Jsoup.parseBodyFragment(html);
         
@@ -165,39 +174,92 @@ public class HtmlToWordXmlConverter {
                 }
                 boolean isBold = inheritedBold || tagName.startsWith("h") || tagName.equals("b") || tagName.equals("strong");
 
+                String rawText = el.text().trim();
+                boolean isBulletPara = startsWithBullet(rawText);
+
                 xml.append("<w:p>");
                 xml.append("<w:pPr>");
                 xml.append("<w:jc w:val=\"").append(align).append("\"/>");
                 xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
+                if (isBulletPara) {
+                    xml.append("<w:ind w:left=\"180\" w:hanging=\"180\"/>");
+                    xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"180\"/></w:tabs>");
+                }
                 xml.append("</w:pPr>");
+
+                if (isBulletPara) {
+                    xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>•</w:t></w:r><w:r><w:tab/></w:r>");
+                    stripLeadingBullet(el);
+                }
                 processInlineChildren(el, xml, doc, isBold, false, false, 22);
                 xml.append("</w:p>");
             }
         }
     }
 
-    private static void flushInlineGroup(List<Node> group, StringBuilder xml, XWPFDocument doc, String align, boolean isBold) {
-        boolean hasContent = false;
-        for (Node n : group) {
-            if (n instanceof TextNode && !((TextNode) n).text().trim().isEmpty()) {
-                hasContent = true;
-                break;
+    private static boolean startsWithBullet(String text) {
+        if (text == null || text.isEmpty()) return false;
+        String trimmed = text.replaceFirst("^[\\s\\u00A0]+", "");
+        if (trimmed.isEmpty()) return false;
+        char c = trimmed.charAt(0);
+        return c == '•' || c == '●' || c == '·' || c == '▪' || c == '▫' || c == '○' || c == '⁃' ||
+               c == '\u2022' || c == '\u25cf' || c == '\u00b7' || c == '\u25aa' || c == '\u25ab' || c == '\u25cb' || c == '\u2043' ||
+               c == '?';
+    }
+
+    private static boolean stripLeadingBullet(Node node) {
+        if (node instanceof TextNode) {
+            TextNode tn = (TextNode) node;
+            String val = tn.text();
+            String trimmed = val.replaceFirst("^[\\s\\u00A0]*[•●·▪▫○⁃\\u2022\\u25cf\\u00b7\\u25aa\\u25ab\\u25cb\\u2043\\?][\\s\\u00A0]*", "");
+            if (!trimmed.equals(val)) {
+                tn.text(trimmed);
+                return true;
             }
-            if (n instanceof Element) {
-                Element e = (Element) n;
-                if (!e.text().trim().isEmpty() || !e.select("img").isEmpty()) {
-                    hasContent = true;
-                    break;
+        } else if (node instanceof Element) {
+            for (Node child : node.childNodes()) {
+                if (stripLeadingBullet(child)) {
+                    return true;
                 }
             }
         }
+        return false;
+    }
+
+    private static void flushInlineGroup(List<Node> group, StringBuilder xml, XWPFDocument doc, String align, boolean isBold) {
+        boolean hasContent = false;
+        StringBuilder sbText = new StringBuilder();
+        for (Node n : group) {
+            if (n instanceof TextNode) {
+                String t = ((TextNode) n).text();
+                sbText.append(t);
+                if (!t.trim().isEmpty()) hasContent = true;
+            } else if (n instanceof Element) {
+                Element e = (Element) n;
+                sbText.append(e.text());
+                if (!e.text().trim().isEmpty() || !e.select("img").isEmpty()) hasContent = true;
+            }
+        }
         if (!hasContent) return;
+
+        String rawTrimmed = sbText.toString().trim();
+        boolean startsWithBullet = startsWithBullet(rawTrimmed);
 
         xml.append("<w:p>");
         xml.append("<w:pPr>");
         xml.append("<w:jc w:val=\"").append(align.isEmpty() ? "both" : align).append("\"/>");
         xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
+        if (startsWithBullet) {
+            xml.append("<w:ind w:left=\"180\" w:hanging=\"180\"/>");
+            xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"180\"/></w:tabs>");
+        }
         xml.append("</w:pPr>");
+        if (startsWithBullet) {
+            xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>•</w:t></w:r><w:r><w:tab/></w:r>");
+            for (Node n : group) {
+                if (stripLeadingBullet(n)) break;
+            }
+        }
         for (Node n : group) {
             processInlineNode(n, xml, doc, isBold, false, false, 22);
         }
@@ -443,7 +505,8 @@ public class HtmlToWordXmlConverter {
                 xml.append("<w:p><w:pPr>");
                 xml.append("<w:jc w:val=\"").append(align.isEmpty() ? "both" : align).append("\"/>");
                 xml.append("<w:spacing w:before=\"0\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/>");
-                xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"360\"/></w:tabs>");
+                xml.append("<w:ind w:left=\"180\" w:hanging=\"180\"/>");
+                xml.append("<w:tabs><w:tab w:val=\"left\" w:pos=\"180\"/></w:tabs>");
                 xml.append("</w:pPr>");
                 
                 xml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>");
@@ -453,6 +516,7 @@ public class HtmlToWordXmlConverter {
                     xml.append("•");
                 }
                 xml.append("</w:t></w:r><w:r><w:tab/></w:r>");
+                stripLeadingBullet(li);
                 processInlineChildren(li, xml, doc, false, false, false, 22);
                 xml.append("</w:p>");
                 counter++;

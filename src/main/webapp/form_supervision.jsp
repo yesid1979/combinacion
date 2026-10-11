@@ -1338,6 +1338,8 @@
                                 var cleanHtml = temp.innerHTML;
                                 // Remover comentarios XML/HTML (basura de Word/Excel)
                                 cleanHtml = cleanHtml.replace(/<!--[\s\S]*?-->/g, "");
+                                // Si Word dejó viñetas pegadas a palabras (ej: ●Realizó o •Realizó), separarlas con espacio
+                                cleanHtml = cleanHtml.replace(/([•●·▪▫○⁃])([a-zA-ZáéíóúÁÉÍÓÚñÑ])/g, "$1 $2");
                                 // Remover espacios y párrafos vacíos que generan huecos gigantes
                                 cleanHtml = cleanHtml.replace(/<p>\s*<\/p>/gi, "");
                                 cleanHtml = cleanHtml.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "");
@@ -1363,7 +1365,8 @@
                             } else if (text) {
                                 e.preventDefault();
                                 setTimeout(function () {
-                                    var textHtml = text.replace(/\n/g, "<br>");
+                                    var textClean = text.replace(/([•●·▪▫○⁃])([a-zA-ZáéíóúÁÉÍÓÚñÑ])/g, "$1 $2");
+                                    var textHtml = textClean.replace(/\n/g, "<br>");
                                     var currentContent = $(textarea).summernote('code');
                                     if (!currentContent || currentContent === '<p><br></p>' || currentContent.trim() === '') {
                                         $(textarea).summernote('code', textHtml);

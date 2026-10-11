@@ -63,7 +63,7 @@ public class GestionReportGenerator {
     private static final String TEMPLATE_PATH_BORRADOR = "plantillas/INFORME_GESTION_TEMPLATE_BORRADOR.docx";
     private static final String OUTPUT_DIR = "generados/informes";
 
-    private static byte[] templateCacheBytes = null;
+    private static final java.util.Map<String, byte[]> templateCacheMap = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static String generarDocx(InformeSupervision info, Contrato contrato, String realPath) throws IOException {
         String currentTemplatePath = ("BORRADOR".equalsIgnoreCase(info.getEstadoRadicacion())) 
@@ -158,13 +158,16 @@ public class GestionReportGenerator {
         }
 
         // 1. Cargar plantilla en cache de memoria
-        if (templateCacheBytes == null) {
-            templateCacheBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+        String cacheKey = templateFile.getAbsolutePath() + "_" + templateFile.lastModified();
+        byte[] tplBytes = templateCacheMap.get(cacheKey);
+        if (tplBytes == null) {
+            tplBytes = java.nio.file.Files.readAllBytes(templateFile.toPath());
+            templateCacheMap.put(cacheKey, tplBytes);
         }
 
         ByteArrayOutputStream docxMemoryStream = new ByteArrayOutputStream();
 
-        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(templateCacheBytes);
+        try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(tplBytes);
              org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(bais)) {
             
             TemplateGenerator.replacePlaceholders(doc, reps);
