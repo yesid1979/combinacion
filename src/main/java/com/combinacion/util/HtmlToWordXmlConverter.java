@@ -60,6 +60,52 @@ public class HtmlToWordXmlConverter {
             }
         }
         
+        // Normalizar listas ol, ul: asegurar que todo contenido directo esté envuelto en <li>
+        for (Element list : jsoupDoc.select("ol, ul")) {
+            boolean hasNonLi = false;
+            for (Node child : list.childNodes()) {
+                if (child instanceof Element) {
+                    if (!((Element) child).tagName().equalsIgnoreCase("li")) {
+                        hasNonLi = true;
+                        break;
+                    }
+                } else if (child instanceof TextNode && !((TextNode) child).text().trim().isEmpty()) {
+                    hasNonLi = true;
+                    break;
+                }
+            }
+            if (hasNonLi) {
+                List<Node> currentLiNodes = new ArrayList<>();
+                List<Node> originalChildren = new ArrayList<>(list.childNodes());
+                for (Node child : originalChildren) {
+                    if (child instanceof Element && ((Element) child).tagName().equalsIgnoreCase("li")) {
+                        if (!currentLiNodes.isEmpty()) {
+                            Element newLi = list.ownerDocument().createElement("li");
+                            child.before(newLi);
+                            for (Node n : currentLiNodes) {
+                                newLi.appendChild(n);
+                            }
+                            currentLiNodes.clear();
+                        }
+                    } else {
+                        if (child instanceof TextNode && ((TextNode) child).text().trim().isEmpty()) {
+                            continue;
+                        }
+                        child.remove();
+                        currentLiNodes.add(child);
+                    }
+                }
+                if (!currentLiNodes.isEmpty()) {
+                    Element newLi = list.ownerDocument().createElement("li");
+                    list.appendChild(newLi);
+                    for (Node n : currentLiNodes) {
+                        newLi.appendChild(n);
+                    }
+                    currentLiNodes.clear();
+                }
+            }
+        }
+        
         StringBuilder xml = new StringBuilder();
         
         List<Node> inlineGroup = new ArrayList<>();
@@ -516,12 +562,35 @@ public class HtmlToWordXmlConverter {
                     xml.append("•");
                 }
                 xml.append("</w:t></w:r><w:r><w:tab/></w:r>");
-                stripLeadingBullet(li);
+                if (tagName.equalsIgnoreCase("ol")) {
+                    stripLeadingNumber(li, counter);
+                } else {
+                    stripLeadingBullet(li);
+                }
                 processInlineChildren(li, xml, doc, false, false, false, 22);
                 xml.append("</w:p>");
                 counter++;
             }
         }
+    }
+
+    private static boolean stripLeadingNumber(Node node, int counter) {
+        if (node instanceof TextNode) {
+            TextNode tn = (TextNode) node;
+            String val = tn.text();
+            String trimmed = val.replaceFirst("^[\\s\\u00A0]*([0-9]+|[a-zA-Z])[.)\\-][\\s\\u00A0]*", "");
+            if (!trimmed.equals(val)) {
+                tn.text(trimmed);
+                return true;
+            }
+        } else if (node instanceof Element) {
+            for (Node child : node.childNodes()) {
+                if (stripLeadingNumber(child, counter)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static void processInlineChildren(Node parent, StringBuilder xml, XWPFDocument doc, boolean bold, boolean italic, boolean underline, int fontSize) {
