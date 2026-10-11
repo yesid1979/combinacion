@@ -261,23 +261,21 @@ public class DatabasePatcher {
                 "    ct.telefono,\n" +
                 "    ct.correo,\n" +
                 "    COALESCE(s.nombre, 'Sin supervisor') AS supervisor,\n" +
-                "    c.estado AS estado_contrato,\n" +
-                "    COUNT(inf.id) AS total_cuentas_creadas,\n" +
-                "    CASE \n" +
-                "        WHEN COUNT(inf.id) = 0 THEN 'Sin ninguna cuenta creada'\n" +
-                "        ELSE 'Tiene cuentas solo en BORRADOR (sin radicar)'\n" +
-                "    END AS situacion,\n" +
                 "    c.fecha_inicio,\n" +
                 "    c.fecha_terminacion,\n" +
                 "    (c.fecha_terminacion - CURRENT_DATE) AS dias_para_vencer,\n" +
                 "    c.plazo_ejecucion AS plazo,\n" +
-                "    c.valor_total_numeros AS valor_contrato\n" +
+                "    c.valor_total_numeros AS valor_contrato,\n" +
+                "    COUNT(inf.id) AS total_cuentas_creadas,\n" +
+                "    CASE \n" +
+                "        WHEN COUNT(inf.id) = 0 THEN 'Sin ninguna cuenta creada'\n" +
+                "        ELSE 'Tiene cuentas solo en BORRADOR (sin radicar)'\n" +
+                "    END AS situacion\n" +
                 "FROM contratos c\n" +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
                 "LEFT JOIN supervisores s ON c.supervisor_id = s.id\n" +
                 "LEFT JOIN informes_supervision inf ON inf.contrato_id = c.id\n" +
-                "WHERE c.estado NOT IN ('CERRADO', 'ANULADO', 'TERMINADO ANTICIPADO')\n" +
-                "  AND (c.fecha_terminacion IS NULL OR c.fecha_terminacion >= CURRENT_DATE)\n" +
+                "WHERE c.fecha_terminacion >= CURRENT_DATE\n" +
                 "  AND NOT EXISTS (\n" +
                 "      SELECT 1 \n" +
                 "      FROM informes_supervision inf_rad \n" +
@@ -286,8 +284,8 @@ public class DatabasePatcher {
                 "        AND inf_rad.estado_radicacion != 'BORRADOR'\n" +
                 "  )\n" +
                 "GROUP BY \n" +
-                "    c.id, c.numero_contrato, c.anio, ct.cedula, ct.nombre, ct.telefono, ct.correo, s.nombre, c.estado, c.fecha_inicio, c.fecha_terminacion, c.plazo_ejecucion, c.valor_total_numeros\n" +
-                "ORDER BY c.anio DESC, c.numero_contrato ASC"
+                "    c.id, c.numero_contrato, c.anio, ct.cedula, ct.nombre, ct.telefono, ct.correo, s.nombre, c.fecha_inicio, c.fecha_terminacion, c.plazo_ejecucion, c.valor_total_numeros\n" +
+                "ORDER BY c.fecha_terminacion ASC, c.numero_contrato ASC"
             );
 
             System.out.println("✅ Vistas 'vista_resumen_contratos_cuotas', 'vista_informes_cuotas_detalle' y 'vista_personas_sin_cuentas_radicadas' aseguradas.");
