@@ -184,6 +184,7 @@ public class DatabasePatcher {
                              "ON CONFLICT DO NOTHING");
 
             // Asegurar creación de las vistas de informes y contratos
+            stmt.executeUpdate("DROP VIEW IF EXISTS vista_resumen_contratos_cuotas CASCADE");
             stmt.executeUpdate(
                 "CREATE OR REPLACE VIEW vista_resumen_contratos_cuotas AS\n" +
                 "SELECT \n" +
@@ -195,11 +196,18 @@ public class DatabasePatcher {
                 "    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor') AS supervisor,\n" +
                 "    STRING_AGG(DISTINCT COALESCE(u.nombre_completo, 'Sin revisor'), ', ') AS revisor,\n" +
                 "    STRING_AGG(inf.id::text, ', ' ORDER BY (CASE WHEN inf.numero_cuota ~ '^[0-9]+$' THEN inf.numero_cuota::int ELSE 9999 END), inf.id) AS ids_informes,\n" +
-                "    STRING_AGG(\n" +
-                "        'Cuota ' || COALESCE(inf.numero_cuota, 'N/A') || ': ' || COALESCE(inf.estado_radicacion, 'BORRADOR'),\n" +
-                "        ' | ' \n" +
-                "        ORDER BY (CASE WHEN inf.numero_cuota ~ '^[0-9]+$' THEN inf.numero_cuota::int ELSE 9999 END), inf.id\n" +
-                "    ) AS cuotas_registradas_estado,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '1' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_1,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '2' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_2,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '3' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_3,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '4' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_4,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '5' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_5,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '6' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_6,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '7' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_7,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '8' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_8,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '9' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_9,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '10' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_10,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '11' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_11,\n" +
+                "    MAX(CASE WHEN inf.numero_cuota = '12' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_12,\n" +
                 "    COUNT(inf.id) AS total_cuotas_registradas\n" +
                 "FROM contratos c\n" +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
