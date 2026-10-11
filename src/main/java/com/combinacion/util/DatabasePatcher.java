@@ -138,6 +138,14 @@ public class DatabasePatcher {
                 System.out.println("✅ Tabla 'usuario_permisos' creada exitosamente.");
             }
 
+            // Asegurar usuario id = 0 para opción 'Sin Revisor (Contratación)'
+            ResultSet rsU0 = stmt.executeQuery("SELECT id FROM usuarios WHERE id = 0");
+            if (!rsU0.next()) {
+                stmt.executeUpdate("INSERT INTO usuarios (id, username, password_hash, salt, nombre_completo, activo, rol_id) " +
+                                 "VALUES (0, 'sin_revisor', 'N/A', 'N/A', 'Contratación (Revisión Directa)', true, 1)");
+                System.out.println("✅ Usuario 0 (Sin Revisor) asegurado en tabla usuarios.");
+            }
+
             // Asegurar permisos VER TODO para la mallas dinámica
             String[] modulosPerms = {"ADMINISTRACION", "CARGA_MASIVA", "COMBINACION", "CONTRATISTAS", "CONTRATOS", "ORDENADORES", "PRESUPUESTO", "SUPERVISORES", "REVALUACION"};
             for (String mod : modulosPerms) {

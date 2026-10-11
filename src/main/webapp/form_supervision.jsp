@@ -552,7 +552,7 @@
                                                 <label class="form-label">Asignar a Revisor:</label>
                                                 <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
                                                     <option value="">-- Seleccione un Revisor --</option>
-                                                    <option value="0">-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                                    <option value="0" ${informe.idRevisorAsignado != null && informe.idRevisorAsignado == 0 ? 'selected' : ''}>-- Sin Revisor (Pasar directo a Contratación) --</option>
                                                     <c:forEach var="rev" items="${listaRevisores}">
                                                         <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
                                                     </c:forEach>
@@ -1818,9 +1818,6 @@
                 if (!rev && rev !== "0") {
                     Swal.fire('Atención', 'Debe seleccionar un revisor (o la opción Sin Revisor) para poder radicar la cuenta.', 'warning');
                     return false;
-                }
-                if (rev === "0") {
-                    document.getElementById("revisor_select").name = ""; // Remove name so it sends null to the backend
                 }
                 document.getElementById("radicar_input").value = "true";
                 return true;

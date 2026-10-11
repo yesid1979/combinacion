@@ -2197,7 +2197,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         String idRevisor = r.getParameter("id_revisor_asignado");
         if (idRevisor != null && !idRevisor.trim().isEmpty()) {
             int parsedRevisorId = ParseUtils.parseInt(idRevisor);
-            f.idRevisorAsignado = (parsedRevisorId > 0) ? parsedRevisorId : null;
+            f.idRevisorAsignado = (parsedRevisorId >= 0) ? parsedRevisorId : null;
+        } else if (exist != null) {
+            f.idRevisorAsignado = exist.getIdRevisorAsignado();
         }
         
         return f;
