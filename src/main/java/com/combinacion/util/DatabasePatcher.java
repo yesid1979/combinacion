@@ -276,7 +276,54 @@ public class DatabasePatcher {
                 "ORDER BY c.fecha_terminacion ASC, c.numero_contrato ASC"
             );
 
-            System.out.println("✅ Vistas 'vista_resumen_contratos_cuotas', 'vista_informes_cuotas_detalle' y 'vista_personas_sin_cuentas_radicadas' aseguradas.");
+            stmt.executeUpdate("DROP VIEW IF EXISTS vista_contratos_proximos_a_vencer CASCADE");
+            stmt.executeUpdate(
+                "CREATE OR REPLACE VIEW vista_contratos_proximos_a_vencer AS\n" +
+                "SELECT \n" +
+                "    c.id AS contrato_id,\n" +
+                "    c.numero_contrato,\n" +
+                "    c.anio,\n" +
+                "    ct.cedula AS cedula_contratista,\n" +
+                "    ct.nombre AS nombres_apellidos,\n" +
+                "    ct.telefono,\n" +
+                "    ct.correo,\n" +
+                "    COALESCE(s.nombre, 'Sin supervisor') AS supervisor,\n" +
+                "    c.fecha_inicio,\n" +
+                "    c.fecha_terminacion,\n" +
+                "    (c.fecha_terminacion - CURRENT_DATE) AS dias_para_vencer,\n" +
+                "    CASE \n" +
+                "        WHEN (c.fecha_terminacion - CURRENT_DATE) <= 15 THEN 'Crítico (<= 15 días)'\n" +
+                "        WHEN (c.fecha_terminacion - CURRENT_DATE) <= 30 THEN 'Próximo (16 a 30 días)'\n" +
+                "        WHEN (c.fecha_terminacion - CURRENT_DATE) <= 60 THEN 'Alerta (31 a 60 días)'\n" +
+                "        ELSE 'Vigente (> 60 días)'\n" +
+                "    END AS nivel_alerta,\n" +
+                "    c.plazo_ejecucion AS plazo,\n" +
+                "    c.valor_total_numeros AS valor_contrato,\n" +
+                "    COUNT(inf.id) AS total_cuentas_registradas,\n" +
+                "    COUNT(CASE WHEN inf.estado_radicacion IS NOT NULL AND inf.estado_radicacion != 'BORRADOR' THEN 1 END) AS total_cuentas_radicadas\n" +
+                "FROM contratos c\n" +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id\n" +
+                "LEFT JOIN supervisores s ON c.supervisor_id = s.id\n" +
+                "LEFT JOIN informes_supervision inf ON inf.contrato_id = c.id\n" +
+                "WHERE c.fecha_terminacion >= CURRENT_DATE\n" +
+                "  AND (c.fecha_terminacion - CURRENT_DATE) <= 60\n" +
+                "GROUP BY \n" +
+                "    c.id, \n" +
+                "    c.numero_contrato, \n" +
+                "    c.anio, \n" +
+                "    ct.cedula, \n" +
+                "    ct.nombre, \n" +
+                "    ct.telefono, \n" +
+                "    ct.correo, \n" +
+                "    s.nombre, \n" +
+                "    c.fecha_inicio, \n" +
+                "    c.fecha_terminacion, \n" +
+                "    c.plazo_ejecucion, \n" +
+                "    c.valor_total_numeros\n" +
+                "ORDER BY c.fecha_terminacion ASC, c.numero_contrato ASC"
+            );
+
+            System.out.println("✅ Vistas 'vista_resumen_contratos_cuotas', 'vista_informes_cuotas_detalle', 'vista_personas_sin_cuentas_radicadas' y 'vista_contratos_proximos_a_vencer' aseguradas.");
             System.out.println("✅ Todos los permisos de ADMINISTRACION asegurados.");
 
         } catch (Exception e) {
