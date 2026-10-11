@@ -11,3 +11,5 @@ Thumbs.db
 scratch/
 src/main/resources/credencialescontratacion*.json
 nb-configuration.xml
+generados/
+cp.txt
