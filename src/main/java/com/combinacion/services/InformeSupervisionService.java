@@ -72,10 +72,11 @@ public class InformeSupervisionService {
 
                 boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
                 if (esRadicacion) {
-                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty() || form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
-                        StringBuilder faltantes = new StringBuilder();
-                        if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
-                        if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
+                    StringBuilder faltantes = new StringBuilder();
+                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
+                    if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
+                    if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                    if (faltantes.length() > 0) {
                         return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
                     }
                 } else {
@@ -164,6 +165,17 @@ public class InformeSupervisionService {
             
             if (form.fechaSuscripcion == null || form.fechaSuscripcion.trim().isEmpty()) {
                 return "El campo 'Fecha de transacción' es obligatorio.";
+            }
+
+            boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
+            if (esRadicacion) {
+                StringBuilder faltantes = new StringBuilder();
+                if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
+                if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
+                if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                if (faltantes.length() > 0) {
+                    return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
+                }
             }
             
             InformeSupervision info = mapFormToModel(form);
@@ -2055,8 +2067,27 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 hr.setObservaciones("DEVUELTA".equals(estadoAnterior) ? "Cuenta vuelta a radicar tras correcciones." : "Cuenta radicada para revisión.");
                 new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
             }
-            // Procesar Drive después de actualizar exitosamente
-            procesarArchivosDrive(id, request);
+            // Verificar si hay cambios en archivos o radicación para procesar Drive
+            boolean tieneArchivosNuevos = false;
+            try {
+                for (Part part : request.getParts()) {
+                    String fn = getFileName(part);
+                    if (fn != null && !fn.trim().isEmpty() && part.getSize() > 0) {
+                        tieneArchivosNuevos = true;
+                        break;
+                    }
+                }
+            } catch (Exception ignore) {}
+
+            boolean tieneArchivosEliminados = (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty());
+            boolean esRadicacion = "RADICADA".equals(form.estadoRadicacion);
+            boolean faltaCarpetaDrive = (existente != null && (existente.getUrlDriveEvidencias() == null || existente.getUrlDriveEvidencias().trim().isEmpty()));
+
+            if (tieneArchivosNuevos || tieneArchivosEliminados || esRadicacion || faltaCarpetaDrive) {
+                procesarArchivosDrive(id, request);
+            } else {
+                System.out.println("Actualización de datos informativos completada al instante para informe ID " + id + " (sin llamadas pesadas a Drive).");
+            }
             
             if ("RADICADA".equals(form.estadoRadicacion)) {
                 request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");

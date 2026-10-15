@@ -45,8 +45,20 @@ public class GoogleDriveService {
                 HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
                 .setDataStoreFactory(new JDBCDataStoreFactory())
                 .setAccessType("offline")
-                .setApprovalPrompt("force")
                 .build();
+
+        Credential credential = flow.loadCredential("user_v2");
+        if (credential != null) {
+            if (credential.getExpiresInSeconds() != null && credential.getExpiresInSeconds() <= 60) {
+                try {
+                    credential.refreshToken();
+                } catch (Exception refEx) {
+                    System.err.println("Aviso refrescando token de Google Drive: " + refEx.getMessage());
+                }
+            }
+            return credential;
+        }
+
         LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8889).build();
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user_v2");
     }

@@ -180,6 +180,7 @@
                                     <c:choose>
                                         <c:when test="${not readonly}">
                                             <select class="form-select" name="supervisor_id" id="supervisor_id" required>
+                                                <option value="" disabled ${empty informe.supervisorId && empty contrato.supervisorId ? 'selected' : ''}>-- Seleccione un Supervisor --</option>
                                                 <c:forEach var="sup" items="${listaSupervisores}">
                                                     <c:set var="esSeleccionado" value="${(not empty informe.supervisorId && informe.supervisorId == sup.id) || (empty informe.supervisorId && contrato.supervisorId == sup.id)}" />
                                                     <option value="${sup.id}" ${esSeleccionado ? 'selected' : ''}>
