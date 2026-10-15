@@ -162,13 +162,46 @@ public class CuentaCobroGenerator {
         cellD21.setCellValue(textoConcepto);
         ajustarAltoFila(row21, textoConcepto, 100);
 
+        boolean esCuotaAdicion = false;
+        if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+            int cuotasNormales = contrato.getNumCuotasNumero();
+            int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+            if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
+                esCuotaAdicion = true;
+            }
+        }
+
         // Valor a pagar (D23 y F23)
         Row row23 = sheet.getRow(22); if(row23 == null) row23 = sheet.createRow(22);
         Cell cellD23 = row23.getCell(3); if(cellD23 == null) cellD23 = row23.createCell(3);
         Cell cellF23 = row23.getCell(5); if(cellF23 == null) cellF23 = row23.createCell(5);
-        if (informe.getValorCuotaPagar() != null) {
-            cellD23.setCellValue(formatearMoneda(informe.getValorCuotaPagar()));
-            cellF23.setCellValue(convertirNumeroALetras(informe.getValorCuotaPagar().longValue()).toUpperCase() + " PESOS M/CTE");
+        
+        Number valorOperacion = informe.getValorCuotaPagar();
+        if (valorOperacion == null) {
+            valorOperacion = contrato.getValorCuotaNumero();
+        }
+        
+        if (valorOperacion != null) {
+            cellD23.setCellValue(formatearMoneda(valorOperacion));
+            
+            // Determinar texto en letras desde la base de datos
+            String cuotaLetras = null;
+            if (contrato.getValorMediaCuotaNumero() != null 
+                    && valorOperacion.longValue() == contrato.getValorMediaCuotaNumero().longValue()
+                    && contrato.getValorMediaCuotaLetras() != null 
+                    && !contrato.getValorMediaCuotaLetras().trim().isEmpty()) {
+                cuotaLetras = contrato.getValorMediaCuotaLetras().trim().toUpperCase();
+            } else if (contrato.getValorCuotaLetras() != null && !contrato.getValorCuotaLetras().trim().isEmpty()) {
+                cuotaLetras = contrato.getValorCuotaLetras().trim().toUpperCase();
+            }
+            
+            if (cuotaLetras == null || cuotaLetras.isEmpty()) {
+                cuotaLetras = convertirNumeroALetras(valorOperacion.longValue()).toUpperCase();
+            }
+            if (!cuotaLetras.endsWith("PESOS M/CTE") && !cuotaLetras.endsWith("PESOS M/CTE.")) {
+                cuotaLetras += " PESOS M/CTE";
+            }
+            cellF23.setCellValue(cuotaLetras);
         }
 
         // Info Contrato
@@ -179,15 +212,6 @@ public class CuentaCobroGenerator {
             numContrato += "-" + contrato.getAnio();
         }
         cellD25.setCellValue(numContrato);
-
-        boolean esCuotaAdicion = false;
-        if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
-            int cuotasNormales = contrato.getNumCuotasNumero();
-            int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-            if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
-                esCuotaAdicion = true;
-            }
-        }
 
         if (contrato.getPresupuestoDetalle() != null) {
             com.combinacion.models.PresupuestoDetalle pre = contrato.getPresupuestoDetalle();
@@ -230,16 +254,18 @@ public class CuentaCobroGenerator {
         Cell cellF28 = row28.getCell(5); if(cellF28 == null) cellF28 = row28.createCell(5);
         
         Number valorMostrar = contrato.getValorTotalNumeros();
-        String valorLetras = null;
+        String valorLetras = (contrato.getValorTotalLetras() != null) ? contrato.getValorTotalLetras().trim() : null;
         if (esCuotaAdicion && contrato.getValorContratoMasAdicion() != null) {
             valorMostrar = contrato.getValorContratoMasAdicion();
-            valorLetras = contrato.getValorContratoMasAdicionLetras();
+            if (contrato.getValorContratoMasAdicionLetras() != null && !contrato.getValorContratoMasAdicionLetras().trim().isEmpty()) {
+                valorLetras = contrato.getValorContratoMasAdicionLetras().trim();
+            }
         }
         
         if (valorMostrar != null) {
             cellD28.setCellValue(formatearMoneda(valorMostrar));
-            String letras = (valorLetras != null && !valorLetras.trim().isEmpty()) 
-                                ? valorLetras.trim().toUpperCase() 
+            String letras = (valorLetras != null && !valorLetras.isEmpty()) 
+                                ? valorLetras.toUpperCase() 
                                 : convertirNumeroALetras(valorMostrar.longValue()).toUpperCase();
             if (!letras.endsWith("PESOS M/CTE") && !letras.endsWith("PESOS M/CTE.")) {
                 letras += " PESOS M/CTE";
