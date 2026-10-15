@@ -95,20 +95,29 @@ public class ConsecutivoDAO {
     public String obtenerConsecutivo(String cedula, String contrato, String numeroCuota, Integer anio) {
         if (contrato == null || numeroCuota == null) return null;
         
+        String cleanCuota = numeroCuota.replaceAll("[^0-9]", "").trim();
+        if (cleanCuota.isEmpty()) cleanCuota = numeroCuota.trim();
+
+        // Limpiar sufijos como ' - 2026', ' de 2026', etc.
+        String cleanContrato = contrato.replaceAll("(?i)\\s*(de|-)\\s*202\\d.*", "").trim();
+        
         String sql = "SELECT consecutivo FROM consecutivos_cobro " +
-                     "WHERE contrato LIKE ? AND numero_cuota = ? ";
+                     "WHERE (? ILIKE '%' || contrato || '%' OR contrato ILIKE '%' || ? || '%') " +
+                     "AND (numero_cuota = ? OR numero_cuota = ?) ";
         if (anio != null) {
-            sql += " AND anio = ? ";
+            sql += "AND (anio IS NULL OR anio = ?) ";
         }
         sql += "ORDER BY id DESC LIMIT 1";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, "%" + contrato.trim() + "%");
-            ps.setString(2, numeroCuota.trim());
+            ps.setString(1, "%" + cleanContrato + "%");
+            ps.setString(2, cleanContrato);
+            ps.setString(3, cleanCuota);
+            ps.setString(4, numeroCuota.trim());
             if (anio != null) {
-                ps.setInt(3, anio);
+                ps.setInt(5, anio);
             }
             
             try (ResultSet rs = ps.executeQuery()) {

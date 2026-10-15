@@ -2158,7 +2158,7 @@
             $(document).ready(function() {
                 // Autocompletar Consecutivo de Cobro desde el módulo masivo
                 function fetchConsecutivo() {
-                    var cedula = '${sessionScope.usuario.cedula}';
+                    var cedula = '${contrato.contratista != null ? contrato.contratista.cedula : sessionScope.usuario.cedula}';
                     var contrato = '${contrato.numeroContrato}';
                     var cuota = $('[name="numero_cuota"]').val();
                     var fechaTerminacion = '${contrato.fechaTerminacion}';
@@ -2167,7 +2167,7 @@
                         anio = fechaTerminacion.substring(0, 4); // YYYY-MM-DD
                     }
                     
-                    if (cedula && contrato && cuota) {
+                    if (contrato && cuota) {
                         $.post('${pageContext.request.contextPath}/consecutivos', {
                             action: 'check',
                             cedula: cedula,
