@@ -17,8 +17,8 @@ public class ContratoDAO {
                 "num_cuotas_numero, valor_media_cuota_letras, valor_media_cuota_numero, actividades_entregables, liquidacion_acuerdo, liquidacion_articulo, "
                 +
                 "liquidacion_decreto, circular_honorarios, contratista_id, supervisor_id, ordenador_id, " +
-                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop, iva_si_no, anio, facturador_electronico) VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "presupuesto_id, estructurador_id, apoyo_supervision, fecha_idoneidad, fecha_estructurador, adicion_si_no, numero_cuotas_adicion, valor_total_adicion_letras, valor_total_adicion, valor_contrato_mas_adicion_letras, valor_contrato_mas_adicion, enlace_secop, iva_si_no, anio, facturador_electronico, numero_modificacion, fecha_modificacion) VALUES " +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -95,6 +95,8 @@ public class ContratoDAO {
             if (c.getAnio() != null) ps.setInt(55, c.getAnio());
             else ps.setNull(55, java.sql.Types.INTEGER);
             ps.setString(56, c.getFacturadorElectronico());
+            ps.setString(57, c.getNumeroModificacion());
+            ps.setDate(58, c.getFechaModificacion());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -400,7 +402,8 @@ try {
                 "liquidacion_acuerdo=?, liquidacion_articulo=?, liquidacion_decreto=?, circular_honorarios=?, " +
                 "contratista_id=?, supervisor_id=?, ordenador_id=?, presupuesto_id=?, estructurador_id=?, apoyo_supervision=?, " +
                 "fecha_idoneidad=?, fecha_estructurador=?, adicion_si_no=?, numero_cuotas_adicion=?, valor_total_adicion_letras=?, " +
-                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=?, anio=?, facturador_electronico=? " +
+                "valor_total_adicion=?, valor_contrato_mas_adicion_letras=?, valor_contrato_mas_adicion=?, enlace_secop=?, iva_si_no=?, anio=?, facturador_electronico=?, " +
+                "numero_modificacion=?, fecha_modificacion=? " +
                 "WHERE id=?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -480,7 +483,9 @@ try {
                 ps.setNull(54, java.sql.Types.INTEGER);
             }
             ps.setString(55, c.getFacturadorElectronico());
-            ps.setInt(56, c.getId());
+            ps.setString(56, c.getNumeroModificacion());
+            ps.setDate(57, c.getFechaModificacion());
+            ps.setInt(58, c.getId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -561,6 +566,8 @@ try {
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
                     try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
+                    try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch (Exception e) {}
+                    try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -728,6 +735,8 @@ try {
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
                     try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
+                    try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch (Exception e) {}
+                    try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch (Exception e) {}
                     return c;
                 }
             }
@@ -808,6 +817,8 @@ try {
                     c.setEnlaceSecop(rs.getString("enlace_secop"));
                     c.setIvaSiNo(rs.getString("iva_si_no"));
                     try { c.setFacturadorElectronico(rs.getString("facturador_electronico")); } catch (Exception e) {}
+                    try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch (Exception e) {}
+                    try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch (Exception e) {}
                     return c;
                 }
             }

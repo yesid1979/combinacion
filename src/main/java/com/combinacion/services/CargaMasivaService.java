@@ -961,7 +961,7 @@ public class CargaMasivaService {
                 map.put("iva_si_no", i);
             } else if (h.contains("facturador") || h.contains("facturacion") || (h.contains("factura") && h.contains("electronica"))) {
                 map.put("facturador_electronico", i);
-            } else if (h.contains("modificaci") && h.contains("no") && h.contains(".")) {
+            } else if ((h.contains("modificaci") || h.contains("modificacion")) && (h.contains("no") || h.contains("num")) && !h.contains("fecha")) {
                 map.put("numero_modificacion", i);
             } else if (h.contains("modificaci") && h.contains("fecha")) {
                 map.put("fecha_modificacion", i);

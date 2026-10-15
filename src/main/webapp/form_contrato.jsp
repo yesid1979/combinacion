@@ -305,6 +305,14 @@
                                                 <input type="url" class="form-control" name="enlace_secop" value="${contrato.enlaceSecop}" ${readonly ? 'readonly' : ''}>
                                             </div>
                                             <div class="col-md-3">
+                                                <label class="form-label">No. Modificación</label>
+                                                <input type="text" class="form-control" name="numero_modificacion" placeholder="Ej: 01" value="${contrato.numeroModificacion}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Fecha Modificación</label>
+                                                <input type="date" class="form-control" name="fecha_modificacion" value="${contrato.fechaModificacion}" ${readonly ? 'readonly' : ''}>
+                                            </div>
+                                            <div class="col-md-3">
                                                 <label class="form-label">Cuotas (Adición)</label>
                                                 <input type="number" class="form-control" name="numero_cuotas_adicion" value="${contrato.numeroCuotasAdicion}" ${readonly ? 'readonly' : ''}>
                                             </div>

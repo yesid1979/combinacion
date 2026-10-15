@@ -287,6 +287,8 @@ public class ContratoService {
         contrato.setValorContratoMasAdicionLetras(f.valorContratoMasAdicionLetras);
         contrato.setEnlaceSecop(f.enlaceSecop);
         contrato.setFacturadorElectronico(f.facturadorElectronico);
+        contrato.setNumeroModificacion(f.numeroModificacion);
+        contrato.setFechaModificacion(ParseUtils.parseDate(f.fechaModificacion));
         return contrato;
     }
 
@@ -357,6 +359,8 @@ public class ContratoService {
         public String valorContratoMasAdicionLetras;
         public String enlaceSecop;
         public String facturadorElectronico;
+        public String numeroModificacion;
+        public String fechaModificacion;
     }
 
 public void listar(HttpServletRequest request, HttpServletResponse response)
@@ -521,6 +525,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.valorContratoMasAdicionLetras= r.getParameter("valor_contrato_mas_adicion_letras");
         f.enlaceSecop                  = r.getParameter("enlace_secop");
         f.facturadorElectronico        = r.getParameter("facturador_electronico");
+        f.numeroModificacion           = r.getParameter("numero_modificacion");
+        f.fechaModificacion            = r.getParameter("fecha_modificacion");
         return f;
     }
 
