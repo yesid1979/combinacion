@@ -468,8 +468,9 @@ public class InformeSupervisionService {
             if (contrato != null) {
                 java.math.BigDecimal total = contrato.getValorTotalNumeros();
                 int cuotasNormales = contrato.getNumCuotasNumero();
-                if (cuotasNormales > 0 && currentCuota >= cuotasNormales && contrato.getValorTotalAdicion() != null && contrato.getValorTotalAdicion().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                    total = contrato.getValorTotalAdicion();
+                boolean tieneAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) || "SÍ".equalsIgnoreCase(contrato.getAdicionSiNo());
+                if (tieneAdicion && cuotasNormales > 0 && currentCuota >= cuotasNormales && contrato.getValorContratoMasAdicion() != null && contrato.getValorContratoMasAdicion().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    total = contrato.getValorContratoMasAdicion();
                 }
                 
                 if (total != null) {

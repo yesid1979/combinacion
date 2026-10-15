@@ -237,7 +237,8 @@
 
                         <!-- Tab 2: Jurídico -->
                         <div class="tab-pane fade" id="juridico" role="tabpanel">
-                            <c:set var="mostrarTextosAuto" value="${contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero}" />
+                            <c:set var="tieneAdicion" value="${contrato.adicionSiNo == 'SI' || contrato.adicionSiNo == 'Si' || contrato.adicionSiNo == 'SÍ'}" />
+                            <c:set var="mostrarTextosAuto" value="${tieneAdicion && contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero}" />
                             <!-- DEBUG: siguienteCuota=${siguienteCuota}, contrato.numCuotasNumero=${contrato.numCuotasNumero}, mostrarTextosAuto=${mostrarTextosAuto} -->
                             <div class="section-title">Informe Jurídico</div>
                             <div class="row g-3">
@@ -1825,19 +1826,20 @@
             
             // Dinamismo para textos de adición y valores
             $(document).ready(function() {
-                var adicionesAuto = `${fn:escapeXml(informeAuto.adiciones)}`;
-                var prorrogasAuto = `${fn:escapeXml(informeAuto.prorrogas)}`;
-                var modificacionesAuto = `${fn:escapeXml(informeAuto.modificaciones)}`;
+                var tieneAdicion = "${contrato.adicionSiNo}".trim().toUpperCase() === "SI" || "${contrato.adicionSiNo}".trim().toUpperCase() === "SÍ";
+                var adicionesAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.adiciones)}` : '';
+                var prorrogasAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.prorrogas)}` : '';
+                var modificacionesAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.modificaciones)}` : '';
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                 var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
                 var cuotaFinal = cuotasNormales + cuotasAdicion;
                 
                 var valorNormal = "${contrato.valorTotalNumeros}";
-                var valorAdicionado = "${contrato.valorContratoMasAdicion}";
+                var valorAdicionado = (tieneAdicion && "${contrato.valorContratoMasAdicion}") ? "${contrato.valorContratoMasAdicion}" : valorNormal;
                 
                 var baseDateStr = "<fmt:formatDate value='${contrato.fechaTerminacion}' pattern='yyyy-MM-dd'/>";
                 var fechaAdicion = baseDateStr;
-                if (baseDateStr && cuotasAdicion > 0) {
+                if (tieneAdicion && baseDateStr && cuotasAdicion > 0) {
                     var dateParts = baseDateStr.split("-");
                     var dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                     dateObj.setMonth(dateObj.getMonth() + cuotasAdicion);
@@ -1855,18 +1857,18 @@
                     var currentPro = $('textarea[name="prorrogas"]').val().trim();
                     var currentMod = $('textarea[name="modificaciones"]').val().trim();
 
-                    if (cuotasNormales > 0 && cuota >= cuotasNormales) {
-                        if (currentAd === 'N/A' || currentAd === '') $('textarea[name="adiciones"]').val(adicionesAuto);
-                        if (currentPro === 'N/A' || currentPro === '') $('textarea[name="prorrogas"]').val(prorrogasAuto);
-                        if (currentMod === 'N/A' || currentMod === '') $('textarea[name="modificaciones"]').val(modificacionesAuto);
+                    if (tieneAdicion && cuotasNormales > 0 && cuota >= cuotasNormales) {
+                        if (modificacionesAuto && (currentMod === 'N/A' || currentMod === '')) $('textarea[name="modificaciones"]').val(modificacionesAuto);
+                        if (adicionesAuto && (currentAd === 'N/A' || currentAd === '')) $('textarea[name="adiciones"]').val(adicionesAuto);
+                        if (prorrogasAuto && (currentPro === 'N/A' || currentPro === '')) $('textarea[name="prorrogas"]').val(prorrogasAuto);
                     } else {
                         if (currentAd === adicionesAuto || currentAd === '') $('textarea[name="adiciones"]').val('N/A');
                         if (currentPro === prorrogasAuto || currentPro === '') $('textarea[name="prorrogas"]').val('N/A');
                         if (currentMod === modificacionesAuto || currentMod === '') $('textarea[name="modificaciones"]').val('N/A');
                     }
                     
-                    // Actualizar Valor Total y Fecha de Terminación a partir de la última cuota normal
-                    if (cuotasNormales > 0 && cuota >= cuotasNormales) {
+                    // Actualizar Valor Total y Fecha de Terminación solo si tiene adición y estamos en cuotas de adición
+                    if (tieneAdicion && cuotasNormales > 0 && cuota >= cuotasNormales) {
                         if (valorAdicionado) $('#valor_total').val(valorAdicionado).trigger('input');
                         if (fechaAdicion) $('input[name="fecha_fin_periodo"]').val(fechaAdicion);
                     } else {
