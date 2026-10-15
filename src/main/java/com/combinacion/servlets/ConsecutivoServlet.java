@@ -314,7 +314,7 @@ public class ConsecutivoServlet extends HttpServlet {
                          "WHERE c.fecha_terminacion >= CURRENT_DATE ";
             
             if (anio != null) {
-                sql += "AND c.anio = ? ";
+                sql += "AND (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM c.fecha_terminacion) = ?)) ";
             }
             
             sql += "ORDER BY c.numero_contrato ASC";
@@ -325,6 +325,7 @@ public class ConsecutivoServlet extends HttpServlet {
                  
                  if (anio != null) {
                      ps.setInt(1, anio);
+                     ps.setInt(2, anio);
                  }
                  
                  try (java.sql.ResultSet rs = ps.executeQuery()) {
