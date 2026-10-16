@@ -589,6 +589,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         }
         boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS"));
         boolean esRevisor = u != null && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
+        boolean esSupervisorRol = (u != null && (u.tienePermiso("SUPERVISOR_CUENTAS") || (u.getRol() != null && "Supervisor".equalsIgnoreCase(u.getRol().getNombre()))));
         boolean esContratistaBase = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
         
         String modo = request.getParameter("modo");
@@ -597,7 +598,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (modo == null || modo.trim().isEmpty()) {
             if (esContratistaBase) {
                 modo = "mis_cuentas";
-            } else if (esAdmin || esRevisor) {
+            } else if (esAdmin || esRevisor || esSupervisorRol) {
                 modo = "revision";
             }
         }
@@ -632,16 +633,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             listaFinal.addAll(this.listarPorContrato(con.getId()));
                         }
                     }
-                } else if (!esAdmin && !esRevisor) {
+                } else if (!esAdmin && !esRevisor && !esSupervisorRol) {
                     request.setAttribute("error", "No tienes ningún contrato activo asignado en el sistema.");
                 }
-            } else if (!esAdmin && !esRevisor) {
+            } else if (!esAdmin && !esRevisor && !esSupervisorRol) {
                 request.setAttribute("error", "No se encontraron tus datos como contratista.");
             }
         }
         
-        // 2. Lógica para Admin / Revisor: Agregar informes que deben revisar
-        if ((esAdmin || esRevisor) && !"mis_cuentas".equals(modo)) {
+        // 2. Lógica para Admin / Revisor / Supervisor: Agregar informes que deben revisar
+        if ((esAdmin || esRevisor || esSupervisorRol) && !"mis_cuentas".equals(modo)) {
             java.util.List<InformeSupervision> todos = new java.util.ArrayList<>();
             if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
                 int contratoIdParam = com.combinacion.util.ParseUtils.parseInt(contratoIdStr);
@@ -658,6 +659,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 todos = this.listarTodos();
             }
             
+            String userCedulaLimpia = (u != null && u.getCedula() != null) ? u.getCedula().replaceAll("[^0-9]", "") : "";
+
             for (InformeSupervision info : todos) {
                 // Evitar duplicados si ya los cargó por ser su propio contrato
                 if (misContratosIds.contains(info.getContratoId())) {
@@ -666,12 +669,28 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 
                 if (esAdmin) {
                     listaFinal.add(info);
-                } else if (esRevisor) {
+                } else {
+                    boolean agregado = false;
                     // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas
-                    if (info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
+                    if (esRevisor && info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
                             && !"BORRADOR".equals(info.getEstadoRadicacion()) 
                             && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
                         listaFinal.add(info);
+                        agregado = true;
+                    }
+                    // Un supervisor ve las cuentas de los contratos que tiene asignados (titular o encargado)
+                    if (!agregado && !userCedulaLimpia.isEmpty()) {
+                        String supCed = null;
+                        if (info.getSupervisor() != null && info.getSupervisor().getCedula() != null) {
+                            supCed = info.getSupervisor().getCedula().replaceAll("[^0-9]", "");
+                        } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null && info.getContrato().getSupervisor().getCedula() != null) {
+                            supCed = info.getContrato().getSupervisor().getCedula().replaceAll("[^0-9]", "");
+                        }
+                        if (supCed != null && userCedulaLimpia.equals(supCed)
+                                && !"BORRADOR".equals(info.getEstadoRadicacion()) 
+                                && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
+                            listaFinal.add(info);
+                        }
                     }
                 }
             }
@@ -683,6 +702,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
         request.setAttribute("esAdminGlobal", esAdmin);
         request.setAttribute("esRevisorGlobal", esRevisor);
+        request.setAttribute("esSupervisorGlobal", esSupervisorRol);
         
         return listaFinal;
     }
@@ -814,6 +834,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             
             com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
             row.addProperty("usuarioActualId", u != null ? u.getId() : 0);
+
+            boolean esSupervisorContrato = false;
+            if (u != null && u.getCedula() != null) {
+                String uCed = u.getCedula().replaceAll("[^0-9]", "");
+                String sCed = "";
+                if (info.getSupervisor() != null && info.getSupervisor().getCedula() != null) {
+                    sCed = info.getSupervisor().getCedula().replaceAll("[^0-9]", "");
+                } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null && info.getContrato().getSupervisor().getCedula() != null) {
+                    sCed = info.getContrato().getSupervisor().getCedula().replaceAll("[^0-9]", "");
+                }
+                if (!uCed.isEmpty() && uCed.equals(sCed)) {
+                    esSupervisorContrato = true;
+                }
+            }
+            row.addProperty("esSupervisorContrato", esSupervisorContrato);
 
             dataArray.add(row);
         }

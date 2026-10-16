@@ -59,7 +59,7 @@
                             <c:if test="${sessionScope.usuario.tienePermiso('PRESUPUESTO_VER')}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/presupuesto"><i class="bi bi-graph-up me-2"></i>Presupuesto</a></li>
                             </c:if>
-                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR')}">
+                            <c:if test="${sessionScope.usuario.tienePermiso('CONTRATOS_VER') || sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISOR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || (sessionScope.usuario.rol != null && (sessionScope.usuario.rol.nombre == 'Supervisor' || sessionScope.usuario.rol.nombre == 'SUPERVISOR'))}">
                                 <li><a class="dropdown-item py-2" href="${pageContext.request.contextPath}/informes"><i class="bi bi-wallet2 me-2"></i>Cuentas</a></li>
                             </c:if>
                             <c:if test="${sessionScope.usuario.tienePermiso('VERBOS_VER')}">

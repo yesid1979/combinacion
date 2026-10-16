@@ -44,6 +44,11 @@
                                 <i class="bi bi-person-plus-fill me-1"></i>Nuevo supervisor
                             </a>
                         </c:if>
+                        <c:if test="${sessionScope.usuario.tienePermiso('SUPERVISORES_CREAR') || sessionScope.usuario.tienePermiso('ADMIN_USUARIOS') || sessionScope.usuario.esAdministrador()}">
+                            <a href="${pageContext.request.contextPath}/masivo-supervisores" class="btn text-white fw-bold" style="background-color: #004884;">
+                                <i class="bi bi-person-lines-fill me-1"></i>Crear Usuarios Supervisores
+                            </a>
+                        </c:if>
                     </div>
                 </div>
 

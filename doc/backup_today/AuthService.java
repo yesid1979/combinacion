@@ -1,0 +1,189 @@
+package com.combinacion.services;
+
+import com.combinacion.models.Usuario;
+import com.combinacion.dao.UsuarioDAO;
+import com.combinacion.util.PasswordUtils;
+
+public class AuthService {
+
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+    // ==========================================
+    // SECCIÓN 1: AUTENTICACIÓN (LOGIN)
+    // ==========================================
+    public Usuario autenticar(String username, String password) {
+        LoginResult result = autenticarDetallado(username, password);
+        return (result != null) ? result.getUsuario() : null;
+    }
+
+    public LoginResult autenticarDetallado(String username, String password) {
+        if (username == null || username.trim().isEmpty() || password == null) {
+            return new LoginResult(null, "Complete todos los campos.", false);
+        }
+        Usuario usuario = usuarioDAO.obtenerPorUsername(username.trim());
+        if (usuario == null) {
+            return new LoginResult(null, "Usuario o contraseña incorrectos.", false);
+        }
+        if (!usuario.isActivo()) {
+            return new LoginResult(null, "El usuario está inactivo.", false);
+        }
+        if (!PasswordUtils.verifyPassword(password, usuario.getPasswordHash(), usuario.getSalt())) {
+            return new LoginResult(null, "Usuario o contraseña incorrectos.", false);
+        }
+        usuarioDAO.actualizarUltimoAcceso(usuario.getId());
+        return new LoginResult(usuario, null, true);
+    }
+
+    // ==========================================
+    // SECCIÓN 2: AUTORIZACIÓN (PERMISOS)
+    // ==========================================
+    public boolean puedeAccederExtendido(Usuario usuario, String path, String action, String method) {
+        if (usuario == null) {
+            System.err.println("[AUTH] Usuario no autenticado.");
+            return false;
+        }
+
+        // --- 1. LLAVE MAESTRA: Administrador (Sincronizado con Usuario.java) ---
+        if (usuario.esAdministrador()) {
+            return true;
+        }
+
+        if (!usuario.isActivo()) {
+            System.out.println("[AUTH] Usuario inactivo. Acceso denegado.");
+            return false;
+        }
+
+        if (path == null) {
+            path = "/";
+        }
+        String lowerPath = path.toLowerCase();
+
+        // Normalizar acción y método
+        if (action == null || action.isEmpty()) {
+            action = "list";
+        }
+        action = action.toLowerCase();
+        if (method == null) {
+            method = "GET";
+        }
+
+        // Resolver permiso necesario
+        String permiso = resolverPermiso(lowerPath, action);
+        System.out.println("[AUTH] Permiso resuelto para " + lowerPath + " (" + action + "): " + permiso);
+
+        // Si no hay permiso definido, permitir acceso a rutas base
+        if (permiso == null) {
+            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet") || lowerPath.contains("procesar_revision.jsp");
+            System.out.println("[AUTH] Permiso no definido. Acceso a ruta base: " + esRutaBase);
+            return esRutaBase;
+        }
+
+        // PERMISO ESPECIAL PARA CONTRATISTAS EN INFORMES/CUENTAS DE COBRO
+        boolean esContratista = usuario.getRolId() == 3 || 
+                                (usuario.getRol() != null && "Contratista".equalsIgnoreCase(usuario.getRol().getNombre()));
+                                
+        if (lowerPath.equals("/informes") && esContratista) {
+            return true;
+        }
+
+        // PERMISO ESPECIAL PARA REVISORES Y SUPERVISORES EN INFORMES (REVISION DE CUENTAS)
+        if (lowerPath.equals("/informes") && (
+                usuario.tienePermiso("PUEDE_REVISAR_CUENTAS") || 
+                usuario.tienePermiso("REVISION_CUENTAS_VER") || 
+                usuario.tienePermiso("ADMINISTRAR_CUENTAS") || 
+                usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") ||
+                usuario.tienePermiso("SUPERVISOR_CUENTAS") ||
+                (usuario.getRol() != null && "Supervisor".equalsIgnoreCase(usuario.getRol().getNombre())))) {
+            return true;
+        }
+
+        // Permiso global para que cualquier usuario autenticado use los servlets del editor de texto
+        if (lowerPath.equals("/imageuploadservlet") || lowerPath.equals("/imageservlet")) {
+            return true;
+        }
+
+        // Validación de método para acciones críticas
+        if (action.equals("delete") && !"POST".equalsIgnoreCase(method)) {
+            System.out.println("[AUTH] Método no permitido para acción 'delete'. Debe ser POST.");
+            return false;
+        }
+
+        // Soporte para el permiso legado 'ADMIN_USUARIOS' que se asigna manualmente a usuarios específicos (ej: en Contratacion)
+        if (lowerPath.contains("usuarios") && usuario.tienePermiso("ADMIN_USUARIOS")) {
+            return true;
+        }
+
+        // 3. Verificar permiso en base de datos (Lógica robusta en Usuario.java)
+        boolean tienePermiso = usuario.tienePermiso(permiso);
+        
+        if (!tienePermiso) {
+            System.err.println("[AUTH] ACCESO DENEGADO: Usuario '" + usuario.getUsername() + 
+                "' no tiene permiso '" + permiso + "' para " + lowerPath + " (Accion: " + action + ")");
+        }
+
+        return tienePermiso;
+    }
+
+    private String resolverPermiso(String path, String action) {
+        String modulo = obtenerModulo(path);
+        if (modulo == null) {
+            return null;
+        }
+
+        // Casos especiales
+        if (modulo.equals("CARGA_MASIVA")) {
+            return "CARGA_MASIVA_VER";
+        }
+
+        // Mapear acción a permiso
+        switch (action) {
+            case "list":
+            case "view":
+            case "data":
+            case "search":
+            case "download":
+            case "downloadzip":
+            case "generate":
+            case "generatemodificacion":
+            case "downloadzipmodificacion":
+            case "downloadzipestructuradores":
+            case "downloadzipdesignacion":
+            case "export":
+            case "print":
+            case "descargar_doc":
+                return modulo + "_VER";
+            case "new":
+            case "insert":
+            case "create":
+                return modulo + "_CREAR";
+            case "edit":
+            case "update":
+            case "save":
+                return modulo + "_EDITAR";
+            case "delete":
+                return modulo + "_ELIMINAR";
+            default:
+                return null;
+        }
+    }
+
+    private String obtenerModulo(String path) {
+        if (path.contains("contratistas") || path.contains("masivo-usuarios")) return "CONTRATISTAS";
+        if (path.contains("contratos")) return "CONTRATOS";
+        if (path.contains("usuarios") && !path.contains("masivo-usuarios")) return "ADMIN";
+        if (path.contains("roles")) return "ADMIN";
+        if (path.contains("presupuesto")) return "PRESUPUESTO";
+        if (path.contains("supervisor")) return "SUPERVISORES";
+        if (path.contains("ordenador")) return "ORDENADORES";
+        if (path.contains("combinacion") || path.contains("informes")) return "COMBINACION";
+        if (path.contains("carga_masiva") || path.contains("upload") || path.contains("google-sync")) return "CARGA_MASIVA";
+        if (path.contains("revisor")) return "REVISORES";
+        if (path.contains("verbo")) return "VERBOS";
+        if (path.contains("revaluacion")) return "REVALUACION";
+        return null;
+    }
+
+    public boolean tienePermiso(Usuario usuario, String codigoPermiso) {
+        return usuario != null && usuario.tienePermiso(codigoPermiso);
+    }
+}

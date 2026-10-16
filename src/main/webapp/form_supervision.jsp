@@ -638,7 +638,10 @@
                                                     <c:choose>
                                                         <c:when test="${hr.estadoNuevo == 'RADICADA'}"><span class="badge bg-primary">RADICADA</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'DEVUELTA'}"><span class="badge bg-danger">DEVUELTA</span></c:when>
-                                                        <c:when test="${hr.estadoNuevo == 'APROBADA'}"><span class="badge bg-success">APROBADA</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION CONTRATACION'}"><span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION SUPERVISOR'}"><span class="badge bg-info text-dark">EN REVISIÓN (SUPERVISIÓN)</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION FINAL'}"><span class="badge bg-info text-dark">EN REVISIÓN FINAL</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'APROBADA PARA IMPRESION' || hr.estadoNuevo == 'APROBADA'}"><span class="badge bg-success">APROBADA</span></c:when>
                                                         <c:otherwise><span class="badge bg-secondary">${fn:escapeXml(hr.estadoNuevo)}</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
@@ -666,21 +669,43 @@
                         <c:set var="esRevisorAsignado" value="${sessionScope.usuario != null and informe.idRevisorAsignado == sessionScope.usuario.id}" />
                         <c:set var="sinRevisor" value="${empty informe.idRevisorAsignado or informe.idRevisorAsignado == 0}" />
                         
-                        <c:set var="mostrarBtnRevisar" value="false" />
-                        <c:set var="esModalAdmin" value="false" />
+                        <c:set var="userCedClean" value="${fn:replace(fn:replace(sessionScope.usuario.cedula, '.', ''), ' ', '')}" />
+                        <c:set var="supCedClean" value="${fn:replace(fn:replace(not empty informe.supervisor ? informe.supervisor.cedula : contrato.supervisor.cedula, '.', ''), ' ', '')}" />
+                        <c:set var="esSupervisorContrato" value="${not empty userCedClean and not empty supCedClean and userCedClean == supCedClean}" />
                         
+                        <c:set var="mostrarBtnRevisar" value="false" />
+                        <c:set var="tipoRolModal" value="" />
+                        
+                        <%-- 1. Si es el Revisor asignado --%>
                         <c:if test="${esRevisorAsignado and (informe.estadoRadicacion == 'RADICADA' or informe.estadoRadicacion == 'VISTO BUENO CONTRATACION')}">
                             <c:set var="mostrarBtnRevisar" value="true" />
+                            <c:set var="tipoRolModal" value="revisor" />
                         </c:if>
+                        <%-- 2. Si es Administrador / Contratación --%>
                         <c:if test="${esAdmin}">
-                            <c:if test="${informe.estadoRadicacion == 'EN REVISION FINAL' or (informe.estadoRadicacion == 'RADICADA' and sinRevisor)}">
-                                <c:set var="mostrarBtnRevisar" value="true" />
-                                <c:set var="esModalAdmin" value="true" />
-                            </c:if>
+                            <c:choose>
+                                <c:when test="${informe.estadoRadicacion == 'EN REVISION CONTRATACION' or informe.estadoRadicacion == 'EN REVISION FINAL'}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="contratacion_con_revisor" />
+                                </c:when>
+                                <c:when test="${informe.estadoRadicacion == 'RADICADA' and sinRevisor}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="contratacion_sin_revisor" />
+                                </c:when>
+                                <c:when test="${informe.estadoRadicacion == 'EN REVISION SUPERVISOR'}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="supervisor" />
+                                </c:when>
+                            </c:choose>
+                        </c:if>
+                        <%-- 3. Si es el Supervisor del contrato --%>
+                        <c:if test="${!esAdmin and esSupervisorContrato and informe.estadoRadicacion == 'EN REVISION SUPERVISOR'}">
+                            <c:set var="mostrarBtnRevisar" value="true" />
+                            <c:set var="tipoRolModal" value="supervisor" />
                         </c:if>
                         
                         <c:if test="${mostrarBtnRevisar and not empty informe.id}">
-                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', ${esModalAdmin})">
+                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', '${tipoRolModal}')">
                                 <i class="bi bi-check2-square me-2"></i>Revisar
                             </button>
                         </c:if>
@@ -1420,11 +1445,18 @@
             });
         });
         
-        // Validación personalizada con SweetAlert
+        // Validación personalizada con SweetAlert y verificación física de archivos
+        var formValidated = false;
+        
         $('#informeForm').on('submit', function(e) {
+            if (formValidated) {
+                return true; // Si ya pasó todas las validaciones asíncronas, permitir el envío nativo
+            }
+            e.preventDefault();
+            var form = this;
             var submitBtn = $(this).find('button[type="submit"]');
-            
-            // Sincronizar todos los inputs de evidencias con su acumulador DataTransfer
+
+            // 1. Sincronizar todos los inputs de evidencias con su acumulador DataTransfer
             $('.file-input-evidencia').each(function() {
                 if (this._dt && this._dt.files) {
                     try {
@@ -1434,51 +1466,110 @@
                     }
                 }
             });
-            
-            // Validar el tamaño de los archivos (Max 100MB por archivo y Max 450MB en total)
-            let filesTooLarge = false;
-            let largeFileNames = [];
-            let maxFileSize = 100 * 1024 * 1024; // 100MB en bytes
-            let totalFilesSize = 0;
-            let maxTotalSize = 450 * 1024 * 1024; // 450MB en total
-            
-            $(this).find('input[type="file"]').each(function() {
+
+            // 2. VERIFICACIÓN FÍSICA INMEDIATA DE ARCHIVOS EN EL DISCO DEL COMPUTADOR
+            // Previene el error 'ERR_FILE_NOT_FOUND' de Google Chrome si el usuario borró o movió el archivo de su computador
+            var filePromises = [];
+            var archivosBorrados = [];
+            var brokenInputs = [];
+            var totalFilesSize = 0;
+            var maxFileSize = 100 * 1024 * 1024; // 100MB
+            var maxTotalSize = 450 * 1024 * 1024; // 450MB
+            var filesTooLarge = false;
+            var largeFileNames = [];
+
+            $(form).find('input[type="file"]').each(function() {
                 if (this.files && this.files.length > 0) {
-                    for (let i = 0; i < this.files.length; i++) {
-                        totalFilesSize += this.files[i].size;
-                        if (this.files[i].size > maxFileSize) {
+                    for (var i = 0; i < this.files.length; i++) {
+                        var file = this.files[i];
+                        totalFilesSize += file.size;
+                        if (file.size > maxFileSize) {
                             filesTooLarge = true;
-                            largeFileNames.push(this.files[i].name);
+                            largeFileNames.push(file.name);
                         }
+                        
+                        // Lectura de prueba de 16 bytes para comprobar que el archivo no fue eliminado en Windows/Mac
+                        (function(f, inputEl) {
+                            var p = new Promise(function(resolve) {
+                                try {
+                                    if (f.slice) {
+                                        var reader = new FileReader();
+                                        reader.onload = function() { resolve(); };
+                                        reader.onerror = function() {
+                                            archivosBorrados.push(f.name);
+                                            if (brokenInputs.indexOf(inputEl) === -1) {
+                                                brokenInputs.push(inputEl);
+                                            }
+                                            resolve();
+                                        };
+                                        reader.readAsArrayBuffer(f.slice(0, 16));
+                                    } else {
+                                        resolve();
+                                    }
+                                } catch(err) {
+                                    archivosBorrados.push(f.name);
+                                    if (brokenInputs.indexOf(inputEl) === -1) {
+                                        brokenInputs.push(inputEl);
+                                    }
+                                    resolve();
+                                }
+                            });
+                            filePromises.push(p);
+                        })(file, this);
                     }
                 }
             });
-            
-            if (filesTooLarge) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo demasiado pesado',
-                    html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
-                          '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
-                          'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente.',
-                    confirmButtonColor: '#007bff'
-                });
-                return false;
-            }
 
-            if (totalFilesSize > maxTotalSize) {
-                e.preventDefault();
-                let totalMB = (totalFilesSize / (1024 * 1024)).toFixed(1);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Carga total demasiado grande',
-                    html: 'El tamaño acumulado de todos los archivos seleccionados es de <b>' + totalMB + ' MB</b>, lo cual supera el límite permitido (máximo 450 MB combinados).<br><br>' + 
-                          'Por favor, sube las evidencias en grupos o comprime los documentos PDF antes de guardar.',
-                    confirmButtonColor: '#007bff'
-                });
-                return false;
-            }
+            Promise.all(filePromises).then(function() {
+                if (archivosBorrados.length > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Archivo no encontrado en tu equipo',
+                        html: 'El navegador detectó que los siguientes archivos seleccionados ya no se encuentran en tu computador (fueron borrados, movidos o renombrados):<br><br>' + 
+                              '<div class="text-danger fw-bold p-2 bg-light border rounded text-start" style="max-height: 120px; overflow-y: auto;">' + 
+                              archivosBorrados.map(name => '• ' + $('<div>').text(name).html()).join('<br>') + 
+                              '</div><br>' + 
+                              'Como las evidencias no son obligatorias, ¿deseas <b>omitir estos archivos</b> y continuar guardando, o prefieres buscarlos y volver a seleccionarlos?',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Omitir archivos y continuar',
+                        cancelButtonText: 'Volver a seleccionarlos'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            brokenInputs.forEach(function(inp) {
+                                try { $(inp).val(''); } catch(e){}
+                            });
+                            // Re-ejecutar submit ya con los inputs limpios
+                            $('#informeForm').submit();
+                        }
+                    });
+                    return false;
+                }
+
+                if (filesTooLarge) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo demasiado pesado',
+                        html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
+                              '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
+                              'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente.',
+                        confirmButtonColor: '#007bff'
+                    });
+                    return false;
+                }
+
+                if (totalFilesSize > maxTotalSize) {
+                    let totalMB = (totalFilesSize / (1024 * 1024)).toFixed(1);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Carga total demasiado grande',
+                        html: 'El tamaño acumulado de todos los archivos seleccionados es de <b>' + totalMB + ' MB</b>, lo cual supera el límite permitido (máximo 450 MB combinados).<br><br>' + 
+                              'Por favor, sube las evidencias en grupos o comprime los documentos PDF antes de guardar.',
+                        confirmButtonColor: '#007bff'
+                    });
+                    return false;
+                }
             
             let isValid = true;
             let firstInvalid = null;
@@ -1503,6 +1594,34 @@
                         }
                     }
                 });
+
+                // Validar obligatoriedad de la ESCRITURA de actividades al radicar
+                var countObs = parseInt($('input[name="obligaciones_count"]').val()) || 0;
+                for (var ob = 0; ob < countObs; ob++) {
+                    var hasActivityText = false;
+                    var $actTextareas = $('textarea[name="actividad_' + ob + '"]');
+                    
+                    $actTextareas.each(function() {
+                        var code = '';
+                        try { code = $(this).summernote('code'); } catch(e){}
+                        if (!code) code = $(this).val() || '';
+                        
+                        // Verificar que tenga texto real o contenido (no solo etiquetas vacías como <p><br></p>)
+                        var plainText = $('<div>').html(code).text().trim();
+                        var hasVisualContent = /<img|<table|<iframe/i.test(code);
+                        if (plainText.length > 0 || hasVisualContent) {
+                            hasActivityText = true;
+                        }
+                    });
+
+                    if (!hasActivityText) {
+                        isValid = false;
+                        if (!firstInvalid) {
+                            var $noteEditor = $('#actividades_container_' + ob).find('.note-editable');
+                            firstInvalid = $noteEditor.length ? $noteEditor : $('#actividades_container_' + ob);
+                        }
+                    }
+                }
             } else {
                 // Al guardar borrador, verificar datos mínimos de identificación y Fecha de transacción obligatoria
                 var $periodo = $('input[name="periodo_informe"]');
@@ -1531,9 +1650,9 @@
                     tabTrigger.show();
                 }
                 
-                var alertTitle = esRadicacion ? '¡Faltan datos para radicar!' : '¡Faltan datos para el borrador!';
+                var alertTitle = esRadicacion ? '¡Faltan datos obligatorios para radicar!' : '¡Faltan datos para el borrador!';
                 var errorMsg = esRadicacion ? 
-                    'Por favor, diligencia todos los campos obligatorios antes de radicar la cuenta.' : 
+                    'Por favor, diligencia todos los campos obligatorios y asegúrate de <b>describir las actividades desarrolladas para cada obligación</b> antes de radicar la cuenta.' : 
                     'Para guardar el borrador, es obligatorio indicar el <b>Período del informe</b>, el <b>Número de cuota</b> y la <b>Fecha de transacción</b>.';
                 
                 Swal.fire({
@@ -1611,7 +1730,11 @@
                     Swal.showLoading();
                 }
             });
+
+            formValidated = true;
+            form.submit();
         });
+    });
         
         // Auto-calcular el Saldo por Cancelar
         function calcularSaldo() {
@@ -1859,9 +1982,9 @@
                     var currentMod = $('textarea[name="modificaciones"]').val().trim();
 
                     if (tieneAdicion && cuotasNormales > 0 && cuota >= cuotasNormales) {
-                        if (modificacionesAuto && (currentMod === 'N/A' || currentMod === '')) $('textarea[name="modificaciones"]').val(modificacionesAuto);
                         if (adicionesAuto && (currentAd === 'N/A' || currentAd === '')) $('textarea[name="adiciones"]').val(adicionesAuto);
                         if (prorrogasAuto && (currentPro === 'N/A' || currentPro === '')) $('textarea[name="prorrogas"]').val(prorrogasAuto);
+                        if (modificacionesAuto && (currentMod === 'N/A' || currentMod === '')) $('textarea[name="modificaciones"]').val(modificacionesAuto);
                     } else {
                         if (currentAd === adicionesAuto || currentAd === '') $('textarea[name="adiciones"]').val('N/A');
                         if (currentPro === prorrogasAuto || currentPro === '') $('textarea[name="prorrogas"]').val('N/A');
@@ -2032,29 +2155,45 @@
             });
 
             // Función para modal de Revisión
-            function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
+            function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
                 let opcionesHTML = '';
                 let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
                     <c:forEach var="r" items="${listaRevisores}">
                         <option value="${r.id}">${r.nombreCompleto}</option>
                     </c:forEach>`;
                 
-                if (esAdminCuentas) {
-                    if (estadoActual === 'RADICADA') {
-                        opcionesHTML = `
-                            <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
-                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                        `;
+                // Compatibilidad si llega booleano legado
+                if (typeof tipoRolModal === 'boolean') {
+                    if (tipoRolModal) {
+                        tipoRolModal = (estadoActual === 'RADICADA') ? 'contratacion_sin_revisor' : 'contratacion_con_revisor';
                     } else {
-                        opcionesHTML = `
-                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                        `;
+                        tipoRolModal = 'revisor';
                     }
-                } else {
+                }
+
+                if (tipoRolModal === 'supervisor') {
+                    // El Supervisor da la Aprobación Definitiva para impresión
                     opcionesHTML = `
-                        <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else if (tipoRolModal === 'contratacion_con_revisor') {
+                    // Contratación revisa cuenta que viene de un Revisor y la pasa al Supervisor
+                    opcionesHTML = `
+                        <option value="EN REVISION SUPERVISOR">Dar Visto Bueno (Pasar a Supervisión)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else if (tipoRolModal === 'contratacion_sin_revisor') {
+                    // Contratación revisa cuenta radicada SIN revisor (flujo directo legado intacto)
+                    opcionesHTML = `
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else {
+                    // Revisor básico da su visto bueno para pasar a Contratación
+                    opcionesHTML = `
+                        <option value="EN REVISION CONTRATACION">Dar Visto Bueno (Pasar a Contratación)</option>
                         <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                     `;
                 }

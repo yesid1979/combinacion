@@ -78,16 +78,26 @@
                     </div>
                     </c:if>
 
-                    <!-- Revisión de Cuentas (Para Revisores y Administradores) -->
-                    <c:if test="${sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR')}">
+                    <!-- Revisión de Cuentas (Para Revisores, Supervisores y Administradores) -->
+                    <c:if test="${sessionScope.usuario.tienePermiso('PUEDE_REVISAR_CUENTAS') || sessionScope.usuario.tienePermiso('REVISION_CUENTAS_VER') || sessionScope.usuario.tienePermiso('SUPERVISOR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS') || sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') || (sessionScope.usuario.rol != null && (sessionScope.usuario.rol.nombre == 'Supervisor' || sessionScope.usuario.rol.nombre == 'SUPERVISOR'))}">
                     <div class="col-md-6 col-lg-3">
                         <div class="card h-100 border-0 shadow-sm card-menu" onclick="location.href='informes?modo=revision'">
                             <div class="card-body text-center">
                                 <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
                                     <i class="bi bi-ui-checks fs-2"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">Revisión de Cuentas</h5>
-                                <p class="card-text text-muted small">Revisar y aprobar cuentas de cobro de contratistas.</p>
+                                <h5 class="card-title fw-bold">
+                                    <c:choose>
+                                        <c:when test="${sessionScope.usuario.rol != null && (sessionScope.usuario.rol.nombre == 'Supervisor' || sessionScope.usuario.rol.nombre == 'SUPERVISOR')}">Supervisión de Cuentas</c:when>
+                                        <c:otherwise>Revisión de Cuentas</c:otherwise>
+                                    </c:choose>
+                                </h5>
+                                <p class="card-text text-muted small">
+                                    <c:choose>
+                                        <c:when test="${sessionScope.usuario.rol != null && (sessionScope.usuario.rol.nombre == 'Supervisor' || sessionScope.usuario.rol.nombre == 'SUPERVISOR')}">Revisar y dar aprobación definitiva a cuentas asignadas.</c:when>
+                                        <c:otherwise>Revisar y aprobar cuentas de cobro de contratistas.</c:otherwise>
+                                    </c:choose>
+                                </p>
                             </div>
                         </div>
                     </div>

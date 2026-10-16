@@ -1,0 +1,439 @@
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+    if (request.getAttribute("contratistaInfo") == null && session.getAttribute("usuario") != null) {
+        com.combinacion.models.Usuario uLog = (com.combinacion.models.Usuario) session.getAttribute("usuario");
+        if (uLog != null && uLog.getCedula() != null) {
+            request.setAttribute("contratistaInfo", new com.combinacion.dao.ContratistaDAO().obtenerPorCedula(uLog.getCedula()));
+        }
+    }
+%>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - DAGJP</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="assets/css/styles.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; }
+        .card-profile { border-radius: 8px; border: 1px solid #ddd; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .section-header { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; margin-bottom: 20px; }
+        .header-personal { color: #007bff; }
+        .header-security { color: #ffc107; }
+        .form-label { font-weight: 600; color: #333; margin-bottom: 5px; font-size: 0.95rem; }
+        .form-control { padding: 10px 15px; border-radius: 5px; border: 1px solid #ccc; background-color: #fff; color: #333; }
+        .form-control:read-only { background-color: #f8f9fa; color: #6c757d; border-color: #dee2e6; }
+        .btn-blue { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: 600; width: 100%; }
+        .btn-blue:hover { background-color: #0069d9; color: white; }
+        .btn-yellow { background-color: #ffc107; color: #333; border: none; padding: 10px 20px; border-radius: 5px; font-weight: 600; width: 100%; }
+        .btn-yellow:hover { background-color: #e0a800; color: #212529; }
+        .btn-close-custom { background-color: #6c757d; color: white; border: none; padding: 8px 25px; border-radius: 5px; font-weight: 600; }
+        
+        /* Avatar adjustments */
+        .avatar-section { position: relative; text-align: center; margin-bottom: 30px; }
+        .avatar-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .avatar-overlay { position: absolute; bottom: 5px; left: 50%; transform: translateX(35px); background: #198754; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s; }
+        .avatar-remove { position: absolute; bottom: 5px; left: 50%; transform: translateX(-73px); background: #dc3545; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s; }
+        .avatar-remove:hover { transform: translateX(-73px) scale(1.1); background: #bb2d3b; }
+        .avatar-overlay:hover { transform: translateX(35px) scale(1.1); background: #157347; }
+
+        .container-custom { max-width: 1000px; }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <jsp:include page="inc/navbar.jsp" />
+
+    <div class="container container-custom py-4 flex-grow-1">
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-premium">
+                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/index.jsp"><i class="bi bi-house-door-fill me-1"></i>Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-person-circle me-1"></i>Mi Perfil</li>
+                </ol>
+            </nav>
+        <div class="card card-profile p-4">
+            
+            <div class="row align-items-center mb-4">
+                <div class="col-auto">
+                    <div class="avatar-section">
+                        <img src="${usuario.fotoUrl != null ? pageContext.request.contextPath.concat('/').concat(usuario.fotoUrl) : 'https://ui-avatars.com/api/?name='.concat(nombreUsuario).concat('&background=0D8ABC&color=fff&size=150')}" 
+                             onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${nombreUsuario}&background=0D8ABC&color=fff&size=150';"
+                             alt="Foto" class="avatar-img" id="profileImagePreview">
+                        <label for="profileImageInput" class="avatar-overlay" title="Cambiar foto">
+                            <i class="bi bi-camera-fill"></i>
+                        </label>
+                        <c:if test="${not empty usuario.fotoUrl}">
+                            <div class="avatar-remove" onclick="removePhoto()" title="Quitar foto">
+                                <i class="bi bi-trash3-fill"></i>
+                            </div>
+                        </c:if>
+                        <form id="formUploadPhoto" enctype="multipart/form-data" class="d-none">
+                            <input type="file" id="profileImageInput" name="foto" accept="image/*" onchange="uploadPhoto()">
+                        </form>
+                    </div>
+                </div>
+                <div class="col">
+                    <h4 class="fw-bold mb-0 text-dark">${sessionScope.usuario.nombreCompleto}</h4>
+                    <p class="text-muted mb-0">${sessionScope.rolNombre}</p>
+                </div>
+            </div>
+
+            <div class="row g-5">
+                <!-- Columna Izquierda: Datos Personales -->
+                <div class="col-md-6 border-end">
+                    <div class="section-header header-personal">
+                        <i class="bi bi-person-vcard me-2"></i> Datos personales
+                    </div>
+                    <form id="formUpdateProfile">
+                        <div class="mb-3">
+                            <label class="form-label">No. de documento</label>
+                            <input type="text" class="form-control" value="${fn:escapeXml(sessionScope.usuario.cedula)}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombres y apellidos</label>
+                            <input type="text" name="nombre" class="form-control" value="${fn:escapeXml(sessionScope.usuario.nombreCompleto)}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="correo" class="form-control" value="${fn:escapeXml(sessionScope.usuario.correo)}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">No. de contacto</label>
+                            <input type="text" name="celular" class="form-control" value="${fn:escapeXml(not empty sessionScope.usuario.celular ? sessionScope.usuario.celular : contratistaInfo.telefono)}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" name="direccion" class="form-control" value="${fn:escapeXml(contratistaInfo.direccion)}">
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${fn:escapeXml(contratistaInfo.fechaNacimiento)}" onchange="calcularEdad()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Edad</label>
+                                <input type="number" id="edad" name="edad" class="form-control" value="${fn:escapeXml(contratistaInfo.edad)}" readonly style="background-color: #f8f9fa;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-blue shadow-sm">
+                            <i class="bi bi-save me-2"></i> Guardar datos
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Columna Derecha: Seguridad -->
+                <div class="col-md-6">
+                    <div class="section-header header-security">
+                        <i class="bi bi-key-fill me-2 rotate-45"></i> Seguridad
+                    </div>
+                    <form id="formUpdatePassword">
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual</label>
+                            <input type="password" name="oldPass" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva contraseña</label>
+                            <input type="password" name="newPass" id="newPass" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Confirmar nueva contraseña</label>
+                            <input type="password" name="confirmPass" id="confirmPass" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-yellow shadow-sm">
+                            <i class="bi bi-key-fill me-2"></i> Cambiar contraseña
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Columna Inferior: Firma -->
+            <div class="row g-5 mt-2 border-top pt-2">
+                <div class="col-md-12">
+                    <div class="section-header text-success">
+                        <i class="bi bi-pen me-2"></i> Mi Firma para Documentos
+                    </div>
+                    <p class="text-muted small mb-2">Sube una imagen de tu firma (preferiblemente con fondo blanco o transparente) para que sea incrustada automáticamente al generar los informes de supervisión.</p>
+                    <div class="alert alert-secondary border-0 bg-light mb-3 py-2 px-3 small">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="authFirmaCheck" ${not empty sessionScope.usuario.firmaUrl ? 'checked disabled' : ''}>
+                            <label class="form-check-label fw-bold text-dark" for="authFirmaCheck" style="font-size: 0.8rem; line-height: 1.3;">
+                                Autorizo el uso de mi firma digitalizada para la suscripción y generación automática de los informes y cuentas tramitados en este sistema, en concordancia con la Ley 527 de 1999 (Comercio Electrónico) y la Ley 1581 de 2012 (Protección de Datos Personales).
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div id="dropFirmaArea" class="me-4" style="width: 250px; height: 120px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fafafa; position: relative; cursor: pointer;">
+                            <c:choose>
+                                <c:when test="${not empty sessionScope.usuario.firmaUrl}">
+                                    <img src="${pageContext.request.contextPath}/${sessionScope.usuario.firmaUrl}" alt="Mi Firma" style="max-width: 100%; max-height: 100%; pointer-events: none;">
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="text-muted" style="pointer-events: none;"><i class="bi bi-image me-1"></i> Arrastra tu firma aquí</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div>
+                            <form id="formUploadFirma" enctype="multipart/form-data">
+                                <label for="firmaImageInput" class="btn btn-outline-success mb-2" style="cursor: pointer;">
+                                    <i class="bi bi-upload me-1"></i> Subir / Cambiar Firma
+                                </label>
+                                <input type="file" id="firmaImageInput" name="firma" accept=".png,image/png" class="d-none" onchange="uploadFirma()">
+                            </form>
+                            <c:if test="${not empty sessionScope.usuario.firmaUrl}">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeFirma()">
+                                    <i class="bi bi-trash3 me-1"></i> Eliminar Firma
+                                </button>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mt-5 pt-3 border-top">
+                <a href="${pageContext.request.contextPath}/index.jsp" class="btn-close-custom text-decoration-none">
+                    <i class="bi bi-x-lg me-2"></i> Cerrar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <jsp:include page="inc/footer.jsp" />
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function calcularEdad() {
+            var fecha = $('#fechaNacimiento').val();
+            if (fecha) {
+                var hoy = new Date();
+                var cumpleanos = new Date(fecha);
+                cumpleanos.setMinutes(cumpleanos.getMinutes() + cumpleanos.getTimezoneOffset());
+                var edad = hoy.getFullYear() - cumpleanos.getFullYear();
+                var m = hoy.getMonth() - cumpleanos.getMonth();
+                if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
+                    edad--;
+                }
+                $('#edad').val(edad);
+            }
+        }
+
+        // Estilo solicitado: icono de llave rotado
+        $('.rotate-45').css('transform', 'rotate(-45deg)');
+
+        // Actualizar Info Personal
+        $('#formUpdateProfile').on('submit', function(e) {
+            e.preventDefault();
+            $.post('${pageContext.request.contextPath}/usuarios?action=updateProfile', $(this).serialize(), function(res) {
+                if(res.success) {
+                    Swal.fire({ icon: 'success', title: '¡Guardado!', text: 'Tus datos se actualizaron correctamente.', timer: 2000, showConfirmButton: false }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', res.message || 'Error al guardar.', 'error');
+                }
+            }, 'json');
+        });
+
+        // Actualizar Contraseña
+        $('#formUpdatePassword').on('submit', function(e) {
+            e.preventDefault();
+            if($('#newPass').val() !== $('#confirmPass').val()) {
+                Swal.fire('Atención', 'Las nuevas contraseñas no coinciden.', 'warning');
+                return;
+            }
+            $.post('${pageContext.request.contextPath}/usuarios?action=changeMyPassword', $(this).serialize(), function(res) {
+                if(res.success) {
+                    Swal.fire({ icon: 'success', title: '¡Listo!', text: 'Contraseña cambiada con éxito.', timer: 2000, showConfirmButton: false });
+                    $('#formUpdatePassword')[0].reset();
+                } else {
+                    Swal.fire('Error', res.message || 'Error al cambiar contraseña.', 'error');
+                }
+            }, 'json');
+        });
+
+        // Subida de Foto
+        function uploadPhoto() {
+            const formData = new FormData($('#formUploadPhoto')[0]);
+            $.ajax({
+                url: '${pageContext.request.contextPath}/usuarios?action=uploadPhoto',
+                type: 'POST', data: formData, processData: false, contentType: false,
+                success: function(res) {
+                    if(res.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', res.message || 'Error al subir la foto.', 'error');
+                    }
+                },
+                dataType: 'json'
+            });
+        }
+
+        // Eliminar Foto
+        function removePhoto() {
+            Swal.fire({
+                title: '¿Quitar foto?',
+                text: "Se volverá a mostrar el avatar por defecto.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('${pageContext.request.contextPath}/usuarios?action=removePhoto', function(res) {
+                        if(res.success) {
+                            location.reload();
+                        }
+                    }, 'json');
+                }
+            });
+        }
+            $(document).ready(function() {
+            // Drag and drop events for signature
+            var dropZone = document.getElementById('dropFirmaArea');
+            if(dropZone) {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#198754';
+                    this.style.backgroundColor = '#e8f5e9';
+                });
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#fafafa';
+                });
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#ccc';
+                    this.style.backgroundColor = '#fafafa';
+                    var files = e.dataTransfer.files;
+                    if(files.length > 0) {
+                        $('#firmaImageInput')[0].files = files;
+                        uploadFirma();
+                    }
+                });
+                dropZone.addEventListener('click', function() {
+                    $('#firmaImageInput').click();
+                });
+            }
+        });
+
+        // Subida de Firma
+        function uploadFirma() {
+            if (!$('#authFirmaCheck').is(':checked')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Autorización requerida',
+                    text: 'Debes marcar la casilla autorizando el uso legal de tu firma antes de poder subirla.',
+                    confirmButtonColor: '#004884'
+                });
+                $('#firmaImageInput').val(''); // Limpiar el input
+                return;
+            }
+            var fileInput = $('#firmaImageInput')[0];
+            if (fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                var fileSize = file.size;
+                
+                // Validate file type
+                if (file.type !== 'image/png' && !file.name.toLowerCase().endsWith('.png')) {
+                    Swal.fire('Error', 'Por favor, sube únicamente imágenes en formato PNG (fondo transparente).', 'error');
+                    fileInput.value = ''; // Limpiar el input
+                    return;
+                }
+                
+                // Validate file size
+                if (fileSize > 20 * 1024 * 1024) { // 20MB
+                    Swal.fire('Error', 'La imagen es demasiado grande. El tamaño máximo es 20MB.', 'error');
+                    fileInput.value = ''; // Limpiar el input
+                    return;
+                }
+            }
+
+            const formData = new FormData($('#formUploadFirma')[0]);
+            
+            // Show loading
+            Swal.fire({
+                title: 'Subiendo firma...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: '${pageContext.request.contextPath}/usuarios?action=uploadFirma',
+                type: 'POST', data: formData, processData: false, contentType: false,
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire({ icon: 'success', title: 'Firma guardada', timer: 1500, showConfirmButton: false }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message || 'Error al subir la firma.', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    var errorMsg = error || "La conexión se interrumpió o el archivo excede los límites permitidos.";
+                    if (xhr.status !== 0) {
+                        errorMsg += " (HTTP " + xhr.status + ")";
+                    }
+                    if (xhr.responseText) {
+                        // Intentar parsear si es JSON de Tomcat/AuthFilter, o mostrar texto raw
+                        try {
+                            var jsonRes = JSON.parse(xhr.responseText);
+                            if (jsonRes.error) errorMsg += "\nDetalle: " + jsonRes.error;
+                            else if (jsonRes.message) errorMsg += "\nDetalle: " + jsonRes.message;
+                        } catch (e) {
+                            // Limitar la longitud si es HTML (ej. página de error de NGINX)
+                            var rawText = xhr.responseText.substring(0, 150);
+                            errorMsg += "\nServidor: " + rawText;
+                        }
+                    }
+                    Swal.fire('Error', 'Error de conexión: ' + errorMsg, 'error');
+                },
+                dataType: 'json'
+            });
+        }
+
+        // Eliminar Firma
+        function removeFirma() {
+            Swal.fire({
+                title: '¿Quitar firma?',
+                text: "Ya no aparecerá en tus documentos generados.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('${pageContext.request.contextPath}/usuarios?action=removeFirma', function(res) {
+                        if(res.success) {
+                            location.reload();
+                        }
+                    }, 'json');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

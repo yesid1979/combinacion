@@ -106,7 +106,9 @@
                         <label for="filtroEstado" class="me-2 fw-bold text-secondary mb-0"><i class="bi bi-funnel"></i> Filtrar por Estado:</label>
                         <select id="filtroEstado" class="form-select w-auto shadow-sm border-primary">
                             <option value="">Todos los estados</option>
-                            <option value="RADICADA">Radicadas (Pendientes)</option>
+                            <option value="RADICADA">Radicadas (Revisor)</option>
+                            <option value="EN REVISION CONTRATACION">En Revisión (Contratación)</option>
+                            <option value="EN REVISION SUPERVISOR">En Revisión (Supervisión)</option>
                             <option value="EN REVISION FINAL">En Revisión Final</option>
                             <option value="APROBADA PARA IMPRESION">Aprobadas</option>
                             <option value="DEVUELTA">Devueltas</option>
@@ -184,7 +186,9 @@
                             if (data === 'BORRADOR') return '<span class="badge bg-secondary">BORRADOR</span>';
                             if (data === 'RADICADA') return '<span class="badge bg-primary">RADICADA</span>';
                             if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÓN</span>';
+                            if (data === 'EN REVISION CONTRATACION') return '<span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span>';
                             if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÓN FINAL</span>';
+                            if (data === 'EN REVISION SUPERVISOR') return '<span class="badge bg-info text-dark">EN REVISIÓN (SUPERVISIÓN)</span>';
                             if (data === 'APROBADA PARA IMPRESION') return '<span class="badge bg-success">APROBADA (LISTA PARA FIRMA)</span>';
                             if (data === 'DEVUELTA') return '<span class="badge bg-danger">DEVUELTA</span>';
                             return '<span class="badge bg-secondary">' + data + '</span>';
@@ -219,24 +223,35 @@
                             
                             // Botón Revisar
                             let mostrarBtnRevisar = false;
-                            let esModalAdmin = false;
+                            let tipoRolModal = '';
+                            let sinRevisor = (!row.idRevisorAsignado || row.idRevisorAsignado === 0 || row.idRevisorAsignado === '0');
                             
+                            // 1. Si es el Revisor asignado
                             if (row.idRevisorAsignado == row.usuarioActualId && (estado === 'RADICADA' || estado === 'VISTO BUENO CONTRATACION')) {
                                 mostrarBtnRevisar = true;
-                                esModalAdmin = false;
-                            } else if (esAdminCuentas) {
-                                // Contratación interviene si:
-                                // 1. Ya pasó por el supervisor (EN REVISION FINAL)
-                                // 2. O si se radicó (RADICADA) pero NO tiene un revisor asignado (idRevisorAsignado es nulo, vacío o 0)
-                                let sinRevisor = (!row.idRevisorAsignado || row.idRevisorAsignado === 0 || row.idRevisorAsignado === '0');
-                                if (estado === 'EN REVISION FINAL' || (estado === 'RADICADA' && sinRevisor)) {
+                                tipoRolModal = 'revisor';
+                            } 
+                            // 2. Si es Administrador / Contratación
+                            else if (esAdminCuentas) {
+                                if (estado === 'EN REVISION CONTRATACION' || estado === 'EN REVISION FINAL') {
                                     mostrarBtnRevisar = true;
-                                    esModalAdmin = true;
+                                    tipoRolModal = 'contratacion_con_revisor';
+                                } else if (estado === 'RADICADA' && sinRevisor) {
+                                    mostrarBtnRevisar = true;
+                                    tipoRolModal = 'contratacion_sin_revisor';
+                                } else if (estado === 'EN REVISION SUPERVISOR') {
+                                    mostrarBtnRevisar = true;
+                                    tipoRolModal = 'supervisor';
                                 }
+                            }
+                            // 3. Si es el Supervisor del contrato
+                            else if (row.esSupervisorContrato && estado === 'EN REVISION SUPERVISOR') {
+                                mostrarBtnRevisar = true;
+                                tipoRolModal = 'supervisor';
                             }
                             
                             if (mostrarBtnRevisar) {
-                                html += '<button type="button" class="btn btn-sm btn-outline-primary" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', ' + esModalAdmin + ')"><i class="bi bi-check2-square"></i> Revisar</button>';
+                                html += '<button type="button" class="btn btn-sm btn-outline-primary" title="Gestionar Revisión" onclick="abrirModalRevision(' + id + ', \'' + estado + '\', \'' + tipoRolModal + '\')"><i class="bi bi-check2-square"></i> Revisar</button>';
                             }
 
                             // Botón Borrar (solo en estado BORRADOR y si es el dueño o admin)
@@ -295,30 +310,45 @@
             });
         }
 
-        function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
+        function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
             let opcionesHTML = '';
             let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
                 <c:forEach var="r" items="${revisoresList}">
                     <option value="${r.id}">${r.nombreCompleto}</option>
                 </c:forEach>`;
             
-            if (esAdminCuentas) {
-                if (estadoActual === 'RADICADA') {
-                    opcionesHTML = `
-                        <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
-                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                    `;
+            // Compatibilidad si llega booleano legado
+            if (typeof tipoRolModal === 'boolean') {
+                if (tipoRolModal) {
+                    tipoRolModal = (estadoActual === 'RADICADA') ? 'contratacion_sin_revisor' : 'contratacion_con_revisor';
                 } else {
-                    opcionesHTML = `
-                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                    `;
+                    tipoRolModal = 'revisor';
                 }
-            } else {
-                // Si es solo Revisor Básico, solo da el Visto Bueno previo
+            }
+
+            if (tipoRolModal === 'supervisor') {
+                // El Supervisor da la Aprobación Definitiva para impresión
                 opcionesHTML = `
-                    <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
+                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                `;
+            } else if (tipoRolModal === 'contratacion_con_revisor') {
+                // Contratación revisa cuenta que viene de un Revisor y la pasa al Supervisor
+                opcionesHTML = `
+                    <option value="EN REVISION SUPERVISOR">Dar Visto Bueno (Pasar a Supervisión)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                `;
+            } else if (tipoRolModal === 'contratacion_sin_revisor') {
+                // Contratación revisa cuenta radicada SIN revisor (flujo directo legado intacto)
+                opcionesHTML = `
+                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                    <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                `;
+            } else {
+                // Revisor básico da su visto bueno para pasar a Contratación
+                opcionesHTML = `
+                    <option value="EN REVISION CONTRATACION">Dar Visto Bueno (Pasar a Contratación)</option>
                     <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                 `;
             }

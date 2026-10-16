@@ -12,8 +12,9 @@
 
     boolean esAdminCuentas = u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS") || u.esAdministrador();
     boolean esRevisor = u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER");
+    boolean esSupervisor = u.tienePermiso("SUPERVISOR_CUENTAS") || (u.getRol() != null && "Supervisor".equalsIgnoreCase(u.getRol().getNombre()));
 
-    if (!esAdminCuentas && !esRevisor) {
+    if (!esAdminCuentas && !esRevisor && !esSupervisor) {
         session.setAttribute("error", "No tienes permisos para realizar esta acción.");
         String errorUrl = "informes";
         String errModo = request.getParameter("modo");
@@ -98,9 +99,10 @@
                                     String nombreContratista = "";
                                     String numCuota = "";
                                     String numContrato = "";
-                                    String sqlEmail = "SELECT c.correo, c.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
+                                    String sqlEmail = "SELECT COALESCE(NULLIF(TRIM(u.correo), ''), NULLIF(TRIM(c.correo), '')) as correo, c.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
                                                       "JOIN contratos con ON i.contrato_id = con.id " +
                                                       "JOIN contratistas c ON con.contratista_id = c.id " +
+                                                      "LEFT JOIN usuarios u ON regexp_replace(u.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') AND u.activo = true " +
                                                       "WHERE i.id = ?";
                                     try (PreparedStatement psEmail = conn.prepareStatement(sqlEmail)) {
                                         psEmail.setInt(1, idInforme);
@@ -165,7 +167,68 @@
                                         }).start();
                                     }
                                 } catch (Exception ex) {
-                                    System.err.println("Error enviando email: " + ex.getMessage());
+                                    System.err.println("Error enviando email contratista: " + ex.getMessage());
+                                }
+                            } else if ("EN REVISION SUPERVISOR".equals(accion)) {
+                                try {
+                                    String emailSup = null;
+                                    String nombreSup = "";
+                                    String numContrato = "";
+                                    String numCuota = "";
+                                    String sqlSup = "SELECT s.cedula, s.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
+                                                    "JOIN contratos con ON i.contrato_id = con.id " +
+                                                    "JOIN supervisores s ON s.id = COALESCE(i.supervisor_id, con.supervisor_id) " +
+                                                    "WHERE i.id = ?";
+                                    try (PreparedStatement psSup = conn.prepareStatement(sqlSup)) {
+                                        psSup.setInt(1, idInforme);
+                                        try (java.sql.ResultSet rs = psSup.executeQuery()) {
+                                            if (rs.next()) {
+                                                String cedSup = rs.getString("cedula");
+                                                nombreSup = rs.getString("nombre");
+                                                numCuota = rs.getString("numero_cuota");
+                                                numContrato = rs.getString("numero_contrato");
+                                                if (cedSup != null) {
+                                                    String cedLimpia = cedSup.replaceAll("[^0-9]", "");
+                                                    try (PreparedStatement psUsr = conn.prepareStatement("SELECT correo FROM usuarios WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ? AND activo = true LIMIT 1")) {
+                                                        psUsr.setString(1, cedLimpia);
+                                                        try (java.sql.ResultSet rsUsr = psUsr.executeQuery()) {
+                                                            if (rsUsr.next()) {
+                                                                emailSup = rsUsr.getString("correo");
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (emailSup != null && !emailSup.trim().isEmpty()) {
+                                        String systemLink = "https://juridica.cali.gov.co/combinacion/";
+                                        String subject = "📋 Cuenta de Cobro Pendiente de Aprobación - Contrato " + numContrato;
+                                        String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                                + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                                + "<div style='background-color: #004884; color: #fff; padding: 20px; text-align: center;'>"
+                                                + "<h2 style='margin: 0;'>Cuenta Pendiente de Aprobación</h2>"
+                                                + "</div>"
+                                                + "<div style='padding: 20px;'>"
+                                                + "<p>Hola <strong>" + nombreSup + "</strong>,</p>"
+                                                + "<p>La cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente a la <strong>Cuota " + numCuota + "</strong> ha superado la revisión de Contratación y se encuentra lista para su <strong>aprobación definitiva para impresión</strong>.</p>"
+                                                + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para verificar y dar la aprobación definitiva.</p>"
+                                                + "<div style='text-align: center; margin-top: 30px;'><a href='" + systemLink + "' style='background-color: #004884; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
+                                                + "</div>"
+                                                + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                                + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                                + "</div></div></body></html>";
+                                        
+                                        final String finalEmailSup = emailSup;
+                                        final String finalSubjectSup = subject;
+                                        final String finalBodySup = bodyHtml;
+                                        new Thread(() -> {
+                                            com.combinacion.services.EmailService.sendEmailHtml(finalEmailSup, finalSubjectSup, finalBodySup);
+                                        }).start();
+                                    }
+                                } catch (Exception ex) {
+                                    System.err.println("Error notificando al supervisor: " + ex.getMessage());
                                 }
                             }
                             

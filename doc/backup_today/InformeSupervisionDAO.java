@@ -1,0 +1,478 @@
+package com.combinacion.dao;
+
+import com.combinacion.models.InformeSupervision;
+import com.combinacion.util.DBConnection;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class InformeSupervisionDAO {
+
+    /**
+     * Verifica si ya existe una cuenta de cobro con el mismo contrato, período, tipo e número de cuota.
+     * @return true si ya existe un registro duplicado
+     */
+    public boolean existeDuplicado(int contratoId, String periodoInforme, String tipoInforme, String numeroCuota) {
+        String sql = "SELECT COUNT(*) FROM informes_supervision WHERE contrato_id = ? AND periodo_informe = ? AND tipo_informe = ? AND numero_cuota = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratoId);
+            ps.setString(2, periodoInforme);
+            ps.setString(3, tipoInforme);
+            ps.setString(4, numeroCuota);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public String insertar(InformeSupervision info) {
+        crearTablaSiNoExiste();
+        String sql = "INSERT INTO informes_supervision (" +
+                "contrato_id, periodo_informe, tipo_informe, numero_cuota, " +
+                "fecha_inicio_periodo, fecha_fin_periodo, modificaciones, suspensiones, " +
+                "reanudaciones, cesiones, terminacion_anticipada, adiciones, prorrogas, recibo_satisfaccion, constancia_paz_salvo, " +
+                "valor_cuota_pagar, valor_acumulado_pagado, saldo_por_cancelar, " +
+                "planilla_numero, planilla_pin, planilla_operador, planilla_fecha_pago, planilla_periodo, pago_seguridad_social, " +
+                "concepto_supervisor, observaciones_financieras, observaciones_tecnicas, recomendaciones, fecha_suscripcion, url_drive_evidencias, consecutivo_cobro, estado_radicacion, id_revisor_asignado, anio, soportes_json, " +
+                "eps, afp_pension, arl, es_contratista_nuevo" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, info.getContratoId());
+            ps.setString(2, info.getPeriodoInforme());
+            ps.setString(3, info.getTipoInforme());
+            ps.setString(4, info.getNumeroCuota());
+            ps.setDate(5, info.getFechaInicioPeriodo() != null ? new java.sql.Date(info.getFechaInicioPeriodo().getTime()) : null);
+            ps.setDate(6, info.getFechaFinPeriodo() != null ? new java.sql.Date(info.getFechaFinPeriodo().getTime()) : null);
+            ps.setString(7, info.getModificaciones());
+            ps.setString(8, info.getSuspensiones());
+            ps.setString(9, info.getReanudaciones());
+            ps.setString(10, info.getCesiones());
+            ps.setString(11, info.getTerminacionAnticipada());
+            ps.setString(12, info.getAdiciones());
+            ps.setString(13, info.getProrrogas());
+            ps.setString(14, info.getReciboSatisfaccion());
+            ps.setString(15, info.getConstanciaPazSalvo());
+            ps.setBigDecimal(16, info.getValorCuotaPagar());
+            ps.setBigDecimal(17, info.getValorAccumuladoPagado());
+            ps.setBigDecimal(18, info.getSaldoPorCancelar());
+            ps.setString(19, info.getPlanillaNumero());
+            ps.setString(20, info.getPlanillaPin());
+            ps.setString(21, info.getPlanillaOperador());
+            ps.setDate(22, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
+            ps.setString(23, info.getPlanillaPeriodo());
+            ps.setString(24, info.getPagoSeguridadSocial());
+            ps.setString(25, info.getConceptoSupervisor());
+            ps.setString(26, info.getObservacionesFinancieras());
+            ps.setString(27, info.getObservacionesTecnicas());
+            ps.setString(28, info.getRecomendaciones());
+            ps.setDate(29, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(30, info.getUrlDriveEvidencias());
+            ps.setString(31, info.getConsecutivoCobro());
+            ps.setString(32, info.getEstadoRadicacion() != null ? info.getEstadoRadicacion() : "BORRADOR");
+            if (info.getIdRevisorAsignado() != null) {
+                ps.setInt(33, info.getIdRevisorAsignado());
+            } else {
+                ps.setNull(33, Types.INTEGER);
+            }
+            if (info.getAnio() != null) {
+                ps.setInt(34, info.getAnio());
+            } else {
+                ps.setNull(34, Types.INTEGER);
+            }
+            ps.setString(35, info.getSoportesJson());
+            ps.setString(36, info.getEps());
+            ps.setString(37, info.getAfpPension());
+            ps.setString(38, info.getArl());
+            ps.setString(39, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
+
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        info.setId(rs.getInt(1));
+                    }
+                }
+                return null;
+            } else {
+                return "No se insertó ninguna fila.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error SQL: " + e.getMessage();
+        }
+    }
+
+    public List<InformeSupervision> listarPorContrato(int contratoId) {
+        crearTablaSiNoExiste();
+        List<InformeSupervision> lista = new ArrayList<>();
+        String sql = "SELECT i.*, c.numero_contrato, c.supervisor_id, ct.nombre as contratista_nombre, " +
+                "sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
+                "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
+                "FROM informes_supervision i " +
+                "JOIN contratos c ON i.contrato_id = c.id " +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "LEFT JOIN supervisores sup ON c.supervisor_id = sup.id " +
+                "WHERE i.contrato_id = ? " +
+                "ORDER BY " +
+                "  CASE i.estado_radicacion " +
+                "    WHEN 'RADICADA' THEN 1 " +
+                "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
+                "    WHEN 'EN REVISION CONTRATACION' THEN 3 " +
+                "    WHEN 'EN REVISION FINAL' THEN 4 " +
+                "    WHEN 'EN REVISION SUPERVISOR' THEN 5 " +
+                "    WHEN 'DEVUELTA' THEN 6 " +
+                "    WHEN 'BORRADOR' THEN 7 " +
+                "    WHEN 'APROBADA PARA IMPRESION' THEN 8 " +
+                "    ELSE 9 " +
+                "  END ASC, " +
+                "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
+                "  i.fecha_creacion DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, contratoId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    InformeSupervision info = mapResultSetToInforme(rs);
+                    lista.add(info);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+    public List<InformeSupervision> listarTodos() {
+        crearTablaSiNoExiste();
+        List<InformeSupervision> lista = new ArrayList<>();
+        String sql = "SELECT i.*, c.numero_contrato, c.supervisor_id, ct.nombre as contratista_nombre, " +
+                "sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
+                "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
+                "FROM informes_supervision i " +
+                "JOIN contratos c ON i.contrato_id = c.id " +
+                "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "LEFT JOIN supervisores sup ON c.supervisor_id = sup.id " +
+                "ORDER BY " +
+                "  CASE i.estado_radicacion " +
+                "    WHEN 'RADICADA' THEN 1 " +
+                "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
+                "    WHEN 'EN REVISION CONTRATACION' THEN 3 " +
+                "    WHEN 'EN REVISION FINAL' THEN 4 " +
+                "    WHEN 'EN REVISION SUPERVISOR' THEN 5 " +
+                "    WHEN 'DEVUELTA' THEN 6 " +
+                "    WHEN 'BORRADOR' THEN 7 " +
+                "    WHEN 'APROBADA PARA IMPRESION' THEN 8 " +
+                "    ELSE 9 " +
+                "  END ASC, " +
+                "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
+                "  i.fecha_creacion DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                InformeSupervision info = mapResultSetToInforme(rs);
+                lista.add(info);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
+    public InformeSupervision obtenerPorId(int id) {
+        crearTablaSiNoExiste();
+        String sql = "SELECT * FROM informes_supervision WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToInforme(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private InformeSupervision mapResultSetToInforme(ResultSet rs) throws SQLException {
+        InformeSupervision info = new InformeSupervision();
+        info.setId(rs.getInt("id"));
+        info.setContratoId(rs.getInt("contrato_id"));
+        info.setPeriodoInforme(rs.getString("periodo_informe"));
+        info.setTipoInforme(rs.getString("tipo_informe"));
+        info.setNumeroCuota(rs.getString("numero_cuota"));
+        try { info.setConsecutivoCobro(rs.getString("consecutivo_cobro")); } catch(SQLException ignore){}
+        info.setFechaInicioPeriodo(rs.getDate("fecha_inicio_periodo"));
+        info.setFechaFinPeriodo(rs.getDate("fecha_fin_periodo"));
+        info.setModificaciones(rs.getString("modificaciones"));
+        info.setSuspensiones(rs.getString("suspensiones"));
+        info.setReanudaciones(rs.getString("reanudaciones"));
+        info.setCesiones(rs.getString("cesiones"));
+        info.setTerminacionAnticipada(rs.getString("terminacion_anticipada"));
+        info.setAdiciones(rs.getString("adiciones"));
+        info.setProrrogas(rs.getString("prorrogas"));
+        info.setReciboSatisfaccion(rs.getString("recibo_satisfaccion"));
+        info.setConstanciaPazSalvo(rs.getString("constancia_paz_salvo"));
+        info.setValorCuotaPagar(rs.getBigDecimal("valor_cuota_pagar"));
+        info.setValorAccumuladoPagado(rs.getBigDecimal("valor_acumulado_pagado"));
+        info.setSaldoPorCancelar(rs.getBigDecimal("saldo_por_cancelar"));
+        info.setPlanillaNumero(rs.getString("planilla_numero"));
+        info.setPlanillaPin(rs.getString("planilla_pin"));
+        info.setPlanillaOperador(rs.getString("planilla_operador"));
+        info.setPlanillaFechaPago(rs.getDate("planilla_fecha_pago"));
+        info.setPlanillaPeriodo(rs.getString("planilla_periodo"));
+        try { info.setPagoSeguridadSocial(rs.getString("pago_seguridad_social")); } catch(SQLException ignore) {}
+        try { info.setEps(rs.getString("eps")); } catch(SQLException ignore) {}
+        try { info.setAfpPension(rs.getString("afp_pension")); } catch(SQLException ignore) {}
+        try { info.setArl(rs.getString("arl")); } catch(SQLException ignore) {}
+        try { info.setEsContratistaNuevo(rs.getString("es_contratista_nuevo")); } catch(SQLException ignore) {}
+        info.setConceptoSupervisor(rs.getString("concepto_supervisor"));
+        try { info.setObservacionesFinancieras(rs.getString("observaciones_financieras")); } catch(SQLException ignore) {}
+        info.setObservacionesTecnicas(rs.getString("observaciones_tecnicas"));
+        info.setRecomendaciones(rs.getString("recomendaciones"));
+        info.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
+        info.setFechaSuscripcion(rs.getDate("fecha_suscripcion"));
+        info.setUrlDriveEvidencias(rs.getString("url_drive_evidencias"));
+        try { info.setSoportesJson(rs.getString("soportes_json")); } catch (SQLException e) {}
+        try { info.setEstadoRadicacion(rs.getString("estado_radicacion")); } catch (SQLException e) {}
+        try { info.setObservacionesRevision(rs.getString("observaciones_revision")); } catch (SQLException e) {}
+        try {
+            int revId = rs.getInt("id_revisor_asignado");
+            if (!rs.wasNull()) {
+                info.setIdRevisorAsignado(revId);
+            }
+        } catch (SQLException e) {}
+        try {
+            int anio = rs.getInt("anio");
+            if (!rs.wasNull()) {
+                info.setAnio(anio);
+            }
+        } catch (SQLException e) {}
+
+        // Map contract info if available in the result set
+        try {
+            String numContrato = rs.getString("numero_contrato");
+            if (numContrato != null) {
+                com.combinacion.models.Contrato c = new com.combinacion.models.Contrato();
+                c.setId(info.getContratoId());
+                c.setNumeroContrato(numContrato);
+                c.setContratistaNombre(rs.getString("contratista_nombre"));
+                try {
+                    int supId = rs.getInt("supervisor_id");
+                    if (!rs.wasNull() && supId > 0) {
+                        c.setSupervisorId(supId);
+                        String supCed = rs.getString("supervisor_cedula");
+                        if (supCed != null) {
+                            com.combinacion.models.Supervisor sup = new com.combinacion.models.Supervisor();
+                            sup.setId(supId);
+                            sup.setCedula(supCed);
+                            sup.setNombre(rs.getString("supervisor_nombre"));
+                            c.setSupervisor(sup);
+                        }
+                    }
+                } catch (Exception ignoreSup) {}
+                info.setContrato(c);
+            }
+        } catch (SQLException e) {
+            // numero_contrato might not be in the result set for some queries
+        }
+        
+        try { info.setFechaRadicacion(rs.getTimestamp("fecha_radicacion_calculada")); } catch (SQLException e) {}
+
+        return info;
+    }
+
+    public String actualizar(InformeSupervision info) {
+        String sql = "UPDATE informes_supervision SET " +
+                "periodo_informe = ?, tipo_informe = ?, numero_cuota = ?, " +
+                "fecha_inicio_periodo = ?, fecha_fin_periodo = ?, modificaciones = ?, suspensiones = ?, " +
+                "reanudaciones = ?, cesiones = ?, terminacion_anticipada = ?, adiciones = ?, prorrogas = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ?, " +
+                "valor_cuota_pagar = ?, valor_acumulado_pagado = ?, saldo_por_cancelar = ?, " +
+                "planilla_numero = ?, planilla_pin = ?, planilla_operador = ?, planilla_fecha_pago = ?, planilla_periodo = ?, pago_seguridad_social = ?, " +
+                "concepto_supervisor = ?, observaciones_financieras = ?, observaciones_tecnicas = ?, recomendaciones = ?, fecha_suscripcion = ?, url_drive_evidencias = ?, consecutivo_cobro = ?, estado_radicacion = ?, id_revisor_asignado = ?, anio = ?, soportes_json = ?, " +
+                "eps = ?, afp_pension = ?, arl = ?, es_contratista_nuevo = ? " +
+                "WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, info.getPeriodoInforme());
+            ps.setString(2, info.getTipoInforme());
+            ps.setString(3, info.getNumeroCuota());
+            ps.setDate(4, info.getFechaInicioPeriodo() != null ? new java.sql.Date(info.getFechaInicioPeriodo().getTime()) : null);
+            ps.setDate(5, info.getFechaFinPeriodo() != null ? new java.sql.Date(info.getFechaFinPeriodo().getTime()) : null);
+            ps.setString(6, info.getModificaciones());
+            ps.setString(7, info.getSuspensiones());
+            ps.setString(8, info.getReanudaciones());
+            ps.setString(9, info.getCesiones());
+            ps.setString(10, info.getTerminacionAnticipada());
+            ps.setString(11, info.getAdiciones());
+            ps.setString(12, info.getProrrogas());
+            ps.setString(13, info.getReciboSatisfaccion());
+            ps.setString(14, info.getConstanciaPazSalvo());
+            ps.setBigDecimal(15, info.getValorCuotaPagar());
+            ps.setBigDecimal(16, info.getValorAccumuladoPagado());
+            ps.setBigDecimal(17, info.getSaldoPorCancelar());
+            ps.setString(18, info.getPlanillaNumero());
+            ps.setString(19, info.getPlanillaPin());
+            ps.setString(20, info.getPlanillaOperador());
+            ps.setDate(21, info.getPlanillaFechaPago() != null ? new java.sql.Date(info.getPlanillaFechaPago().getTime()) : null);
+            ps.setString(22, info.getPlanillaPeriodo());
+            ps.setString(23, info.getPagoSeguridadSocial());
+            ps.setString(24, info.getConceptoSupervisor());
+            ps.setString(25, info.getObservacionesFinancieras());
+            ps.setString(26, info.getObservacionesTecnicas());
+            ps.setString(27, info.getRecomendaciones());
+            ps.setDate(28, info.getFechaSuscripcion() != null ? new java.sql.Date(info.getFechaSuscripcion().getTime()) : null);
+            ps.setString(29, info.getUrlDriveEvidencias());
+            ps.setString(30, info.getConsecutivoCobro());
+            ps.setString(31, info.getEstadoRadicacion());
+            if (info.getIdRevisorAsignado() != null) {
+                ps.setInt(32, info.getIdRevisorAsignado());
+            } else {
+                ps.setNull(32, Types.INTEGER);
+            }
+            if (info.getAnio() != null) {
+                ps.setInt(33, info.getAnio());
+            } else {
+                ps.setNull(33, Types.INTEGER);
+            }
+            ps.setString(34, info.getSoportesJson());
+            ps.setString(35, info.getEps());
+            ps.setString(36, info.getAfpPension());
+            ps.setString(37, info.getArl());
+            ps.setString(38, info.getEsContratistaNuevo() != null ? info.getEsContratistaNuevo() : "NO");
+            ps.setInt(39, info.getId());
+
+            if (ps.executeUpdate() > 0) {
+                return null;
+            } else {
+                return "No se actualizó ninguna fila.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error SQL: " + e.getMessage();
+        }
+    }
+
+    public String actualizarObservacionesRevision(int id, String observaciones) {
+        String sql = "UPDATE informes_supervision SET observaciones_revision = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, observaciones);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error SQL: " + e.getMessage();
+        }
+    }
+
+    public void actualizarUrlDrive(int id, String url) {
+        String sql = "UPDATE informes_supervision SET url_drive_evidencias = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, url);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void eliminar(int id) {
+        String sql = "DELETE FROM informes_supervision WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void actualizarSoportesJson(int id, String json) {
+        String sql = "UPDATE informes_supervision SET soportes_json = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, json);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void crearTablaSiNoExiste() {
+        String sql = "CREATE TABLE IF NOT EXISTS informes_supervision (" +
+            "id SERIAL PRIMARY KEY, " +
+            "contrato_id INT REFERENCES contratos(id), " +
+            "periodo_informe VARCHAR(100), " +
+            "tipo_informe VARCHAR(20), " +
+            "numero_cuota VARCHAR(20), " +
+            "fecha_inicio_periodo DATE, " +
+            "fecha_fin_periodo DATE, " +
+            "modificaciones TEXT, " +
+            "suspensiones TEXT, " +
+            "reanudaciones TEXT, " +
+            "cesiones TEXT, " +
+            "terminacion_anticipada TEXT, " +
+            "adiciones TEXT, " +
+            "prorrogas TEXT, " +
+            "recibo_satisfaccion TEXT, " +
+            "constancia_paz_salvo TEXT, " +
+            "valor_cuota_pagar NUMERIC(15, 2), " +
+            "valor_acumulado_pagado NUMERIC(15, 2), " +
+            "saldo_por_cancelar NUMERIC(15, 2), " +
+            "planilla_numero VARCHAR(50), " +
+            "planilla_pin VARCHAR(100), " +
+            "planilla_operador VARCHAR(100), " +
+            "planilla_fecha_pago DATE, " +
+            "planilla_periodo VARCHAR(50), " +
+            "observaciones_tecnicas TEXT, " +
+            "recomendaciones TEXT, " +
+            "fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+            "fecha_suscripcion DATE" +
+        "); " +
+        "CREATE INDEX IF NOT EXISTS idx_informes_contrato ON informes_supervision(contrato_id);";
+        
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN adiciones TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN prorrogas TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN recibo_satisfaccion TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN constancia_paz_salvo TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN concepto_supervisor TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN url_drive_evidencias VARCHAR(1000)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN consecutivo_cobro VARCHAR(50)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN soportes_json TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN estado_radicacion VARCHAR(50) DEFAULT 'BORRADOR'"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN id_revisor_asignado INTEGER REFERENCES usuarios(id)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN observaciones_financieras TEXT"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN pago_seguridad_social VARCHAR(50)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN anio INTEGER"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN eps VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN afp_pension VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN arl VARCHAR(150)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN es_contratista_nuevo VARCHAR(10) DEFAULT 'NO'"); } catch (Exception ignore) {}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}

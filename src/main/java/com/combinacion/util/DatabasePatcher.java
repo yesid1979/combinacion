@@ -183,6 +183,21 @@ public class DatabasePatcher {
                              "WHERE r.nombre = 'Administrador' " +
                              "ON CONFLICT DO NOTHING");
 
+            // Asegurar Rol y Permiso para Supervisores
+            stmt.executeUpdate("INSERT INTO permisos (codigo, nombre, modulo, descripcion) " +
+                             "VALUES ('SUPERVISOR_CUENTAS', 'Supervisión de Cuentas', 'REVISION_CUENTAS', 'Permite a los supervisores revisar y dar aprobación final a cuentas de cobro') " +
+                             "ON CONFLICT (codigo) DO NOTHING");
+
+            stmt.executeUpdate("INSERT INTO roles (nombre, descripcion, activo) " +
+                             "VALUES ('Supervisor', 'Rol para supervisores de contratos: revisión y aprobación final de cuentas de cobro', true) " +
+                             "ON CONFLICT (nombre) DO NOTHING");
+
+            stmt.executeUpdate("INSERT INTO rol_permisos (rol_id, permiso_id) " +
+                             "SELECT r.id, p.id FROM roles r, permisos p " +
+                             "WHERE r.nombre = 'Supervisor' AND p.codigo IN ('SUPERVISOR_CUENTAS', 'REVISION_CUENTAS_VER', 'CONTRATOS_VER') " +
+                             "ON CONFLICT DO NOTHING");
+
+
             // Asegurar creación de las vistas de informes y contratos
             stmt.executeUpdate("DROP VIEW IF EXISTS vista_resumen_contratos_cuotas CASCADE");
             stmt.executeUpdate(
