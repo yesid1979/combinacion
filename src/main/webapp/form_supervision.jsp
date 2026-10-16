@@ -1443,11 +1443,18 @@
             });
         });
         
-        // Validación personalizada con SweetAlert
+        // Validación personalizada con SweetAlert y verificación física de archivos
+        var formValidated = false;
+        
         $('#informeForm').on('submit', function(e) {
+            if (formValidated) {
+                return true; // Si ya pasó todas las validaciones asíncronas, permitir el envío nativo
+            }
+            e.preventDefault();
+            var form = this;
             var submitBtn = $(this).find('button[type="submit"]');
-            
-            // Sincronizar todos los inputs de evidencias con su acumulador DataTransfer
+
+            // 1. Sincronizar todos los inputs de evidencias con su acumulador DataTransfer
             $('.file-input-evidencia').each(function() {
                 if (this._dt && this._dt.files) {
                     try {
@@ -1457,51 +1464,110 @@
                     }
                 }
             });
-            
-            // Validar el tamaño de los archivos (Max 100MB por archivo y Max 450MB en total)
-            let filesTooLarge = false;
-            let largeFileNames = [];
-            let maxFileSize = 100 * 1024 * 1024; // 100MB en bytes
-            let totalFilesSize = 0;
-            let maxTotalSize = 450 * 1024 * 1024; // 450MB en total
-            
-            $(this).find('input[type="file"]').each(function() {
+
+            // 2. VERIFICACIÓN FÍSICA INMEDIATA DE ARCHIVOS EN EL DISCO DEL COMPUTADOR
+            // Previene el error 'ERR_FILE_NOT_FOUND' de Google Chrome si el usuario borró o movió el archivo de su computador
+            var filePromises = [];
+            var archivosBorrados = [];
+            var brokenInputs = [];
+            var totalFilesSize = 0;
+            var maxFileSize = 100 * 1024 * 1024; // 100MB
+            var maxTotalSize = 450 * 1024 * 1024; // 450MB
+            var filesTooLarge = false;
+            var largeFileNames = [];
+
+            $(form).find('input[type="file"]').each(function() {
                 if (this.files && this.files.length > 0) {
-                    for (let i = 0; i < this.files.length; i++) {
-                        totalFilesSize += this.files[i].size;
-                        if (this.files[i].size > maxFileSize) {
+                    for (var i = 0; i < this.files.length; i++) {
+                        var file = this.files[i];
+                        totalFilesSize += file.size;
+                        if (file.size > maxFileSize) {
                             filesTooLarge = true;
-                            largeFileNames.push(this.files[i].name);
+                            largeFileNames.push(file.name);
                         }
+                        
+                        // Lectura de prueba de 16 bytes para comprobar que el archivo no fue eliminado en Windows/Mac
+                        (function(f, inputEl) {
+                            var p = new Promise(function(resolve) {
+                                try {
+                                    if (f.slice) {
+                                        var reader = new FileReader();
+                                        reader.onload = function() { resolve(); };
+                                        reader.onerror = function() {
+                                            archivosBorrados.push(f.name);
+                                            if (brokenInputs.indexOf(inputEl) === -1) {
+                                                brokenInputs.push(inputEl);
+                                            }
+                                            resolve();
+                                        };
+                                        reader.readAsArrayBuffer(f.slice(0, 16));
+                                    } else {
+                                        resolve();
+                                    }
+                                } catch(err) {
+                                    archivosBorrados.push(f.name);
+                                    if (brokenInputs.indexOf(inputEl) === -1) {
+                                        brokenInputs.push(inputEl);
+                                    }
+                                    resolve();
+                                }
+                            });
+                            filePromises.push(p);
+                        })(file, this);
                     }
                 }
             });
-            
-            if (filesTooLarge) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo demasiado pesado',
-                    html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
-                          '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
-                          'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente.',
-                    confirmButtonColor: '#007bff'
-                });
-                return false;
-            }
 
-            if (totalFilesSize > maxTotalSize) {
-                e.preventDefault();
-                let totalMB = (totalFilesSize / (1024 * 1024)).toFixed(1);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Carga total demasiado grande',
-                    html: 'El tamaño acumulado de todos los archivos seleccionados es de <b>' + totalMB + ' MB</b>, lo cual supera el límite permitido (máximo 450 MB combinados).<br><br>' + 
-                          'Por favor, sube las evidencias en grupos o comprime los documentos PDF antes de guardar.',
-                    confirmButtonColor: '#007bff'
-                });
-                return false;
-            }
+            Promise.all(filePromises).then(function() {
+                if (archivosBorrados.length > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Archivo no encontrado en tu equipo',
+                        html: 'El navegador detectó que los siguientes archivos seleccionados ya no se encuentran en tu computador (fueron borrados, movidos o renombrados):<br><br>' + 
+                              '<div class="text-danger fw-bold p-2 bg-light border rounded text-start" style="max-height: 120px; overflow-y: auto;">' + 
+                              archivosBorrados.map(name => '• ' + $('<div>').text(name).html()).join('<br>') + 
+                              '</div><br>' + 
+                              'Como las evidencias no son obligatorias, ¿deseas <b>omitir estos archivos</b> y continuar guardando, o prefieres buscarlos y volver a seleccionarlos?',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Omitir archivos y continuar',
+                        cancelButtonText: 'Volver a seleccionarlos'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            brokenInputs.forEach(function(inp) {
+                                try { $(inp).val(''); } catch(e){}
+                            });
+                            // Re-ejecutar submit ya con los inputs limpios
+                            $('#informeForm').submit();
+                        }
+                    });
+                    return false;
+                }
+
+                if (filesTooLarge) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Archivo demasiado pesado',
+                        html: 'Los siguientes archivos superan el límite máximo de <b>100 MB</b>:<br><br>' + 
+                              '<span class="text-danger">' + largeFileNames.join('<br>') + '</span><br><br>' + 
+                              'Por favor, reduce su tamaño (comprimiendo el PDF) e intenta nuevamente.',
+                        confirmButtonColor: '#007bff'
+                    });
+                    return false;
+                }
+
+                if (totalFilesSize > maxTotalSize) {
+                    let totalMB = (totalFilesSize / (1024 * 1024)).toFixed(1);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Carga total demasiado grande',
+                        html: 'El tamaño acumulado de todos los archivos seleccionados es de <b>' + totalMB + ' MB</b>, lo cual supera el límite permitido (máximo 450 MB combinados).<br><br>' + 
+                              'Por favor, sube las evidencias en grupos o comprime los documentos PDF antes de guardar.',
+                        confirmButtonColor: '#007bff'
+                    });
+                    return false;
+                }
             
             let isValid = true;
             let firstInvalid = null;
@@ -1662,7 +1728,11 @@
                     Swal.showLoading();
                 }
             });
+
+            formValidated = true;
+            form.submit();
         });
+    });
         
         // Auto-calcular el Saldo por Cancelar
         function calcularSaldo() {
