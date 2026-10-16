@@ -1526,6 +1526,34 @@
                         }
                     }
                 });
+
+                // Validar obligatoriedad de la ESCRITURA de actividades al radicar
+                var countObs = parseInt($('input[name="obligaciones_count"]').val()) || 0;
+                for (var ob = 0; ob < countObs; ob++) {
+                    var hasActivityText = false;
+                    var $actTextareas = $('textarea[name="actividad_' + ob + '"]');
+                    
+                    $actTextareas.each(function() {
+                        var code = '';
+                        try { code = $(this).summernote('code'); } catch(e){}
+                        if (!code) code = $(this).val() || '';
+                        
+                        // Verificar que tenga texto real o contenido (no solo etiquetas vacías como <p><br></p>)
+                        var plainText = $('<div>').html(code).text().trim();
+                        var hasVisualContent = /<img|<table|<iframe/i.test(code);
+                        if (plainText.length > 0 || hasVisualContent) {
+                            hasActivityText = true;
+                        }
+                    });
+
+                    if (!hasActivityText) {
+                        isValid = false;
+                        if (!firstInvalid) {
+                            var $noteEditor = $('#actividades_container_' + ob).find('.note-editable');
+                            firstInvalid = $noteEditor.length ? $noteEditor : $('#actividades_container_' + ob);
+                        }
+                    }
+                }
             } else {
                 // Al guardar borrador, verificar datos mínimos de identificación y Fecha de transacción obligatoria
                 var $periodo = $('input[name="periodo_informe"]');
@@ -1554,9 +1582,9 @@
                     tabTrigger.show();
                 }
                 
-                var alertTitle = esRadicacion ? '¡Faltan datos para radicar!' : '¡Faltan datos para el borrador!';
+                var alertTitle = esRadicacion ? '¡Faltan datos obligatorios para radicar!' : '¡Faltan datos para el borrador!';
                 var errorMsg = esRadicacion ? 
-                    'Por favor, diligencia todos los campos obligatorios antes de radicar la cuenta.' : 
+                    'Por favor, diligencia todos los campos obligatorios y asegúrate de <b>describir las actividades desarrolladas para cada obligación</b> antes de radicar la cuenta.' : 
                     'Para guardar el borrador, es obligatorio indicar el <b>Período del informe</b>, el <b>Número de cuota</b> y la <b>Fecha de transacción</b>.';
                 
                 Swal.fire({
