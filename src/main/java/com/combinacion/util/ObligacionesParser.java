@@ -64,7 +64,7 @@ public class ObligacionesParser {
             return obligaciones;
         }
 
-        String[] partes = texto.split("(?=\\b\\d+\\.(?:[\\sA-Za-záéíóúÁÉÍÓÚñÑ]|$))");
+        String[] partes = texto.split("(?=\\b\\d{1,2}\\.(?:[\\sA-Za-záéíóúÁÉÍÓÚñÑ]|$))");
         for (String p : partes) {
             String clean = p.trim();
             if (!clean.isEmpty()) {
