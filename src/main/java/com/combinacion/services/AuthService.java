@@ -86,12 +86,14 @@ public class AuthService {
             return true;
         }
 
-        // PERMISO ESPECIAL PARA REVISORES EN INFORMES (REVISION DE CUENTAS)
+        // PERMISO ESPECIAL PARA REVISORES Y SUPERVISORES EN INFORMES (REVISION DE CUENTAS)
         if (lowerPath.equals("/informes") && (
                 usuario.tienePermiso("PUEDE_REVISAR_CUENTAS") || 
                 usuario.tienePermiso("REVISION_CUENTAS_VER") || 
                 usuario.tienePermiso("ADMINISTRAR_CUENTAS") || 
-                usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR"))) {
+                usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") ||
+                usuario.tienePermiso("SUPERVISOR_CUENTAS") ||
+                (usuario.getRol() != null && "Supervisor".equalsIgnoreCase(usuario.getRol().getNombre())))) {
             return true;
         }
 

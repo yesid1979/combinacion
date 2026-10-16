@@ -121,19 +121,24 @@ public class InformeSupervisionDAO {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
         String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
+                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
                 "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "LEFT JOIN supervisores sup ON sup.id = COALESCE(i.supervisor_id, c.supervisor_id) " +
                 "WHERE i.contrato_id = ? " +
                 "ORDER BY " +
                 "  CASE i.estado_radicacion " +
                 "    WHEN 'RADICADA' THEN 1 " +
                 "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
-                "    WHEN 'EN REVISION FINAL' THEN 3 " +
-                "    WHEN 'DEVUELTA' THEN 4 " +
-                "    WHEN 'BORRADOR' THEN 5 " +
-                "    ELSE 6 " +
+                "    WHEN 'EN REVISION CONTRATACION' THEN 3 " +
+                "    WHEN 'EN REVISION FINAL' THEN 4 " +
+                "    WHEN 'EN REVISION SUPERVISOR' THEN 5 " +
+                "    WHEN 'DEVUELTA' THEN 6 " +
+                "    WHEN 'BORRADOR' THEN 7 " +
+                "    WHEN 'APROBADA PARA IMPRESION' THEN 8 " +
+                "    ELSE 9 " +
                 "  END ASC, " +
                 "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
                 "  i.fecha_creacion DESC";
@@ -157,18 +162,23 @@ public class InformeSupervisionDAO {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
         String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
+                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
                 "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
                 "LEFT JOIN contratistas ct ON c.contratista_id = ct.id " +
+                "LEFT JOIN supervisores sup ON sup.id = COALESCE(i.supervisor_id, c.supervisor_id) " +
                 "ORDER BY " +
                 "  CASE i.estado_radicacion " +
                 "    WHEN 'RADICADA' THEN 1 " +
                 "    WHEN 'VISTO BUENO CONTRATACION' THEN 2 " +
-                "    WHEN 'EN REVISION FINAL' THEN 3 " +
-                "    WHEN 'DEVUELTA' THEN 4 " +
-                "    WHEN 'BORRADOR' THEN 5 " +
-                "    ELSE 6 " +
+                "    WHEN 'EN REVISION CONTRATACION' THEN 3 " +
+                "    WHEN 'EN REVISION FINAL' THEN 4 " +
+                "    WHEN 'EN REVISION SUPERVISOR' THEN 5 " +
+                "    WHEN 'DEVUELTA' THEN 6 " +
+                "    WHEN 'BORRADOR' THEN 7 " +
+                "    WHEN 'APROBADA PARA IMPRESION' THEN 8 " +
+                "    ELSE 9 " +
                 "  END ASC, " +
                 "  (SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) ASC NULLS LAST, " +
                 "  i.fecha_creacion DESC";
@@ -273,6 +283,21 @@ public class InformeSupervisionDAO {
                 c.setId(info.getContratoId());
                 c.setNumeroContrato(numContrato);
                 c.setContratistaNombre(rs.getString("contratista_nombre"));
+                try {
+                    int supId = rs.getInt("sup_id");
+                    if (!rs.wasNull() && supId > 0) {
+                        c.setSupervisorId(supId);
+                        String supCed = rs.getString("supervisor_cedula");
+                        if (supCed != null) {
+                            com.combinacion.models.Supervisor sup = new com.combinacion.models.Supervisor();
+                            sup.setId(supId);
+                            sup.setCedula(supCed);
+                            sup.setNombre(rs.getString("supervisor_nombre"));
+                            c.setSupervisor(sup);
+                            info.setSupervisor(sup);
+                        }
+                    }
+                } catch (Exception ignoreSup) {}
                 info.setContrato(c);
             }
         } catch (SQLException e) {

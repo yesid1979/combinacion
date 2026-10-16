@@ -636,7 +636,10 @@
                                                     <c:choose>
                                                         <c:when test="${hr.estadoNuevo == 'RADICADA'}"><span class="badge bg-primary">RADICADA</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'DEVUELTA'}"><span class="badge bg-danger">DEVUELTA</span></c:when>
-                                                        <c:when test="${hr.estadoNuevo == 'APROBADA'}"><span class="badge bg-success">APROBADA</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION CONTRATACION'}"><span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION SUPERVISOR'}"><span class="badge bg-info text-dark">EN REVISIÓN (SUPERVISIÓN)</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'EN REVISION FINAL'}"><span class="badge bg-info text-dark">EN REVISIÓN FINAL</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'APROBADA PARA IMPRESION' || hr.estadoNuevo == 'APROBADA'}"><span class="badge bg-success">APROBADA</span></c:when>
                                                         <c:otherwise><span class="badge bg-secondary">${fn:escapeXml(hr.estadoNuevo)}</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
@@ -664,21 +667,43 @@
                         <c:set var="esRevisorAsignado" value="${sessionScope.usuario != null and informe.idRevisorAsignado == sessionScope.usuario.id}" />
                         <c:set var="sinRevisor" value="${empty informe.idRevisorAsignado or informe.idRevisorAsignado == 0}" />
                         
-                        <c:set var="mostrarBtnRevisar" value="false" />
-                        <c:set var="esModalAdmin" value="false" />
+                        <c:set var="userCedClean" value="${fn:replace(fn:replace(sessionScope.usuario.cedula, '.', ''), ' ', '')}" />
+                        <c:set var="supCedClean" value="${fn:replace(fn:replace(not empty informe.supervisor ? informe.supervisor.cedula : contrato.supervisor.cedula, '.', ''), ' ', '')}" />
+                        <c:set var="esSupervisorContrato" value="${not empty userCedClean and not empty supCedClean and userCedClean == supCedClean}" />
                         
+                        <c:set var="mostrarBtnRevisar" value="false" />
+                        <c:set var="tipoRolModal" value="" />
+                        
+                        <%-- 1. Si es el Revisor asignado --%>
                         <c:if test="${esRevisorAsignado and (informe.estadoRadicacion == 'RADICADA' or informe.estadoRadicacion == 'VISTO BUENO CONTRATACION')}">
                             <c:set var="mostrarBtnRevisar" value="true" />
+                            <c:set var="tipoRolModal" value="revisor" />
                         </c:if>
+                        <%-- 2. Si es Administrador / Contratación --%>
                         <c:if test="${esAdmin}">
-                            <c:if test="${informe.estadoRadicacion == 'EN REVISION FINAL' or (informe.estadoRadicacion == 'RADICADA' and sinRevisor)}">
-                                <c:set var="mostrarBtnRevisar" value="true" />
-                                <c:set var="esModalAdmin" value="true" />
-                            </c:if>
+                            <c:choose>
+                                <c:when test="${informe.estadoRadicacion == 'EN REVISION CONTRATACION' or informe.estadoRadicacion == 'EN REVISION FINAL'}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="contratacion_con_revisor" />
+                                </c:when>
+                                <c:when test="${informe.estadoRadicacion == 'RADICADA' and sinRevisor}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="contratacion_sin_revisor" />
+                                </c:when>
+                                <c:when test="${informe.estadoRadicacion == 'EN REVISION SUPERVISOR'}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="supervisor" />
+                                </c:when>
+                            </c:choose>
+                        </c:if>
+                        <%-- 3. Si es el Supervisor del contrato --%>
+                        <c:if test="${!esAdmin and esSupervisorContrato and informe.estadoRadicacion == 'EN REVISION SUPERVISOR'}">
+                            <c:set var="mostrarBtnRevisar" value="true" />
+                            <c:set var="tipoRolModal" value="supervisor" />
                         </c:if>
                         
                         <c:if test="${mostrarBtnRevisar and not empty informe.id}">
-                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', ${esModalAdmin})">
+                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', '${tipoRolModal}')">
                                 <i class="bi bi-check2-square me-2"></i>Revisar
                             </button>
                         </c:if>
@@ -2029,29 +2054,45 @@
             });
 
             // Función para modal de Revisión
-            function abrirModalRevision(idInforme, estadoActual, esAdminCuentas) {
+            function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
                 let opcionesHTML = '';
                 let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
                     <c:forEach var="r" items="${listaRevisores}">
                         <option value="${r.id}">${r.nombreCompleto}</option>
                     </c:forEach>`;
                 
-                if (esAdminCuentas) {
-                    if (estadoActual === 'RADICADA') {
-                        opcionesHTML = `
-                            <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
-                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                        `;
+                // Compatibilidad si llega booleano legado
+                if (typeof tipoRolModal === 'boolean') {
+                    if (tipoRolModal) {
+                        tipoRolModal = (estadoActual === 'RADICADA') ? 'contratacion_sin_revisor' : 'contratacion_con_revisor';
                     } else {
-                        opcionesHTML = `
-                            <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
-                            <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
-                        `;
+                        tipoRolModal = 'revisor';
                     }
-                } else {
+                }
+
+                if (tipoRolModal === 'supervisor') {
+                    // El Supervisor da la Aprobación Definitiva para impresión
                     opcionesHTML = `
-                        <option value="EN REVISION FINAL">Dar Visto Bueno (Pasar a Contratación)</option>
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else if (tipoRolModal === 'contratacion_con_revisor') {
+                    // Contratación revisa cuenta que viene de un Revisor y la pasa al Supervisor
+                    opcionesHTML = `
+                        <option value="EN REVISION SUPERVISOR">Dar Visto Bueno (Pasar a Supervisión)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else if (tipoRolModal === 'contratacion_sin_revisor') {
+                    // Contratación revisa cuenta radicada SIN revisor (flujo directo legado intacto)
+                    opcionesHTML = `
+                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
+                        <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else {
+                    // Revisor básico da su visto bueno para pasar a Contratación
+                    opcionesHTML = `
+                        <option value="EN REVISION CONTRATACION">Dar Visto Bueno (Pasar a Contratación)</option>
                         <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                     `;
                 }
