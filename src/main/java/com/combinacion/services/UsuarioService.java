@@ -196,6 +196,20 @@ public class UsuarioService {
         if (correo == null || correo.trim().isEmpty()) return "El correo es obligatorio.";
         
         if (usuarioDAO.actualizarPerfil(id, nombre.trim(), correo.trim(), celular != null ? celular.trim() : "")) {
+            try {
+                Usuario u = usuarioDAO.obtenerPorId(id);
+                if (u != null && u.getCedula() != null) {
+                    String cedLimpia = u.getCedula().replaceAll("[^0-9]", "");
+                    if (!cedLimpia.isEmpty()) {
+                        try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
+                             java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE contratistas SET correo = ? WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ?")) {
+                            ps.setString(1, correo.trim());
+                            ps.setString(2, cedLimpia);
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+            } catch (Exception ignoreSync) {}
             return null;
         }
         return "Error al actualizar los datos en la base de datos.";
@@ -286,12 +300,15 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             com.combinacion.dao.ContratistaDAO cDao = new com.combinacion.dao.ContratistaDAO();
             com.combinacion.models.Contratista c = cDao.obtenerPorCedula(logged.getCedula());
             if (c != null) {
-                if (direccion != null) c.setDireccion(direccion);
-                if (fechaNacimientoStr != null && !fechaNacimientoStr.isEmpty()) {
-                    try { c.setFechaNacimiento(java.sql.Date.valueOf(fechaNacimientoStr)); } catch (Exception e) {}
+                if (nombre != null && !nombre.trim().isEmpty()) c.setNombre(nombre.trim());
+                if (correo != null && !correo.trim().isEmpty()) c.setCorreo(correo.trim());
+                if (celular != null) c.setTelefono(celular.trim());
+                if (direccion != null) c.setDireccion(direccion.trim());
+                if (fechaNacimientoStr != null && !fechaNacimientoStr.trim().isEmpty()) {
+                    try { c.setFechaNacimiento(java.sql.Date.valueOf(fechaNacimientoStr.trim())); } catch (Exception e) {}
                 }
-                if (edadStr != null && !edadStr.isEmpty()) {
-                    try { c.setEdad(Integer.parseInt(edadStr)); } catch (Exception e) {}
+                if (edadStr != null && !edadStr.trim().isEmpty()) {
+                    try { c.setEdad(Integer.parseInt(edadStr.trim())); } catch (Exception e) {}
                 }
                 cDao.actualizar(c);
             }

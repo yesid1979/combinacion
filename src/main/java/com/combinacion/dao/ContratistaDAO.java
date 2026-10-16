@@ -377,7 +377,27 @@ public class ContratistaDAO {
             ps.setString(15, c.getRestricciones());
             ps.setInt(16, c.getId());
 
-            return ps.executeUpdate() > 0;
+            int res = ps.executeUpdate();
+            if (res > 0 && c.getCedula() != null) {
+                try {
+                    String cedLimpia = c.getCedula().replaceAll("[^0-9]", "");
+                    if (!cedLimpia.isEmpty()) {
+                        try (PreparedStatement psUsr = conn.prepareStatement(
+                                "UPDATE usuarios SET " +
+                                "correo = COALESCE(NULLIF(?, ''), correo), " +
+                                "celular = COALESCE(NULLIF(?, ''), celular), " +
+                                "nombre_completo = COALESCE(NULLIF(?, ''), nombre_completo) " +
+                                "WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ?")) {
+                            psUsr.setString(1, c.getCorreo() != null ? c.getCorreo().trim() : "");
+                            psUsr.setString(2, c.getTelefono() != null ? c.getTelefono().trim() : "");
+                            psUsr.setString(3, c.getNombre() != null ? c.getNombre().trim() : "");
+                            psUsr.setString(4, cedLimpia);
+                            psUsr.executeUpdate();
+                        }
+                    }
+                } catch (Exception ignore) {}
+            }
+            return res > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

@@ -1,6 +1,14 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+    if (request.getAttribute("contratistaInfo") == null && session.getAttribute("usuario") != null) {
+        com.combinacion.models.Usuario uLog = (com.combinacion.models.Usuario) session.getAttribute("usuario");
+        if (uLog != null && uLog.getCedula() != null) {
+            request.setAttribute("contratistaInfo", new com.combinacion.dao.ContratistaDAO().obtenerPorCedula(uLog.getCedula()));
+        }
+    }
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -101,7 +109,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">No. de contacto</label>
-                            <input type="text" name="celular" class="form-control" value="${fn:escapeXml(sessionScope.usuario.celular)}">
+                            <input type="text" name="celular" class="form-control" value="${fn:escapeXml(not empty sessionScope.usuario.celular ? sessionScope.usuario.celular : contratistaInfo.telefono)}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Dirección</label>
