@@ -233,6 +233,7 @@ public class InformeSupervisionService {
                 if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
                 }
+
                 if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
                     info.setConceptoSupervisor(existente.getConceptoSupervisor());
                 }
@@ -1436,7 +1437,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     }
                     
                     if (gestionPdfFile != null && gestionPdfFile.exists() && tempSegSoc != null && tempSegSoc.exists()) {
-                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
                         java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
                         if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
                             zos.putNextEntry(new java.util.zip.ZipEntry(mergedName));
@@ -1541,36 +1542,53 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                        + nombreCompleto.toUpperCase();
             
             String cNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota().trim() : "1";
-            String folderNameCuota = "CUOTA " + cNum;
+            String cNoPad = cNum;
+            String cPad = cNum;
+            try {
+                int cInt = Integer.parseInt(cNum);
+                cNoPad = String.valueOf(cInt);
+                cPad = String.format("%02d", cInt);
+            } catch (Exception ignore) {}
 
-            // 1. Obtener o resolver la carpeta raíz (acepta ID directo, URL de Drive, o nombre de carpeta)
-            // Soporta el nombre claro 'DRIVE_CARPETA_CUENTAS_COBRO' o el histórico 'DRIVE_CARPETA_PRUEBAS'
-            String configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
-            if (configuredPruebas == null || configuredPruebas.trim().isEmpty()) {
-                configuredPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
-            }
-            String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(configuredPruebas, null);
+            String folderNameCuota = "CUOTA " + cNoPad;
+
+            // 1. Obtener carpetas configuradas: Producción (oficial) y Pruebas (históricos/sandbox)
+            String confProduccion = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
+            String confPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+
+            String produccionFolderId = (confProduccion != null && !confProduccion.trim().isEmpty())
+                    ? com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null)
+                    : null;
+            String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas, null);
+
+            boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota());
+
+            String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
 
             // 2. Resolver o crear la carpeta principal del contratista con búsqueda inteligente
             String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
             String principalFolderId = null;
             if (!prefixContrato.isEmpty()) {
-                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(pruebasFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
             } else {
-                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(pruebasFolderId, folderNamePrincipal, nombreCompleto);
+                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, nombreCompleto);
             }
             if (principalFolderId == null) {
-                principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, pruebasFolderId);
+                principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, rootFolderId);
             }
 
             // 3. Resolver o crear la carpeta de la cuota con búsqueda inteligente (Opción A)
-            // Si Contratación ya la marcó con el número de contrato (ej. "CUOTA 1 086"), se reutiliza
-            String patternConMarca = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNum + " " + ultimoBloque) : null;
+            // Si Contratación ya la marcó con el número de contrato (ej. "CUOTA 1 086" o "CUOTA 01 086"), se reutiliza
+            String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
+            String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
             String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
                 principalFolderId,
-                patternConMarca,
-                "CUOTA " + cNum,
-                "Cuota " + cNum
+                patternConMarca1,
+                patternConMarca2,
+                "CUOTA " + cNoPad,
+                "CUOTA " + cPad,
+                "Cuota " + cNoPad,
+                "Cuota " + cPad
             );
             if (cuotaFolderId == null) {
                 cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
@@ -1936,10 +1954,13 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
                 
                 if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
-                    String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTIÓN No." + informe.getNumeroCuota() + ".pdf";
+                    String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
                     java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
                     if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
                         com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                        System.out.println("Archivo unificado generado y subido con exito: " + mergedName);
+                    } else {
+                        System.err.println("Aviso: mergePdfs no pudo unir gestion y seguridad social.");
                     }
                     mergedFile.delete();
                 }
@@ -2093,7 +2114,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             // Auditoría
             com.combinacion.dao.AuditoriaDAO.registrar(u, "Actualización de Cuenta", "Se actualizó la cuenta de cobro ID " + id, request.getRemoteAddr());
             
-            if ("RADICADA".equals(form.estadoRadicacion) && !"RADICADA".equals(estadoAnterior)) {
+            InformeSupervision infActualizado = this.obtenerPorId(id);
+            String estadoNuevoEfectivo = (infActualizado != null) ? infActualizado.getEstadoRadicacion() : form.estadoRadicacion;
+
+            if ("RADICADA".equals(estadoNuevoEfectivo) && !"RADICADA".equals(estadoAnterior)) {
                 com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                 hr.setIdInforme(id);
                 hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
@@ -2115,7 +2139,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             } catch (Exception ignore) {}
 
             boolean tieneArchivosEliminados = (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty());
-            boolean esRadicacion = "RADICADA".equals(form.estadoRadicacion);
+            boolean esRadicacion = "RADICADA".equals(form.estadoRadicacion) || "RADICADA".equals(estadoNuevoEfectivo);
             boolean faltaCarpetaDrive = (existente != null && (existente.getUrlDriveEvidencias() == null || existente.getUrlDriveEvidencias().trim().isEmpty()));
 
             if (tieneArchivosNuevos || tieneArchivosEliminados || esRadicacion || faltaCarpetaDrive) {
@@ -2124,7 +2148,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 System.out.println("Actualización de datos informativos completada al instante para informe ID " + id + " (sin llamadas pesadas a Drive).");
             }
             
-            if ("RADICADA".equals(form.estadoRadicacion)) {
+            if ("RADICADA".equals(estadoNuevoEfectivo)) {
                 request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
                 response.sendRedirect("informes");
             } else {
@@ -2168,6 +2192,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 f.periodoInforme = exist.getPeriodoInforme();
             }
         }
+        if (f.periodoInforme != null && !f.periodoInforme.trim().isEmpty()) {
+            f.periodoInforme = com.combinacion.util.ParseUtils.normalizarPeriodo(f.periodoInforme, null);
+        }
         
         f.tipoInforme = r.getParameter("tipo_informe");
         if ((f.tipoInforme == null || f.tipoInforme.trim().isEmpty()) && exist != null) {
@@ -2203,6 +2230,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.planillaOperador = r.getParameter("planilla_operador");
         f.planillaFechaPago = r.getParameter("planilla_fecha_pago");
         f.planillaPeriodo = r.getParameter("planilla_periodo");
+        if (f.planillaPeriodo != null && !f.planillaPeriodo.trim().isEmpty()) {
+            f.planillaPeriodo = com.combinacion.util.ParseUtils.normalizarPeriodo(f.planillaPeriodo, null);
+        }
         f.pagoSeguridadSocial = r.getParameter("pago_seguridad_social");
         f.eps = r.getParameter("eps");
         f.afpPension = r.getParameter("afp_pension");
@@ -2393,6 +2423,99 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (adVacio) informe.setAdiciones(adicionTxt);
         if (proVacio) informe.setProrrogas(prorrogaTxt);
         if (modVacio) informe.setModificaciones(modificacionTxt);
+    }
+
+    public boolean esCuotaManualHistorica(Contrato contrato, String numeroCuota) {
+        if (contrato == null || numeroCuota == null || numeroCuota.trim().isEmpty()) {
+            return false;
+        }
+        if (contrato.getContratistaNombre() == null || contrato.getContratistaNombre().trim().isEmpty()) {
+            Contrato full = this.obtenerContrato(contrato.getId());
+            if (full != null && full.getContratistaNombre() != null && !full.getContratistaNombre().trim().isEmpty()) {
+                contrato = full;
+            }
+        }
+        try {
+            String confProduccion = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
+            if (confProduccion == null || confProduccion.trim().isEmpty()) {
+                return false;
+            }
+            String produccionFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null);
+            if (produccionFolderId == null) {
+                return false;
+            }
+
+            String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
+            String shortContrato = "4121";
+            String ultimoBloque = "";
+            if (!numContrato.isEmpty()) {
+                String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
+                String[] partsNum = cleanNum.split("\\.");
+                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+                if (partsNum.length > 1) {
+                    String last = partsNum[partsNum.length - 1].trim();
+                    if (last.contains("-")) last = last.split("-")[0].trim();
+                    ultimoBloque = last;
+                }
+            }
+
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
+                                       + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
+                                       + nombreCompleto.toUpperCase();
+
+            String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
+            String principalProduccionId = null;
+            if (!prefixContrato.isEmpty()) {
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+            } else {
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, nombreCompleto);
+            }
+
+            if (principalProduccionId == null) {
+                return false;
+            }
+
+            String cNum = numeroCuota.trim();
+            String cNoPad = cNum;
+            String cPad = cNum;
+            try {
+                int cInt = Integer.parseInt(cNum);
+                cNoPad = String.valueOf(cInt);
+                cPad = String.format("%02d", cInt);
+            } catch (Exception ignore) {}
+
+            String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
+            String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+            String cuotaExistenteId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
+                principalProduccionId,
+                patternConMarca1,
+                patternConMarca2,
+                "CUOTA " + cNoPad,
+                "CUOTA " + cPad,
+                "Cuota " + cNoPad,
+                "Cuota " + cPad
+            );
+
+            if (cuotaExistenteId == null) {
+                return false;
+            }
+
+            // Validar si la carpeta existente en Producción corresponde al periodo manual histórico
+            // Fecha de corte de inicio del sistema digital: 15 de Octubre de 2026 00:00:00 UTC (1792022400000 ms)
+            com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
+            com.google.api.services.drive.model.File f = drive.files().get(cuotaExistenteId).setFields("createdTime").execute();
+            if (f != null && f.getCreatedTime() != null) {
+                long created = f.getCreatedTime().getValue();
+                long corteSistema = 1792022400000L;
+                return (created < corteSistema);
+            }
+
+            return false;
+        } catch (Exception ex) {
+            System.err.println("Aviso al verificar cuota manual historica en Drive: " + ex.getMessage());
+            return false;
+        }
     }
 
 }

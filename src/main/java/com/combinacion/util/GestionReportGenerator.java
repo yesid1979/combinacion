@@ -244,15 +244,9 @@ public class GestionReportGenerator {
                         if (urlDrive != null && !urlDrive.trim().isEmpty()) {
                             urlDrive = urlDrive.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                             actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"180\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>NOTA: Las evidencias detalladas y capturas de pantalla de estas actividades se encuentran anexas en el siguiente enlace de Google Drive:</w:t></w:r></w:p>");
-                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"120\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr>");
-                            actividadesXml.append("<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r>");
-                            actividadesXml.append("<w:r><w:instrText xml:space=\"preserve\"> HYPERLINK \"").append(urlDrive).append("\" </w:instrText></w:r>");
-                            actividadesXml.append("<w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>");
-                            actividadesXml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>");
+                            actividadesXml.append("<w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"0\" w:after=\"120\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>");
                             actividadesXml.append(urlDrive);
-                            actividadesXml.append("</w:t></w:r>");
-                            actividadesXml.append("<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>");
-                            actividadesXml.append("</w:p>");
+                            actividadesXml.append("</w:t></w:r></w:p>");
                         }
                         
                         actividadesXml.append("<w:p><w:r><w:t>"); // Reopen paragraph tag to balance

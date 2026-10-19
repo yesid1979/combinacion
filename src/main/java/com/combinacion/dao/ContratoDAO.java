@@ -829,7 +829,7 @@ try {
     }
 
     public Contrato obtenerPorId(int id) {
-        String sql = "SELECT * FROM contratos WHERE id = ?";
+        String sql = "SELECT c.*, ct.nombre as contratista_nombre FROM contratos c LEFT JOIN contratistas ct ON c.contratista_id = ct.id WHERE c.id = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -902,6 +902,7 @@ try {
                     
                     try { c.setNumeroModificacion(rs.getString("numero_modificacion")); } catch(Exception e) {}
                     try { c.setFechaModificacion(rs.getDate("fecha_modificacion")); } catch(Exception e) {}
+                    try { c.setContratistaNombre(rs.getString("contratista_nombre")); } catch(Exception e) {}
                     
                     return c;
                 }

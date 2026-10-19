@@ -176,29 +176,47 @@ public class PdfGenerator {
     }
 
     /**
-     * Motor para Linux: Usa LibreOffice (soffice) en modo headless.
+     * Motor para Linux: Usa LibreOffice (soffice) en modo headless con perfil aislado.
      */
     private static boolean convertWithLibreOfficeLinux(File docxFile, File pdfFile) {
+        File tempProfile = null;
         try {
-            // LibreOffice guarda en el directorio de salida con el mismo nombre del archivo base
             String outDir = pdfFile.getParent();
+            tempProfile = new File(System.getProperty("java.io.tmpdir"), "lo_docx_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId());
+            tempProfile.mkdirs();
+
             ProcessBuilder pb = new ProcessBuilder(
-                "soffice", "--headless", "--convert-to", "pdf", 
-                "--outdir", outDir, docxFile.getAbsolutePath()
+                "soffice",
+                "-env:UserInstallation=file://" + tempProfile.getAbsolutePath(),
+                "--headless",
+                "--norestore",
+                "--nofirststartwizard",
+                "--convert-to", "pdf", 
+                "--outdir", outDir, 
+                docxFile.getAbsolutePath()
             );
+            
+            pb.environment().put("LC_ALL", "es_CO.UTF-8");
+            pb.environment().put("LANG", "es_CO.UTF-8");
             
             runProcessSafely(pb, 60);
             
             // Soffice genera un archivo con el mismo nombre pero .pdf
-            File generatedPdf = new File(docxFile.getAbsolutePath().replace(".docx", ".pdf"));
+            File generatedPdf = new File(docxFile.getAbsolutePath().replaceAll("(?i)\\.docx$", ".pdf"));
             if (generatedPdf.exists() && !generatedPdf.getAbsolutePath().equals(pdfFile.getAbsolutePath())) {
                 generatedPdf.renameTo(pdfFile);
             }
             
             return pdfFile.exists() && pdfFile.length() > 0;
         } catch (Exception e) {
-            System.err.println("⚠️ LibreOffice no encontrado o falló en Linux.");
+            System.err.println("⚠️ LibreOffice no encontrado o falló en Linux: " + e.getMessage());
             return false;
+        } finally {
+            if (tempProfile != null) {
+                try {
+                    deleteDirectory(tempProfile);
+                } catch (Exception ignore) {}
+            }
         }
     }
 
@@ -339,12 +357,14 @@ public class PdfGenerator {
             document.open();
             
             com.lowagie.text.pdf.PdfReader reader1 = new com.lowagie.text.pdf.PdfReader(new java.io.FileInputStream(pdf1));
+            unlockPdfReader(reader1);
             for (int i = 1; i <= reader1.getNumberOfPages(); i++) {
                 copy.addPage(copy.getImportedPage(reader1, i));
             }
             reader1.close();
             
             com.lowagie.text.pdf.PdfReader reader2 = new com.lowagie.text.pdf.PdfReader(new java.io.FileInputStream(pdf2));
+            unlockPdfReader(reader2);
             for (int i = 1; i <= reader2.getNumberOfPages(); i++) {
                 copy.addPage(copy.getImportedPage(reader2, i));
             }
@@ -357,6 +377,15 @@ public class PdfGenerator {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private static void unlockPdfReader(com.lowagie.text.pdf.PdfReader reader) {
+        if (reader == null) return;
+        try {
+            java.lang.reflect.Field ownerField = com.lowagie.text.pdf.PdfReader.class.getDeclaredField("ownerPasswordUsed");
+            ownerField.setAccessible(true);
+            ownerField.setBoolean(reader, true);
+        } catch (Throwable ignore) {}
     }
 
 

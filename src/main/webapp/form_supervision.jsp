@@ -80,6 +80,57 @@
             transform: scale(1.02);
             transition: all 0.2s ease;
         }
+        /* Custom Monthpicker Widget */
+        .month-picker-group {
+            position: relative;
+        }
+        .month-picker-display {
+            background-color: #fff !important;
+            cursor: pointer;
+        }
+        .month-picker-display:disabled {
+            background-color: #e9ecef !important;
+            cursor: not-allowed;
+        }
+        .month-picker-popup {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1055;
+            min-width: 290px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+            border: 1px solid #ced4da;
+            margin-top: 5px;
+            padding: 12px;
+            display: none;
+        }
+        .mp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .mp-year {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        .mp-month-btn {
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 8px 4px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+        .mp-month-btn:hover {
+            background-color: #e7f1ff;
+            color: var(--primary-blue);
+            border-color: #004884;
+        }
     </style>
 </head>
 <body class="bg-white d-flex flex-column min-vh-100">
@@ -168,7 +219,13 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Periodo del Informe (Mes y Año)</label>
-                                    <input type="month" class="form-control" name="periodo_informe" value="${informe.periodoInforme}" required ${readonly ? 'readonly' : ''}>
+                                    <div class="input-group month-picker-group">
+                                        <input type="text" class="form-control month-picker-display" id="display_periodo_informe" data-target="#periodo_informe" placeholder="Seleccione Mes y Año..." readonly required ${readonly ? 'disabled' : ''}>
+                                        <button class="btn btn-outline-primary month-picker-btn" type="button" data-target="#periodo_informe" ${readonly ? 'disabled' : ''} title="Seleccionar Mes y Año">
+                                            <i class="bi bi-calendar3"></i>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="periodo_informe" id="periodo_informe" value="${informe.periodoInforme}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label d-flex justify-content-between align-items-center">
@@ -372,7 +429,13 @@
                                     </div>
                                     <div class="col-md-6" id="col_planilla_periodo">
                                         <label class="form-label">Periodo de Pago</label>
-                                        <input type="month" class="form-control" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}" required ${readonly ? 'readonly' : ''}>
+                                        <div class="input-group month-picker-group">
+                                            <input type="text" class="form-control month-picker-display" id="display_planilla_periodo" data-target="#planilla_periodo" placeholder="Seleccione Mes y Año..." readonly required ${readonly ? 'disabled' : ''}>
+                                            <button class="btn btn-outline-primary month-picker-btn" type="button" data-target="#planilla_periodo" ${readonly ? 'disabled' : ''} title="Seleccionar Mes y Año">
+                                                <i class="bi bi-calendar3"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="planilla_periodo" id="planilla_periodo" value="${informe.planillaPeriodo}">
                                     </div>
                                 </div>
                             </div>
@@ -773,6 +836,144 @@
                 e.preventDefault();
                 $(this).tab('show');
             });
+
+            // Inicializar Monthpicker visual bloqueado
+            initCustomMonthPicker();
+
+            function initCustomMonthPicker() {
+                var mesesNombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                var mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+                $('.month-picker-group').each(function() {
+                    var $group = $(this);
+                    var $display = $group.find('.month-picker-display');
+                    var targetSelector = $display.data('target');
+                    var $hidden = $(targetSelector);
+
+                    function updateDisplay() {
+                        var val = $hidden.val();
+                        if (val && val.indexOf('-') !== -1) {
+                            var parts = val.split('-');
+                            if (parts.length === 2) {
+                                var y = parseInt(parts[0], 10);
+                                var m = parseInt(parts[1], 10) - 1;
+                                if (!isNaN(y) && m >= 0 && m <= 11) {
+                                    $display.val(mesesNombres[m] + ' de ' + y);
+                                    return;
+                                }
+                            }
+                        }
+                        $display.val(val ? val : '');
+                    }
+                    updateDisplay();
+                    $hidden.on('change', updateDisplay);
+
+                    if ($display.is(':disabled') || (typeof isReadonly !== 'undefined' && isReadonly)) {
+                        return;
+                    }
+
+                    var $popup = $group.find('.month-picker-popup');
+                    if ($popup.length === 0) {
+                        $popup = $(
+                            '<div class="month-picker-popup">' +
+                                '<div class="mp-header">' +
+                                    '<button type="button" class="btn btn-sm btn-outline-secondary mp-btn-prev py-0 px-2" title="Año anterior"><i class="bi bi-chevron-left"></i></button>' +
+                                    '<span class="mp-year"></span>' +
+                                    '<button type="button" class="btn btn-sm btn-outline-secondary mp-btn-next py-0 px-2" title="Año siguiente"><i class="bi bi-chevron-right"></i></button>' +
+                                '</div>' +
+                                '<div class="row g-2 text-center mp-grid"></div>' +
+                            '</div>'
+                        );
+                        $group.append($popup);
+                    }
+
+                    var viewingYear = new Date().getFullYear();
+
+                    function renderMonths(year) {
+                        viewingYear = year;
+                        $popup.find('.mp-year').text(year);
+                        var $grid = $popup.find('.mp-grid').empty();
+                        
+                        var currentVal = $hidden.val() || '';
+                        var selYear = -1;
+                        var selMonth = -1;
+                        if (currentVal.indexOf('-') !== -1) {
+                            var p = currentVal.split('-');
+                            selYear = parseInt(p[0], 10);
+                            selMonth = parseInt(p[1], 10) - 1;
+                        }
+
+                        for (var i = 0; i < 12; i++) {
+                            var isSelected = (selYear === year && selMonth === i);
+                            var btnClass = isSelected ? 'btn-primary text-white shadow-sm' : 'btn-outline-light text-dark border';
+                            var colHtml = 
+                                '<div class="col-4">' +
+                                    '<button type="button" class="btn btn-sm w-100 ' + btnClass + ' mp-month-btn" data-month="' + i + '">' +
+                                        mesesCortos[i] +
+                                    '</button>' +
+                                '</div>';
+                            $grid.append(colHtml);
+                        }
+                    }
+
+                    function openPicker() {
+                        if ($display.is(':disabled') || (typeof isReadonly !== 'undefined' && isReadonly)) return;
+                        $('.month-picker-popup').not($popup).hide();
+                        var cur = $hidden.val() || '';
+                        var initY = new Date().getFullYear();
+                        if (cur.indexOf('-') !== -1) {
+                            var py = parseInt(cur.split('-')[0], 10);
+                            if (!isNaN(py) && py > 2000) initY = py;
+                        }
+                        renderMonths(initY);
+                        $popup.stop(true, true).fadeIn(150);
+                    }
+
+                    $display.on('click', function(e) {
+                        e.stopPropagation();
+                        if ($popup.is(':visible')) {
+                            $popup.fadeOut(100);
+                        } else {
+                            openPicker();
+                        }
+                    });
+
+                    $group.find('.month-picker-btn').on('click', function(e) {
+                        e.stopPropagation();
+                        if ($popup.is(':visible')) {
+                            $popup.fadeOut(100);
+                        } else {
+                            openPicker();
+                        }
+                    });
+
+                    $popup.on('click', '.mp-btn-prev', function(e) {
+                        e.stopPropagation();
+                        renderMonths(viewingYear - 1);
+                    });
+
+                    $popup.on('click', '.mp-btn-next', function(e) {
+                        e.stopPropagation();
+                        renderMonths(viewingYear + 1);
+                    });
+
+                    $popup.on('click', '.mp-month-btn', function(e) {
+                        e.stopPropagation();
+                        var m = parseInt($(this).data('month'), 10);
+                        var mStr = (m + 1 < 10 ? '0' : '') + (m + 1);
+                        var formatted = viewingYear + '-' + mStr;
+                        $hidden.val(formatted).trigger('change');
+                        $display.val(mesesNombres[m] + ' de ' + viewingYear).removeClass('is-invalid');
+                        $popup.fadeOut(120);
+                    });
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('.month-picker-group').length) {
+                        $('.month-picker-popup').fadeOut(100);
+                    }
+                });
+            }
 
             // Cargar actividades dinámicamente
             var isReadonly = ${readonly == true ? 'true' : 'false'};
@@ -2065,9 +2266,10 @@
                         $('#col_planilla_fecha_pago').hide();
 
                         $('#planilla_periodo').prop('required', false).val('');
+                        $('#display_planilla_periodo').prop('required', false).val('');
                         $('#col_planilla_periodo').hide();
 
-                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo').each(function() {
+                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo, #display_planilla_periodo').each(function() {
                             var lbl = $(this).closest('div').find('.form-label');
                             lbl.find('.req-asterisk').remove();
                         });
@@ -2093,7 +2295,7 @@
                         $('#col_planilla_fecha_pago').show();
                         $('#col_planilla_periodo').show();
 
-                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo').prop('required', true).each(function() {
+                        $('#planilla_numero, #planilla_pin, #planilla_operador, #planilla_fecha_pago, #planilla_periodo, #display_planilla_periodo').prop('required', true).each(function() {
                             var lbl = $(this).closest('div').find('.form-label');
                             if (lbl.find('.req-asterisk').length === 0) {
                                 lbl.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');

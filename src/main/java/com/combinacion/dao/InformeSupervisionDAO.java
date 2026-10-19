@@ -413,6 +413,18 @@ public class InformeSupervisionDAO {
         }
     }
 
+    public void actualizarEstadoRadicacion(int id, String estado) {
+        String sql = "UPDATE informes_supervision SET estado_radicacion = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, estado);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void eliminar(int id) {
         String sql = "DELETE FROM informes_supervision WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

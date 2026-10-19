@@ -50,10 +50,67 @@ public class ParseUtils {
         }
     }
 
+    public static String normalizarPeriodo(String raw, Integer anioReferencia) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return raw;
+        }
+        String clean = raw.trim();
+        // If already YYYY-MM
+        if (clean.matches("^\\d{4}-(0[1-9]|1[0-2])$")) {
+            return clean;
+        }
+        // If MM/YYYY or MM-YYYY
+        if (clean.matches("^(0?[1-9]|1[0-2])[/-](\\d{4})$")) {
+            String[] parts = clean.split("[/-]");
+            int m = Integer.parseInt(parts[0]);
+            int y = Integer.parseInt(parts[1]);
+            return String.format("%04d-%02d", y, m);
+        }
+        // If YYYY/MM
+        if (clean.matches("^(\\d{4})/(0?[1-9]|1[0-2])$")) {
+            String[] parts = clean.split("/");
+            int y = Integer.parseInt(parts[0]);
+            int m = Integer.parseInt(parts[1]);
+            return String.format("%04d-%02d", y, m);
+        }
+
+        // Try extracting year (4 digits starting with 20)
+        int year = (anioReferencia != null && anioReferencia > 2000) ? anioReferencia : java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+        java.util.regex.Matcher ym = java.util.regex.Pattern.compile("\\b(20\\d{2})\\b").matcher(clean);
+        if (ym.find()) {
+            try {
+                year = Integer.parseInt(ym.group(1));
+            } catch (Exception ignore) {}
+        }
+
+        // Detect month from text (Spanish)
+        String lower = clean.toLowerCase();
+        int month = 0;
+        if (lower.contains("ene")) month = 1;
+        else if (lower.contains("feb")) month = 2;
+        else if (lower.contains("mar")) month = 3;
+        else if (lower.contains("abr")) month = 4;
+        else if (lower.contains("may")) month = 5;
+        else if (lower.contains("jun")) month = 6;
+        else if (lower.contains("jul")) month = 7;
+        else if (lower.contains("ago")) month = 8;
+        else if (lower.contains("sep") || lower.contains("set")) month = 9;
+        else if (lower.contains("oct")) month = 10;
+        else if (lower.contains("nov")) month = 11;
+        else if (lower.contains("dic")) month = 12;
+
+        if (month > 0) {
+            return String.format("%04d-%02d", year, month);
+        }
+
+        return raw;
+    }
+
     public static String formatearPeriodo(String periodo) {
         if (periodo == null || periodo.trim().isEmpty()) return "";
         try {
-            String[] parts = periodo.split("-");
+            String norm = normalizarPeriodo(periodo, null);
+            String[] parts = norm.split("-");
             if (parts.length == 2) {
                 int year = Integer.parseInt(parts[0]);
                 int month = Integer.parseInt(parts[1]);
