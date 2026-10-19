@@ -1,0 +1,220 @@
+-- 1. CONSULTA DE VERIFICACIÓN
+SELECT 
+    id, 
+    contrato_id, 
+    numero_cuota, 
+    periodo_informe, 
+    estado_radicacion
+FROM informes_supervision
+WHERE estado_radicacion IN ('RADICADA', 'BORRADOR')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  )
+ORDER BY id DESC;
+
+-- 2. ACTUALIZACIÓN A 'APROBADA PARA IMPRESION'
+UPDATE informes_supervision
+SET estado_radicacion = 'APROBADA PARA IMPRESION'
+WHERE estado_radicacion IN ('RADICADA', 'BORRADOR')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+INSERT INTO historial_radicacion (id_informe, id_usuario_cambio, estado_anterior, estado_nuevo, observaciones)
+SELECT 
+    id, 
+    1, 
+    estado_radicacion, 
+    'APROBADA PARA IMPRESION', 
+    'Aprobación masiva de cuentas históricas (Julio, Agosto, Septiembre)'
+FROM informes_supervision
+WHERE estado_radicacion IN ('RADICADA', 'BORRADOR')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+SELECT 
+    id, 
+    contrato_id, 
+    numero_cuota, 
+    periodo_informe, 
+    estado_radicacion
+FROM informes_supervision
+WHERE estado_radicacion IN ('EN REVISION FINAL')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  )
+ORDER BY id DESC;
+
+UPDATE informes_supervision
+SET estado_radicacion = 'APROBADA PARA IMPRESION'
+WHERE estado_radicacion IN ('EN REVISION FINAL')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+INSERT INTO historial_radicacion (id_informe, id_usuario_cambio, estado_anterior, estado_nuevo, observaciones)
+SELECT 
+    id, 
+    1, 
+    estado_radicacion, 
+    'APROBADA PARA IMPRESION', 
+    'Aprobación masiva de cuentas históricas (Julio, Agosto, Septiembre)'
+FROM informes_supervision
+WHERE estado_radicacion IN ('EN REVISION FINAL')
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+SELECT 
+    id, 
+    contrato_id, 
+    numero_cuota, 
+    periodo_informe, 
+    estado_radicacion
+FROM informes_supervision
+WHERE estado_radicacion IN ('RADICADA', 'BORRADOR')
+  AND (
+      periodo_informe LIKE '%-01%' 
+      OR periodo_informe LIKE '%-02%' 
+      OR periodo_informe LIKE '%-03%'
+      OR periodo_informe LIKE '%-04%'
+      OR periodo_informe LIKE '%-05%'
+      OR periodo_informe LIKE '%-06%'
+      OR LOWER(periodo_informe) LIKE '%enero%'
+      OR LOWER(periodo_informe) LIKE '%febrero%'
+      OR LOWER(periodo_informe) LIKE '%marzo%'
+      OR LOWER(periodo_informe) LIKE '%abril%'
+      OR LOWER(periodo_informe) LIKE '%mayo%'
+      OR LOWER(periodo_informe) LIKE '%junio%'
+  )
+ORDER BY id DESC;
+
+UPDATE informes_supervision
+SET estado_radicacion = 'APROBADA PARA IMPRESION'
+WHERE estado_radicacion IN ('RADICADA','BORRADOR')
+  AND (
+      periodo_informe LIKE '%-01%' 
+      OR periodo_informe LIKE '%-02%' 
+      OR periodo_informe LIKE '%-03%'
+      OR periodo_informe LIKE '%-04%'
+      OR periodo_informe LIKE '%-05%'
+      OR periodo_informe LIKE '%-06%'
+      OR LOWER(periodo_informe) LIKE '%enero%'
+      OR LOWER(periodo_informe) LIKE '%febrero%'
+      OR LOWER(periodo_informe) LIKE '%marzo%'
+      OR LOWER(periodo_informe) LIKE '%abril%'
+      OR LOWER(periodo_informe) LIKE '%mayo%'
+      OR LOWER(periodo_informe) LIKE '%junio%'
+  );
+
+
+INSERT INTO historial_radicacion (id_informe, id_usuario_cambio, estado_anterior, estado_nuevo, observaciones)
+SELECT 
+    id, 
+    1, 
+    estado_radicacion, 
+    'APROBADA PARA IMPRESION', 
+    'Aprobación masiva de cuentas históricas (Julio, Agosto, Septiembre)'
+FROM informes_supervision
+WHERE estado_radicacion IN ('RADICADA','BORRADOR')
+  AND (
+      periodo_informe LIKE '%-01%' 
+      OR periodo_informe LIKE '%-02%' 
+      OR periodo_informe LIKE '%-03%'
+      OR periodo_informe LIKE '%-04%'
+      OR periodo_informe LIKE '%-05%'
+      OR periodo_informe LIKE '%-06%'
+      OR LOWER(periodo_informe) LIKE '%enero%'
+      OR LOWER(periodo_informe) LIKE '%febrero%'
+      OR LOWER(periodo_informe) LIKE '%marzo%'
+      OR LOWER(periodo_informe) LIKE '%abril%'
+      OR LOWER(periodo_informe) LIKE '%mayo%'
+      OR LOWER(periodo_informe) LIKE '%junio%'
+  );
+
+UPDATE informes_supervision
+SET estado_radicacion = 'APROBADA PARA IMPRESION'
+WHERE estado_radicacion IN ('VISTO BUENO CONTRATACION')
+  AND (
+      periodo_informe LIKE '%-01%' 
+      OR periodo_informe LIKE '%-02%' 
+      OR periodo_informe LIKE '%-03%'
+      OR periodo_informe LIKE '%-04%'
+      OR periodo_informe LIKE '%-05%'
+      OR periodo_informe LIKE '%-06%'
+      OR periodo_informe LIKE '%-07%'
+      OR periodo_informe LIKE '%-08%'
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%enero%'
+      OR LOWER(periodo_informe) LIKE '%febrero%'
+      OR LOWER(periodo_informe) LIKE '%marzo%'
+      OR LOWER(periodo_informe) LIKE '%abril%'
+      OR LOWER(periodo_informe) LIKE '%mayo%'
+      OR LOWER(periodo_informe) LIKE '%junio%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+INSERT INTO historial_radicacion (id_informe, id_usuario_cambio, estado_anterior, estado_nuevo, observaciones)
+SELECT 
+    id, 
+    1, 
+    estado_radicacion, 
+    'APROBADA PARA IMPRESION', 
+    'Aprobación masiva de cuentas históricas (Julio, Agosto, Septiembre)'
+FROM informes_supervision
+WHERE estado_radicacion IN ('VISTO BUENO CONTRATACION')
+  AND (
+      periodo_informe LIKE '%-01%' 
+      OR periodo_informe LIKE '%-02%' 
+      OR periodo_informe LIKE '%-03%'
+      OR periodo_informe LIKE '%-04%'
+      OR periodo_informe LIKE '%-05%'
+      OR periodo_informe LIKE '%-06%'
+      OR periodo_informe LIKE '%-07%'
+      OR periodo_informe LIKE '%-08%'
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%enero%'
+      OR LOWER(periodo_informe) LIKE '%febrero%'
+      OR LOWER(periodo_informe) LIKE '%marzo%'
+      OR LOWER(periodo_informe) LIKE '%abril%'
+      OR LOWER(periodo_informe) LIKE '%mayo%'
+      OR LOWER(periodo_informe) LIKE '%junio%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+VISTO BUENO CONTRATACION

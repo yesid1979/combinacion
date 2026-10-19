@@ -107,6 +107,7 @@
                         <select id="filtroEstado" class="form-select w-auto shadow-sm border-primary">
                             <option value="">Todos los estados</option>
                             <option value="RADICADA">Radicadas (Revisor)</option>
+                            <option value="VISTO BUENO CONTRATACION">Visto Bueno (Contratación)</option>
                             <option value="EN REVISION CONTRATACION">En Revisión (Contratación)</option>
                             <option value="EN REVISION SUPERVISOR">En Revisión (Supervisión)</option>
                             <option value="EN REVISION FINAL">En Revisión Final</option>
@@ -182,9 +183,13 @@
                     { "data": "valorCuota" },
                     { 
                         "data": "estado",
-                        "render": function(data) {
+                        "render": function(data, type, row) {
+                            if (type === 'filter' || type === 'sort') {
+                                return data;
+                            }
                             if (data === 'BORRADOR') return '<span class="badge bg-secondary">BORRADOR</span>';
                             if (data === 'RADICADA') return '<span class="badge bg-primary">RADICADA</span>';
+                            if (data === 'VISTO BUENO CONTRATACION') return '<span class="badge bg-success bg-opacity-75 text-white">VISTO BUENO (CONTRATACIÓN)</span>';
                             if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÓN</span>';
                             if (data === 'EN REVISION CONTRATACION') return '<span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span>';
                             if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÓN FINAL</span>';
