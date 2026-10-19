@@ -117,6 +117,7 @@ public class SupervisionReportGenerator {
         
         com.combinacion.models.Supervisor supInforme = (info != null && info.getSupervisor() != null) ? info.getSupervisor() : (contrato != null ? contrato.getSupervisor() : null);
         reps.put("${NOMBRE_SUPERVISOR}", supInforme != null && supInforme.getNombre() != null ? supInforme.getNombre() : "");
+        reps.put("${CARGO_SUPERVISOR}", supInforme != null && supInforme.getCargo() != null ? supInforme.getCargo() : "");
         
         boolean esEncargado = false;
         if (supInforme != null) {

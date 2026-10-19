@@ -134,6 +134,9 @@ public class AuthService {
         if (modulo.equals("CARGA_MASIVA")) {
             return "CARGA_MASIVA_VER";
         }
+        if (modulo.equals("CONSECUTIVOS")) {
+            return "CONSECUTIVOS_VER";
+        }
 
         // Mapear acción a permiso
         switch (action) {
@@ -177,6 +180,7 @@ public class AuthService {
         if (path.contains("ordenador")) return "ORDENADORES";
         if (path.contains("combinacion") || path.contains("informes")) return "COMBINACION";
         if (path.contains("carga_masiva") || path.contains("upload") || path.contains("google-sync")) return "CARGA_MASIVA";
+        if (path.contains("consecutiv")) return "CONSECUTIVOS";
         if (path.contains("revisor")) return "REVISORES";
         if (path.contains("verbo")) return "VERBOS";
         if (path.contains("revaluacion")) return "REVALUACION";

@@ -111,7 +111,15 @@ public class CargaMasivaService {
                             log.append("Se detectaron ").append(TABS.size()).append(" pestañas en el documento Nativo.\\n");
                             
                             for (String tab : TABS) {
-                                String range = tab + "!A:AZ";
+                                String tabNorm = normalizeText(tab);
+                                if (tabNorm.contains("seguimiento") || tabNorm.contains("historic") || tabNorm.contains("anterior")
+                                        || tabNorm.contains("parametro") || tabNorm.contains("resumen") || tabNorm.contains("lista")
+                                        || tabNorm.contains("grafic") || tabNorm.contains("tabla") || tabNorm.contains("control")
+                                        || tabNorm.contains("indicador") || tabNorm.contains("plantilla")) {
+                                    log.append("Se omitió la pestaña '").append(tab).append("' por no ser de contratos vigentes.\n");
+                                    continue;
+                                }
+                                String range = tab + "!A:ZZ";
                                 try {
                                     ValueRange responseVal = sheetsService.spreadsheets().values()
                                             .get(SPREADSHEET_ID, range)
@@ -145,8 +153,17 @@ public class CargaMasivaService {
                                     log.append("Se detectaron ").append(workbook.getNumberOfSheets()).append(" pestañas en el Excel.\\n");
                                     for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                                         Sheet poiSheet = workbook.getSheetAt(i);
+                                        String sheetName = poiSheet.getSheetName();
+                                        String sheetNorm = normalizeText(sheetName);
+                                        if (sheetNorm.contains("seguimiento") || sheetNorm.contains("historic") || sheetNorm.contains("anterior")
+                                                || sheetNorm.contains("parametro") || sheetNorm.contains("resumen") || sheetNorm.contains("lista")
+                                                || sheetNorm.contains("grafic") || sheetNorm.contains("tabla") || sheetNorm.contains("control")
+                                                || sheetNorm.contains("indicador") || sheetNorm.contains("plantilla")) {
+                                            log.append("Se omitió la pestaña '").append(sheetName).append("' por no ser de contratos vigentes.\n");
+                                            continue;
+                                        }
                                         allRows.addAll(readSheetData(poiSheet));
-                                        log.append("Se extrajeron datos de la pestaña '").append(poiSheet.getSheetName()).append("'.\\n");
+                                        log.append("Se extrajeron datos de la pestaña '").append(sheetName).append("'.\\n");
                                     }
                                 }
                             } else {
@@ -154,8 +171,17 @@ public class CargaMasivaService {
                                     log.append("Se detectaron ").append(workbook.getNumberOfSheets()).append(" pestañas en el Excel.\\n");
                                     for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                                         Sheet poiSheet = workbook.getSheetAt(i);
+                                        String sheetName = poiSheet.getSheetName();
+                                        String sheetNorm = normalizeText(sheetName);
+                                        if (sheetNorm.contains("seguimiento") || sheetNorm.contains("historic") || sheetNorm.contains("anterior")
+                                                || sheetNorm.contains("parametro") || sheetNorm.contains("resumen") || sheetNorm.contains("lista")
+                                                || sheetNorm.contains("grafic") || sheetNorm.contains("tabla") || sheetNorm.contains("control")
+                                                || sheetNorm.contains("indicador") || sheetNorm.contains("plantilla")) {
+                                            log.append("Se omitió la pestaña '").append(sheetName).append("' por no ser de contratos vigentes.\n");
+                                            continue;
+                                        }
                                         allRows.addAll(readSheetData(poiSheet));
-                                        log.append("Se extrajeron datos de la pestaña '").append(poiSheet.getSheetName()).append("'.\\n");
+                                        log.append("Se extrajeron datos de la pestaña '").append(sheetName).append("'.\\n");
                                     }
                                 }
                             }
@@ -193,60 +219,45 @@ public class CargaMasivaService {
                     throw new Exception("El archivo está vacío.");
                 }
 
-                // 2. DETECT HEADER (VERTICAL MERGING STRATEGY)
-                // Combine text from the first 5 rows to handle split headers (e.g., Row 1:
-                // "Estructuradores", Row 2: "Juridico")
-                // This creates a "Virtual Header" that contains all keywords found in the top
-                // rows for each column.
+                // 2. DETECT HEADER
+                // Find which row is the genuine header row (the one with the most recognizable column keywords)
+                // NEVER combine multiple rows into one header, as that pollutes column headers with contractor data!
+                int bestHeaderRowIndex = 0;
+                int maxMatches = -1;
+                int rowsToScan = Math.min(4, allRows.size());
 
-                int maxCols = 0;
-                int rowsToScan = Math.min(5, allRows.size());
-
-                // Find max columns
-                for (int i = 0; i < rowsToScan; i++) {
-                    if (allRows.get(i).length > maxCols)
-                        maxCols = allRows.get(i).length;
-                }
-
-                String[] header = new String[maxCols];
-                for (int c = 0; c < maxCols; c++) {
-                    StringBuilder sb = new StringBuilder();
-                    for (int r = 0; r < rowsToScan; r++) {
-                        String[] row = allRows.get(r);
-                        if (c < row.length && row[c] != null && !row[c].trim().isEmpty()) {
-                            sb.append(row[c].trim()).append(" ");
+                for (int r = 0; r < rowsToScan; r++) {
+                    String[] rRow = allRows.get(r);
+                    int matches = 0;
+                    for (String cell : rRow) {
+                        if (cell == null || cell.trim().isEmpty()) continue;
+                        String cNorm = normalizeText(cell);
+                        if (cNorm.contains("contrato") || cNorm.contains("supervisor") || 
+                            cNorm.contains("cedula") || cNorm.contains("objeto") || 
+                            cNorm.contains("ordenador") || cNorm.contains("presupuest") ||
+                            cNorm.contains("cdp") || cNorm.contains("rpc") ||
+                            cNorm.contains("actividades") || cNorm.contains("valor")) {
+                            matches++;
                         }
                     }
-                    header[c] = sb.toString().trim();
+                    if (matches > maxMatches) {
+                        maxMatches = matches;
+                        bestHeaderRowIndex = r;
+                    }
                 }
 
-                log.append("═══ DEBUG: ENCABEZADO VIRTUAL (Combinación ").append(rowsToScan).append(" filas) ═══\n");
+                String[] header = allRows.get(bestHeaderRowIndex);
+
+                log.append("═══ DEBUG: ENCABEZADO DETECTADO (Fila ").append(bestHeaderRowIndex + 1).append(") ═══\n");
                 for (int k = 0; k < header.length; k++) {
-                    if (!header[k].isEmpty()) {
-                        log.append("[").append(k).append("] ").append(header[k]).append(" | Norm: ")
+                    if (header[k] != null && !header[k].trim().isEmpty()) {
+                        log.append("[").append(k).append("] ").append(header[k].trim()).append(" | Norm: ")
                                 .append(normalizeText(header[k])).append("\n");
                     }
                 }
                 log.append("═══════════════════════════════════════════════════\n\n");
 
                 Map<String, Integer> map = mapHeaders(header, log);
-
-                // NOTE: We do not skip rows based on index here because we merged multiple
-                // rows.
-                // We will rely on the processing logic to ignore rows that don't look like data
-                // (e.g. they look like headers).
-                // Or we can start processing at 'rowsToScan' if we are confident.
-                // Let's set 'bestHeaderRowIndex' to rowsToScan - 1 so the loop starts after it?
-                // The loop uses 'bestHeaderRowIndex + 1'.
-                int bestHeaderRowIndex = rowsToScan - 1;
-                // Caution: if the file has ONLY 1 header row, we might skip 4 data rows if
-                // rowsToScan=5.
-                // WE MUST BE CAREFUL.
-                // Heuristic: If row 2 has data that parses as date/number in known columns?
-                // SAFEST: Set bestHeaderRowIndex = 0. We will iterate from 1.
-                // Header rows (merged) will probably fail parsing and be skipped as invalid
-                // data.
-                bestHeaderRowIndex = 0;
 
                 log.append("═══ CARGA MASIVA - ORDENADORES, CONTRATISTAS Y PRESUPUESTO ═══\n\n");
                 log.append("Total columnas detectadas: ").append(map.size()).append("\n\n");
@@ -575,6 +586,31 @@ public class CargaMasivaService {
         }
     }
 
+    private boolean isRpHeader(String h) {
+        if (h == null || h.isEmpty()) return false;
+        // Excluir descripciones, experiencia, contratos y otros campos de texto
+        if (h.contains("experienc") || h.contains("descrip") || h.contains("perfil") || 
+            h.contains("actividad") || h.contains("formacion") || h.contains("objeto") ||
+            h.contains("justificacion") || h.contains("estudio") || h.contains("necesidad") ||
+            h.contains("minuta") || h.contains("secop") || h.contains("supervisor") ||
+            h.contains("contratista") || h.contains("ordenador") || h.contains("obligacion") ||
+            h.contains("titulo") || h.contains("tarjeta")) {
+            return false;
+        }
+        return h.matches(".*\\b(rp|rpc)\\b.*") || h.contains("registro presupuestal");
+    }
+
+    private boolean isCdpHeader(String h) {
+        if (h == null || h.isEmpty()) return false;
+        if (h.contains("experienc") || h.contains("descrip") || h.contains("perfil") || 
+            h.contains("actividad") || h.contains("formacion") || h.contains("objeto") ||
+            h.contains("justificacion") || h.contains("estudio") || h.contains("necesidad") ||
+            h.contains("supervisor") || h.contains("contratista") || h.contains("ordenador")) {
+            return false;
+        }
+        return h.matches(".*\\b(cdp)\\b.*") || h.contains("disponibilidad presupuestal");
+    }
+
     private Map<String, Integer> mapHeaders(String[] header, StringBuilder log) {
         Map<String, Integer> map = new HashMap<>();
  
@@ -592,7 +628,7 @@ public class CargaMasivaService {
 
             // === BLOQUE DE PRIORIDAD: ADICIONES ===
             if (h.contains("adicion")) {
-                if (h.contains("cdp")) {
+                if (isCdpHeader(h)) {
                     if (h.contains("valor")) {
                         safePut(map, "cdp_valor_adicion", i);
                     } else {
@@ -600,7 +636,7 @@ public class CargaMasivaService {
                     }
                     continue;
                 }
-                if (h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) {
+                if (isRpHeader(h)) {
                     if (h.contains("fecha")) {
                         safePut(map, "rp_fecha_adicion", i);
                     } else {
@@ -612,33 +648,32 @@ public class CargaMasivaService {
 
             // === BLOQUE DE PRIORIDAD ABSOLUTA (Solicitado por Usuario) ===
             // 1. CDP Numero (Incluyendo variantes con "y fecha")
-            if (h.contains("cdp") && (h.contains("numero") || h.contains("nmero") || h.contains("num"))) {
+            if (isCdpHeader(h) && (h.contains("numero") || h.contains("nmero") || h.contains("num"))) {
                 safePut(map, "cdp_numero", i);
                 if (!h.contains("fecha") && !h.contains("venc")) continue; 
             }
             // 2. CDP Fecha (Solo si no es vencimiento Y NO tiene numero)
-            if (h.contains("cdp") && h.contains("fecha") && !h.contains("vencimiento") && !h.contains("venc") && !h.contains("numero") && !h.contains("num")) {
+            if (isCdpHeader(h) && h.contains("fecha") && !h.contains("vencimiento") && !h.contains("venc") && !h.contains("numero") && !h.contains("num")) {
                 safePut(map, "cdp_fecha", i);
                 continue;
             }
             // 3. CDP Valor
-            if (h.contains("cdp") && h.contains("valor")) {
+            if (isCdpHeader(h) && h.contains("valor")) {
                 safePut(map, "cdp_valor", i);
                 continue;
             }
             // 4. CDP Vencimiento
-            if (h.contains("cdp") && (h.contains("vencimiento") || h.contains("venc"))) {
+            if (isCdpHeader(h) && (h.contains("vencimiento") || h.contains("venc"))) {
                 safePut(map, "cdp_vencimiento", i);
                 continue;
             }
             // 5. RPC / RP Numero (Mas flexible si no es fecha ni vencimiento)
-            if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && 
-                !h.contains("fecha") && !h.contains("venc") && !h.contains("apropiacion") && !h.contains("objeto")) {
+            if (isRpHeader(h) && !h.contains("fecha") && !h.contains("venc") && !h.contains("apropiacion") && !h.contains("objeto")) {
                 safePut(map, "rp_numero", i);
                 continue;
             }
             // 6. RPC / RP Fecha
-            if ((h.contains("rp") || h.contains("rpc") || h.contains("registro presupuestal")) && h.contains("fecha")) {
+            if (isRpHeader(h) && h.contains("fecha")) {
                 safePut(map, "rp_fecha", i);
                 continue;
             }
@@ -1309,8 +1344,17 @@ public class CargaMasivaService {
             }
             
             if (exactMatch != null) {
-                exactMatch.setCargo(get(row, map, "supervisor_cargo"));
-                exactMatch.setCedula(rawCedula); // Preserve excel
+                String nuevoCargo = get(row, map, "supervisor_cargo");
+                if (nuevoCargo != null && !nuevoCargo.trim().isEmpty() 
+                        && !nuevoCargo.equalsIgnoreCase("null") 
+                        && !nuevoCargo.equalsIgnoreCase("cargo") 
+                        && !nuevoCargo.toLowerCase().contains("supervisor")
+                        && !nuevoCargo.toLowerCase().contains("cargo del")) {
+                    exactMatch.setCargo(nuevoCargo.trim());
+                }
+                if (!rawCedula.isEmpty()) {
+                    exactMatch.setCedula(rawCedula); // Preserve excel
+                }
                 supervisorDAO.actualizar(exactMatch);
                 mapCedulasExistentes.put(normalizedCedula, rawCedula);
                 return exactMatch;
@@ -1333,7 +1377,12 @@ public class CargaMasivaService {
             Supervisor supervisor = new Supervisor();
             supervisor.setNombre(nombre);
             supervisor.setCedula(rawCedula.isEmpty() ? "SIN_CEDULA_" + System.nanoTime() : rawCedula);
-            supervisor.setCargo(get(row, map, "supervisor_cargo"));
+            String nuevoCargo = get(row, map, "supervisor_cargo");
+            if (nuevoCargo != null && !nuevoCargo.equalsIgnoreCase("null") 
+                    && !nuevoCargo.equalsIgnoreCase("cargo") 
+                    && !nuevoCargo.toLowerCase().contains("cargo del")) {
+                supervisor.setCargo(nuevoCargo.trim());
+            }
 
             if (supervisorDAO.insertar(supervisor)) {
                 if (log != null)
@@ -1531,9 +1580,25 @@ public class CargaMasivaService {
 
             val = get(row, map, "rp_numero");
             if (!val.isEmpty()) { 
-                p.setRpNumero(val); 
-                hasNewData = true; 
-                log.append("DEBUG >> RP_NUMERO encontrado: '").append(val).append("' para contrato ").append(numContrato).append("\n");
+                String valNorm = val.toLowerCase();
+                // Validar que no sea párrafo de texto largo ni contenga palabras de experiencia/objeto
+                if (val.length() <= 30 && !valNorm.contains("desde") && !valNorm.contains("experienc") 
+                        && !valNorm.contains("objeto") && !valNorm.contains("actividad") && !val.startsWith("*")) {
+                    // Limpiar notación científica si viene de Excel/Sheets (ej: 4.50042E9 -> 4500420000)
+                    if (val.matches("^[0-9]+(\\.[0-9]+)?[eE][+]?[0-9]+$")) {
+                        try {
+                            double dbl = Double.parseDouble(val);
+                            val = String.valueOf((long) dbl);
+                        } catch (Exception ex) {}
+                    } else if (val.endsWith(".0")) {
+                        val = val.substring(0, val.length() - 2);
+                    }
+                    p.setRpNumero(val); 
+                    hasNewData = true; 
+                    log.append("DEBUG >> RP_NUMERO encontrado: '").append(val).append("' para contrato ").append(numContrato).append("\n");
+                } else {
+                    log.append("  ⚠️ RP_NUMERO descartado por formato inválido: '").append(truncate(val, 35)).append("'\n");
+                }
             }
 
             val = get(row, map, "rp_fecha");
@@ -1606,7 +1671,21 @@ public class CargaMasivaService {
                 } catch (Exception ignored) {}
             }
 
-            if (!rp_ad.isEmpty()) { p.setRpAdicion(rp_ad); hasNewData = true; }
+            if (!rp_ad.isEmpty()) { 
+                String rpAdNorm = rp_ad.toLowerCase();
+                if (rp_ad.length() <= 30 && !rpAdNorm.contains("desde") && !rpAdNorm.contains("experienc") && !rpAdNorm.contains("objeto")) {
+                    if (rp_ad.matches("^[0-9]+(\\.[0-9]+)?[eE][+]?[0-9]+$")) {
+                        try {
+                            double dbl = Double.parseDouble(rp_ad);
+                            rp_ad = String.valueOf((long) dbl);
+                        } catch (Exception ex) {}
+                    } else if (rp_ad.endsWith(".0")) {
+                        rp_ad = rp_ad.substring(0, rp_ad.length() - 2);
+                    }
+                    p.setRpAdicion(rp_ad); 
+                    hasNewData = true; 
+                }
+            }
             
             if (!rp_fec_raw.isEmpty()) {
                 java.sql.Date d = parseDateStr(rp_fec_raw);

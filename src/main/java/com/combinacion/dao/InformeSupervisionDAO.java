@@ -121,7 +121,7 @@ public class InformeSupervisionDAO {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
         String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
-                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
+                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, sup.cargo as supervisor_cargo, " +
                 "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
@@ -162,7 +162,7 @@ public class InformeSupervisionDAO {
         crearTablaSiNoExiste();
         List<InformeSupervision> lista = new ArrayList<>();
         String sql = "SELECT i.*, c.numero_contrato, ct.nombre as contratista_nombre, " +
-                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, " +
+                "sup.id as sup_id, sup.cedula as supervisor_cedula, sup.nombre as supervisor_nombre, sup.cargo as supervisor_cargo, " +
                 "(SELECT MAX(fecha_cambio) FROM historial_radicacion h WHERE h.id_informe = i.id AND h.estado_nuevo = i.estado_radicacion) as fecha_radicacion_calculada " +
                 "FROM informes_supervision i " +
                 "JOIN contratos c ON i.contrato_id = c.id " +
@@ -293,6 +293,7 @@ public class InformeSupervisionDAO {
                             sup.setId(supId);
                             sup.setCedula(supCed);
                             sup.setNombre(rs.getString("supervisor_nombre"));
+                            try { sup.setCargo(rs.getString("supervisor_cargo")); } catch (Exception ignoreCargo) {}
                             c.setSupervisor(sup);
                             info.setSupervisor(sup);
                         }
