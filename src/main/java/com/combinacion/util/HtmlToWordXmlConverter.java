@@ -458,7 +458,7 @@ public class HtmlToWordXmlConverter {
         }
         if (maxCols == 0) maxCols = 1;
 
-        int containerWidthDxa = (maxImageWidth <= 320.0) ? 5800 : 9900;
+        int containerWidthDxa = (maxImageWidth <= 320.0) ? 4800 : 9900;
         int colWidthDxa = containerWidthDxa / maxCols;
 
         xml.append("<w:tblGrid>");
