@@ -319,8 +319,22 @@ public class HtmlToWordXmlConverter {
         try {
             byte[] imgBytes = null;
             if (src.startsWith("data:image")) {
-                String base64Data = src.substring(src.indexOf(",") + 1);
-                imgBytes = Base64.getDecoder().decode(base64Data);
+                String base64Data = src.substring(src.indexOf(",") + 1).trim();
+                String cleanData = base64Data.replaceAll("\\s+", "");
+                try {
+                    imgBytes = Base64.getDecoder().decode(cleanData);
+                } catch (IllegalArgumentException e1) {
+                    try {
+                        String plusData = base64Data.replace(' ', '+').replaceAll("\\s+", "");
+                        imgBytes = Base64.getDecoder().decode(plusData);
+                    } catch (IllegalArgumentException e2) {
+                        try {
+                            imgBytes = Base64.getMimeDecoder().decode(base64Data);
+                        } catch (Exception e3) {
+                            System.err.println("[HtmlToWordXmlConverter] Error decodificando imagen base64: " + e3.getMessage());
+                        }
+                    }
+                }
             } else if (src.contains("ImageServlet?id=")) {
                 String fileId = src.split("id=")[1].split("&")[0];
                 try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {

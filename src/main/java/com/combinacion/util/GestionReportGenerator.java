@@ -187,11 +187,13 @@ public class GestionReportGenerator {
                 for (com.combinacion.util.ObligacionesParser.ObligacionActividad item : lista) {
                     if (item.actividad != null && !item.actividad.isEmpty()) {
                         String ac = item.actividad;
+                        ac = preprocesarActividadParaGestion(ac);
                         if (verbos != null) {
                             for (com.combinacion.models.VerboConjugacion v : verbos) {
                                 ac = aplicarConjugacion(ac, v.getTerceraPersona(), v.getPrimeraPersona());
                             }
                         }
+                        ac = postprocesarSujetoContratista(ac);
 
                         item.actividad = HtmlToWordXmlConverter.convertHtmlToXml(ac, doc, 460.0);
                     }
@@ -277,6 +279,66 @@ public class GestionReportGenerator {
         }
 
         return outputFile.getAbsolutePath();
+    }
+
+    private static String preprocesarActividadParaGestion(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return text;
+        }
+
+        // 1. Corregir errores tipográficos comunes en supervisión (tildes indebidas en sustantivos o faltantes en verbos)
+        // "brindó apoyó" -> "brindó apoyo"
+        text = text.replaceAll("(?i)\\b(brind[oóé]|prest[oóé])\\s+apoy[oó]\\b", "$1 apoyo");
+
+        // "El/La contratista apoyo en..." -> "El contratista apoyó en..." (verbo sin tilde después del sujeto)
+        text = text.replaceAll("(?i)\\b(el|la)\\s+contratista\\s+apoyo\\s+(en|a|al|con|para)\\b", "$1 contratista apoyó $2");
+
+        // "El/La contratista proyecto y..." -> "El contratista proyectó y..." (verbo sin tilde después del sujeto)
+        text = text.replaceAll("(?i)\\b(el|la)\\s+contratista\\s+proyecto\\s+(y|con|para|a|mediante)\\b", "$1 contratista proyectó $2");
+
+        // 2. Limpieza de formas impersonales reflexivas ("se diligenció" -> "diligenció", para que al conjugar quede "diligencié")
+        text = text.replaceAll("(?i)\\bse\\s+(diligenci[oó]|elabor[oó]|realiz[oó]|efectu[oó]|proyect[oó]|remiti[oó]|envi[oó]|revis[oó]|verific[oó]|actualiz[oó]|radic[oó])\\b", "$1");
+
+        return text;
+    }
+
+    private static String postprocesarSujetoContratista(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return text;
+        }
+
+        // 1. "El contratista el día 14..." -> "El día 14..."
+        java.util.regex.Pattern patFecha = java.util.regex.Pattern.compile("(?i)(>|\\A|[\\.\\;\\:\\n]\\s*)(\\s*)(?:el|la)\\s+contratista\\s+(el\\s+d[ií]a|en\\s+el\\s+mes|durante|conforme|mediante|para\\s+el|en\\s+la\\s+fecha)\\b");
+        java.util.regex.Matcher matFecha = patFecha.matcher(text);
+        StringBuffer sbFecha = new StringBuffer();
+        while (matFecha.find()) {
+            String prefix = matFecha.group(1);
+            String sp = matFecha.group(2);
+            String adverb = matFecha.group(3);
+            String capitalized = Character.toUpperCase(adverb.charAt(0)) + adverb.substring(1);
+            matFecha.appendReplacement(sbFecha, java.util.regex.Matcher.quoteReplacement(prefix + sp + capitalized));
+        }
+        matFecha.appendTail(sbFecha);
+        text = sbFecha.toString();
+
+        // 2. "El contratista [verbo]" -> "[Verbo]" capitalizado (ej: "El contratista brindé" -> "Brindé")
+        java.util.regex.Pattern patVerbo = java.util.regex.Pattern.compile("(?i)(>|\\A|[\\.\\;\\:\\n]\\s*)(\\s*)(?:el|la)\\s+contratista\\s+([a-záéíóúñ]+)");
+        java.util.regex.Matcher matVerbo = patVerbo.matcher(text);
+        StringBuffer sbVerbo = new StringBuffer();
+        while (matVerbo.find()) {
+            String prefix = matVerbo.group(1);
+            String sp = matVerbo.group(2);
+            String verbo = matVerbo.group(3);
+            String capitalized = Character.toUpperCase(verbo.charAt(0)) + verbo.substring(1);
+            matVerbo.appendReplacement(sbVerbo, java.util.regex.Matcher.quoteReplacement(prefix + sp + capitalized));
+        }
+        matVerbo.appendTail(sbVerbo);
+        text = sbVerbo.toString();
+
+        // 3. Cualquier remanente suelto de "(el|la) contratista " antes de un verbo
+        text = text.replaceAll("(?i)\\b(?:el|la)\\s+contratista\\s+", "");
+
+        return text;
     }
 
     private static String aplicarConjugacion(String text, String targetVerb, String replacementVerb) {

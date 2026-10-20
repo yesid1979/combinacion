@@ -197,6 +197,28 @@ public class DatabasePatcher {
                              "WHERE r.nombre = 'Supervisor' AND p.codigo IN ('SUPERVISOR_CUENTAS', 'REVISION_CUENTAS_VER', 'CONTRATOS_VER') " +
                              "ON CONFLICT DO NOTHING");
 
+            // Asegurar verbos de conjugación clave para informes de gestión
+            String[][] verbosClave = {
+                {"contactó y envió", "contacté y envié"},
+                {"proyectó y envió", "proyecté y envié"},
+                {"descargó y organizó", "descargué y organicé"},
+                {"organizó y consolidó", "organicé y consolidé"},
+                {"elaboró y envió", "elaboré y envié"},
+                {"envió", "envié"},
+                {"contactó", "contacté"},
+                {"descargó", "descargué"},
+                {"adelantó", "adelanté"},
+                {"diligenció", "diligencié"},
+                {"remitió", "remití"},
+                {"radicó", "radiqué"},
+                {"cargó", "cargué"},
+                {"tramitó", "tramité"}
+            };
+            for (String[] v : verbosClave) {
+                stmt.executeUpdate("INSERT INTO verbos_conjugacion (tercera_persona, primera_persona, activo) " +
+                                 "SELECT '" + v[0] + "', '" + v[1] + "', true " +
+                                 "WHERE NOT EXISTS (SELECT 1 FROM verbos_conjugacion WHERE LOWER(tercera_persona) = LOWER('" + v[0] + "'))");
+            }
 
             // Asegurar creación de las vistas de informes y contratos
             stmt.executeUpdate("DROP VIEW IF EXISTS vista_resumen_contratos_cuotas CASCADE");
