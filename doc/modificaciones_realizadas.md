@@ -52,6 +52,10 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
 * **Aprobación de Cuentas Históricas (Julio, Agosto, Septiembre):**
   * Se identificaron y pasaron a estado **APROBADA PARA IMPRESION** las cuentas que permanecían en estado `DEVUELTA` correspondientes a periodos anteriores a octubre (IDs 260, 262, 271, 272 y 298).
   * Se registró la respectiva trazabilidad en la tabla `historial_radicacion` con observación: *"Aprobación de cuentas devueltas de meses anteriores (Julio, Agosto, Septiembre)"* manteniendo intacta la auditoría del flujo.
+* **Aprobación de Cuentas Históricas - Contrato 4121.010.26.1.086 (FRANCY JOHANNA FÚQUENE CARVAJAL):**
+  * Se pasaron a estado **APROBADA PARA IMPRESION** las cuotas 1 (Julio - ID 320), 2 (Agosto - ID 321) y 3 (Septiembre - ID 322).
+  * Se preservó intacta en estado `RADICADA` la cuota 4 (Octubre - ID 323) por corresponder al periodo en curso.
+  * Se insertó en `historial_radicacion` la constancia de cada cambio de estado hacia aprobación definitiva.
 
 ---
 
