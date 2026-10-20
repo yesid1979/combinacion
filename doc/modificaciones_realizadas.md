@@ -48,6 +48,11 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
 * **Informes y Consecutivos:**
   * Normalización del cargo del supervisor en informes y control de permisos en la asignación de consecutivos.
 
+### 6. Transición Masiva de Cuentas Devueltas de Meses Anteriores (BD)
+* **Aprobación de Cuentas Históricas (Julio, Agosto, Septiembre):**
+  * Se identificaron y pasaron a estado **APROBADA PARA IMPRESION** las cuentas que permanecían en estado `DEVUELTA` correspondientes a periodos anteriores a octubre (IDs 260, 262, 271, 272 y 298).
+  * Se registró la respectiva trazabilidad en la tabla `historial_radicacion` con observación: *"Aprobación de cuentas devueltas de meses anteriores (Julio, Agosto, Septiembre)"* manteniendo intacta la auditoría del flujo.
+
 ---
 
 ## [2026-10-18]

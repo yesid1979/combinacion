@@ -216,6 +216,56 @@ WHERE estado_radicacion IN ('VISTO BUENO CONTRATACION')
       OR LOWER(periodo_informe) LIKE '%agosto%'
       OR LOWER(periodo_informe) LIKE '%septiembre%'
   );
+-- ========================================================
+-- ACTUALIZACIÓN DE CUENTAS DEVUELTAS A 'APROBADA PARA IMPRESION'
+-- ========================================================
+SELECT 
+    id, 
+    contrato_id, 
+    numero_cuota, 
+    periodo_informe, 
+    estado_radicacion
+FROM informes_supervision
+WHERE estado_radicacion = 'DEVUELTA'
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  )
+ORDER BY id DESC;
 
-VISTO BUENO CONTRATACION
-DEVUELTA
+-- Registrar histórico previo
+INSERT INTO historial_radicacion (id_informe, id_usuario_cambio, estado_anterior, estado_nuevo, observaciones, fecha_cambio)
+SELECT 
+    id, 
+    1, 
+    estado_radicacion, 
+    'APROBADA PARA IMPRESION', 
+    'Aprobación de cuentas devueltas de meses anteriores (Julio, Agosto, Septiembre)',
+    NOW()
+FROM informes_supervision
+WHERE estado_radicacion = 'DEVUELTA'
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
+
+-- Actualizar a APROBADA PARA IMPRESION
+UPDATE informes_supervision
+SET estado_radicacion = 'APROBADA PARA IMPRESION'
+WHERE estado_radicacion = 'DEVUELTA'
+  AND (
+      periodo_informe LIKE '%-07%' 
+      OR periodo_informe LIKE '%-08%' 
+      OR periodo_informe LIKE '%-09%'
+      OR LOWER(periodo_informe) LIKE '%julio%'
+      OR LOWER(periodo_informe) LIKE '%agosto%'
+      OR LOWER(periodo_informe) LIKE '%septiembre%'
+  );
