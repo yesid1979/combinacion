@@ -470,8 +470,8 @@
                                         <table class="table table-bordered align-middle">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th style="width: 40%">Obligaciones del Contratista</th>
-                                                    <th style="width: 60%">Actividades (Use viñetas o guiones)</th>
+                                                    <th style="width: 50%">Obligaciones del Contratista</th>
+                                                    <th style="width: 50%">Actividades (Use viñetas o guiones)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
