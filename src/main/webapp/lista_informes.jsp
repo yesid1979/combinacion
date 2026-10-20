@@ -101,7 +101,12 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-end mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <button type="button" class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalLeyendaColores">
+                            <i class="bi bi-palette me-1"></i> Significado de Colores
+                        </button>
+                    </div>
                     <div class="d-flex align-items-center">
                         <label for="filtroEstado" class="me-2 fw-bold text-secondary mb-0"><i class="bi bi-funnel"></i> Filtrar por Estado:</label>
                         <select id="filtroEstado" class="form-select w-auto shadow-sm border-primary">
@@ -123,7 +128,7 @@
                             <th>Contrato</th>
                             <th>Contratista</th>
                             <th>Periodo</th>
-                            <th>Tipo</th>
+                            <th>Tipo <i class="bi bi-question-circle text-info ms-1" role="button" data-bs-toggle="modal" data-bs-target="#modalLeyendaColores" title="Ver qué significa cada color" onclick="event.stopPropagation();"></i></th>
                             <th>Cuota</th>
                             <th>Turno/Fecha</th>
                             <th>Valor Cuota</th>
@@ -143,6 +148,75 @@
         </div>
     </div>
 
+    <!-- Modal Significado de Colores -->
+    <div class="modal fade" id="modalLeyendaColores" tabindex="-1" aria-labelledby="modalLeyendaColoresLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="modalLeyendaColoresLabel">
+                        <i class="bi bi-palette-fill text-warning"></i>
+                        <span>Significado de Colores según el Estado</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">
+                        El distintivo de <strong>Tipo</strong> (Parcial / Final) y la columna de <strong>Estado</strong> adoptan el color correspondiente a la fase actual en que se encuentra la cuenta:
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 28%;" class="text-center">Color / Distintivo</th>
+                                    <th>Fase y Significado en el Flujo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-secondary w-100 py-2">BORRADOR</span></td>
+                                    <td>Cuenta en elaboración por parte del contratista. Aún no ha sido radicada.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-primary w-100 py-2">RADICADA</span></td>
+                                    <td>Radicada por el contratista. En espera de revisión preliminar o asignación de revisor.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-success bg-opacity-75 text-white w-100 py-2">VISTO BUENO (CONTRATACIÓN)</span></td>
+                                    <td>Contratación emitió visto bueno previo y la cuenta fue asignada a un revisor.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-warning text-dark w-100 py-2">EN REVISIÓN (CONTRATACIÓN)</span></td>
+                                    <td>El revisor emitió su visto bueno y la cuenta regresó a Contratación para validación final.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-info text-dark w-100 py-2">EN REVISIÓN (SUPERVISIÓN)</span></td>
+                                    <td>Contratación dio el visto bueno y la cuenta está en manos del Supervisor del contrato para su revisión y aprobación.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-info text-dark w-100 py-2">EN REVISIÓN FINAL</span></td>
+                                    <td>En etapa de revisión y verificación final de los soportes y documentos.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-success w-100 py-2">APROBADA (LISTA PARA FIRMA)</span></td>
+                                    <td>Aprobada definitivamente por el supervisor. Habilitada para descargar e imprimir el paquete final para firma y cobro.</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><span class="badge bg-danger w-100 py-2">DEVUELTA</span></td>
+                                    <td>Presenta observaciones o inconsistencias y fue devuelta al contratista para su respectiva corrección.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check2 me-1"></i> Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <jsp:include page="inc/footer.jsp" />
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -153,6 +227,19 @@
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function getEstadoBadgeClass(estado) {
+            if (!estado) return 'bg-secondary';
+            let est = estado.trim().toUpperCase();
+            if (est === 'BORRADOR') return 'bg-secondary';
+            if (est === 'RADICADA') return 'bg-primary';
+            if (est === 'VISTO BUENO CONTRATACION') return 'bg-success bg-opacity-75 text-white';
+            if (est === 'EN REVISION' || est === 'EN REVISION CONTRATACION') return 'bg-warning text-dark';
+            if (est === 'EN REVISION FINAL' || est === 'EN REVISION SUPERVISOR') return 'bg-info text-dark';
+            if (est === 'APROBADA PARA IMPRESION' || est === 'APROBADA') return 'bg-success';
+            if (est === 'DEVUELTA') return 'bg-danger';
+            return 'bg-secondary';
+        }
+
         $(document).ready(function() {
             let table = $('#informesTable').DataTable({
                 "processing": true,
@@ -173,9 +260,12 @@
                     { "data": "periodo" },
                     { 
                         "data": "tipo",
-                        "render": function(data) {
-                            let badgeClass = (data === 'FINAL') ? 'bg-info' : 'bg-secondary';
-                            return '<span class="badge ' + badgeClass + '">' + data + '</span>';
+                        "render": function(data, type, row) {
+                            if (type === 'filter' || type === 'sort') {
+                                return data;
+                            }
+                            let badgeClass = getEstadoBadgeClass(row ? row.estado : null);
+                            return '<span class="badge ' + badgeClass + '">' + (data || '') + '</span>';
                         }
                     },
                     { "data": "cuota" },
@@ -187,16 +277,18 @@
                             if (type === 'filter' || type === 'sort') {
                                 return data;
                             }
-                            if (data === 'BORRADOR') return '<span class="badge bg-secondary">BORRADOR</span>';
-                            if (data === 'RADICADA') return '<span class="badge bg-primary">RADICADA</span>';
-                            if (data === 'VISTO BUENO CONTRATACION') return '<span class="badge bg-success bg-opacity-75 text-white">VISTO BUENO (CONTRATACIÓN)</span>';
-                            if (data === 'EN REVISION') return '<span class="badge bg-warning text-dark">EN REVISIÓN</span>';
-                            if (data === 'EN REVISION CONTRATACION') return '<span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span>';
-                            if (data === 'EN REVISION FINAL') return '<span class="badge bg-info text-dark">EN REVISIÓN FINAL</span>';
-                            if (data === 'EN REVISION SUPERVISOR') return '<span class="badge bg-info text-dark">EN REVISIÓN (SUPERVISIÓN)</span>';
-                            if (data === 'APROBADA PARA IMPRESION') return '<span class="badge bg-success">APROBADA (LISTA PARA FIRMA)</span>';
-                            if (data === 'DEVUELTA') return '<span class="badge bg-danger">DEVUELTA</span>';
-                            return '<span class="badge bg-secondary">' + data + '</span>';
+                            let badgeClass = getEstadoBadgeClass(data);
+                            let est = data ? data.trim().toUpperCase() : '';
+                            if (est === 'BORRADOR') return '<span class="badge ' + badgeClass + '">BORRADOR</span>';
+                            if (est === 'RADICADA') return '<span class="badge ' + badgeClass + '">RADICADA</span>';
+                            if (est === 'VISTO BUENO CONTRATACION') return '<span class="badge ' + badgeClass + '">VISTO BUENO (CONTRATACIÓN)</span>';
+                            if (est === 'EN REVISION') return '<span class="badge ' + badgeClass + '">EN REVISIÓN</span>';
+                            if (est === 'EN REVISION CONTRATACION') return '<span class="badge ' + badgeClass + '">EN REVISIÓN (CONTRATACIÓN)</span>';
+                            if (est === 'EN REVISION FINAL') return '<span class="badge ' + badgeClass + '">EN REVISIÓN FINAL</span>';
+                            if (est === 'EN REVISION SUPERVISOR') return '<span class="badge ' + badgeClass + '">EN REVISIÓN (SUPERVISIÓN)</span>';
+                            if (est === 'APROBADA PARA IMPRESION' || est === 'APROBADA') return '<span class="badge ' + badgeClass + '">APROBADA (LISTA PARA FIRMA)</span>';
+                            if (est === 'DEVUELTA') return '<span class="badge ' + badgeClass + '">DEVUELTA</span>';
+                            return '<span class="badge ' + badgeClass + '">' + (data || '') + '</span>';
                         }
                     },
                     { 
