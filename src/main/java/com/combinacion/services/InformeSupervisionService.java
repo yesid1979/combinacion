@@ -2056,14 +2056,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
         if (id > 0) {
             final String realPath = request.getServletContext().getRealPath("/");
-            try {
-                actualizarFormatosEnDrive(id, realPath);
-                request.getSession().setAttribute("successMessage", "Formatos en Google Drive actualizados y sincronizados con éxito.");
-            } catch (Throwable ex) {
-                System.err.println("Error en sincronizarFormatosDrive: " + ex.getMessage());
-                ex.printStackTrace();
-                request.getSession().setAttribute("errorMessage", "Error al sincronizar con Drive: " + ex.getMessage());
-            }
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    actualizarFormatosEnDrive(id, realPath);
+                } catch (Throwable ex) {
+                    System.err.println("Error en sincronizarFormatosDrive (asíncrono): " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            });
+            request.getSession().setAttribute("successMessage", "La sincronización con Google Drive se inició correctamente en segundo plano. En unos momentos los formatos quedarán actualizados en Drive.");
         }
         response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
     }
