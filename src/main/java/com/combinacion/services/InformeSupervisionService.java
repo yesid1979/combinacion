@@ -1011,6 +1011,11 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
+                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                    com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
+                    poblarTextosModificacion(contrato, informeAuto);
+                    request.setAttribute("informeAuto", informeAuto);
+                }
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }

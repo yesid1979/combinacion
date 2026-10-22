@@ -337,7 +337,10 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label">Valor Total del Contrato ($)</label>
-                                    <input type="text" id="valor_total" class="form-control bg-light text-muted fw-bold money-mask" value="${contrato.valorTotalNumeros}" readonly>
+                                    <c:set var="tieneAdicionContrato" value="${contrato.adicionSiNo == 'SI' || contrato.adicionSiNo == 'Si' || contrato.adicionSiNo == 'SÍ'}" />
+                                    <c:set var="numCuotaActual" value="${not empty informe.numeroCuota ? informe.numeroCuota : siguienteCuota}" />
+                                    <c:set var="esCuotaDeAdicion" value="${tieneAdicionContrato && contrato.numCuotasNumero > 0 && not empty numCuotaActual && numCuotaActual >= contrato.numCuotasNumero}" />
+                                    <input type="text" id="valor_total" class="form-control bg-light text-muted fw-bold money-mask" value="${(esCuotaDeAdicion && not empty contrato.valorContratoMasAdicion) ? contrato.valorContratoMasAdicion : contrato.valorTotalNumeros}" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Valor Cuota a Cancelar ($)</label>
@@ -2179,13 +2182,13 @@
                     fechaAdicion = y + "-" + m + "-" + d;
                 }
 
-                $('select[name="numero_cuota"]').change(function() {
+                $('[name="numero_cuota"]').on('change input', function() {
                     var cuota = parseInt($(this).val());
                     if (!cuota) return;
 
-                    var currentAd = $('textarea[name="adiciones"]').val().trim();
-                    var currentPro = $('textarea[name="prorrogas"]').val().trim();
-                    var currentMod = $('textarea[name="modificaciones"]').val().trim();
+                    var currentAd = $('textarea[name="adiciones"]').val() ? $('textarea[name="adiciones"]').val().trim() : '';
+                    var currentPro = $('textarea[name="prorrogas"]').val() ? $('textarea[name="prorrogas"]').val().trim() : '';
+                    var currentMod = $('textarea[name="modificaciones"]').val() ? $('textarea[name="modificaciones"]').val().trim() : '';
 
                     if (tieneAdicion && cuotasNormales > 0 && cuota >= cuotasNormales) {
                         if (adicionesAuto && (currentAd === 'N/A' || currentAd === '')) $('textarea[name="adiciones"]').val(adicionesAuto);
@@ -2208,7 +2211,7 @@
                 });
                 
                 // Ejecutar al cargar la página para inicializar los valores si ya hay una cuota preseleccionada
-                if ($('select[name="numero_cuota"]').val() || $('input[name="numero_cuota"]').val()) {
+                if ($('[name="numero_cuota"]').val()) {
                     $('[name="numero_cuota"]').trigger('change');
                 }
                 
