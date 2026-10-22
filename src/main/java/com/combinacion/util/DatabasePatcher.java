@@ -197,22 +197,25 @@ public class DatabasePatcher {
                              "WHERE r.nombre = 'Supervisor' AND p.codigo IN ('SUPERVISOR_CUENTAS', 'REVISION_CUENTAS_VER', 'CONTRATOS_VER') " +
                              "ON CONFLICT DO NOTHING");
 
-            // Asegurar verbos de conjugación clave para informes de gestión
+            // Limpiar registros con caracteres corruptos por codificación previa
+            stmt.executeUpdate("DELETE FROM verbos_conjugacion WHERE tercera_persona LIKE '%Ã%' OR primera_persona LIKE '%Ã%'");
+
+            // Asegurar verbos de conjugación clave para informes de gestión (usando escapes unicode seguros)
             String[][] verbosClave = {
-                {"contactó y envió", "contacté y envié"},
-                {"proyectó y envió", "proyecté y envié"},
-                {"descargó y organizó", "descargué y organicé"},
-                {"organizó y consolidó", "organicé y consolidé"},
-                {"elaboró y envió", "elaboré y envié"},
-                {"envió", "envié"},
-                {"contactó", "contacté"},
-                {"descargó", "descargué"},
-                {"adelantó", "adelanté"},
-                {"diligenció", "diligencié"},
-                {"remitió", "remití"},
-                {"radicó", "radiqué"},
-                {"cargó", "cargué"},
-                {"tramitó", "tramité"}
+                {"contact\u00f3 y envi\u00f3", "contact\u00e9 y envi\u00e9"},
+                {"proyect\u00f3 y envi\u00f3", "proyect\u00e9 y envi\u00e9"},
+                {"descarg\u00f3 y organiz\u00f3", "descargu\u00e9 y organic\u00e9"},
+                {"organiz\u00f3 y consolid\u00f3", "organic\u00e9 y consolid\u00e9"},
+                {"elabor\u00f3 y envi\u00f3", "elabor\u00e9 y envi\u00e9"},
+                {"envi\u00f3", "envi\u00e9"},
+                {"contact\u00f3", "contact\u00e9"},
+                {"descarg\u00f3", "descargu\u00e9"},
+                {"adelant\u00f3", "adelant\u00e9"},
+                {"diligenci\u00f3", "diligenci\u00e9"},
+                {"remiti\u00f3", "remit\u00ed"},
+                {"radic\u00f3", "radiqu\u00e9"},
+                {"carg\u00f3", "cargu\u00e9"},
+                {"tramit\u00f3", "tramit\u00e9"}
             };
             for (String[] v : verbosClave) {
                 stmt.executeUpdate("INSERT INTO verbos_conjugacion (tercera_persona, primera_persona, activo) " +
