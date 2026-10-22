@@ -55,6 +55,36 @@ public class InformeSupervisionService {
 
     private static final Object INSERT_LOCK = new Object();
 
+    private static final java.util.concurrent.ExecutorService DRIVE_SYNC_EXECUTOR = 
+        java.util.concurrent.Executors.newFixedThreadPool(3, new java.util.concurrent.ThreadFactory() {
+            private int counter = 1;
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "DriveSync-Worker-" + (counter++));
+                t.setDaemon(true);
+                return t;
+            }
+        });
+
+    private static final java.util.Set<Integer> INFORMES_EN_PROCESO_DRIVE = 
+        java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    public void encolarActualizacionDrive(int informeId, String realPath) {
+        if (!INFORMES_EN_PROCESO_DRIVE.add(informeId)) {
+            System.out.println("El informe ID " + informeId + " ya se encuentra en cola o procesándose en Drive. Se omite duplicado.");
+            return;
+        }
+        DRIVE_SYNC_EXECUTOR.submit(() -> {
+            try {
+                actualizarFormatosEnDrive(informeId, realPath);
+            } catch (Throwable ex) {
+                System.err.println("Error procesando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
+            } finally {
+                INFORMES_EN_PROCESO_DRIVE.remove(informeId);
+            }
+        });
+    }
+
     public String insertar(InformeFormData form) {
         return insertar(form, null);
     }
@@ -2056,14 +2086,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
         if (id > 0) {
             final String realPath = request.getServletContext().getRealPath("/");
-            java.util.concurrent.CompletableFuture.runAsync(() -> {
-                try {
-                    actualizarFormatosEnDrive(id, realPath);
-                } catch (Throwable ex) {
-                    System.err.println("Error en sincronizarFormatosDrive (asíncrono): " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            });
+            encolarActualizacionDrive(id, realPath);
             request.getSession().setAttribute("successMessage", "La sincronización con Google Drive se inició correctamente en segundo plano. En unos momentos los formatos quedarán actualizados en Drive.");
         }
         response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
@@ -2235,13 +2258,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 procesarArchivosDrive(id, request);
             } else {
                 final String realPath = request.getServletContext().getRealPath("/");
-                java.util.concurrent.CompletableFuture.runAsync(() -> {
-                    try {
-                        actualizarFormatosEnDrive(id, realPath);
-                    } catch (Exception ex) {
-                        System.err.println("Error actualizando formatos en Drive (asíncrono): " + ex.getMessage());
-                    }
-                });
+                encolarActualizacionDrive(id, realPath);
             }
             
             if ("RADICADA".equals(estadoNuevoEfectivo)) {
