@@ -2033,7 +2033,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
 
             System.out.println("Formatos Word, Excel y PDF actualizados con éxito en Drive para informe ID " + informeId);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             System.err.println("Error actualizando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
             ex.printStackTrace();
         }
@@ -2059,7 +2059,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             try {
                 actualizarFormatosEnDrive(id, realPath);
                 request.getSession().setAttribute("successMessage", "Formatos en Google Drive actualizados y sincronizados con éxito.");
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
+                System.err.println("Error en sincronizarFormatosDrive: " + ex.getMessage());
+                ex.printStackTrace();
                 request.getSession().setAttribute("errorMessage", "Error al sincronizar con Drive: " + ex.getMessage());
             }
         }

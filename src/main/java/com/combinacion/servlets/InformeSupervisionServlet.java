@@ -25,42 +25,51 @@ public class InformeSupervisionServlet extends HttpServlet {
         String action = request.getParameter("action");
         if (action == null) action = "list";
 
-        switch (action) {
-            case "new":
-                informeService.mostrarFormularioNuevo(request, response);
-                break;
-            case "view":
-                informeService.mostrarDetalle(request, response);
-                break;
-            case "download":
-                informeService.descargarInforme(request, response);
-                break;
-            case "descargar_doc":
-                informeService.descargarArchivoDirecto(request, response);
-                break;
-            case "edit":
-                informeService.mostrarFormularioEdicion(request, response);
-                break;
-            case "data":
-                informeService.devolverDatosDataTables(request, response);
-                break;
-            case "delete":
-                informeService.eliminar(request, response);
-                break;
-            case "syncDrive":
-                informeService.sincronizarFormatosDrive(request, response);
-                break;
-            case "fixall":
-                com.combinacion.util.FixAllPostgres.main(null);
-                response.getWriter().write("Base de datos recalculada con exito.");
-                break;
-            case "fixsoportes":
-                com.combinacion.util.FixDuplicateSoportes.main(null);
-                response.getWriter().write("Duplicados de documentos saneados con exito en toda la base de datos.");
-                break;
-            default:
-                informeService.listar(request, response);
-                break;
+        try {
+            switch (action) {
+                case "new":
+                    informeService.mostrarFormularioNuevo(request, response);
+                    break;
+                case "view":
+                    informeService.mostrarDetalle(request, response);
+                    break;
+                case "download":
+                    informeService.descargarInforme(request, response);
+                    break;
+                case "descargar_doc":
+                    informeService.descargarArchivoDirecto(request, response);
+                    break;
+                case "edit":
+                    informeService.mostrarFormularioEdicion(request, response);
+                    break;
+                case "data":
+                    informeService.devolverDatosDataTables(request, response);
+                    break;
+                case "delete":
+                    informeService.eliminar(request, response);
+                    break;
+                case "syncDrive":
+                    informeService.sincronizarFormatosDrive(request, response);
+                    break;
+                case "fixall":
+                    com.combinacion.util.FixAllPostgres.main(null);
+                    response.getWriter().write("Base de datos recalculada con exito.");
+                    break;
+                case "fixsoportes":
+                    com.combinacion.util.FixDuplicateSoportes.main(null);
+                    response.getWriter().write("Duplicados de documentos saneados con exito en toda la base de datos.");
+                    break;
+                default:
+                    informeService.listar(request, response);
+                    break;
+            }
+        } catch (ServletException | IOException ex) {
+            throw ex;
+        } catch (Throwable th) {
+            System.err.println("Error no controlado en doGet de InformeSupervisionServlet: " + th.getMessage());
+            th.printStackTrace();
+            request.getSession().setAttribute("errorMessage", "Ocurrió un error al procesar la solicitud: " + th.getMessage());
+            response.sendRedirect("informes");
         }
     }
 
