@@ -17,9 +17,12 @@ public class ConsecutivoDAO {
                           "consecutivo VARCHAR(50) NOT NULL, " +
                           "fecha_carga TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
                           "cargado_por INTEGER, " +
+                          "anio INTEGER, " +
                           "UNIQUE (cedula, contrato, numero_cuota)" +
                           ")";
                           
+        String sqlAddCol = "ALTER TABLE consecutivos_cobro ADD COLUMN IF NOT EXISTS anio INTEGER";
+
         String sqlPermiso = "INSERT INTO permisos (codigo, nombre, descripcion, modulo) " +
                             "SELECT 'CONSECUTIVOS_VER', 'Ver y gestionar consecutivos', 'Permite cargar masivamente y gestionar los consecutivos de cobro', 'CONSECUTIVOS' " +
                             "WHERE NOT EXISTS (SELECT 1 FROM permisos WHERE codigo = 'CONSECUTIVOS_VER')";
@@ -29,6 +32,7 @@ public class ConsecutivoDAO {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sqlTable);
+            try { stmt.executeUpdate(sqlAddCol); } catch (SQLException ignore) {}
             stmt.executeUpdate(sqlPermiso);
             stmt.executeUpdate(sqlUpdatePermiso);
         } catch (SQLException e) {
@@ -100,19 +104,54 @@ public class ConsecutivoDAO {
 
         // Limpiar sufijos como ' - 2026', ' de 2026', etc.
         String cleanContrato = contrato.replaceAll("(?i)\\s*(de|-)\\s*202\\d.*", "").trim();
-        
-        String sql = "SELECT consecutivo FROM consecutivos_cobro " +
-                     "WHERE (? ILIKE '%' || contrato || '%' OR contrato ILIKE '%' || ? || '%') " +
-                     "AND (numero_cuota = ? OR numero_cuota = ?) ";
-        if (anio != null) {
-            sql += "AND (anio IS NULL OR anio = ?) ";
+        String cleanCedula = (cedula != null) ? cedula.replaceAll("[^0-9]", "").trim() : "";
+
+        // 1. Intento con Cédula + Contrato + Cuota
+        if (!cleanCedula.isEmpty()) {
+            String sqlCedula = "SELECT consecutivo FROM consecutivos_cobro " +
+                               "WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ? " +
+                               "AND (contrato ILIKE '%' || ? || '%' OR ? ILIKE '%' || contrato || '%') " +
+                               "AND (numero_cuota = ? OR numero_cuota = ?) ";
+            if (anio != null) {
+                sqlCedula += "AND (anio IS NULL OR anio = ?) ";
+            }
+            sqlCedula += "ORDER BY id DESC LIMIT 1";
+
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sqlCedula)) {
+                
+                ps.setString(1, cleanCedula);
+                ps.setString(2, cleanContrato);
+                ps.setString(3, cleanContrato);
+                ps.setString(4, cleanCuota);
+                ps.setString(5, numeroCuota.trim());
+                if (anio != null) {
+                    ps.setInt(6, anio);
+                }
+                
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("consecutivo");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        sql += "ORDER BY id DESC LIMIT 1";
+
+        // 2. Fallback: búsqueda por Contrato + Cuota (si la cédula no coincidió o vino vacía)
+        String sqlFallback = "SELECT consecutivo FROM consecutivos_cobro " +
+                             "WHERE (contrato ILIKE '%' || ? || '%' OR ? ILIKE '%' || contrato || '%') " +
+                             "AND (numero_cuota = ? OR numero_cuota = ?) ";
+        if (anio != null) {
+            sqlFallback += "AND (anio IS NULL OR anio = ?) ";
+        }
+        sqlFallback += "ORDER BY id DESC LIMIT 1";
         
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sqlFallback)) {
             
-            ps.setString(1, "%" + cleanContrato + "%");
+            ps.setString(1, cleanContrato);
             ps.setString(2, cleanContrato);
             ps.setString(3, cleanCuota);
             ps.setString(4, numeroCuota.trim());
@@ -178,7 +217,7 @@ public class ConsecutivoDAO {
         }
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ?) ";
+            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? OR c.cedula ILIKE ?) ";
         }
         
         sql += "ORDER BY cc.fecha_carga DESC LIMIT ? OFFSET ?";
@@ -193,6 +232,7 @@ public class ConsecutivoDAO {
             
             if (search != null && !search.trim().isEmpty()) {
                 String likeSearch = "%" + search + "%";
+                ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
@@ -239,7 +279,7 @@ public class ConsecutivoDAO {
         }
         
         if (search != null && !search.trim().isEmpty()) {
-            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ?) ";
+            sql += "AND (cc.cedula ILIKE ? OR cc.contrato ILIKE ? OR cc.numero_cuota ILIKE ? OR cc.consecutivo ILIKE ? OR c.nombre ILIKE ? OR c.cedula ILIKE ?) ";
         }
         
         try (Connection conn = DBConnection.getConnection();
@@ -252,6 +292,7 @@ public class ConsecutivoDAO {
             
             if (search != null && !search.trim().isEmpty()) {
                 String likeSearch = "%" + search + "%";
+                ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);
                 ps.setString(paramIndex++, likeSearch);

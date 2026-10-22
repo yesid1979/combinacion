@@ -2497,15 +2497,17 @@
             }
 
             $(document).ready(function() {
-                // Autocompletar Consecutivo de Cobro desde el módulo masivo
                 function fetchConsecutivo() {
-                    var cedula = '${contrato.contratista != null ? contrato.contratista.cedula : sessionScope.usuario.cedula}';
+                    var rawCedula = '<c:out value="${contrato.contratista != null ? contrato.contratista.cedula : sessionScope.usuario.cedula}" />';
+                    var cedula = rawCedula ? rawCedula.replace(/[^0-9]/g, '') : '';
                     var contrato = '${contrato.numeroContrato}';
                     var cuota = $('[name="numero_cuota"]').val();
-                    var fechaTerminacion = '${contrato.fechaTerminacion}';
-                    var anio = '';
-                    if (fechaTerminacion && fechaTerminacion.length >= 4) {
-                        anio = fechaTerminacion.substring(0, 4); // YYYY-MM-DD
+                    var anio = '${not empty contrato.anio ? contrato.anio : ""}';
+                    if (!anio) {
+                        var fechaTerminacion = '${contrato.fechaTerminacion}';
+                        if (fechaTerminacion && fechaTerminacion.length >= 4) {
+                            anio = fechaTerminacion.substring(0, 4); // YYYY-MM-DD
+                        }
                     }
                     
                     if (contrato && cuota) {

@@ -216,6 +216,15 @@ public class ConsecutivoServlet extends HttpServlet {
                 String contrato = getCellValue(row.getCell(2));
                 String cuota = getCellValue(row.getCell(3));
                 String consecutivo = getCellValue(row.getCell(4));
+
+                if (cuota != null) {
+                    cuota = cuota.trim();
+                    if (cuota.endsWith(".0")) cuota = cuota.substring(0, cuota.length() - 2);
+                }
+                if (consecutivo != null) {
+                    consecutivo = consecutivo.trim();
+                    if (consecutivo.endsWith(".0")) consecutivo = consecutivo.substring(0, consecutivo.length() - 2);
+                }
                 
                 if (cedula != null && !cedula.trim().isEmpty() &&
                     contrato != null && !contrato.trim().isEmpty() &&
@@ -310,11 +319,12 @@ public class ConsecutivoServlet extends HttpServlet {
 
             String sql = "SELECT ct.cedula, ct.nombre, c.numero_contrato " +
                          "FROM contratos c " +
-                         "JOIN contratistas ct ON c.contratista_id = ct.id " +
-                         "WHERE c.fecha_terminacion >= CURRENT_DATE ";
+                         "JOIN contratistas ct ON c.contratista_id = ct.id ";
             
             if (anio != null) {
-                sql += "AND (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM c.fecha_terminacion) = ?)) ";
+                sql += "WHERE (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM c.fecha_terminacion) = ?)) ";
+            } else {
+                sql += "WHERE c.fecha_terminacion >= CURRENT_DATE ";
             }
             
             sql += "ORDER BY c.numero_contrato ASC";
@@ -331,7 +341,9 @@ public class ConsecutivoServlet extends HttpServlet {
                  try (java.sql.ResultSet rs = ps.executeQuery()) {
                      while (rs.next()) {
                      org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
-                     row.createCell(0).setCellValue(rs.getString("cedula"));
+                     String rawCed = rs.getString("cedula");
+                     String cleanCed = (rawCed != null) ? rawCed.replaceAll("[^0-9]", "") : "";
+                     row.createCell(0).setCellValue(cleanCed);
                      row.createCell(1).setCellValue(rs.getString("nombre"));
                      row.createCell(2).setCellValue(rs.getString("numero_contrato"));
                      row.createCell(3).setCellValue(""); // Cuota
