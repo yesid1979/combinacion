@@ -726,6 +726,11 @@
                         <a href="informes${not empty modo ? '?modo='.concat(modo) : ''}" class="btn btn-secondary px-4 shadow-sm">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
+                        <c:if test="${not empty informe.id and esAdminCuentas}">
+                            <a href="informes?action=syncDrive&id=${informe.id}${not empty modo ? '&modo='.concat(modo) : ''}" class="btn btn-outline-success px-4 shadow-sm" title="Regenerar y subir los formatos actualizados (Word, Excel y PDF) a Google Drive">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>Sincronizar Drive
+                            </a>
+                        </c:if>
                         
                         <%-- Lógica del botón Revisar (Idéntica a la de la lista) --%>
                         <c:set var="esAdmin" value="${sessionScope.usuario != null and (sessionScope.usuario.esAdministrador() or sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS_EDITAR') or sessionScope.usuario.tienePermiso('ADMINISTRAR_CUENTAS'))}" />

@@ -317,6 +317,11 @@
                             } else {
                                 html += '<button type="button" class="btn btn-sm btn-outline-secondary" title="La descarga se habilitará cuando la cuenta sea aprobada" disabled><i class="bi bi-lock"></i></button>';
                             }
+
+                            // Botón Sincronizar Formatos con Drive (Solo Administrador y Contratación)
+                            if (esAdminCuentas) {
+                                html += '<a href="informes?action=syncDrive&id=' + id + '&modo=' + (modo || '') + '" class="btn btn-sm btn-outline-secondary" title="Sincronizar formatos en Drive"><i class="bi bi-cloud-arrow-up"></i></a>';
+                            }
                             
                             // Botón Revisar
                             let mostrarBtnRevisar = false;

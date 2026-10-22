@@ -47,6 +47,9 @@ public class InformeSupervisionServlet extends HttpServlet {
             case "delete":
                 informeService.eliminar(request, response);
                 break;
+            case "syncDrive":
+                informeService.sincronizarFormatosDrive(request, response);
+                break;
             case "fixall":
                 com.combinacion.util.FixAllPostgres.main(null);
                 response.getWriter().write("Base de datos recalculada con exito.");
@@ -71,6 +74,8 @@ public class InformeSupervisionServlet extends HttpServlet {
                 informeService.insertar(request, response);
             } else if ("update".equals(action)) {
                 informeService.actualizar(request, response);
+            } else if ("syncDrive".equals(action)) {
+                informeService.sincronizarFormatosDrive(request, response);
             } else if ("data".equals(action)) {
                 informeService.devolverDatosDataTables(request, response);
             } else {

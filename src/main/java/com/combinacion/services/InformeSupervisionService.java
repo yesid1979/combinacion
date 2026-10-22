@@ -1489,6 +1489,88 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     public void exportarPdf(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {  }
 
+    public String resolverCuotaFolderId(InformeSupervision informe, Contrato contrato) throws Exception {
+        if (informe == null || contrato == null) return null;
+        String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+        String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
+        String shortContrato = "4121";
+        String ultimoBloque = "";
+        if (!numContrato.isEmpty()) {
+            String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
+            String[] partsNum = cleanNum.split("\\.");
+            if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+            if (partsNum.length > 1) {
+                String last = partsNum[partsNum.length - 1].trim();
+                if (last.contains("-")) last = last.split("-")[0].trim();
+                ultimoBloque = last;
+            }
+        }
+
+        String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
+                                   + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
+                                   + nombreCompleto.toUpperCase();
+        
+        String cNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota().trim() : "1";
+        String cNoPad = cNum;
+        String cPad = cNum;
+        try {
+            int cInt = Integer.parseInt(cNum);
+            cNoPad = String.valueOf(cInt);
+            cPad = String.format("%02d", cInt);
+        } catch (Exception ignore) {}
+
+        String folderNameCuota = "CUOTA " + cNoPad;
+
+        String confProduccion = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
+        String confPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+
+        String produccionFolderId = (confProduccion != null && !confProduccion.trim().isEmpty())
+                ? com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null)
+                : null;
+        String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas, null);
+
+        boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota());
+        String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
+
+        String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
+        String principalFolderId = null;
+        if (!prefixContrato.isEmpty()) {
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+        } else {
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, nombreCompleto);
+        }
+        if (principalFolderId == null) {
+            principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, rootFolderId);
+        }
+
+        String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
+        String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+        String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
+            principalFolderId,
+            patternConMarca1,
+            patternConMarca2,
+            "CUOTA " + cNoPad,
+            "CUOTA " + cPad,
+            "Cuota " + cNoPad,
+            "Cuota " + cPad
+        );
+        if (cuotaFolderId == null) {
+            cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
+        }
+
+        try {
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
+            com.combinacion.services.GoogleDriveService.setPublicViewPermission(cuotaFolderId);
+            if (informe.getUrlDriveEvidencias() == null || informe.getUrlDriveEvidencias().trim().isEmpty()) {
+                String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
+                informe.setUrlDriveEvidencias(driveUrl);
+                new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
+            }
+        } catch (Exception ignore) {}
+
+        return cuotaFolderId;
+    }
+
     public void procesarArchivosDrive(int informeId, HttpServletRequest request) {
         try {
             System.out.println("Iniciando subida automatica a Drive para informe ID: " + informeId);
@@ -1518,96 +1600,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
-                                        ? informe.getConsecutivoCobro().trim() 
-                                        : (tieneIva ? "FACTURA" : "XXXX");
-
-            String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
-            String shortContrato = "4121";
-            String ultimoBloque = "";
-            if (!numContrato.isEmpty()) {
-                String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
-                String[] partsNum = cleanNum.split("\\.");
-                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
-                if (partsNum.length > 1) {
-                    String last = partsNum[partsNum.length - 1].trim();
-                    if (last.contains("-")) last = last.split("-")[0].trim();
-                    ultimoBloque = last;
-                }
-            }
-
-            // Nombre estándar de producción: ej. "4121 - 086 FRANCY JOHANNA FUQUENE CARVAJAL"
-            String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
-                                       + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
-                                       + nombreCompleto.toUpperCase();
-            
-            String cNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota().trim() : "1";
-            String cNoPad = cNum;
-            String cPad = cNum;
-            try {
-                int cInt = Integer.parseInt(cNum);
-                cNoPad = String.valueOf(cInt);
-                cPad = String.format("%02d", cInt);
-            } catch (Exception ignore) {}
-
-            String folderNameCuota = "CUOTA " + cNoPad;
-
-            // 1. Obtener carpetas configuradas: Producción (oficial) y Pruebas (históricos/sandbox)
-            String confProduccion = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
-            String confPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
-
-            String produccionFolderId = (confProduccion != null && !confProduccion.trim().isEmpty())
-                    ? com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null)
-                    : null;
-            String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas, null);
-
-            boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota());
-
-            String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
-
-            // 2. Resolver o crear la carpeta principal del contratista con búsqueda inteligente
-            String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
-            String principalFolderId = null;
-            if (!prefixContrato.isEmpty()) {
-                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
-            } else {
-                principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, nombreCompleto);
-            }
-            if (principalFolderId == null) {
-                principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, rootFolderId);
-            }
-
-            // 3. Resolver o crear la carpeta de la cuota con búsqueda inteligente (Opción A)
-            // Si Contratación ya la marcó con el número de contrato (ej. "CUOTA 1 086" o "CUOTA 01 086"), se reutiliza
-            String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
-            String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
-            String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
-                principalFolderId,
-                patternConMarca1,
-                patternConMarca2,
-                "CUOTA " + cNoPad,
-                "CUOTA " + cPad,
-                "Cuota " + cNoPad,
-                "Cuota " + cPad
-            );
+            String cuotaFolderId = resolverCuotaFolderId(informe, contrato);
             if (cuotaFolderId == null) {
-                cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
+                System.err.println("No se pudo resolver cuotaFolderId para informe " + informeId);
+                return;
             }
-
-            // 4. Obtener/crear evidencias dentro de la cuota
             String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
-            
-            // 4.1. Dar permisos públicos de lectura a TODA la carpeta de la cuota
-            try {
-                com.combinacion.services.GoogleDriveService.setPublicViewPermission(cuotaFolderId);
-            } catch (Exception ignore) {
-                System.err.println("Aviso: No se pudo asignar permisos publicos a la carpeta CUOTA: " + ignore.getMessage());
-            }
-            
-            // 4.5. Guardar la URL en la base de datos (apuntando a la carpeta EVIDENCIAS)
-            String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
-            informe.setUrlDriveEvidencias(driveUrl);
-            new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             
 
             // 2. Cargar soportes actuales
@@ -1866,34 +1864,88 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
             System.out.println("Soportes y evidencias actualizados en base de datos con exito para informe ID " + informe.getId());
 
-            // 5. GENERAR Y SUBIR DOCUMENTOS EXCEL, WORD Y PDF (En bloque aislado para no afectar archivos de usuario)
-            try {
-                String docxName;
-                String xlsxName;
-                String gestionName;
-                
-                if (esCuota1) {
-                    docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
-                    xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
-                    gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
-                } else if (esCuotaAdicion) {
-                    docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                    xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                    gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                } else {
-                    docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                    xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                    gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                }
+            // 5. GENERAR Y SUBIR DOCUMENTOS EXCEL, WORD Y PDF A DRIVE
+            actualizarFormatosEnDrive(informeId, request.getServletContext().getRealPath("/"));
+            System.out.println("Subida a Drive completada con exito.");
+        } catch (Exception e) {
+            System.err.println("Error subiendo archivos a Drive:");
+            e.printStackTrace();
+        }
+    }
 
-                String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-                File docxFile = new File(docxPath);
-                
-                File xlsxFile = null;
-                File xlsxPdfFile = null;
-                String xlsxPdfName = null;
-                if (!tieneIva) {
-                    String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+    public void actualizarFormatosEnDrive(int informeId, String realPath) {
+        try {
+            InformeSupervision informe = this.obtenerPorId(informeId);
+            if (informe == null) return;
+            Contrato contrato = this.obtenerContrato(informe.getContratoId());
+            if (contrato == null) return;
+
+            String cuotaFolderId = resolverCuotaFolderId(informe, contrato);
+            if (cuotaFolderId == null) {
+                System.err.println("No se pudo resolver la carpeta de Drive para el informe ID " + informeId);
+                return;
+            }
+
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            String nombreCorto = nombreCompleto;
+            String[] parts = nombreCompleto.split("\\s+");
+            if (parts.length >= 4) {
+                nombreCorto = parts[0] + " " + parts[2];
+            } else if (parts.length >= 2) {
+                nombreCorto = parts[0] + " " + parts[1];
+            }
+
+            boolean esCuota1 = "1".equals(informe.getNumeroCuota());
+            boolean tieneIva = contrato != null && contrato.isFacturadorElectronicoOConIva();
+
+            boolean esCuotaAdicion = false;
+            if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                int cuotasNormales = contrato.getNumCuotasNumero();
+                int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                if (cuotasNormales > 0 && cuotaActual >= cuotasNormales) {
+                    esCuotaAdicion = true;
+                }
+            }
+
+            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
+                                        ? informe.getConsecutivoCobro().trim() 
+                                        : (tieneIva ? "FACTURA" : "XXXX");
+
+            String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
+            String shortContrato = "4121";
+            if (!numContrato.isEmpty()) {
+                String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
+                String[] partsNum = cleanNum.split("\\.");
+                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+            }
+
+            String docxName;
+            String xlsxName;
+            String gestionName;
+            
+            if (esCuota1) {
+                docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
+                xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
+                gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
+            } else if (esCuotaAdicion) {
+                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+            } else {
+                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+            }
+
+            String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, realPath);
+            File docxFile = (docxPath != null) ? new File(docxPath) : null;
+            
+            File xlsxFile = null;
+            File xlsxPdfFile = null;
+            String xlsxPdfName = null;
+            if (!tieneIva) {
+                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, realPath);
+                if (xlsxPath != null) {
                     xlsxFile = new File(xlsxPath);
                     if (xlsxFile.exists()) {
                         String pdfPath = xlsxPath.replaceAll("(?i)\\.xlsx$", ".pdf");
@@ -1902,53 +1954,56 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         xlsxPdfName = xlsxName.replaceAll("(?i)\\.xlsx$", ".pdf");
                     }
                 }
-                
-                String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
-                File gestionFile = new File(gestionPath);
-                File gestionPdfFile = null;
-                String gestionPdfName = null;
-                if (gestionFile.exists()) {
-                    String gestionPdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
-                    gestionPdfFile = new File(gestionPdfPath);
-                    com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
-                    gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
-                }
-                
-                if (docxFile != null && docxFile.exists()) {
-                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
-                }
-                if (xlsxFile != null && xlsxFile.exists()) {
-                    String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                    com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
-                }
-                if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
-                    String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                    com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
-                }
-                if (gestionFile != null && gestionFile.exists()) {
-                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
-                }
-                if (gestionPdfFile != null && gestionPdfFile.exists()) {
-                    com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
-                }
-                
-                // Lógica para merge con SS
-                if (tempSegSoc == null && soportes.has("file_seguridad_social")) {
-                    org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
-                    String fileId = ssObj.optString("id");
-                    if (fileId != null && !fileId.isEmpty()) {
-                        try {
-                            java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId);
-                            tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
-                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
-                                byte[] buf = new byte[8192];
-                                int bytesRead;
-                                while ((bytesRead = is.read(buf)) != -1) {
-                                    fos.write(buf, 0, bytesRead);
+            }
+            
+            String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, realPath);
+            File gestionFile = (gestionPath != null) ? new File(gestionPath) : null;
+            File gestionPdfFile = null;
+            String gestionPdfName = null;
+            if (gestionFile != null && gestionFile.exists()) {
+                String gestionPdfPath = gestionPath.replaceAll("(?i)\\.docx$", ".pdf");
+                gestionPdfFile = new File(gestionPdfPath);
+                com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
+                gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
+            }
+            
+            if (docxFile != null && docxFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+            }
+            if (xlsxFile != null && xlsxFile.exists()) {
+                String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
+            }
+            if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
+                String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
+            }
+            if (gestionFile != null && gestionFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+            }
+            if (gestionPdfFile != null && gestionPdfFile.exists()) {
+                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
+            }
+            
+            // Lógica para merge con SS si existe
+            File tempSegSoc = null;
+            try {
+                if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
+                    org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                    if (soportes.has("file_seguridad_social")) {
+                        org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
+                        String fileId = ssObj.optString("id");
+                        if (fileId != null && !fileId.isEmpty()) {
+                            try (java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                                tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
+                                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                    byte[] buf = new byte[8192];
+                                    int bytesRead;
+                                    while ((bytesRead = is.read(buf)) != -1) {
+                                        fos.write(buf, 0, bytesRead);
+                                    }
                                 }
                             }
-                        } catch (Exception e) {
-                            tempSegSoc = null;
                         }
                     }
                 }
@@ -1964,20 +2019,51 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     }
                     mergedFile.delete();
                 }
-            } catch (Exception docEx) {
-                System.err.println("Aviso generando reportes DOCX/XLSX/PDF en Drive: " + docEx.getMessage());
-                docEx.printStackTrace();
+            } catch (Exception ssEx) {
+                System.err.println("Aviso al unir seguridad social en Drive: " + ssEx.getMessage());
             } finally {
-                if (tempSegSoc != null) {
+                if (tempSegSoc != null && tempSegSoc.exists()) {
                     tempSegSoc.delete();
                 }
+                if (docxFile != null && docxFile.exists()) docxFile.delete();
+                if (xlsxFile != null && xlsxFile.exists()) xlsxFile.delete();
+                if (xlsxPdfFile != null && xlsxPdfFile.exists()) xlsxPdfFile.delete();
+                if (gestionFile != null && gestionFile.exists()) gestionFile.delete();
+                if (gestionPdfFile != null && gestionPdfFile.exists()) gestionPdfFile.delete();
             }
-            
-            System.out.println("Subida a Drive completada con exito.");
-        } catch (Exception e) {
-            System.err.println("Error subiendo archivos a Drive:");
-            e.printStackTrace();
+
+            System.out.println("Formatos Word, Excel y PDF actualizados con éxito en Drive para informe ID " + informeId);
+        } catch (Exception ex) {
+            System.err.println("Error actualizando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
+            ex.printStackTrace();
         }
+    }
+
+    public void sincronizarFormatosDrive(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        com.combinacion.models.Usuario usuarioSesion = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+        boolean esAdminCuentas = usuarioSesion != null && (usuarioSesion.esAdministrador() 
+                || usuarioSesion.tienePermiso("ADMINISTRAR_CUENTAS") 
+                || usuarioSesion.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR"));
+        
+        int id = ParseUtils.parseInt(request.getParameter("id"));
+        String modoParam = request.getParameter("modo");
+
+        if (!esAdminCuentas) {
+            request.getSession().setAttribute("errorMessage", "No tiene permisos para sincronizar formatos en Drive.");
+            response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
+            return;
+        }
+
+        if (id > 0) {
+            final String realPath = request.getServletContext().getRealPath("/");
+            try {
+                actualizarFormatosEnDrive(id, realPath);
+                request.getSession().setAttribute("successMessage", "Formatos en Google Drive actualizados y sincronizados con éxito.");
+            } catch (Exception ex) {
+                request.getSession().setAttribute("errorMessage", "Error al sincronizar con Drive: " + ex.getMessage());
+            }
+        }
+        response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
     }
 
     public String getFileName(Part part) {
@@ -2145,7 +2231,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             if (tieneArchivosNuevos || tieneArchivosEliminados || esRadicacion || faltaCarpetaDrive) {
                 procesarArchivosDrive(id, request);
             } else {
-                System.out.println("Actualización de datos informativos completada al instante para informe ID " + id + " (sin llamadas pesadas a Drive).");
+                final String realPath = request.getServletContext().getRealPath("/");
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    try {
+                        actualizarFormatosEnDrive(id, realPath);
+                    } catch (Exception ex) {
+                        System.err.println("Error actualizando formatos en Drive (asíncrono): " + ex.getMessage());
+                    }
+                });
             }
             
             if ("RADICADA".equals(estadoNuevoEfectivo)) {
