@@ -1596,8 +1596,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         try {
             String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
             com.combinacion.services.GoogleDriveService.setPublicViewPermission(cuotaFolderId);
-            if (informe.getUrlDriveEvidencias() == null || informe.getUrlDriveEvidencias().trim().isEmpty()) {
-                String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
+            String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
+            if (!driveUrl.equals(informe.getUrlDriveEvidencias())) {
                 informe.setUrlDriveEvidencias(driveUrl);
                 new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             }
@@ -1919,6 +1919,84 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             if (cuotaFolderId == null) {
                 System.err.println("No se pudo resolver la carpeta de Drive para el informe ID " + informeId);
                 return;
+            }
+
+            String carpetaEvidenciasNombre = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS");
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(carpetaEvidenciasNombre, cuotaFolderId);
+
+            // Reconciliar y asegurar que soportes y evidencias de soportes_json existan en Drive y no estén en la papelera
+            try {
+                com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
+                if (drive != null && informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
+                    org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
+                    java.util.Iterator<String> keys = soportes.keys();
+                    while (keys.hasNext()) {
+                        String k = keys.next();
+                        org.json.JSONObject obj = soportes.getJSONObject(k);
+                        String fileId = obj.optString("id");
+                        String fileName = obj.optString("name");
+                        if (fileId == null || fileId.isEmpty()) continue;
+                        try {
+                            com.google.api.services.drive.model.File gFile = drive.files().get(fileId).setFields("id, name, parents, trashed").execute();
+                            if (gFile == null) continue;
+                            if (Boolean.TRUE.equals(gFile.getTrashed())) {
+                                com.google.api.services.drive.model.File restoreMeta = new com.google.api.services.drive.model.File();
+                                restoreMeta.setTrashed(false);
+                                drive.files().update(fileId, restoreMeta).setFields("id, trashed").execute();
+                                System.out.println("Drive: Restaurado de papelera soporte/evidencia: " + fileName);
+                            }
+                            String targetFolderId = cuotaFolderId;
+                            if (k.startsWith("evidencia_")) {
+                                try {
+                                    int actIndex = Integer.parseInt(k.split("_")[1]) + 1;
+                                    targetFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("Actividad " + actIndex, evidenciasFolderId);
+                                } catch (Exception ex) {
+                                    targetFolderId = evidenciasFolderId;
+                                }
+                            } else if (k.equals("file_paz_salvo_orfeo") || k.equals("file_paz_salvo_procesos") || k.equals("file_paz_salvo_creaciones")) {
+                                targetFolderId = evidenciasFolderId;
+                            }
+                            java.util.List<String> parents = gFile.getParents();
+                            if (parents == null || !parents.contains(targetFolderId)) {
+                                String prevParents = (parents != null && !parents.isEmpty()) ? String.join(",", parents) : null;
+                                com.google.api.services.drive.Drive.Files.Update updateReq = drive.files().update(fileId, null)
+                                        .setAddParents(targetFolderId)
+                                        .setFields("id, parents");
+                                if (prevParents != null && !prevParents.isEmpty()) {
+                                    updateReq.setRemoveParents(prevParents);
+                                }
+                                updateReq.execute();
+                                System.out.println("Drive: Reubicado en carpeta correcta: " + fileName);
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("Aviso Drive al verificar soporte/evidencia " + k + " (" + fileName + "): " + ex.getMessage());
+                        }
+                    }
+                }
+
+                // Migrar elementos si url_drive_evidencias anterior apuntaba a otra carpeta
+                String oldEvidenciasUrl = informe.getUrlDriveEvidencias();
+                String oldEvidenciasId = com.combinacion.services.GoogleDriveService.extractIdFromUrl(oldEvidenciasUrl);
+                if (drive != null && oldEvidenciasId != null && !oldEvidenciasId.equals(evidenciasFolderId)) {
+                    try {
+                        com.google.api.services.drive.model.FileList oldChildren = drive.files().list()
+                                .setQ("'" + oldEvidenciasId + "' in parents and trashed=false")
+                                .setFields("files(id, name, mimeType, parents)")
+                                .execute();
+                        if (oldChildren != null && oldChildren.getFiles() != null) {
+                            for (com.google.api.services.drive.model.File child : oldChildren.getFiles()) {
+                                drive.files().update(child.getId(), null)
+                                        .setAddParents(evidenciasFolderId)
+                                        .setRemoveParents(oldEvidenciasId)
+                                        .execute();
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Aviso al migrar contenido de carpeta anterior de evidencias: " + e.getMessage());
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Aviso Drive al sincronizar soportes y evidencias: " + ex.getMessage());
             }
 
             String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
