@@ -143,13 +143,8 @@ public class SupervisionReportGenerator {
         if (nf instanceof DecimalFormat) {
             ((DecimalFormat) nf).applyPattern("#,##0");
         }
-        Number valorMostrarNums = contrato.getValorTotalNumeros();
-        String valorMostrarLetras = contrato.getValorTotalLetras();
-        
-        if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getValorContratoMasAdicion() != null) {
-            valorMostrarNums = contrato.getValorContratoMasAdicion();
-            valorMostrarLetras = contrato.getValorContratoMasAdicionLetras();
-        }
+        Number valorMostrarNums = contrato.getValorVigente();
+        String valorMostrarLetras = contrato.getValorVigenteLetras();
         
         String valorNumeros = valorMostrarNums != null ? "$ " + nf.format(valorMostrarNums).replace(',', '.') : "$ 0";
         reps.put("${VALOR_INICIAL_LETRAS}", valorMostrarLetras != null ? valorMostrarLetras.toUpperCase() : "");

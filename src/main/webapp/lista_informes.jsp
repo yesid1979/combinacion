@@ -331,7 +331,7 @@
                             // 1. Si es el Revisor asignado
                             if (row.idRevisorAsignado == row.usuarioActualId && (estado === 'RADICADA' || estado === 'VISTO BUENO CONTRATACION')) {
                                 mostrarBtnRevisar = true;
-                                tipoRolModal = 'revisor';
+                                tipoRolModal = (estado === 'VISTO BUENO CONTRATACION') ? 'revisor_post_contratacion' : 'revisor';
                             } 
                             // 2. Si es Administrador / Contratación
                             else if (esAdminCuentas) {
@@ -344,6 +344,9 @@
                                 } else if (estado === 'EN REVISION SUPERVISOR') {
                                     mostrarBtnRevisar = true;
                                     tipoRolModal = 'supervisor';
+                                } else if (estado === 'VISTO BUENO CONTRATACION') {
+                                    mostrarBtnRevisar = true;
+                                    tipoRolModal = 'revisor_post_contratacion';
                                 }
                             }
                             // 3. Si es el Supervisor del contrato
@@ -441,14 +444,22 @@
                     <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                 `;
             } else if (tipoRolModal === 'contratacion_sin_revisor') {
-                // Contratación revisa cuenta radicada SIN revisor (flujo directo legado intacto)
+                // Contratación revisa cuenta radicada SIN revisor (revisa primero y puede pasar a revisor, mandar a imprimir o al supervisor)
                 opcionesHTML = `
-                    <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
                     <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                    <option value="APROBADA PARA IMPRESION">Mandar a Imprimir (Aprobación Definitiva)</option>
+                    <option value="EN REVISION SUPERVISOR">Mandar al Supervisor (Pasar a Supervisión)</option>
+                    <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                `;
+            } else if (tipoRolModal === 'revisor_post_contratacion' || (tipoRolModal === 'revisor' && estadoActual === 'VISTO BUENO CONTRATACION')) {
+                // Revisor en flujo Sin Revisor: Contratación revisó primero y ahora el Revisor decide mandar a supervisor o visto bueno para imprimir
+                opcionesHTML = `
+                    <option value="EN REVISION SUPERVISOR">Mandar al Supervisor (Pasar a Supervisión)</option>
+                    <option value="APROBADA PARA IMPRESION">Dar Visto Bueno para Imprimir (Aprobación Definitiva)</option>
                     <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                 `;
             } else {
-                // Revisor básico da su visto bueno para pasar a Contratación
+                // Revisor inicial (flujo normal con revisor seleccionado desde el inicio):
                 opcionesHTML = `
                     <option value="EN REVISION CONTRATACION">Dar Visto Bueno (Pasar a Contratación)</option>
                     <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>

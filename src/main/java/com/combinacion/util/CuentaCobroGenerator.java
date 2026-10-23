@@ -253,14 +253,8 @@ public class CuentaCobroGenerator {
         Cell cellD28 = row28.getCell(3); if(cellD28 == null) cellD28 = row28.createCell(3);
         Cell cellF28 = row28.getCell(5); if(cellF28 == null) cellF28 = row28.createCell(5);
         
-        Number valorMostrar = contrato.getValorTotalNumeros();
-        String valorLetras = (contrato.getValorTotalLetras() != null) ? contrato.getValorTotalLetras().trim() : null;
-        if (esCuotaAdicion && contrato.getValorContratoMasAdicion() != null) {
-            valorMostrar = contrato.getValorContratoMasAdicion();
-            if (contrato.getValorContratoMasAdicionLetras() != null && !contrato.getValorContratoMasAdicionLetras().trim().isEmpty()) {
-                valorLetras = contrato.getValorContratoMasAdicionLetras().trim();
-            }
-        }
+        Number valorMostrar = contrato.getValorVigente();
+        String valorLetras = (contrato.getValorVigenteLetras() != null) ? contrato.getValorVigenteLetras().trim() : null;
         
         if (valorMostrar != null) {
             cellD28.setCellValue(formatearMoneda(valorMostrar));

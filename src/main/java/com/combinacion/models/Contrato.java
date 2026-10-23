@@ -162,6 +162,37 @@ public class Contrato {
     public void setValorContratoMasAdicionLetras(String valorContratoMasAdicionLetras) { this.valorContratoMasAdicionLetras = valorContratoMasAdicionLetras; }
     public BigDecimal getValorContratoMasAdicion() { return valorContratoMasAdicion; }
     public void setValorContratoMasAdicion(BigDecimal valorContratoMasAdicion) { this.valorContratoMasAdicion = valorContratoMasAdicion; }
+
+    public boolean isTieneAdicion() {
+        if (adicionSiNo != null && !adicionSiNo.trim().isEmpty()) {
+            String norm = java.text.Normalizer.normalize(adicionSiNo.trim().toLowerCase(), java.text.Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}", "");
+            if ("si".equals(norm) || "x".equals(norm) || "true".equals(norm)) {
+                return true;
+            }
+        }
+        return (valorContratoMasAdicion != null && valorContratoMasAdicion.compareTo(BigDecimal.ZERO) > 0)
+                || (valorTotalAdicion != null && valorTotalAdicion.compareTo(BigDecimal.ZERO) > 0)
+                || numeroCuotasAdicion > 0;
+    }
+
+    public boolean getTieneAdicion() {
+        return isTieneAdicion();
+    }
+
+    public BigDecimal getValorVigente() {
+        if (isTieneAdicion() && valorContratoMasAdicion != null && valorContratoMasAdicion.compareTo(BigDecimal.ZERO) > 0) {
+            return valorContratoMasAdicion;
+        }
+        return valorTotalNumeros;
+    }
+
+    public String getValorVigenteLetras() {
+        if (isTieneAdicion() && valorContratoMasAdicionLetras != null && !valorContratoMasAdicionLetras.trim().isEmpty()) {
+            return valorContratoMasAdicionLetras;
+        }
+        return valorTotalLetras;
+    }
     public String getEnlaceSecop() { return enlaceSecop; }
     public void setEnlaceSecop(String enlaceSecop) { this.enlaceSecop = enlaceSecop; }
     public String getIvaSiNo() { return ivaSiNo; }

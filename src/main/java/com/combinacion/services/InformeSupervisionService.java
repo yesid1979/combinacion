@@ -509,12 +509,7 @@ public class InformeSupervisionService {
             
             Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
             if (contrato != null) {
-                java.math.BigDecimal total = contrato.getValorTotalNumeros();
-                int cuotasNormales = contrato.getNumCuotasNumero();
-                boolean tieneAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) || "SÍ".equalsIgnoreCase(contrato.getAdicionSiNo());
-                if (tieneAdicion && cuotasNormales > 0 && currentCuota >= cuotasNormales && contrato.getValorContratoMasAdicion() != null && contrato.getValorContratoMasAdicion().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                    total = contrato.getValorContratoMasAdicion();
-                }
+                java.math.BigDecimal total = contrato.getValorVigente();
                 
                 if (total != null) {
                     java.math.BigDecimal cuota = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar() : java.math.BigDecimal.ZERO;
@@ -1011,11 +1006,13 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
-                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                if (contrato.isTieneAdicion()) {
                     com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
                     poblarTextosModificacion(contrato, informeAuto);
                     request.setAttribute("informeAuto", informeAuto);
                 }
+                int cuotaActualParsed = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                request.setAttribute("siguienteCuota", cuotaActualParsed);
                 request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }
@@ -1041,7 +1038,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
-                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
+                if (contrato.isTieneAdicion()) {
                     com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
                     poblarTextosModificacion(contrato, informeAuto);
                     request.setAttribute("informeAuto", informeAuto);

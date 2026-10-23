@@ -76,3 +76,32 @@
 * **Protección de Encoding UTF-8 en Verbos Rectores:**
   * Se corrigió el manejo de caracteres especiales y acentuados para prevenir corrupción de caracteres en obligaciones y verbos rectores procesados masivamente.
 
+---
+
+### 5. Flujo "Sin Revisor" (Revisión Inicial de Contratación y Paso a Revisor)
+* **[lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp)** y **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)**:
+  * **Opciones para Contratación en cuenta radicada sin revisor (`contratacion_sin_revisor`):**
+    1. **Dar Visto Bueno Previo / Pasar a Revisor (`VISTO BUENO CONTRATACION`)**: Abre selector dinámico para asignar el revisor deseado.
+    2. **Mandar a Imprimir / Aprobación Definitiva (`APROBADA PARA IMPRESION`)**: Permite aprobar la cuenta directamente para impresión sin requerir paso adicional.
+    3. **Mandar al Supervisor (`EN REVISION SUPERVISOR`)**: Permite remitir directamente al supervisor si así se requiere.
+    4. **Devolver al Contratista (`DEVUELTA`)**: Requiere observación obligatoria.
+  * **Opciones para el Revisor tras Visto Bueno de Contratación (`revisor_post_contratacion`):**
+    1. **Mandar al Supervisor (`EN REVISION SUPERVISOR`)**
+    2. **Dar Visto Bueno para Imprimir (`APROBADA PARA IMPRESION`)**
+    3. **Devolver al Contratista (`DEVUELTA`)**
+  * Esto aplica exclusivamente al flujo "Sin Revisor", manteniendo intacto el flujo regular donde un revisor inicial pasa a contratación.
+
+---
+
+### 6. Consistencia Absoluta de Valores Económicos en Contratos con Adición (Punto 4)
+* **[Contrato.java](file:///src/main/java/com/combinacion/models/Contrato.java)**:
+  * Se añadieron los métodos centralizados:
+    * `isTieneAdicion()` / `getTieneAdicion()`: Normalización robusta de tildes y mayúsculas (`SI`, `SÍ`, `X`, `true`) y validación de adición con saldo numérico mayor a cero.
+    * `getValorVigente()`: Retorna automáticamente `valorContratoMasAdicion` si el contrato cuenta con adición aprobada; de lo contrario `valorTotalNumeros`.
+    * `getValorVigenteLetras()`: Retorna `valorContratoMasAdicionLetras` o `valorTotalLetras`.
+* **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)**:
+  * El campo **"Valor Total del Contrato ($)"** ahora enlaza directamente a `${contrato.valorVigente}`, mostrando de manera idéntica y consistente el valor total con adición (ej. `$33.978.000`) tanto en vista de lectura/revisión (`action=view`) como en edición.
+  * Se corrigió la lógica en JavaScript para que no sobreescriba `#valor_total` con el valor base en cuotas intermedias, garantizando que el saldo por cancelar (`$11.326.000`), el valor acumulado (`$16.989.000`), la cuota (`$5.663.000`) y el valor total (`$33.978.000`) cuadren exactamente (33.978.000 - 16.989.000 - 5.663.000 = 11.326.000).
+* **[SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)** y **[CuentaCobroGenerator.java](file:///src/main/java/com/combinacion/util/CuentaCobroGenerator.java)**:
+  * Se sincronizó la emisión de documentos Word y Excel para utilizar `contrato.getValorVigente()` y `contrato.getValorVigenteLetras()`, unificando cifras y textos en letras en todos los entregables generados.
+

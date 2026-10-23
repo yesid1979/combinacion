@@ -295,8 +295,9 @@
 
                         <!-- Tab 2: Jurídico -->
                         <div class="tab-pane fade" id="juridico" role="tabpanel">
-                            <c:set var="tieneAdicion" value="${contrato.adicionSiNo == 'SI' || contrato.adicionSiNo == 'Si' || contrato.adicionSiNo == 'SÍ'}" />
-                            <c:set var="mostrarTextosAuto" value="${tieneAdicion && contrato.numCuotasNumero > 0 && siguienteCuota >= contrato.numCuotasNumero}" />
+                            <c:set var="tieneAdicion" value="${contrato.tieneAdicion}" />
+                            <c:set var="numCuotaParsed" value="${not empty informe.numeroCuota ? informe.numeroCuota : siguienteCuota}" />
+                            <c:set var="mostrarTextosAuto" value="${tieneAdicion && contrato.numCuotasNumero > 0 && numCuotaParsed >= contrato.numCuotasNumero}" />
                             <!-- DEBUG: siguienteCuota=${siguienteCuota}, contrato.numCuotasNumero=${contrato.numCuotasNumero}, mostrarTextosAuto=${mostrarTextosAuto} -->
                             <div class="section-title">Informe Jurídico</div>
                             <div class="row g-3">
@@ -337,10 +338,7 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label">Valor Total del Contrato ($)</label>
-                                    <c:set var="tieneAdicionContrato" value="${contrato.adicionSiNo == 'SI' || contrato.adicionSiNo == 'Si' || contrato.adicionSiNo == 'SÍ'}" />
-                                    <c:set var="numCuotaActual" value="${not empty informe.numeroCuota ? informe.numeroCuota : siguienteCuota}" />
-                                    <c:set var="esCuotaDeAdicion" value="${tieneAdicionContrato && contrato.numCuotasNumero > 0 && not empty numCuotaActual && numCuotaActual >= contrato.numCuotasNumero}" />
-                                    <input type="text" id="valor_total" class="form-control bg-light text-muted fw-bold money-mask" value="${(esCuotaDeAdicion && not empty contrato.valorContratoMasAdicion) ? contrato.valorContratoMasAdicion : contrato.valorTotalNumeros}" readonly>
+                                    <input type="text" id="valor_total" class="form-control bg-light text-muted fw-bold money-mask" value="${contrato.valorVigente}" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Valor Cuota a Cancelar ($)</label>
@@ -704,6 +702,7 @@
                                                     <c:choose>
                                                         <c:when test="${hr.estadoNuevo == 'RADICADA'}"><span class="badge bg-primary">RADICADA</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'DEVUELTA'}"><span class="badge bg-danger">DEVUELTA</span></c:when>
+                                                        <c:when test="${hr.estadoNuevo == 'VISTO BUENO CONTRATACION'}"><span class="badge bg-success bg-opacity-75 text-white">VISTO BUENO (CONTRATACIÓN)</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'EN REVISION CONTRATACION'}"><span class="badge bg-warning text-dark">EN REVISIÓN (CONTRATACIÓN)</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'EN REVISION SUPERVISOR'}"><span class="badge bg-info text-dark">EN REVISIÓN (SUPERVISIÓN)</span></c:when>
                                                         <c:when test="${hr.estadoNuevo == 'EN REVISION FINAL'}"><span class="badge bg-info text-dark">EN REVISIÓN FINAL</span></c:when>
@@ -750,7 +749,14 @@
                         <%-- 1. Si es el Revisor asignado --%>
                         <c:if test="${esRevisorAsignado and (informe.estadoRadicacion == 'RADICADA' or informe.estadoRadicacion == 'VISTO BUENO CONTRATACION')}">
                             <c:set var="mostrarBtnRevisar" value="true" />
-                            <c:set var="tipoRolModal" value="revisor" />
+                            <c:choose>
+                                <c:when test="${informe.estadoRadicacion == 'VISTO BUENO CONTRATACION'}">
+                                    <c:set var="tipoRolModal" value="revisor_post_contratacion" />
+                                </c:when>
+                                <c:otherwise>
+                                    <c:set var="tipoRolModal" value="revisor" />
+                                </c:otherwise>
+                            </c:choose>
                         </c:if>
                         <%-- 2. Si es Administrador / Contratación --%>
                         <c:if test="${esAdmin}">
@@ -766,6 +772,10 @@
                                 <c:when test="${informe.estadoRadicacion == 'EN REVISION SUPERVISOR'}">
                                     <c:set var="mostrarBtnRevisar" value="true" />
                                     <c:set var="tipoRolModal" value="supervisor" />
+                                </c:when>
+                                <c:when test="${informe.estadoRadicacion == 'VISTO BUENO CONTRATACION'}">
+                                    <c:set var="mostrarBtnRevisar" value="true" />
+                                    <c:set var="tipoRolModal" value="revisor_post_contratacion" />
                                 </c:when>
                             </c:choose>
                         </c:if>
@@ -2159,7 +2169,7 @@
             
             // Dinamismo para textos de adición y valores
             $(document).ready(function() {
-                var tieneAdicion = "${contrato.adicionSiNo}".trim().toUpperCase() === "SI" || "${contrato.adicionSiNo}".trim().toUpperCase() === "SÍ";
+                var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'};
                 var adicionesAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.adiciones)}` : '';
                 var prorrogasAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.prorrogas)}` : '';
                 var modificacionesAuto = tieneAdicion ? `${fn:escapeXml(informeAuto.modificaciones)}` : '';
@@ -2168,7 +2178,8 @@
                 var cuotaFinal = cuotasNormales + cuotasAdicion;
                 
                 var valorNormal = "${contrato.valorTotalNumeros}";
-                var valorAdicionado = (tieneAdicion && "${contrato.valorContratoMasAdicion}") ? "${contrato.valorContratoMasAdicion}" : valorNormal;
+                var valorAdicionado = "${not empty contrato.valorContratoMasAdicion ? contrato.valorContratoMasAdicion : contrato.valorTotalNumeros}";
+                var valorVigente = tieneAdicion ? valorAdicionado : valorNormal;
                 
                 var baseDateStr = "<fmt:formatDate value='${contrato.fechaTerminacion}' pattern='yyyy-MM-dd'/>";
                 var fechaAdicion = baseDateStr;
@@ -2200,10 +2211,14 @@
                         if (currentMod === modificacionesAuto || currentMod === '') $('textarea[name="modificaciones"]').val('N/A');
                     }
                     
-                    // Actualizar Valor Total y Fecha de Terminación solo si tiene adición y estamos en cuotas de adición
-                    if (tieneAdicion && cuotasNormales > 0 && cuota >= cuotasNormales) {
-                        if (valorAdicionado) $('#valor_total').val(valorAdicionado).trigger('input');
-                        if (fechaAdicion) $('input[name="fecha_fin_periodo"]').val(fechaAdicion);
+                    // Actualizar Valor Total y Fecha de Terminación
+                    if (tieneAdicion) {
+                        if (valorVigente) $('#valor_total').val(valorVigente).trigger('input');
+                        if (cuotasNormales > 0 && cuota >= cuotasNormales && fechaAdicion) {
+                            $('input[name="fecha_fin_periodo"]').val(fechaAdicion);
+                        } else if (baseDateStr) {
+                            $('input[name="fecha_fin_periodo"]').val(baseDateStr);
+                        }
                     } else {
                         if (valorNormal) $('#valor_total').val(valorNormal).trigger('input');
                         if (baseDateStr) $('input[name="fecha_fin_periodo"]').val(baseDateStr);
@@ -2394,14 +2409,22 @@
                         <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                     `;
                 } else if (tipoRolModal === 'contratacion_sin_revisor') {
-                    // Contratación revisa cuenta radicada SIN revisor (flujo directo legado intacto)
+                    // Contratación revisa cuenta radicada SIN revisor (revisa primero y puede pasar a revisor, mandar a imprimir o al supervisor)
                     opcionesHTML = `
-                        <option value="APROBADA PARA IMPRESION">Aprobación Definitiva (Lista para imprimir)</option>
                         <option value="VISTO BUENO CONTRATACION">Dar Visto Bueno Previo (Pasar a Revisor)</option>
+                        <option value="APROBADA PARA IMPRESION">Mandar a Imprimir (Aprobación Definitiva)</option>
+                        <option value="EN REVISION SUPERVISOR">Mandar al Supervisor (Pasar a Supervisión)</option>
+                        <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
+                    `;
+                } else if (tipoRolModal === 'revisor_post_contratacion' || (tipoRolModal === 'revisor' && estadoActual === 'VISTO BUENO CONTRATACION')) {
+                    // Revisor en flujo Sin Revisor: Contratación revisó primero y ahora el Revisor decide mandar a supervisor o visto bueno para imprimir
+                    opcionesHTML = `
+                        <option value="EN REVISION SUPERVISOR">Mandar al Supervisor (Pasar a Supervisión)</option>
+                        <option value="APROBADA PARA IMPRESION">Dar Visto Bueno para Imprimir (Aprobación Definitiva)</option>
                         <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
                     `;
                 } else {
-                    // Revisor básico da su visto bueno para pasar a Contratación
+                    // Revisor inicial (flujo normal con revisor seleccionado desde el inicio):
                     opcionesHTML = `
                         <option value="EN REVISION CONTRATACION">Dar Visto Bueno (Pasar a Contratación)</option>
                         <option value="DEVUELTA">Devolver al Contratista (Requiere corrección)</option>
