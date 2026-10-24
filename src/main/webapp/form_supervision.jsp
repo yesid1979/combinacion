@@ -827,6 +827,21 @@
                 });
                 <c:remove var="successMessage" scope="session" />
             </c:if>
+            <c:if test="${not empty sessionScope.errorMessage}">
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Atención',
+                    text: '${fn:escapeXml(sessionScope.errorMessage)}'
+                });
+                <c:remove var="errorMessage" scope="session" />
+            </c:if>
+            <c:if test="${not empty requestScope.errorMessage}">
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Atención',
+                    text: '${fn:escapeXml(requestScope.errorMessage)}'
+                });
+            </c:if>
 
             // Agregar asterisco rojo a los labels de campos requeridos
             $('input[required], select[required], textarea[required]').each(function() {

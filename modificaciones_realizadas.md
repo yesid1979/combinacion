@@ -143,5 +143,37 @@
   * Se eliminó el texto `(Incluir cuando aplique)` del rótulo de firma del apoyo a la supervisión `${TEXTO_APOYO}`.
   * Ahora se genera de manera limpia y profesional: `Nombre y firma del Apoyo a la Supervisión`, en concordancia con el rótulo del supervisor (`Nombre y firma del Supervisor`).
 
+---
+
+## Fecha: 24 de Octubre de 2026
+
+### 1. Robustecimiento y Perfeccionamiento de la Subida y Sincronización en Google Drive (Pruebas y Producción)
+* **[GoogleDriveService.java](file:///src/main/java/com/combinacion/services/GoogleDriveService.java)**:
+  * **Limpieza y Prevención de Archivos Duplicados (`uploadOrUpdateFile`):**
+    * Al actualizar un archivo existente por nombre, si existían duplicados previos en la misma carpeta de Drive (generados por reintentos o cargas manuales previas), el sistema ahora detecta los IDs duplicados y los elimina automáticamente, garantizando que siempre exista un único archivo oficial con el contenido más reciente.
+  * **Sanitización de Nombres de Archivo y MimeTypes (`uploadStreamToDrive`):**
+    * Limpieza preventiva de saltos de línea (`\r`, `\n`) y espacios accidentales en nombres de archivos adjuntos.
+    * Asignación automática y rigurosa del Content-Type adecuado (`application/pdf` para PDF y `application/octet-stream` genérico) para evitar rechazos en el API de Drive.
+  * **Reintentos Exponenciales y Resiliencia en Red:**
+    * Se extendió el envoltorio `executeWithRetry` a todas las operaciones de copia (`copyFile`), descarga (`downloadFile`), permisos públicos (`setPublicViewPermission`) y listado (`getFilesInFolder` y `uploadOrReplaceByPattern`), tolerando fluctuaciones de red o límites de cuota (códigos 429, 500, 503).
+
+* **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)**:
+  * **Resolución Exhaustiva y Creación Estandarizada de Carpetas (`resolverCuotaFolderId` y `esCuotaManualHistorica`):**
+    * Se incorporó búsqueda multi-patrón para la carpeta principal del contratista tanto por nombre completo (`MANUEL ALBERTO VALENCIA RIASCOS`) como por nombre corto (`MANUEL VALENCIA`), asegurando compatibilidad total con carpetas creadas en pruebas o producción.
+    * Se homologó la detección de carpetas de cuota para contemplar variaciones con sufijo de contrato (`CUOTA 3 114`), espacios simples y dobles (`CUOTA 3  114`) y formato sin sufijo (`CUOTA 3`).
+    * Al crear una carpeta de cuota nueva, el sistema ahora asigna automáticamente la nomenclatura estándar oficial (`CUOTA X YYY`) cuando el contrato cuenta con terminación numérica, evitando duplicidades de carpetas.
+  * **Propagación Real de Errores en Sincronización:**
+    * Se eliminó el silenciamiento de excepciones en `actualizarFormatosEnDrive`. Cualquier anomalía es capturada y reportada explícitamente a la interfaz de usuario en lugar de recargar en silencio.
+
+* **[SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)**:
+  * **Compatibilidad Total del DOCX con Google Docs y Esquema OOXML/ECMA-376:**
+    * Se corrigió la inserción de bordes de celda (`w:tcBorders`), asegurando que se sitúe estrictamente antes de `w:vAlign` según el estándar OpenXML.
+    * Se reemplazó el campo complejo de Word `w:fldChar HYPERLINK` por un hipervínculo en párrafo con estilo azul subrayado compatible con Google Docs. Con esto se eliminó definitivamente el error *"No se ha podido abrir el archivo. Prueba a actualizar la página"* en Google Docs.
+
+* **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)**:
+  * **Retroalimentación Visual Integral con SweetAlert:**
+    * Se incorporó el manejo de alertas de error tanto para `sessionScope.errorMessage` como para `requestScope.errorMessage`.
+    * Cualquier fallo, timeout o advertencia durante la sincronización o guardado ahora muestra una ventana modal descriptiva con icono de advertencia/error.
+
 
 

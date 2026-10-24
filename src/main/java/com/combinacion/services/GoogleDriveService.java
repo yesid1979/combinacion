@@ -261,6 +261,16 @@ public class GoogleDriveService {
                 String fileId = result.getFiles().get(0).getId();
                 File updatedFile = new File();
                 File newFile = executeWithRetry(() -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
+                
+                // Si existían duplicados con el mismo nombre en la misma carpeta, los limpiamos para evitar inconsistencias
+                if (result.getFiles().size() > 1) {
+                    for (int i = 1; i < result.getFiles().size(); i++) {
+                        String dupId = result.getFiles().get(i).getId();
+                        try {
+                            driveService.files().delete(dupId).execute();
+                        } catch (Exception ignore) {}
+                    }
+                }
                 return newFile.getId();
             } catch (Exception updEx) {
                 System.err.println("Aviso Drive: No se pudo actualizar '" + fileName + "', creando archivo nuevo: " + updEx.getMessage());
@@ -294,18 +304,18 @@ public class GoogleDriveService {
         // 1. Buscar archivos en la carpeta que coincidan con el prefijo
         if (namePrefix != null && !namePrefix.isEmpty() && parentId != null && !parentId.isEmpty()) {
             String patternQuery = "'" + parentId + "' in parents and trashed=false and mimeType='" + mimeType + "'";
-            FileList existing = driveService.files().list()
+            FileList existing = executeWithRetry(() -> driveService.files().list()
                     .setQ(patternQuery)
                     .setSpaces("drive")
                     .setFields("files(id, name)")
-                    .execute();
+                    .execute());
 
-            if (existing.getFiles() != null) {
+            if (existing != null && existing.getFiles() != null) {
                 for (File f : existing.getFiles()) {
                     // Si el nombre empieza con el prefijo pero NO es el nombre correcto, lo eliminamos
                     if (f.getName() != null && f.getName().startsWith(namePrefix) && !f.getName().equals(fileName)) {
                         try {
-                            driveService.files().delete(f.getId()).execute();
+                            executeWithRetry(() -> driveService.files().delete(f.getId()).execute());
                             System.out.println("Drive: Archivo antiguo eliminado: " + f.getName());
                         } catch (Exception ignore) {
                             System.err.println("Drive: No se pudo eliminar archivo antiguo: " + f.getName());
@@ -320,6 +330,12 @@ public class GoogleDriveService {
     }
 
     public static String uploadStreamToDrive(java.io.InputStream in, long length, String fileName, String mimeType, String parentId) throws Exception {
+        if (fileName != null) {
+            fileName = fileName.trim().replaceAll("[\\r\\n]+", "");
+        }
+        if (mimeType == null || mimeType.trim().isEmpty()) {
+            mimeType = (fileName != null && fileName.toLowerCase().endsWith(".pdf")) ? "application/pdf" : "application/octet-stream";
+        }
         java.io.File tempFile = java.io.File.createTempFile("gdrive_up_", ".tmp");
         try {
             try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFile)) {
@@ -339,7 +355,7 @@ public class GoogleDriveService {
 
     public static InputStream downloadFile(String fileId) throws Exception {
         Drive driveService = getDriveService();
-        return driveService.files().get(fileId).executeMediaAsInputStream();
+        return executeWithRetry(() -> driveService.files().get(fileId).executeMediaAsInputStream());
     }
 
     public static void setPublicViewPermission(String fileId) throws Exception {
@@ -347,17 +363,17 @@ public class GoogleDriveService {
         Permission permission = new Permission()
                 .setType("anyone")
                 .setRole("reader");
-        driveService.permissions().create(fileId, permission).execute();
+        executeWithRetry(() -> driveService.permissions().create(fileId, permission).execute());
     }
 
     public static FileList getFilesInFolder(String folderId) throws Exception {
         Drive driveService = getDriveService();
         String query = "'" + folderId + "' in parents and trashed=false";
-        return driveService.files().list()
+        return executeWithRetry(() -> driveService.files().list()
                 .setQ(query)
                 .setSpaces("drive")
                 .setFields("files(id, name, mimeType)")
-                .execute();
+                .execute());
     }
 
     public static String extractIdFromUrl(String url) {
@@ -379,7 +395,7 @@ public class GoogleDriveService {
         if (parentId != null && !parentId.isEmpty()) {
             copiedFile.setParents(Collections.singletonList(parentId));
         }
-        File result = driveService.files().copy(fileId, copiedFile).execute();
+        File result = executeWithRetry(() -> driveService.files().copy(fileId, copiedFile).setFields("id").execute());
         return result.getId();
     }
 }

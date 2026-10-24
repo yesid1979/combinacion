@@ -305,18 +305,6 @@ public class SupervisionReportGenerator {
                     // La tabla principal es la única que tiene <w:tblCellMar> en su <w:tblPr>.
                     xml = xml.replaceFirst("<w:tblCellMar>", TBL_BORDERS + "<w:tblCellMar>");
                     
-                    // FIX 3 (redundante pero seguro): Asegurar bordes explícitos en cada celda.
-                    // La plantilla ya los tiene pero los reforzamos por si POI los alteró.
-                    String EXPLICIT_BORDERS = 
-                        "<w:tcBorders>" +
-                        "<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
-                        "<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
-                        "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
-                        "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
-                        "</w:tcBorders>";
-                    xml = xml.replaceAll("<w:tcBorders>[\\s\\S]*?</w:tcBorders>", "");
-                    xml = xml.replace("</w:tcPr>", EXPLICIT_BORDERS + "</w:tcPr>");
-                    
                     if (lista != null) {
                         StringBuilder tablaXml = new StringBuilder();
                         tablaXml.append("</w:t></w:r></w:p>"); // Cerrar el párrafo actual de ${CONCEPTO_SUPERVISOR}
@@ -349,10 +337,17 @@ public class SupervisionReportGenerator {
                         tablaXml.append("<w:gridCol w:w=\"5050\"/>");
                         tablaXml.append("</w:tblGrid>");
                         
-                        // Header Row
+                        String tcBordersXml = "<w:tcBorders>" +
+                            "<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                            "<w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                            "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                            "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
+                            "</w:tcBorders>";
+                        
+                        // Header Row (tcBorders colocado antes de vAlign según esquema OOXML)
                         tablaXml.append("<w:tr>");
-                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc>");
-                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/><w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc>");
                         tablaXml.append("</w:tr>");
                         
                         // Rows
@@ -366,12 +361,12 @@ public class SupervisionReportGenerator {
                             tablaXml.append("<w:tr>");
                             
                             // Cell Obligacion
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"40\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"40\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
                             // Cell Actividad (ya es Word XML)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/><w:vAlign w:val=\"top\"/></w:tcPr>")
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5050\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr>")
                                     .append(acXml)
                                     .append("</w:tc>");
                                     
@@ -380,7 +375,7 @@ public class SupervisionReportGenerator {
                         
                         tablaXml.append("</w:tbl>");
                         
-                        // Inyectar enlace de Drive si existe
+                        // Inyectar enlace de Drive si existe (formato estándar compatible con Google Docs y Microsoft Word)
                         String urlDrive = info.getUrlDriveEvidencias();
                         if (urlDrive != null && !urlDrive.trim().isEmpty()) {
                             urlDrive = urlDrive.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
@@ -390,15 +385,11 @@ public class SupervisionReportGenerator {
                             tablaXml.append(info.getNumeroCuota() != null ? info.getNumeroCuota() : "");
                             tablaXml.append(":</w:t></w:r></w:p>");
                             
-                            // Párrafo con la URL como un hipervínculo real de Word
+                            // Párrafo con la URL azul subrayada legible y compatible con Google Docs
                             tablaXml.append("<w:p><w:pPr><w:spacing w:after=\"240\"/></w:pPr>");
-                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r>");
-                            tablaXml.append("<w:r><w:instrText xml:space=\"preserve\"> HYPERLINK \"").append(urlDrive).append("\" </w:instrText></w:r>");
-                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>");
                             tablaXml.append("<w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:color w:val=\"0000FF\"/><w:u w:val=\"single\"/></w:rPr><w:t>");
                             tablaXml.append(urlDrive);
                             tablaXml.append("</w:t></w:r>");
-                            tablaXml.append("<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>");
                             tablaXml.append("</w:p>");
                         }
                         

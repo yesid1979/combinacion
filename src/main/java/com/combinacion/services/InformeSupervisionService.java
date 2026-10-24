@@ -1617,30 +1617,47 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota());
         String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
 
+        String nombreCorto = nombreCompleto;
+        String[] parts = nombreCompleto.split("\\s+");
+        if (parts.length >= 4) {
+            nombreCorto = parts[0] + " " + parts[2];
+        } else if (parts.length >= 2) {
+            nombreCorto = parts[0] + " " + parts[1];
+        }
+
+        String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
+                                        + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
+                                        + nombreCorto.toUpperCase();
+
         String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
         String principalFolderId = null;
         if (!prefixContrato.isEmpty()) {
-            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
         } else {
-            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, nombreCompleto);
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
         }
         if (principalFolderId == null) {
             principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, rootFolderId);
         }
 
         String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
-        String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+        String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + "  " + ultimoBloque) : null;
+        String patternConMarca3 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+        String patternConMarca4 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + "  " + ultimoBloque) : null;
         String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
             principalFolderId,
             patternConMarca1,
             patternConMarca2,
+            patternConMarca3,
+            patternConMarca4,
             "CUOTA " + cNoPad,
             "CUOTA " + cPad,
             "Cuota " + cNoPad,
             "Cuota " + cPad
         );
         if (cuotaFolderId == null) {
-            cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuota, principalFolderId);
+            String folderNameCuotaToCreate = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : folderNameCuota;
+            cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuotaToCreate, principalFolderId);
         }
 
         try {
@@ -1968,7 +1985,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             String cuotaFolderId = resolverCuotaFolderId(informe, contrato);
             if (cuotaFolderId == null) {
                 System.err.println("No se pudo resolver la carpeta de Drive para el informe ID " + informeId);
-                return;
+                throw new RuntimeException("No se pudo resolver la carpeta de Drive para la cuota " + informe.getNumeroCuota() + " del contrato " + (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
             }
 
             String carpetaEvidenciasNombre = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS");
@@ -2199,6 +2216,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         } catch (Throwable ex) {
             System.err.println("Error actualizando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
             ex.printStackTrace();
+            throw new RuntimeException("Error actualizando formatos en Drive: " + ex.getMessage(), ex);
         }
     }
 
@@ -2723,12 +2741,24 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                        + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
                                        + nombreCompleto.toUpperCase();
 
+            String nombreCorto = nombreCompleto;
+            String[] parts = nombreCompleto.split("\\s+");
+            if (parts.length >= 4) {
+                nombreCorto = parts[0] + " " + parts[2];
+            } else if (parts.length >= 2) {
+                nombreCorto = parts[0] + " " + parts[1];
+            }
+
+            String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
+                                            + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
+                                            + nombreCorto.toUpperCase();
+
             String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
             String principalProduccionId = null;
             if (!prefixContrato.isEmpty()) {
-                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, prefixContrato, nombreCompleto);
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
             } else {
-                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, nombreCompleto);
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
             }
 
             if (principalProduccionId == null) {
@@ -2745,11 +2775,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             } catch (Exception ignore) {}
 
             String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
-            String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+            String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + "  " + ultimoBloque) : null;
+            String patternConMarca3 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
+            String patternConMarca4 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + "  " + ultimoBloque) : null;
             String cuotaExistenteId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
                 principalProduccionId,
                 patternConMarca1,
                 patternConMarca2,
+                patternConMarca3,
+                patternConMarca4,
                 "CUOTA " + cNoPad,
                 "CUOTA " + cPad,
                 "Cuota " + cNoPad,
