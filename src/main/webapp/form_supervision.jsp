@@ -30,15 +30,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${action == 'view' ? 'Ver' : (action == 'update' ? 'Editar' : 'Crear')} Cuenta de cobro No. <fmt:formatNumber value="${not empty informe.numeroCuota ? informe.numeroCuota : (not empty siguienteCuota ? siguienteCuota : 1)}" pattern="000" /> - Gestión de Prestadores</title>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
-    
-    <!-- Summernote Lite CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+    <jsp:include page="inc/head_assets.jsp" />
     <style>
         :root {
             --primary-blue: #004884;
@@ -821,10 +813,7 @@
     <jsp:include page="inc/footer.jsp" />
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
     <script>
         $(document).ready(function() {
             <c:if test="${not empty sessionScope.successMessage}">
@@ -2024,9 +2013,6 @@
             });
         });
     </script>
-
-        <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
         <script>
             $(document).ready(function() {
                 $('#historialTable').DataTable({

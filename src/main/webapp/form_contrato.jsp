@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
             <!DOCTYPE html>
@@ -9,10 +9,9 @@
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>${action == 'update' ? 'Editar' : (action == 'view' ? 'Ver' : 'Nuevo')} Contrato - Gestión de
                     Prestadores</title>
-                <!-- Bootstrap 5 CSS -->
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <link rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+                
+    <jsp:include page="inc/head_assets.jsp" />
+
                 <style>
                     .section-title {
                         background-color: #f8f9fa;
@@ -449,8 +448,7 @@
                 </div>
 
                 <!-- jQuery and Bootstrap JS -->
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
                 <script>
                     $(document).ready(function () {
                         console.log("Initializing Tabs with Vanilla JS...");

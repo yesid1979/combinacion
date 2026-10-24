@@ -7,18 +7,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Informes - Gestión de Prestadores</title>
-    <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <jsp:include page="inc/head_assets.jsp" />
     <style>
         .table thead th { background-color: #212529 !important; color: #ffffff !important; border: none; }
         .table td { vertical-align: middle; }
         .badge { font-weight: 600; padding: 6px 12px; border-radius: 6px; text-transform: uppercase; font-size: 0.75rem; }
     </style>
-    <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 
@@ -218,14 +212,7 @@
     </div>
 
     <jsp:include page="inc/footer.jsp" />
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
     <script>
         function getEstadoBadgeClass(estado) {
             if (!estado) return 'bg-secondary';

@@ -8,10 +8,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Carga Masiva - Ordenadores y Contratistas</title>
-        <!-- Bootstrap 5 CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-        <link href="assets/css/styles.css" rel="stylesheet">
+        
+    <jsp:include page="inc/head_assets.jsp" />
+
     </head>
 
     <body class="bg-light d-flex flex-column min-vh-100">
@@ -151,7 +150,7 @@
         </div>
 
         <!-- SweetAlert2 -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
         <!-- Flash Message Handling -->
         <c:if test="${not empty sessionScope.message}">
     <script>
@@ -200,9 +199,6 @@
 
                             <!-- Footer -->
                             <jsp:include page="inc/footer.jsp" />
-
-                            <script
-                                src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
     </html>

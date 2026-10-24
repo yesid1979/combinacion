@@ -117,12 +117,19 @@
                                href="#" id="userDrop" role="button" data-bs-toggle="dropdown" style="min-height: 50px;">
                                 <c:choose>
                                     <c:when test="${not empty sessionScope.usuario.fotoUrl}">
-                                        <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${sessionScope.nombreUsuario}&background=0D8ABC&color=fff&size=38';"
+                                        <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                              alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; object-fit: cover; object-position: 50% 15%; border: 2px solid #fff; display: block;">
+                                        <div class="rounded-circle me-2 shadow-sm bg-primary text-white align-items-center justify-content-center fw-bold" 
+                                             style="width: 38px; height: 38px; font-size: 0.95rem; border: 2px solid #fff; display: none;">
+                                            ${not empty sessionScope.nombreUsuario ? sessionScope.nombreUsuario.substring(0, 1).toUpperCase() : 'U'}
+                                        </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <img src="https://ui-avatars.com/api/?name=${sessionScope.nombreUsuario}&background=0D8ABC&color=fff&size=38" 
-                                             alt="User" class="rounded-circle me-2 shadow-sm" style="width: 38px; height: 38px; border: 2px solid #fff; display: block;">
+                                        <div class="rounded-circle me-2 shadow-sm bg-primary text-white d-flex align-items-center justify-content-center fw-bold" 
+                                             style="width: 38px; height: 38px; font-size: 0.95rem; border: 2px solid #fff;">
+                                            ${not empty sessionScope.nombreUsuario ? sessionScope.nombreUsuario.substring(0, 1).toUpperCase() : 'U'}
+                                        </div>
                                     </c:otherwise>
                                 </c:choose>
                                 <div class="d-flex flex-column justify-content-center me-1" style="height: 100%; max-width: 150px;">

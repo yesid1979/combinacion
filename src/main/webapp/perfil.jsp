@@ -15,13 +15,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil - DAGJP</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="assets/css/styles.css" rel="stylesheet">
+    
+    <jsp:include page="inc/head_assets.jsp" />
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     
     <style>
@@ -40,12 +35,82 @@
         .btn-close-custom { background-color: #6c757d; color: white; border: none; padding: 8px 25px; border-radius: 5px; font-weight: 600; }
         
         /* Avatar adjustments */
-        .avatar-section { position: relative; text-align: center; margin-bottom: 30px; }
-        .avatar-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
-        .avatar-overlay { position: absolute; bottom: 5px; left: 50%; transform: translateX(35px); background: #198754; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s; }
-        .avatar-remove { position: absolute; bottom: 5px; left: 50%; transform: translateX(-73px); background: #dc3545; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.2s; }
-        .avatar-remove:hover { transform: translateX(-73px) scale(1.1); background: #bb2d3b; }
-        .avatar-overlay:hover { transform: translateX(35px) scale(1.1); background: #157347; }
+        .avatar-section { 
+            position: relative; 
+            width: 150px; 
+            height: 150px; 
+            margin: 0 auto; 
+        }
+        .avatar-img { 
+            width: 150px; 
+            height: 150px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            object-position: 50% 15%; 
+            border: 4px solid #fff; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15); 
+            display: block;
+        }
+        .avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #004884 0%, #0d6efd 100%);
+            color: #ffffff;
+            font-size: 3.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            text-transform: uppercase;
+            user-select: none;
+        }
+        .avatar-overlay { 
+            position: absolute; 
+            bottom: 4px; 
+            right: 4px; 
+            background: #198754; 
+            color: white; 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25); 
+            transition: transform 0.2s, background-color 0.2s; 
+            z-index: 5;
+        }
+        .avatar-overlay:hover { 
+            transform: scale(1.1); 
+            background: #157347; 
+        }
+        .avatar-remove { 
+            position: absolute; 
+            bottom: 4px; 
+            left: 4px; 
+            background: #dc3545; 
+            color: white; 
+            width: 34px; 
+            height: 34px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.25); 
+            transition: transform 0.2s, background-color 0.2s; 
+            z-index: 5;
+        }
+        .avatar-remove:hover { 
+            transform: scale(1.1); 
+            background: #bb2d3b; 
+        }
 
         .container-custom { max-width: 1000px; }
     </style>
@@ -63,16 +128,29 @@
             </nav>
         <div class="card card-profile p-4">
             
-            <div class="row align-items-center mb-4">
+            <div class="row align-items-center mb-4 g-3">
                 <div class="col-auto">
                     <div class="avatar-section">
-                        <img src="${usuario.fotoUrl != null ? pageContext.request.contextPath.concat('/').concat(usuario.fotoUrl) : 'https://ui-avatars.com/api/?name='.concat(nombreUsuario).concat('&background=0D8ABC&color=fff&size=150')}" 
-                             onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${nombreUsuario}&background=0D8ABC&color=fff&size=150';"
-                             alt="Foto" class="avatar-img" id="profileImagePreview">
+                        <c:choose>
+                            <c:when test="${not empty sessionScope.usuario.fotoUrl}">
+                                <img src="${pageContext.request.contextPath}/${sessionScope.usuario.fotoUrl}" 
+                                     alt="Foto de perfil" class="avatar-img" id="profileImagePreview"
+                                     onerror="this.style.display='none'; document.getElementById('avatarPlaceholder').style.display='flex';">
+                                <div id="avatarPlaceholder" class="avatar-placeholder" style="display: none;">
+                                    ${not empty sessionScope.nombreUsuario ? sessionScope.nombreUsuario.substring(0, 1) : 'U'}
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div id="avatarPlaceholder" class="avatar-placeholder">
+                                    ${not empty sessionScope.nombreUsuario ? sessionScope.nombreUsuario.substring(0, 1) : 'U'}
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+
                         <label for="profileImageInput" class="avatar-overlay" title="Cambiar foto">
                             <i class="bi bi-camera-fill"></i>
                         </label>
-                        <c:if test="${not empty usuario.fotoUrl}">
+                        <c:if test="${not empty sessionScope.usuario.fotoUrl}">
                             <div class="avatar-remove" onclick="removePhoto()" title="Quitar foto">
                                 <i class="bi bi-trash3-fill"></i>
                             </div>
@@ -82,9 +160,9 @@
                         </form>
                     </div>
                 </div>
-                <div class="col">
-                    <h4 class="fw-bold mb-0 text-dark">${sessionScope.usuario.nombreCompleto}</h4>
-                    <p class="text-muted mb-0">${sessionScope.rolNombre}</p>
+                <div class="col ps-md-3">
+                    <h4 class="fw-bold mb-1 text-dark">${sessionScope.usuario.nombreCompleto}</h4>
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill">${sessionScope.rolNombre}</span>
                 </div>
             </div>
 
@@ -118,7 +196,7 @@
                         <div class="row mb-4">
                             <div class="col-md-8">
                                 <label class="form-label">Fecha de Nacimiento</label>
-                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${fn:escapeXml(contratistaInfo.fechaNacimiento)}" onchange="calcularEdad()">
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento" class="form-control" value="${fn:escapeXml(contratistaInfo.fechaNacimiento)}" oninput="calcularEdad()" onchange="calcularEdad()">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Edad</label>
@@ -210,25 +288,50 @@
     <jsp:include page="inc/footer.jsp" />
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
 
     <script>
         function calcularEdad() {
-            var fecha = $('#fechaNacimiento').val();
-            if (fecha) {
-                var hoy = new Date();
-                var cumpleanos = new Date(fecha);
-                cumpleanos.setMinutes(cumpleanos.getMinutes() + cumpleanos.getTimezoneOffset());
-                var edad = hoy.getFullYear() - cumpleanos.getFullYear();
-                var m = hoy.getMonth() - cumpleanos.getMonth();
-                if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
-                    edad--;
-                }
-                $('#edad').val(edad);
+            var val = $('#fechaNacimiento').val();
+            if (!val) {
+                $('#edad').val('');
+                return;
             }
+
+            // Parsear año, mes y día de la cadena YYYY-MM-DD
+            var parts = val.split('-');
+            if (parts.length === 3) {
+                var anio = parseInt(parts[0], 10);
+                var mes = parseInt(parts[1], 10) - 1; // 0-indexed
+                var dia = parseInt(parts[2], 10);
+
+                if (!isNaN(anio) && !isNaN(mes) && !isNaN(dia)) {
+                    var hoy = new Date();
+                    var edad = hoy.getFullYear() - anio;
+                    var m = hoy.getMonth() - mes;
+                    if (m < 0 || (m === 0 && hoy.getDate() < dia)) {
+                        edad--;
+                    }
+                    if (edad >= 0 && edad < 130) {
+                        $('#edad').val(edad);
+                        return;
+                    }
+                }
+            }
+            $('#edad').val('');
         }
+
+        $(document).ready(function() {
+            // Escuchar tanto input como change al interactuar con el calendario o teclado
+            $('#fechaNacimiento').on('input change blur keyup', function() {
+                calcularEdad();
+            });
+
+            // Si al cargar ya tiene fecha pero la edad está vacía, calcularla de inmediato
+            if ($('#fechaNacimiento').val() && !$('#edad').val()) {
+                calcularEdad();
+            }
+        });
 
         // Estilo solicitado: icono de llave rotado
         $('.rotate-45').css('transform', 'rotate(-45deg)');
@@ -236,6 +339,11 @@
         // Actualizar Info Personal
         $('#formUpdateProfile').on('submit', function(e) {
             e.preventDefault();
+            Swal.fire({
+                title: 'Guardando datos...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
             $.post('${pageContext.request.contextPath}/usuarios?action=updateProfile', $(this).serialize(), function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: '¡Guardado!', text: 'Tus datos se actualizaron correctamente.', timer: 2000, showConfirmButton: false }).then(() => {
@@ -244,7 +352,9 @@
                 } else {
                     Swal.fire('Error', res.message || 'Error al guardar.', 'error');
                 }
-            }, 'json');
+            }, 'json').fail(function() {
+                Swal.fire('Error', 'No se pudo conectar con el servidor para actualizar tus datos.', 'error');
+            });
         });
 
         // Actualizar Contraseña
@@ -254,6 +364,11 @@
                 Swal.fire('Atención', 'Las nuevas contraseñas no coinciden.', 'warning');
                 return;
             }
+            Swal.fire({
+                title: 'Cambiando contraseña...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
             $.post('${pageContext.request.contextPath}/usuarios?action=changeMyPassword', $(this).serialize(), function(res) {
                 if(res.success) {
                     Swal.fire({ icon: 'success', title: '¡Listo!', text: 'Contraseña cambiada con éxito.', timer: 2000, showConfirmButton: false });
@@ -261,11 +376,29 @@
                 } else {
                     Swal.fire('Error', res.message || 'Error al cambiar contraseña.', 'error');
                 }
-            }, 'json');
+            }, 'json').fail(function() {
+                Swal.fire('Error', 'No se pudo conectar con el servidor para cambiar la contraseña.', 'error');
+            });
         });
 
         // Subida de Foto
         function uploadPhoto() {
+            var fileInput = $('#profileImageInput')[0];
+            if (fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                if (file.size > 20 * 1024 * 1024) {
+                    Swal.fire('Error', 'La imagen es demasiado grande. El tamaño máximo es 20MB.', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+            }
+
+            Swal.fire({
+                title: 'Subiendo foto de perfil...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
             const formData = new FormData($('#formUploadPhoto')[0]);
             $.ajax({
                 url: '${pageContext.request.contextPath}/usuarios?action=uploadPhoto',
@@ -276,6 +409,9 @@
                     } else {
                         Swal.fire('Error', res.message || 'Error al subir la foto.', 'error');
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor para subir la foto.', 'error');
                 },
                 dataType: 'json'
             });

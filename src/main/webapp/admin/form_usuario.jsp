@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
@@ -6,8 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${usuario_edit != null ? 'Editar' : 'Nuevo'} Usuario - Administración</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <jsp:include page="../inc/head_assets.jsp" />
+
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
 </head>
@@ -237,7 +238,7 @@
     </div>
 
     <jsp:include page="/inc/footer.jsp" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <jsp:include page="../inc/scripts_assets.jsp" />
     <script>
         function toggleContratistaFields() {
             const vinculacion = document.getElementById('vinculacion').value;

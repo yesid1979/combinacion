@@ -4,6 +4,42 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
 
 ---
 
+## [2026-10-24]
+
+### 1. Independencia de Red y Migración de CDNs a Assets Locales
+* **Eliminación Total de Dependencias de CDNs Externos:**
+  * Se descargaron y alojaron de forma local en `src/main/webapp/assets/vendor/` todas las librerías frontend del sistema que antes dependían de CDNs (`cdn.jsdelivr.net`, `code.jquery.com`, `cdn.datatables.net`):
+    * **Bootstrap 5.3.0**: CSS y JS Bundle.
+    * **Bootstrap Icons 1.10.0**: CSS y fuentes locales (`woff`, `woff2`).
+    * **jQuery 3.6.0**: JS minificado.
+    * **DataTables 1.13.4 + Bootstrap 5 + Responsive**: CSS, JS y archivo de internacionalización local (`es-ES.json`).
+    * **SweetAlert2 v11**: JS bundle unificado.
+    * **Summernote Lite 0.8.18**: CSS, JS y paquete de fuentes (`woff`, `woff2`, `ttf`).
+* **Centralización de Plantillas (Assets Layouts):**
+  * Creación de `src/main/webapp/inc/head_assets.jsp` para centralizar todos los enlaces CSS, preconnects y fuentes.
+  * Creación de `src/main/webapp/inc/scripts_assets.jsp` para centralizar los scripts en el orden exacto de dependencias e inicialización en español de DataTables.
+  * Migración de más de 30 páginas JSP (tanto en raíz como en `admin/`) para consumir los nuevos includes modulares.
+  * **Beneficios:** Carga instantánea en intranets, tolerancia a fallos por cortes de internet corporativo y eliminación de redundancias en las páginas.
+
+### 2. Seguridad, Gestión de Sesión y Manejo de Errores (Web Descriptor)
+* **Tiempo de Sesión Extendido y Protección de Cookies:**
+  * Se configuró en `src/main/webapp/WEB-INF/web.xml` el parámetro `<session-timeout>` a **120 minutos** (2 horas).
+  * Se habilitó `<cookie-config><http-only>true</http-only></cookie-config>` para blindar la cookie `JSESSIONID` contra robo de sesión mediante ataques XSS.
+* **Páginas de Error Institucionales (404 y 500):**
+  * Creación de `src/main/webapp/error.jsp` con diseño corporativo institucional, navbar y footer.
+  * Mapeo de errores HTTP `404` (recurso no encontrado) y `500` (error interno no controlado) en `web.xml`, evitando la exposición de stacktraces de Java o versiones del servidor Tomcat.
+* **Autonomía Total en Fotos de Perfil (Eliminación de `ui-avatars.com`):**
+  * En `src/main/webapp/inc/navbar.jsp` y `src/main/webapp/perfil.jsp` se reemplazaron las peticiones remotas a `ui-avatars.com` por avatares generados localmente mediante vector SVG y badges CSS con las iniciales del usuario. Carga instantánea y 100% offline.
+* **Optimización y Resiliencia en Mi Perfil (`perfil.jsp`):**
+  * Limpieza de enlaces redundantes en `<head>`.
+  * Incorporación de indicadores de carga interactivos (`Swal.showLoading()`) en la subida de foto de perfil, guardado de datos y cambio de contraseña.
+  * Blindaje con control de excepciones `.fail()` en todas las peticiones AJAX de perfil para notificar amigablemente al usuario en caso de desconexión.
+  * Validación de peso máximo de 20 MB en el lado del cliente previo al envío de la foto de perfil.
+  * **Corrección en Cálculo de Edad con Calendario:** Se reescribió la lógica para escuchar los eventos `input`, `change`, `blur` y `keyup`, parseando directamente el formato ISO `YYYY-MM-DD`. Ahora calcula y refleja la edad al instante tanto al escribir con el teclado como al elegir el día desde el selector/calendario emergente del navegador.
+  * **Corrección de Maquetación y Posicionamiento de Avatar:** Se fijó el contenedor `.avatar-section` a 150x150 px y se anclaron los botones flotantes de acción (cámara de subida en la esquina inferior derecha y basurero de eliminación en la inferior izquierda) eliminando el solapamiento que tenían sobre el nombre del usuario. Se corrigió la lectura del atributo `${sessionScope.usuario.fotoUrl}` y se diseñó un badge circular degradado (`.avatar-placeholder`) que muestra limpiamente la inicial en blanco cuando no hay foto cargada.
+
+---
+
 ## [2026-10-19]
 
 ### 1. Interfaz de Usuario (UI) y Gestión de Cuentas / Informes

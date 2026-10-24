@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <c:if test="${empty sessionScope.usuario}">
     <c:redirect url="login.jsp" />
@@ -10,10 +10,9 @@
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Panel Principal - Gestión de Contratos</title>
-            <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
-            <!-- Bootstrap 5 CSS -->
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+            
+    <jsp:include page="inc/head_assets.jsp" />
+
             <style>
                 .card-menu { transition: transform 0.2s; cursor: pointer; }
                 .card-menu:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
@@ -227,9 +226,7 @@
 
             <!-- Footer -->
             <jsp:include page="inc/footer.jsp" />
-
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const urlParams = new URLSearchParams(window.location.search);

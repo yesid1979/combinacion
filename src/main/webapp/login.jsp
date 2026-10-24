@@ -9,8 +9,9 @@
     <link rel="icon" href="${pageContext.request.contextPath}/favicon.ico" type="image/x-icon">
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <jsp:include page="inc/head_assets.jsp" />
+
     <link rel="icon" type="image/x-icon" href="${pageContext.request.contextPath}/favicon.ico">
     <style>
         html, body {
@@ -139,9 +140,7 @@
 
     <!-- Footer Corporativo Minimalista -->
     <jsp:include page="inc/footer.jsp" />
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <jsp:include page="inc/scripts_assets.jsp" />
     <c:if test="${not empty error and error.contains('expirado')}">
     <script>
         Swal.fire({
