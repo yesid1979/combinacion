@@ -320,7 +320,7 @@
 
                             // Botón Sincronizar Formatos con Drive (Solo Administrador y Contratación)
                             if (esAdminCuentas) {
-                                html += '<a href="informes?action=syncDrive&id=' + id + '&modo=' + (modo || '') + '" class="btn btn-sm btn-outline-secondary" title="Sincronizar formatos en Drive"><i class="bi bi-cloud-arrow-up"></i></a>';
+                                html += '<a href="informes?action=syncDrive&id=' + id + '&modo=' + (modo || '') + '&from=lista" class="btn btn-sm btn-outline-secondary" title="Sincronizar formatos en Drive" onclick="this.classList.add(\'disabled\'); this.innerHTML=\'<span class=\\\'spinner-border spinner-border-sm\\\'></span>\';"><i class="bi bi-cloud-arrow-up"></i></a>';
                             }
                             
                             // Botón Revisar

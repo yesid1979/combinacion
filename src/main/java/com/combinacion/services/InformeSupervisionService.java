@@ -2158,6 +2158,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         int id = ParseUtils.parseInt(request.getParameter("id"));
         String modoParam = request.getParameter("modo");
 
+        String fromParam = request.getParameter("from");
+
         if (!esAdminCuentas) {
             request.getSession().setAttribute("errorMessage", "No tiene permisos para sincronizar formatos en Drive.");
             response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
@@ -2166,10 +2168,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
         if (id > 0) {
             final String realPath = request.getServletContext().getRealPath("/");
-            encolarActualizacionDrive(id, realPath);
-            request.getSession().setAttribute("successMessage", "La sincronización con Google Drive se inició correctamente en segundo plano. En unos momentos los formatos quedarán actualizados en Drive.");
+            try {
+                actualizarFormatosEnDrive(id, realPath);
+                request.getSession().setAttribute("successMessage", "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
+            } catch (Throwable ex) {
+                System.err.println("Error al sincronizar con Google Drive para informe ID " + id + ": " + ex.getMessage());
+                ex.printStackTrace();
+                request.getSession().setAttribute("errorMessage", "Error al sincronizar con Google Drive: " + ex.getMessage());
+            }
         }
-        response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
+
+        if ("lista".equals(fromParam)) {
+            response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
+        } else {
+            response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
+        }
     }
 
     public String getFileName(Part part) {
@@ -2694,14 +2707,30 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 return false;
             }
 
-            // Validar si la carpeta existente en Producción corresponde al periodo manual histórico
-            // Fecha de corte de inicio del sistema digital: 15 de Octubre de 2026 00:00:00 UTC (1792022400000 ms)
+            // Validar si dentro de la carpeta existente en Producción YA REPOSAN documentos oficiales
+            // históricos generados antes del corte del sistema digital (15 de Octubre de 2026 00:00:00 UTC)
             com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
-            com.google.api.services.drive.model.File f = drive.files().get(cuotaExistenteId).setFields("createdTime").execute();
-            if (f != null && f.getCreatedTime() != null) {
-                long created = f.getCreatedTime().getValue();
-                long corteSistema = 1792022400000L;
-                return (created < corteSistema);
+            long corteSistema = 1792022400000L;
+
+            com.google.api.services.drive.model.FileList filesRes = drive.files().list()
+                    .setQ("'" + cuotaExistenteId + "' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'")
+                    .setFields("files(id, name, createdTime)")
+                    .execute();
+
+            if (filesRes != null && filesRes.getFiles() != null) {
+                for (com.google.api.services.drive.model.File file : filesRes.getFiles()) {
+                    String fName = file.getName() != null ? file.getName().toUpperCase() : "";
+                    boolean esDocumentoOficial = fName.contains("DS-") 
+                                              || fName.contains("INFORME") 
+                                              || fName.contains("CUENTA") 
+                                              || fName.contains("FACTURA");
+                    if (esDocumentoOficial && file.getCreatedTime() != null) {
+                        long fileCreated = file.getCreatedTime().getValue();
+                        if (fileCreated < corteSistema) {
+                            return true; // Cuenta histórica con documentos oficiales previos: se protege intacta
+                        }
+                    }
+                }
             }
 
             return false;

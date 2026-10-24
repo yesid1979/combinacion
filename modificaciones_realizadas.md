@@ -105,3 +105,21 @@
 * **[SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)** y **[CuentaCobroGenerator.java](file:///src/main/java/com/combinacion/util/CuentaCobroGenerator.java)**:
   * Se sincronizó la emisión de documentos Word y Excel para utilizar `contrato.getValorVigente()` y `contrato.getValorVigenteLetras()`, unificando cifras y textos en letras en todos los entregables generados.
 
+---
+
+## Fecha: 23 de Octubre de 2026
+
+### 1. [InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+* **Protección de Cuentas Históricas basada en Contenido (`esCuotaManualHistorica`):**
+  * Se reemplazó la validación basada únicamente en la fecha de creación de la carpeta en Drive (`createdTime < 15 de Octubre`) por una inspección basada en archivos oficiales existentes (`DS-`, `INFORME`, `CUENTA`, `FACTURA`) con fecha previa al corte.
+  * Si la carpeta en producción ya contenía documentos oficiales previos cerrados, se mantiene protegida al 100% (evitando que cuotas viejas tramitadas manualmente sean sobreescritas).
+  * Si la carpeta fue creada con anticipación pero no contiene documentos oficiales previos (como cuotas actuales vacías o solo con evidencias), el sistema reconoce que es la cuenta en curso y deposita los formatos oficiales en la carpeta de producción correspondiente.
+* **Sincronización Directa y Transparente con Google Drive (`sincronizarFormatosDrive`):**
+  * La acción manual de sincronización ahora se ejecuta directamente con respuesta garantizada, permitiendo informar en pantalla el éxito o el error exacto de la operación.
+  * Se añadió soporte para redirección inteligente según el origen (`from=lista` o desde el formulario de edición).
+
+### 2. [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp) y [lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp)
+* **Feedback Visual en el Botón "Sincronizar Drive":**
+  * Se integró estado de carga dinámico (`spinner-border` y deshabilitación al hacer clic) para informar al usuario que la sincronización con Google Drive está en progreso, evitando clics duplicados y asegurando que al recargar la página los archivos ya estén disponibles en Drive.
+
+
