@@ -122,4 +122,20 @@
 * **Feedback Visual en el Botón "Sincronizar Drive":**
   * Se integró estado de carga dinámico (`spinner-border` y deshabilitación al hacer clic) para informar al usuario que la sincronización con Google Drive está en progreso, evitando clics duplicados y asegurando que al recargar la página los archivos ya estén disponibles en Drive.
 
+### 3. [InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java) - Optimización de Descarga de Documentos Aprobados para Impresión (`descargarInforme`)
+* **Datos 100% Actualizados y Vigentes:**
+  * Al descargar el paquete ZIP cuando la cuenta está aprobada para impresión, el sistema consulta los datos frescos y vigentes del contrato e informe directamente desde la base de datos, regenerando al vuelo el Word de Supervisión, el Excel/PDF de Cuenta de Cobro y el Word/PDF de Gestión con la última información guardada.
+  * **Preservación del Informe de Supervisión en Word (`.docx`):** Se mantiene deliberadamente en formato editable Word para permitir que el contratista lo imprima o entregue físicamente/digitalmente para la firma del supervisor, antes de subir el PDF firmado definitivo.
+* **Homologación de Nomenclatura para Cuotas de Adición:**
+  * Se unificó la numeración de los archivos dentro del ZIP descargado para que coincida con la estructura en Google Drive (`actualizarFormatosEnDrive`):
+    * `6. INFORME DE SUPERVISIÓN CUOTA X - Nombre.docx`
+    * `4. DS-[Contrato]-[Consecutivo] CUOTA X Nombre.xlsx` / `.pdf`
+    * `13. INFORME DE GESTIÓN CUOTA X - Nombre.docx` / `.pdf`
+  * Extracción robusta del número base del contrato (`shortContrato`) para evitar inconsistencias en el prefijo `DS-`.
+* **Resiliencia del Flujo ZIP ante Errores de Google Drive:**
+  * Se corrigió la apertura prematura de entradas ZIP (`zos.putNextEntry`): ahora solo se inicializa la entrada si el flujo (`InputStream`) del anexo en Drive se obtuvo exitosamente y no es nulo.
+  * Se encapsuló la escritura de cada entrada en bloques `try-finally` para asegurar que `zos.closeEntry()` siempre se invoque, evitando que excepciones de red o timeouts corrompan el ZIP con errores `ZipException: entry already open` o caídas HTTP 500/504.
+* **Limpieza de Recursos y Archivos Temporales:**
+  * Se incorporó un bloque `finally` al final del proceso de descarga para eliminar de forma inmediata todos los archivos temporales (`docxFile`, `xlsxFile`, `xlsxPdfFile`, `gestionFile`, `gestionPdfFile`, `tempSegSoc`, `mergedFile`), previniendo fugas de almacenamiento en el servidor.
+
 
