@@ -44,6 +44,9 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
   * Se detectó que la tabla `historialTable` ordenaba la columna de fecha de forma lexicográfica (alfabética como texto), provocando que eventos de la tarde con formato 12 horas (ej. `03:41 PM`) quedaran por debajo de eventos de la mañana (`10:20 AM`).
   * Se agregó el atributo `data-order="${hr.fechaCambio != null ? hr.fechaCambio.time : 0}"` en la celda `<td>` para que DataTables ordene de manera estrictamente numérica por el timestamp en milisegundos.
   * Se ajustó en `HistorialRadicacionDAO.java` la consulta para ordenar por `ORDER BY h.fecha_cambio DESC, h.id DESC`.
+* **Visualización Selectiva de Cuentas Devueltas para Revisores y Supervisores (`InformeSupervisionService.java`):**
+  * Para mantener la bandeja de entrada limpia (Zero Inbox), las cuentas en estado `DEVUELTA` permanecen ocultas de forma predeterminada para revisores y supervisores.
+  * Cuando el usuario activa voluntariamente el filtro de estado en **"Devueltas"** (o busca "DEVUELTA"), el sistema detecta la consulta y carga únicamente las cuentas devueltas que le corresponden, permitiendo consultar el historial, motivos y trazabilidad sin saturar la vista principal de trabajo.
 
 ---
 

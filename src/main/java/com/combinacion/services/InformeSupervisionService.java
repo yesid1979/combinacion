@@ -686,6 +686,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
             
             String userCedulaLimpia = (u != null && u.getCedula() != null) ? u.getCedula().replaceAll("[^0-9]", "") : "";
+            
+            // Detectar si el usuario está buscando o filtrando específicamente por cuentas DEVUELTAS
+            String col7Search = request.getParameter("columns[7][search][value]");
+            String searchBox = request.getParameter("search[value]");
+            String estadoParam = request.getParameter("estado");
+            boolean buscandoDevueltas = (col7Search != null && col7Search.toUpperCase().contains("DEVUELTA"))
+                    || (searchBox != null && searchBox.toUpperCase().contains("DEVUELTA"))
+                    || (estadoParam != null && estadoParam.toUpperCase().contains("DEVUELTA"));
 
             for (InformeSupervision info : todos) {
                 // Evitar duplicados si ya los cargó por ser su propio contrato
@@ -697,12 +705,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     listaFinal.add(info);
                 } else {
                     boolean agregado = false;
-                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas
+                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas,
+                    // a menos que explícitamente filtre o busque por DEVUELTA.
                     if (esRevisor && info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
-                            && !"BORRADOR".equals(info.getEstadoRadicacion()) 
-                            && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
-                        listaFinal.add(info);
-                        agregado = true;
+                            && !"BORRADOR".equals(info.getEstadoRadicacion())) {
+                        if (!"DEVUELTA".equals(info.getEstadoRadicacion()) || buscandoDevueltas) {
+                            listaFinal.add(info);
+                            agregado = true;
+                        }
                     }
                     // Un supervisor ve las cuentas de los contratos que tiene asignados (titular o encargado)
                     if (!agregado && !userCedulaLimpia.isEmpty()) {
@@ -713,9 +723,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             supCed = info.getContrato().getSupervisor().getCedula().replaceAll("[^0-9]", "");
                         }
                         if (supCed != null && userCedulaLimpia.equals(supCed)
-                                && !"BORRADOR".equals(info.getEstadoRadicacion()) 
-                                && !"DEVUELTA".equals(info.getEstadoRadicacion())) {
-                            listaFinal.add(info);
+                                && !"BORRADOR".equals(info.getEstadoRadicacion())) {
+                            if (!"DEVUELTA".equals(info.getEstadoRadicacion()) || buscandoDevueltas) {
+                                listaFinal.add(info);
+                            }
                         }
                     }
                 }
