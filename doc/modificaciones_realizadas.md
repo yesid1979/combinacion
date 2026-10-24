@@ -37,6 +37,9 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
   * Validación de peso máximo de 20 MB en el lado del cliente previo al envío de la foto de perfil.
   * **Corrección en Cálculo de Edad con Calendario:** Se reescribió la lógica para escuchar los eventos `input`, `change`, `blur` y `keyup`, parseando directamente el formato ISO `YYYY-MM-DD`. Ahora calcula y refleja la edad al instante tanto al escribir con el teclado como al elegir el día desde el selector/calendario emergente del navegador.
   * **Corrección de Maquetación y Posicionamiento de Avatar:** Se fijó el contenedor `.avatar-section` a 150x150 px y se anclaron los botones flotantes de acción (cámara de subida en la esquina inferior derecha y basurero de eliminación en la inferior izquierda) eliminando el solapamiento que tenían sobre el nombre del usuario. Se corrigió la lectura del atributo `${sessionScope.usuario.fotoUrl}` y se diseñó un badge circular degradado (`.avatar-placeholder`) que muestra limpiamente la inicial en blanco cuando no hay foto cargada.
+* **Blindaje contra Cruce y Sobreescritura de Firmas en Google Drive:**
+  * En `UsuarioService.java`, se sustituyó el nombre de archivo arbitrario del cliente (`submittedFileName`, ej: `firma.png`, `firma-removebg-preview.png`) por un nombre determinístico y único: `firma_user_[id]_[cedula].ext`.
+  * Previene que múltiples contratistas que suban archivos con el mismo nombre genérico sobreescriban el archivo en Google Drive o intercambien involuntariamente sus firmas en los informes de gestión y supervisión.
 
 ---
 

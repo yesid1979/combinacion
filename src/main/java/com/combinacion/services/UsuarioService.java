@@ -447,17 +447,20 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             Part filePart = request.getPart("firma");
             if (filePart != null && filePart.getSize() > 0) {
                 String submittedFileName = filePart.getSubmittedFileName();
-                if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
-                    submittedFileName = "firma_" + logged.getId() + ".jpg";
+                String ext = ".png";
+                if (submittedFileName != null && (submittedFileName.toLowerCase().endsWith(".jpg") || submittedFileName.toLowerCase().endsWith(".jpeg"))) {
+                    ext = ".jpg";
                 }
+                String cedulaClean = (logged.getCedula() != null) ? logged.getCedula().replaceAll("[^0-9]", "") : "0";
+                String driveFileName = "firma_user_" + logged.getId() + "_" + cedulaClean + ext;
                 
-                String mimeType = filePart.getContentType() != null ? filePart.getContentType() : "image/jpeg";
+                String mimeType = filePart.getContentType() != null ? filePart.getContentType() : ("image/" + (ext.equals(".png") ? "png" : "jpeg"));
                 
                 String masterFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_SISTEMA", "configuracion_SistemaContratacion"), null);
                 String folderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_FIRMAS", "FIRMAS_CONTRATISTAS"), masterFolderId);
                 
                 try (java.io.InputStream is = filePart.getInputStream()) {
-                    String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, filePart.getSize(), submittedFileName, mimeType, folderId);
+                    String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, filePart.getSize(), driveFileName, mimeType, folderId);
                     
                     if (fileId != null && !fileId.isEmpty()) {
                         String firmaUrl = "ImageServlet?id=" + fileId;
