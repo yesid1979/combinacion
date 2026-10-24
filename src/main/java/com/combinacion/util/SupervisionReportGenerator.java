@@ -206,7 +206,7 @@ public class SupervisionReportGenerator {
         boolean tieneApoyo = contrato.getApoyoSupervision() != null && !contrato.getApoyoSupervision().trim().isEmpty();
         reps.put("${LINEA_APOYO}", tieneApoyo ? "______________________________________________________" : "{{REMOVE_PARAGRAPH}}");
         reps.put("${NOMBRE_APOYO}", tieneApoyo ? contrato.getApoyoSupervision().toUpperCase() : "{{REMOVE_PARAGRAPH}}");
-        reps.put("${TEXTO_APOYO}", tieneApoyo ? "Nombre y firma del Apoyo a la Supervisión (Incluir cuando aplique)" : "{{REMOVE_PARAGRAPH}}");
+        reps.put("${TEXTO_APOYO}", tieneApoyo ? "Nombre y firma del Apoyo a la Supervisión" : "{{REMOVE_PARAGRAPH}}");
 
         java.util.List<com.combinacion.util.ObligacionesParser.ObligacionActividad> lista = null;
         if (finalConceptoSup != null) {

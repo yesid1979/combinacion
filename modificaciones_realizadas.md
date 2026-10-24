@@ -138,4 +138,10 @@
 * **Limpieza de Recursos y Archivos Temporales:**
   * Se incorporó un bloque `finally` al final del proceso de descarga para eliminar de forma inmediata todos los archivos temporales (`docxFile`, `xlsxFile`, `xlsxPdfFile`, `gestionFile`, `gestionPdfFile`, `tempSegSoc`, `mergedFile`), previniendo fugas de almacenamiento en el servidor.
 
+### 4. [SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java) - Ajuste en Firmas de Apoyo a la Supervisión
+* **Eliminación de la Frase Condicional:**
+  * Se eliminó el texto `(Incluir cuando aplique)` del rótulo de firma del apoyo a la supervisión `${TEXTO_APOYO}`.
+  * Ahora se genera de manera limpia y profesional: `Nombre y firma del Apoyo a la Supervisión`, en concordancia con el rótulo del supervisor (`Nombre y firma del Supervisor`).
+
+
 
