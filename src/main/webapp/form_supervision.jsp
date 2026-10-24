@@ -686,7 +686,7 @@
                                     <tbody>
                                         <c:forEach var="hr" items="${listaHistorial}">
                                             <tr>
-                                                <td class="align-middle fw-semibold">
+                                                <td class="align-middle fw-semibold" data-order="${hr.fechaCambio != null ? hr.fechaCambio.time : 0}">
                                                     <fmt:formatDate value="${hr.fechaCambio}" pattern="dd/MM/yyyy hh:mm a" />
                                                 </td>
                                                 <td class="align-middle">${fn:escapeXml(not empty hr.nombreUsuarioCambio ? hr.nombreUsuarioCambio : 'Sistema')}</td>

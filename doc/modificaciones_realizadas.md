@@ -40,6 +40,10 @@ Este documento mantiene un registro cronológico detallado de todos los cambios,
 * **Blindaje contra Cruce y Sobreescritura de Firmas en Google Drive:**
   * En `UsuarioService.java`, se sustituyó el nombre de archivo arbitrario del cliente (`submittedFileName`, ej: `firma.png`, `firma-removebg-preview.png`) por un nombre determinístico y único: `firma_user_[id]_[cedula].ext`.
   * Previene que múltiples contratistas que suban archivos con el mismo nombre genérico sobreescriban el archivo en Google Drive o intercambien involuntariamente sus firmas en los informes de gestión y supervisión.
+* **Corrección de Orden Cronológico en Historial de Radicación y Revisiones (`form_supervision.jsp`):**
+  * Se detectó que la tabla `historialTable` ordenaba la columna de fecha de forma lexicográfica (alfabética como texto), provocando que eventos de la tarde con formato 12 horas (ej. `03:41 PM`) quedaran por debajo de eventos de la mañana (`10:20 AM`).
+  * Se agregó el atributo `data-order="${hr.fechaCambio != null ? hr.fechaCambio.time : 0}"` en la celda `<td>` para que DataTables ordene de manera estrictamente numérica por el timestamp en milisegundos.
+  * Se ajustó en `HistorialRadicacionDAO.java` la consulta para ordenar por `ORDER BY h.fecha_cambio DESC, h.id DESC`.
 
 ---
 

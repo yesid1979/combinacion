@@ -33,7 +33,7 @@ public class HistorialRadicacionDAO {
                      "FROM historial_radicacion h " +
                      "LEFT JOIN usuarios u ON h.id_usuario_cambio = u.id " +
                      "WHERE h.id_informe = ? " +
-                     "ORDER BY h.fecha_cambio DESC";
+                     "ORDER BY h.fecha_cambio DESC, h.id DESC";
                      
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
