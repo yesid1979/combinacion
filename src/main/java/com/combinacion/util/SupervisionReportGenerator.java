@@ -307,23 +307,24 @@ public class SupervisionReportGenerator {
                     
                     if (lista != null) {
                         StringBuilder tablaXml = new StringBuilder();
+                        tablaXml.append("</w:t></w:r></w:p>"); // Cerrar el párrafo actual de ${CONCEPTO_SUPERVISOR}
+                        
                         tablaXml.append("<w:tbl>");
                         tablaXml.append("<w:tblPr>");
-                        tablaXml.append("<w:tblW w:w=\"10114\" w:type=\"dxa\"/>");
-                        tablaXml.append("<w:tblInd w:w=\"0\" w:type=\"dxa\"/>");
+                        tablaXml.append("<w:tblW w:w=\"5000\" w:type=\"pct\"/>");
                         tablaXml.append(TBL_BORDERS);
-                        tablaXml.append("<w:tblLayout w:type=\"fixed\"/>");
                         tablaXml.append("<w:tblCellMar>");
                         tablaXml.append("<w:top w:w=\"80\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:left w:w=\"100\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:bottom w:w=\"80\" w:type=\"dxa\"/>");
                         tablaXml.append("<w:right w:w=\"100\" w:type=\"dxa\"/>");
                         tablaXml.append("</w:tblCellMar>");
+                        tablaXml.append("<w:tblLook w:val=\"0000\" w:firstRow=\"0\" w:lastRow=\"0\" w:firstColumn=\"0\" w:lastColumn=\"0\" w:noHBand=\"0\" w:noVBand=\"0\"/>");
                         tablaXml.append("</w:tblPr>");
                         
                         tablaXml.append("<w:tblGrid>");
-                        tablaXml.append("<w:gridCol w:w=\"5057\"/>");
-                        tablaXml.append("<w:gridCol w:w=\"5057\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"4987\"/>");
+                        tablaXml.append("<w:gridCol w:w=\"4987\"/>");
                         tablaXml.append("</w:tblGrid>");
                         
                         String tcBordersXml = "<w:tcBorders>" +
@@ -333,10 +334,10 @@ public class SupervisionReportGenerator {
                             "<w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"000000\"/>" +
                             "</w:tcBorders>";
                         
-                        // Header Row (50% / 50% = 5057 dxa cada columna)
+                        // Header Row (50% / 50% = 2500 pct cada columna)
                         tablaXml.append("<w:tr>");
-                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5057\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc>");
-                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5057\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2500\" w:type=\"pct\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>OBLIGACIONES DEL CONTRATISTA</w:t></w:r></w:p></w:tc>");
+                        tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2500\" w:type=\"pct\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"center\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"center\"/><w:spacing w:before=\"60\" w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:b/><w:bCs/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>ACTIVIDADES</w:t></w:r></w:p></w:tc>");
                         tablaXml.append("</w:tr>");
                         
                         // Rows
@@ -349,13 +350,13 @@ public class SupervisionReportGenerator {
                             
                             tablaXml.append("<w:tr>");
                             
-                            // Cell Obligacion (50%)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5057\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"40\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
+                            // Cell Obligacion (50% = 2500 pct)
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2500\" w:type=\"pct\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr><w:p><w:pPr><w:jc w:val=\"both\"/><w:spacing w:before=\"40\" w:after=\"40\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\" w:cs=\"Arial\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/></w:rPr><w:t>")
                                     .append(ob)
                                     .append("</w:t></w:r></w:p></w:tc>");
                                     
-                            // Cell Actividad (50%)
-                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"5057\" w:type=\"dxa\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr>")
+                            // Cell Actividad (50% = 2500 pct)
+                            tablaXml.append("<w:tc><w:tcPr><w:tcW w:w=\"2500\" w:type=\"pct\"/>").append(tcBordersXml).append("<w:vAlign w:val=\"top\"/></w:tcPr>")
                                     .append(acXml)
                                     .append("</w:tc>");
                                     
@@ -382,37 +383,9 @@ public class SupervisionReportGenerator {
                             tablaXml.append("</w:p>");
                         }
                         
-                        // Reabrir la segunda tabla principal para el resto del documento
-                        String table2Header = "<w:tbl>" +
-                            "<w:tblPr>" +
-                            "<w:tblW w:w=\"10110\" w:type=\"dxa\"/>" +
-                            TBL_BORDERS +
-                            "<w:tblCellMar><w:left w:w=\"10\" w:type=\"dxa\"/><w:right w:w=\"10\" w:type=\"dxa\"/></w:tblCellMar>" +
-                            "<w:tblLook w:val=\"04A0\" w:firstRow=\"1\" w:lastRow=\"0\" w:firstColumn=\"1\" w:lastColumn=\"0\" w:noHBand=\"0\" w:noVBand=\"1\"/>" +
-                            "</w:tblPr>" +
-                            "<w:tblGrid>" +
-                            "<w:gridCol w:w=\"3826\"/>" +
-                            "<w:gridCol w:w=\"1415\"/>" +
-                            "<w:gridCol w:w=\"4873\"/>" +
-                            "</w:tblGrid>";
-
-                        // División de tabla: Se cierra la primera tabla principal después de "Concepto Supervisor:",
-                        // se inserta la tabla de obligaciones como tabla independiente (con su propio 50%/50% sin que
-                        // Google Docs la ajuste a las columnas 3826/6288 de la tabla contenedora), y se abre la segunda tabla.
-                        int idx = xml.indexOf("${CONCEPTO_SUPERVISOR}");
-                        if (idx >= 0) {
-                            int pStart1 = xml.lastIndexOf("<w:p ", idx);
-                            int pStart2 = xml.lastIndexOf("<w:p>", idx);
-                            int pStart = Math.max(pStart1, pStart2);
-                            int trEnd = xml.indexOf("</w:tc></w:tr>", idx) + "</w:tc></w:tr>".length();
-                            if (pStart >= 0 && trEnd > pStart) {
-                                String toReplace = xml.substring(pStart, trEnd);
-                                String replacement = "</w:tc></w:tr></w:tbl>" + tablaXml.toString() + table2Header;
-                                xml = xml.replace(toReplace, replacement);
-                            } else {
-                                xml = xml.replace("${CONCEPTO_SUPERVISOR}", "");
-                            }
-                        }
+                        tablaXml.append("<w:p><w:r><w:t>"); // Reabrir para balancear el tag original
+                        
+                        xml = xml.replace("${CONCEPTO_SUPERVISOR}", tablaXml.toString());
                     } else {
                         xml = xml.replace("${CONCEPTO_SUPERVISOR}", "");
                     }
