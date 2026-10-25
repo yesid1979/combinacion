@@ -245,5 +245,40 @@
     * Si la cuenta proviene de Supervisión o Contratación, se presenta un panel informativo destacado al contratista explicándole con total claridad que, al guardar las correcciones, la cuenta irá directamente a la bandeja de quien la devolvió (Supervisor o Contratación), sin necesidad de reasignar revisor.
     * El selector de revisor se omite automáticamente para estos casos y el botón de acción se adapta dinámicamente a **`[Volver a Radicar (Enviar a Supervisión)]`** o **`[Volver a Radicar (Enviar a Contratación)]`**.
 
+---
+
+### 6. Sistema de Notificaciones en Tiempo Real (Campanita, Animación Pendular y Sonido Chime)
+* **Objetivo:**
+  * Notificar instantáneamente a contratistas, revisores, supervisores y contratación sobre cada cambio de estado, devolución, radicación o aprobación en el trámite de las cuentas de cobro, sin requerir recargar la página ni depender exclusivamente del correo electrónico.
+* **Componentes Implementados:**
+  * **[Notificacion.java](file:///src/main/java/com/combinacion/models/Notificacion.java):**
+    * Modelo para representar las notificaciones: `id`, `idUsuario`, `idInforme`, `titulo`, `mensaje`, `tipo` (SUCCESS, DANGER, WARNING, INFO), `url`, `leida`, `fechaCreacion`.
+  * **[NotificacionDAO.java](file:///src/main/java/com/combinacion/dao/NotificacionDAO.java):**
+    * Creación de tabla e índices en PostgreSQL: `notificaciones_usuario` con índices en `(id_usuario, leida)` y `(id_usuario, fecha_creacion DESC)`.
+    * Métodos de inserción orientados al negocio: `crearParaUsuarioPorCedula` (sanitiza cédula automáticamente para ubicar al usuario contratista o supervisor) y `crearParaRol` (para el equipo de Contratación).
+    * Consultas optimizadas para conteo de no leídas, listado con límite y marcado individual o masivo como leídas.
+  * **[NotificacionServlet.java](file:///src/main/java/com/combinacion/servlets/NotificacionServlet.java):**
+    * Endpoint JSON ligero bajo la ruta `/notificaciones`.
+    * Acciones: `check` (conteo y último ID para polling eficiente), `list` (detalle con cálculo de tiempo relativo tipo *"Hace 5 minutos"*), `mark_read` (marcar una o todas).
+  * **[AuthFilter.java](file:///src/main/java/com/combinacion/util/AuthFilter.java) y [web.xml](file:///src/main/webapp/WEB-INF/web.xml):**
+    * Configuración de acceso seguro para que cualquier usuario autenticado en el sistema pueda consultar sus propias alertas.
+  * **[navbar.jsp](file:///src/main/webapp/inc/navbar.jsp):**
+    * Integración de la **Campanita de Notificaciones** (`bi-bell-fill`) junto a la tarjeta del usuario.
+    * Insignia numérica roja (*badge*) con el total de notificaciones pendientes.
+    * Tarjeta flotante (*dropdown*) estilizada con encabezado, botón *"Marcar todas leídas"*, scroll para el listado con tarjetas individuales por color de estado y pie informativo en tiempo real.
+  * **[scripts_assets.jsp](file:///src/main/webapp/inc/scripts_assets.jsp):**
+    * **Sonido Chime Sintetizado (Web Audio API):** Genera un doble tono armónico suave (cristalino y profesional) sin archivos externos ni descargas de `.mp3`.
+    * **Animación Pendular (`@keyframes bellSwingAnim`):** La campana se balancea durante 6 segundos al detectar un nuevo evento.
+    * **Control Inteligente de Notificaciones Nuevas:** Registra en `localStorage` el último ID alertado por usuario. **El sonido suena ÚNICAMENTE una vez por cada evento nuevo**, evitando repeticiones molestas aunque el usuario no las marque de inmediato como leídas.
+    * **Navegación Directa:** Al hacer clic en cualquier notificación, se marca automáticamente como leída y abre de inmediato la cuenta o formulario de cobro.
+    * Polling silencioso en segundo plano cada 25 segundos.
+  * **[procesar_revision.jsp](file:///src/main/webapp/procesar_revision.jsp) e [InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java):**
+    * Registro automático de alertas en tiempo real en cada evento:
+      * **Contratista:** Alertas rojas si la cuenta es devuelta con observaciones y verdes si es aprobada.
+      * **Revisor:** Alerta azul cuando se le asigna o radica una cuenta.
+      * **Supervisor:** Alerta informativa cuando una cuenta llega a su bandeja de supervisión o cuando un contratista vuelve a radicar una cuenta devuelta corregida.
+      * **Contratación:** Alerta cuando una cuenta ingresa para revisión del área de Contratación.
+
+
 
 

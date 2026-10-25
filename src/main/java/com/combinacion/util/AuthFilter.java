@@ -91,6 +91,13 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // 3.7 EXCEPCIÓN: Todos los usuarios autenticados pueden consultar sus propias notificaciones
+        if (path.equals("/notificaciones")) {
+            request.setAttribute("usuarioLogueado", usuario);
+            chain.doFilter(request, response);
+            return;
+        }
+
         // 4. VALIDACIÓN DE SEGURIDAD
         boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
 

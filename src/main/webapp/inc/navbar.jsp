@@ -111,7 +111,45 @@
                 </ul>
 
                 <c:if test="${not empty sessionScope.usuario}">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <!-- Campanita de Notificaciones -->
+                        <li class="nav-item dropdown me-2" id="notifDropdownItem">
+                            <a class="nav-link position-relative p-2 d-flex align-items-center justify-content-center rounded-circle notif-bell-btn" 
+                               href="#" id="notifBellDrop" role="button" data-bs-toggle="dropdown" aria-expanded="false" 
+                               title="Notificaciones de Cuentas" style="width: 40px; height: 40px; color: #004884; background-color: #f1f5f9; transition: all 0.2s ease;">
+                                <i class="bi bi-bell-fill fs-5" id="bellIcon"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm d-none" 
+                                      id="notifBadge" style="font-size: 0.68rem; padding: 0.35em 0.55em;">
+                                    0
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-0 notif-dropdown-menu" 
+                                 aria-labelledby="notifBellDrop" style="width: 360px; max-width: 92vw; border-radius: 12px; overflow: hidden; z-index: 1060;">
+                                <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-bell-fill me-2 text-primary"></i>
+                                        <span class="fw-bold text-dark" style="font-size: 0.92rem;">Notificaciones</span>
+                                        <span class="badge bg-primary ms-2 rounded-pill d-none" id="notifHeaderCount">0</span>
+                                    </div>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" 
+                                            id="btnMarcarTodasLeidas" style="font-size: 0.78rem;" onclick="marcarTodasNotificacionesLeidas(event)">
+                                        <i class="bi bi-check2-all me-1"></i>Marcar todas leídas
+                                    </button>
+                                </div>
+                                <div class="notif-scroll-container" id="notifListContainer" style="max-height: 380px; overflow-y: auto;">
+                                    <div class="p-4 text-center text-muted" id="notifEmptyState">
+                                        <i class="bi bi-bell-slash text-secondary mb-2" style="font-size: 2rem; display: block;"></i>
+                                        <span class="small">No tienes notificaciones pendientes</span>
+                                    </div>
+                                </div>
+                                <div class="p-2 bg-light border-top text-center">
+                                    <small class="text-muted" style="font-size: 0.72rem;">
+                                        <i class="bi bi-broadcast me-1 text-success"></i>Alertas de trámite de cuentas en tiempo real
+                                    </small>
+                                </div>
+                            </div>
+                        </li>
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center px-3" 
                                href="#" id="userDrop" role="button" data-bs-toggle="dropdown" style="min-height: 50px;">

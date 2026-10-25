@@ -103,14 +103,15 @@
                             // Auditoría del Sistema
                             com.combinacion.dao.AuditoriaDAO.registrar(u, "Cambio de Estado", "La cuenta de cobro ID " + idInforme + " pasó a estado: " + accion, request.getRemoteAddr());
                             
-                            // Notificación por correo al contratista si fue devuelta o aprobada
+                            // Notificación en el sistema y por correo al contratista si fue devuelta o aprobada
                             if ("DEVUELTA".equals(accion) || "APROBADA PARA IMPRESION".equals(accion)) {
                                 try {
                                     String emailContratista = null;
                                     String nombreContratista = "";
+                                    String cedContratista = "";
                                     String numCuota = "";
                                     String numContrato = "";
-                                    String sqlEmail = "SELECT COALESCE(NULLIF(TRIM(u.correo), ''), NULLIF(TRIM(c.correo), '')) as correo, c.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
+                                    String sqlEmail = "SELECT COALESCE(NULLIF(TRIM(u.correo), ''), NULLIF(TRIM(c.correo), '')) as correo, c.nombre, c.cedula, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
                                                       "JOIN contratos con ON i.contrato_id = con.id " +
                                                       "JOIN contratistas c ON con.contratista_id = c.id " +
                                                       "LEFT JOIN usuarios u ON regexp_replace(u.cedula, '[^0-9]', '', 'g') = regexp_replace(c.cedula, '[^0-9]', '', 'g') AND u.activo = true " +
@@ -121,10 +122,19 @@
                                             if (rs.next()) {
                                                 emailContratista = rs.getString("correo");
                                                 nombreContratista = rs.getString("nombre");
+                                                cedContratista = rs.getString("cedula");
                                                 numCuota = rs.getString("numero_cuota");
                                                 numContrato = rs.getString("numero_contrato");
                                             }
                                         }
+                                    }
+
+                                    // Notificación en campanita para el contratista
+                                    com.combinacion.dao.NotificacionDAO notifDAO = new com.combinacion.dao.NotificacionDAO();
+                                    if ("DEVUELTA".equals(accion)) {
+                                        notifDAO.crearParaUsuarioPorCedula(cedContratista, idInforme, "⚠️ Cuenta Devuelta", "Su cuenta del Contrato " + numContrato + " (Cuota " + numCuota + ") fue devuelta con observaciones.", "DANGER", "informes?action=edit&id=" + idInforme);
+                                    } else {
+                                        notifDAO.crearParaUsuarioPorCedula(cedContratista, idInforme, "✅ Cuenta Aprobada", "Su cuenta del Contrato " + numContrato + " (Cuota " + numCuota + ") ha sido aprobada para impresión.", "SUCCESS", "informes?action=edit&id=" + idInforme);
                                     }
                                     
                                     if (emailContratista != null && !emailContratista.trim().isEmpty()) {
@@ -186,6 +196,7 @@
                                     String nombreSup = "";
                                     String numContrato = "";
                                     String numCuota = "";
+                                    String cedSup = null;
                                     String sqlSup = "SELECT s.cedula, s.nombre, i.numero_cuota, con.numero_contrato FROM informes_supervision i " +
                                                     "JOIN contratos con ON i.contrato_id = con.id " +
                                                     "JOIN supervisores s ON s.id = COALESCE(i.supervisor_id, con.supervisor_id) " +
@@ -194,7 +205,7 @@
                                         psSup.setInt(1, idInforme);
                                         try (java.sql.ResultSet rs = psSup.executeQuery()) {
                                             if (rs.next()) {
-                                                String cedSup = rs.getString("cedula");
+                                                cedSup = rs.getString("cedula");
                                                 nombreSup = rs.getString("nombre");
                                                 numCuota = rs.getString("numero_cuota");
                                                 numContrato = rs.getString("numero_contrato");
@@ -211,6 +222,11 @@
                                                 }
                                             }
                                         }
+                                    }
+
+                                    // Notificación en campanita al supervisor
+                                    if (cedSup != null) {
+                                        new com.combinacion.dao.NotificacionDAO().crearParaUsuarioPorCedula(cedSup, idInforme, "📋 Cuenta para Supervisión", "La cuenta del Contrato " + numContrato + " (Cuota " + numCuota + ") está en su bandeja de supervisión.", "INFO", "informes?action=edit&id=" + idInforme);
                                     }
 
                                     if (emailSup != null && !emailSup.trim().isEmpty()) {
@@ -240,6 +256,21 @@
                                     }
                                 } catch (Exception ex) {
                                     System.err.println("Error notificando al supervisor: " + ex.getMessage());
+                                }
+                            } else if ("EN REVISION CONTRATACION".equals(accion)) {
+                                try {
+                                    new com.combinacion.dao.NotificacionDAO().crearParaRol("Contratacion", idInforme, "🏛️ Cuenta en Contratación", "Una cuenta de cobro pasó a revisión de Contratación.", "INFO", "informes?action=edit&id=" + idInforme);
+                                } catch (Exception ex) {
+                                    System.err.println("Error notificando a contratacion: " + ex.getMessage());
+                                }
+                            }
+
+                            // Si se asignó un revisor en Visto Bueno de Contratación
+                            if (updateRevisor && idRevisorNuevo > 0) {
+                                try {
+                                    new com.combinacion.dao.NotificacionDAO().crear(new com.combinacion.models.Notificacion(idRevisorNuevo, idInforme, "📥 Cuenta Asignada", "Se le ha asignado una cuenta de cobro para revisión.", "INFO", "informes?action=edit&id=" + idInforme));
+                                } catch (Exception ex) {
+                                    System.err.println("Error notificando a revisor asignado: " + ex.getMessage());
                                 }
                             }
                             

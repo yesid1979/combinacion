@@ -139,6 +139,16 @@
         <url-pattern>/informes</url-pattern>
     </servlet-mapping>
 
+    <!-- Notificaciones de Usuario -->
+    <servlet>
+        <servlet-name>NotificacionServlet</servlet-name>
+        <servlet-class>com.combinacion.servlets.NotificacionServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NotificacionServlet</servlet-name>
+        <url-pattern>/notificaciones</url-pattern>
+    </servlet-mapping>
+
     <!-- 3. OTROS RECURSOS -->
     <session-config>
         <session-timeout>120</session-timeout>
