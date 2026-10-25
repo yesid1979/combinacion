@@ -190,6 +190,17 @@
     * Ahora se obtiene la lista de subcarpetas del padre en una **única llamada HTTP eficiente** y el emparejamiento (exacto y por contención) se realiza instantáneamente en memoria Java de forma insensible a mayúsculas/minúsculas.
     * La resolución de carpetas pasó de varios segundos a menos de 300 milisegundos.
 
-* **Limpieza de Producción para Manuel Alberto Valencia (Contrato 114 - Cuota 3):**
-  * Se removieron los archivos de prueba generados temporalmente durante las pruebas de sincronización en la carpeta `CUOTA 3 114` de Producción, restaurando su contenido a su estado manual original con sus subcarpetas y anexos intactos.
+### 3. Distribución Equitativa 50% / 50% de la Tabla de Obligaciones y Actividades en Google Docs y Word
+* **[SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)**:
+  * **Causa Raíz Identificada:**
+    * La plantilla del informe de supervisión está diseñada dentro de una tabla principal contenedora con una cuadrícula (`w:tblGrid`) de 3 columnas desiguales (`3826 dxa`, `1415 dxa`, `4873 dxa`).
+    * Al inyectar la tabla de obligaciones como una tabla anidada dentro de la celda de `${CONCEPTO_SUPERVISOR}` (que abarca `gridSpan="3"`), el motor de importación de **Google Docs** fuerza y alinea las columnas de la tabla anidada a las líneas guía de la cuadrícula de la tabla contenedora.
+    * En consecuencia, en Google Docs la columna de *Obligaciones del Contratista* quedaba comprimida al ancho de la columna 1 (`3826 dxa` ≈ 30%), y la de *Actividades* se expandía a las columnas 2 + 3 (`6288 dxa` ≈ 70%), ignorando las propiedades `w:gridCol` internas de la tabla anidada.
+  * **Solución Definitiva (Independización de la Tabla de Obligaciones):**
+    * Se separó la estructura del documento en el marcador `${CONCEPTO_SUPERVISOR}`:
+      1. Se cierra limpiamente la primera tabla principal tras el encabezado de *"Concepto Supervisor:"* (`</w:tc></w:tr></w:tbl>`).
+      2. Se inserta la tabla de **Obligaciones y Actividades** como una **tabla de primer nivel e independiente** con su propia cuadrícula al 50% / 50% exacto (`w:gridCol w:w="5057"` y celdas `w:tcW w:w="5057"` con bordes y márgenes idénticos).
+      3. Se añaden los párrafos con el hipervínculo de evidencias de Google Drive con estilo azul legible.
+      4. Se abre la segunda tabla principal para el resto del documento (*"Recibo a Satisfacción de Servicios"*, firmas, etc.) conservando la cuadrícula y márgenes originales.
+    * Al ser una tabla independiente de primer nivel, **Google Docs respeta fielmente el 50% / 50% para ambas columnas** tanto en la vista web como en Microsoft Word y LibreOffice.
 
