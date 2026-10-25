@@ -783,12 +783,12 @@
                         </div>
                     </c:if>
                     
-                    <div class="mt-5 pt-3 border-top d-flex justify-content-end gap-2">
-                        <a href="informes${not empty modo ? '?modo='.concat(modo) : ''}" class="btn btn-secondary px-4 shadow-sm">
+                    <div class="mt-5 pt-3 border-top d-flex justify-content-end gap-2" id="contenedorBotonesAccion">
+                        <a href="informes${not empty modo ? '?modo='.concat(modo) : ''}" id="btnVolverForm" class="btn btn-secondary px-4 shadow-sm" onclick="if (verificarBloqueoRevision(event, 'salir o volver a la lista', function() { window.location.href = document.getElementById('btnVolverForm').getAttribute('href'); })) return false;">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                         <c:if test="${not empty informe.id and esAdminCuentas}">
-                            <button type="button" class="btn btn-outline-success px-4 shadow-sm" title="Regenerar y subir los formatos actualizados (Word, Excel y PDF) a Google Drive" onclick="sincronizarDriveConConfirmacion(${informe.id}, '${not empty modo ? modo : ''}', false)">
+                            <button type="button" id="btnSincronizarDriveForm" class="btn btn-outline-success px-4 shadow-sm" title="Regenerar y subir los formatos actualizados (Word, Excel y PDF) a Google Drive" onclick="if (verificarBloqueoRevision(event, 'sincronizar con Drive', function() { sincronizarDriveConConfirmacion(${informe.id}, '${not empty modo ? modo : ''}', false); })) return false; sincronizarDriveConConfirmacion(${informe.id}, '${not empty modo ? modo : ''}', false)">
                                 <i class="bi bi-cloud-arrow-up me-2"></i>Sincronizar Drive
                             </button>
                         </c:if>
@@ -845,39 +845,39 @@
                         </c:if>
                         
                         <c:if test="${mostrarBtnRevisar and not empty informe.id}">
-                            <button type="button" class="btn btn-outline-primary px-4 shadow-sm" onclick="abrirModalRevision(${informe.id}, '${informe.estadoRadicacion}', '${tipoRolModal}')">
+                            <button type="button" id="btnRevisarForm" class="btn btn-outline-primary px-4 shadow-sm" onclick="manejarClickBotonRevisar(${informe.id}, '${informe.estadoRadicacion}', '${tipoRolModal}')">
                                 <i class="bi bi-check2-square me-2"></i>Revisar
                             </button>
                         </c:if>
                         
                         <c:if test="${not readonly}">
-                            <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm" onclick="document.getElementById('radicar_input').value='false'; return true;">
+                            <button type="submit" id="btnGuardarForm" class="btn btn-success px-5 fw-bold shadow-sm" onclick="if (verificarBloqueoRevision(event, 'guardar o actualizar el informe', function() { document.getElementById('radicar_input').value='false'; document.getElementById('informeForm').submit(); })) return false; document.getElementById('radicar_input').value='false'; return true;">
                                 <i class="bi bi-save me-2"></i>${action == 'update' ? 'Actualizar Informe' : 'Guardar Informe'}
                             </button>
                             <c:if test="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}">
                                 <c:choose>
                                     <c:when test="${empty informe.id}">
-                                        <button type="button" class="btn btn-secondary px-5 fw-bold shadow-sm" disabled title="Guarde el informe primero para poder radicarlo">
+                                        <button type="button" id="btnRadicarForm" class="btn btn-secondary px-5 fw-bold shadow-sm" disabled title="Guarde el informe primero para poder radicarlo">
                                             <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
                                         </button>
                                     </c:when>
                                     <c:when test="${esDevuelta and estadoPrevioDevolucion == 'EN REVISION SUPERVISOR'}">
-                                        <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm" onclick="return setRadicarDevuelta()">
+                                        <button type="submit" id="btnRadicarForm" class="btn btn-success px-5 fw-bold shadow-sm" onclick="if (verificarBloqueoRevision(event, 'radicar la cuenta', function() { if (setRadicarDevuelta()) document.getElementById('informeForm').submit(); })) return false; return setRadicarDevuelta()">
                                             <i class="bi bi-send-check me-2"></i>Volver a Radicar (Enviar a Supervisión)
                                         </button>
                                     </c:when>
                                     <c:when test="${esDevuelta and estadoPrevioDevolucion == 'EN REVISION CONTRATACION'}">
-                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicarDevuelta()">
+                                        <button type="submit" id="btnRadicarForm" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="if (verificarBloqueoRevision(event, 'radicar la cuenta', function() { if (setRadicarDevuelta()) document.getElementById('informeForm').submit(); })) return false; return setRadicarDevuelta()">
                                             <i class="bi bi-send-check me-2"></i>Volver a Radicar (Enviar a Contratación)
                                         </button>
                                     </c:when>
                                     <c:when test="${esDevuelta}">
-                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
+                                        <button type="submit" id="btnRadicarForm" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="if (verificarBloqueoRevision(event, 'radicar la cuenta', function() { if (setRadicar()) document.getElementById('informeForm').submit(); })) return false; return setRadicar()">
                                             <i class="bi bi-send-fill me-2"></i>Volver a Radicar Cuenta
                                         </button>
                                     </c:when>
                                     <c:otherwise>
-                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
+                                        <button type="submit" id="btnRadicarForm" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="if (verificarBloqueoRevision(event, 'radicar la cuenta', function() { if (setRadicar()) document.getElementById('informeForm').submit(); })) return false; return setRadicar()">
                                             <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
                                         </button>
                                     </c:otherwise>
@@ -2482,6 +2482,141 @@
             };
             var _isMinimizingModal = false;
 
+            // Función para hacer arrastrable cualquier ventana o widget flotante
+            function hacerDraggable(elem, handle) {
+                if (!elem || !handle) return;
+                var x = 0, y = 0, dx = 0, dy = 0;
+                handle.style.cursor = 'grab';
+
+                handle.onmousedown = function(e) {
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                    e.preventDefault();
+                    handle.style.cursor = 'grabbing';
+                    dx = e.clientX;
+                    dy = e.clientY;
+                    document.onmouseup = function() {
+                        handle.style.cursor = 'grab';
+                        document.onmouseup = null;
+                        document.onmousemove = null;
+                    };
+                    document.onmousemove = function(e) {
+                        e.preventDefault();
+                        x = dx - e.clientX;
+                        y = dy - e.clientY;
+                        dx = e.clientX;
+                        dy = e.clientY;
+                        elem.style.top = (elem.offsetTop - y) + "px";
+                        elem.style.left = (elem.offsetLeft - x) + "px";
+                        elem.style.bottom = 'auto';
+                        elem.style.right = 'auto';
+                    };
+                };
+
+                handle.ontouchstart = function(e) {
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                    var t = e.touches[0];
+                    dx = t.clientX;
+                    dy = t.clientY;
+                    document.ontouchend = function() {
+                        document.ontouchend = null;
+                        document.ontouchmove = null;
+                    };
+                    document.ontouchmove = function(e) {
+                        var t = e.touches[0];
+                        x = dx - t.clientX;
+                        y = dy - t.clientY;
+                        dx = t.clientX;
+                        dy = t.clientY;
+                        elem.style.top = (elem.offsetTop - y) + "px";
+                        elem.style.left = (elem.offsetLeft - x) + "px";
+                        elem.style.bottom = 'auto';
+                        elem.style.right = 'auto';
+                    };
+                };
+            }
+
+            // Gestionar estado y apariencia de los botones de acción durante la revisión minimizada
+            function actualizarBloqueoBotonesRevision(bloquear) {
+                var btnRev = document.getElementById('btnRevisarForm');
+                var btnVolver = document.getElementById('btnVolverForm');
+                var btnSync = document.getElementById('btnSincronizarDriveForm');
+                var btnGuardar = document.getElementById('btnGuardarForm');
+                var btnRadicar = document.getElementById('btnRadicarForm');
+
+                if (bloquear) {
+                    if (btnRev) {
+                        btnRev.className = 'btn btn-warning px-4 shadow-sm text-dark fw-bold border-2 border-warning';
+                        btnRev.innerHTML = '<i class="bi bi-arrows-angle-expand me-2"></i>Continuar Revisión';
+                        btnRev.title = 'Revisión en curso minimizada. Clic para restaurar y finalizar.';
+                    }
+                    [btnVolver, btnSync, btnGuardar, btnRadicar].forEach(function(btn) {
+                        if (btn) {
+                            btn.dataset.bloqueadoPorRevision = 'true';
+                            btn.style.opacity = '0.45';
+                            btn.style.cursor = 'not-allowed';
+                        }
+                    });
+                } else {
+                    if (btnRev) {
+                        btnRev.className = 'btn btn-outline-primary px-4 shadow-sm';
+                        btnRev.innerHTML = '<i class="bi bi-check2-square me-2"></i>Revisar';
+                        btnRev.title = '';
+                    }
+                    [btnVolver, btnSync, btnGuardar, btnRadicar].forEach(function(btn) {
+                        if (btn) {
+                            delete btn.dataset.bloqueadoPorRevision;
+                            btn.style.opacity = '';
+                            btn.style.cursor = '';
+                        }
+                    });
+                }
+            }
+
+            // Interceptar cualquier acción secundaria si hay revisión minimizada
+            window.verificarBloqueoRevision = function(e, nombreAccion, accionProceder) {
+                if (_modalRevisionState && _modalRevisionState.activo) {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    }
+                    Swal.fire({
+                        title: 'Revisión en curso',
+                        html: 'Tienes una revisión abierta y minimizada con observaciones en proceso.<br><br>' +
+                              'No es posible <b>' + nombreAccion + '</b> mientras la revisión esté pendiente.<br><br>' +
+                              '¿Deseas restaurar la ventana de revisión o descartarla para proceder?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="bi bi-arrows-angle-expand me-1"></i> Continuar Revisión',
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonText: '<i class="bi bi-trash3 me-1"></i> Descartar y proceder',
+                        cancelButtonColor: '#dc3545'
+                    }).then(function(res) {
+                        if (res.isConfirmed) {
+                            restaurarModalRevision();
+                        } else if (res.dismiss === Swal.DismissReason.cancel) {
+                            _modalRevisionState = { activo: false };
+                            var w = document.getElementById('widgetRevisionMinimizado');
+                            if (w) w.remove();
+                            actualizarBloqueoBotonesRevision(false);
+                            if (typeof accionProceder === 'function') {
+                                accionProceder();
+                            }
+                        }
+                    });
+                    return true;
+                }
+                return false;
+            };
+
+            window.manejarClickBotonRevisar = function(idInforme, estadoActual, tipoRolModal) {
+                if (_modalRevisionState && _modalRevisionState.activo) {
+                    restaurarModalRevision();
+                } else {
+                    abrirModalRevision(idInforme, estadoActual, tipoRolModal);
+                }
+            };
+
             function mostrarWidgetRevisionMinimizado() {
                 var viejo = document.getElementById('widgetRevisionMinimizado');
                 if (viejo) viejo.remove();
@@ -2497,10 +2632,12 @@
                 var div = document.createElement('div');
                 div.id = 'widgetRevisionMinimizado';
                 div.className = 'card shadow-lg border-primary';
-                div.style.cssText = 'position: fixed; bottom: 20px; right: 25px; width: 360px; max-width: 90vw; z-index: 1070; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
+                // Ubicado en la esquina inferior izquierda para dejar libres los botones de acción principales
+                div.style.cssText = 'position: fixed; bottom: 25px; left: 25px; width: 360px; max-width: calc(100vw - 50px); z-index: 1070; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
                 div.innerHTML = `
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3">
+                    <div id="widgetRevisionHeader" class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3" style="cursor: grab; user-select: none;">
                         <div class="d-flex align-items-center">
+                            <i class="bi bi-grip-vertical me-1 fs-5 text-white-50"></i>
                             <i class="bi bi-pencil-square me-2 fs-6"></i>
                             <strong style="font-size: 0.88rem;">Revisión en Curso</strong>
                         </div>
@@ -2524,7 +2661,7 @@
                     </div>
                     <div class="card-footer bg-white p-2 d-flex justify-content-between align-items-center">
                         <small class="text-success fw-bold" style="font-size: 0.75rem;">
-                            <i class="bi bi-check-circle-fill me-1"></i>Texto guardado (Pantalla interactiva)
+                            <i class="bi bi-check-circle-fill me-1"></i>Texto guardado (Arrastrable)
                         </small>
                         <button type="button" class="btn btn-primary btn-sm px-3 py-1 shadow-sm" onclick="restaurarModalRevision()">
                             <i class="bi bi-arrows-angle-expand me-1"></i>Maximizar
@@ -2532,6 +2669,8 @@
                     </div>
                 `;
                 document.body.appendChild(div);
+                hacerDraggable(div, document.getElementById('widgetRevisionHeader'));
+                actualizarBloqueoBotonesRevision(true);
             }
 
             window.restaurarModalRevision = function() {
@@ -2557,9 +2696,19 @@
                         _modalRevisionState = { activo: false };
                         var w = document.getElementById('widgetRevisionMinimizado');
                         if (w) w.remove();
+                        actualizarBloqueoBotonesRevision(false);
                     }
                 });
             };
+
+            // Advertencia al intentar salir o recargar la pestaña si hay una revisión minimizada activa
+            window.addEventListener('beforeunload', function(e) {
+                if (_modalRevisionState && _modalRevisionState.activo) {
+                    e.preventDefault();
+                    e.returnValue = 'Tienes una revisión en curso con notas pendientes.';
+                    return e.returnValue;
+                }
+            });
 
             // Función para modal de Revisión con opción Minimizar
             function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
@@ -2723,6 +2872,7 @@
                         _modalRevisionState = { activo: false };
                         var w = document.getElementById('widgetRevisionMinimizado');
                         if (w) w.remove();
+                        actualizarBloqueoBotonesRevision(false);
 
                         const form = document.createElement('form');
                         form.method = 'POST';
@@ -2767,6 +2917,7 @@
                         _modalRevisionState = { activo: false };
                         var w = document.getElementById('widgetRevisionMinimizado');
                         if (w) w.remove();
+                        actualizarBloqueoBotonesRevision(false);
                     }
                 });
             }
@@ -2865,7 +3016,14 @@
                     setInterval(guardarBorradorLocal, 10000);
                     
                     // Al enviar el formulario, limpiar el borrador local ya que se está guardando en el servidor
-                    $('#informeForm').on('submit', function() {
+                    $('#informeForm').on('submit', function(e) {
+                        if (_modalRevisionState && _modalRevisionState.activo) {
+                            e.preventDefault();
+                            verificarBloqueoRevision(e, 'guardar o radicar el informe', function() {
+                                document.getElementById('informeForm').submit();
+                            });
+                            return false;
+                        }
                         try { localStorage.removeItem(autoSaveKey); } catch(e) {}
                         formHasChanges = false;
                     });

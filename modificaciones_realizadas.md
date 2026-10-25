@@ -292,11 +292,21 @@
     * **Botón "Minimizar" en el Encabezado del Modal:**
       * Al presionar `[Minimizar]`, el modal se oculta y el fondo oscuro desaparece al 100%.
       * La pantalla queda **totalmente activa y libre para scroll, lectura o edición** (tanto en el ojito `action=view` como en edición `action=edit` para Contratación).
-    * **Widget Flotante en la Esquina Inferior Derecha:**
+    * **Widget Flotante Arrastrable en la Esquina Inferior Izquierda:**
+      * Reubicado estratégicamente en `bottom: 25px; left: 25px;` para **despejar por completo la barra inferior derecha de botones de acción** (`[Volver]`, `[Sincronizar Drive]`, `[Revisar]`, `[Guardar]`, `[Radicar]`) y los controles de paginación de la tabla.
+      * **Arrastrable (*Draggable*):** El usuario puede agarrar el widget desde la barra de título (`cursor: grab / grabbing`) y moverlo libremente a cualquier parte de la pantalla según su conveniencia (con soporte tanto para ratón de escritorio como para pantallas táctiles).
       * Muestra una tarjeta compacta y elegante con el estado de la revisión (`[DEVUELTA]`, `[APROBADA]`, etc.), contador de caracteres redactados y extracto de lo escrito.
-      * Incluye indicador de seguridad: *"Texto guardado (Pantalla interactiva)"*.
+    * **Bloqueo Preventivo de Botones de Fondo Durante la Revisión:**
+      * Mientras el modal esté minimizado con notas pendientes:
+        * Los botones de acción de fondo (`[Volver]`, `[Sincronizar Drive]`, `[Guardar/Actualizar Informe]`, `[Radicar Cuenta]`) se atenúan visualmente (`opacity: 0.45; cursor: not-allowed`).
+        * Si el usuario hace clic en cualquiera de ellos o intenta enviar el formulario, el sistema intercepta la acción de inmediato y muestra una advertencia de seguridad con SweetAlert2:
+          > *"Tienes una revisión abierta y minimizada con observaciones en proceso. No es posible [salir / sincronizar / guardar / radicar] mientras la revisión esté pendiente. ¿Deseas restaurar la revisión o descartarla para proceder?"*
+          con opciones para **`[Continuar Revisión]`** (restaura el modal) o **`[Descartar y proceder]`**.
+        * El botón principal `[Revisar]` se transforma dinámicamente en **`[⤢ Continuar Revisión]`** con estilo ámbar destacado (`btn-warning fw-bold`), permitiendo restaurar la ventana con un simple clic desde la barra de botones.
+      * Se integró protección `beforeunload` para impedir que el usuario pierda sus observaciones si recarga la página o cierra la pestaña por error.
+      * En la vista de lista (`lista_informes.jsp`), si el usuario tiene una revisión minimizada de una cuenta y hace clic en "Revisar" sobre otra fila distinta, el sistema le consulta si desea continuar la revisión pendiente o descartarla antes de abrir la nueva cuenta.
     * **Restauración Instantánea al 100%:**
-      * Al presionar el botón `[Maximizar]`, el modal regresa al centro de la pantalla con **todo el texto redactado intacto**, la acción seleccionada y el revisor asignado (si aplica), permitiendo continuar redactando o aplicar la decisión.
+      * Al presionar el botón `[Maximizar]` o el botón `[Continuar Revisión]`, el modal regresa al centro de la pantalla con **todo el texto redactado intacto**, la acción seleccionada y el revisor asignado (si aplica), permitiendo continuar redactando o aplicar la decisión.
     * **Opción de Cancelación Explícita:**
       * Solo se descartan las observaciones si el usuario presiona voluntariamente *"Cancelar"* y confirma en un diálogo de advertencia.
 

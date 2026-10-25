@@ -414,6 +414,59 @@
         };
         var _isMinimizingModalLista = false;
 
+        // Función para hacer arrastrable cualquier ventana o widget flotante en la lista
+        function hacerDraggableLista(elem, handle) {
+            if (!elem || !handle) return;
+            var x = 0, y = 0, dx = 0, dy = 0;
+            handle.style.cursor = 'grab';
+
+            handle.onmousedown = function(e) {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                e.preventDefault();
+                handle.style.cursor = 'grabbing';
+                dx = e.clientX;
+                dy = e.clientY;
+                document.onmouseup = function() {
+                    handle.style.cursor = 'grab';
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+                document.onmousemove = function(e) {
+                    e.preventDefault();
+                    x = dx - e.clientX;
+                    y = dy - e.clientY;
+                    dx = e.clientX;
+                    dy = e.clientY;
+                    elem.style.top = (elem.offsetTop - y) + "px";
+                    elem.style.left = (elem.offsetLeft - x) + "px";
+                    elem.style.bottom = 'auto';
+                    elem.style.right = 'auto';
+                };
+            };
+
+            handle.ontouchstart = function(e) {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                var t = e.touches[0];
+                dx = t.clientX;
+                dy = t.clientY;
+                document.ontouchend = function() {
+                    document.ontouchend = null;
+                    document.ontouchmove = null;
+                };
+                document.ontouchmove = function(e) {
+                    var t = e.touches[0];
+                    x = dx - t.clientX;
+                    y = dy - t.clientY;
+                    dx = t.clientX;
+                    dy = t.clientY;
+                    elem.style.top = (elem.offsetTop - y) + "px";
+                    elem.style.left = (elem.offsetLeft - x) + "px";
+                    elem.style.bottom = 'auto';
+                    elem.style.right = 'auto';
+                };
+            };
+        }
+
         function mostrarWidgetRevisionMinimizadoLista() {
             var viejo = document.getElementById('widgetRevisionMinimizadoLista');
             if (viejo) viejo.remove();
@@ -429,10 +482,12 @@
             var div = document.createElement('div');
             div.id = 'widgetRevisionMinimizadoLista';
             div.className = 'card shadow-lg border-primary';
-            div.style.cssText = 'position: fixed; bottom: 20px; right: 25px; width: 360px; max-width: 90vw; z-index: 1070; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
+            // Ubicado en la esquina inferior izquierda para no tapar acciones ni paginación
+            div.style.cssText = 'position: fixed; bottom: 25px; left: 25px; width: 360px; max-width: calc(100vw - 50px); z-index: 1070; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
             div.innerHTML = `
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3">
+                <div id="widgetRevisionHeaderLista" class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3" style="cursor: grab; user-select: none;">
                     <div class="d-flex align-items-center">
+                        <i class="bi bi-grip-vertical me-1 fs-5 text-white-50"></i>
                         <i class="bi bi-pencil-square me-2 fs-6"></i>
                         <strong style="font-size: 0.88rem;">Revisión en Curso</strong>
                     </div>
@@ -456,7 +511,7 @@
                 </div>
                 <div class="card-footer bg-white p-2 d-flex justify-content-between align-items-center">
                     <small class="text-success fw-bold" style="font-size: 0.75rem;">
-                        <i class="bi bi-check-circle-fill me-1"></i>Texto guardado (Pantalla interactiva)
+                        <i class="bi bi-check-circle-fill me-1"></i>Texto guardado (Arrastrable)
                     </small>
                     <button type="button" class="btn btn-primary btn-sm px-3 py-1 shadow-sm" onclick="restaurarModalRevisionLista()">
                         <i class="bi bi-arrows-angle-expand me-1"></i>Maximizar
@@ -464,6 +519,7 @@
                 </div>
             `;
             document.body.appendChild(div);
+            hacerDraggableLista(div, document.getElementById('widgetRevisionHeaderLista'));
         }
 
         window.restaurarModalRevisionLista = function() {
@@ -493,7 +549,39 @@
             });
         };
 
+        // Advertencia al recargar o salir si hay una revisión minimizada activa
+        window.addEventListener('beforeunload', function(e) {
+            if (_modalRevisionStateLista && _modalRevisionStateLista.activo) {
+                e.preventDefault();
+                e.returnValue = 'Tienes una revisión en curso con notas pendientes.';
+                return e.returnValue;
+            }
+        });
+
         function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
+            if (_modalRevisionStateLista && _modalRevisionStateLista.activo && _modalRevisionStateLista.idInforme !== idInforme) {
+                Swal.fire({
+                    title: 'Revisión en curso',
+                    text: 'Ya tiene una revisión en curso con notas pendientes. ¿Desea continuar con la anterior o descartarla para revisar esta cuenta?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-arrows-angle-expand me-1"></i> Continuar anterior',
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonText: '<i class="bi bi-trash3 me-1"></i> Descartar y revisar esta',
+                    cancelButtonColor: '#dc3545'
+                }).then((r) => {
+                    if (r.isConfirmed) {
+                        restaurarModalRevisionLista();
+                    } else if (r.dismiss === Swal.DismissReason.cancel) {
+                        _modalRevisionStateLista = { activo: false };
+                        var w = document.getElementById('widgetRevisionMinimizadoLista');
+                        if (w) w.remove();
+                        abrirModalRevision(idInforme, estadoActual, tipoRolModal);
+                    }
+                });
+                return;
+            }
+
             let opcionesHTML = '';
             let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
                 <c:forEach var="r" items="${revisoresList}">
