@@ -201,3 +201,20 @@
       3. Se eliminaron `<w:tblLayout w:type="fixed"/>`, `<w:tblInd>` y el estilo inexistente `w:tblStyle="ac"` que causaban que Google Docs encogiera la tabla a su contenido mínimo.
     * Con este ajuste, la tabla se expande naturalmente a lo ancho de toda la página sin dividirse y distribuye equitativamente el 50% a cada una de las dos columnas.
 
+### 4. Confirmación Previa, Ejecución Asíncrona (AJAX) y Cancelación de la Sincronización con Google Drive
+* **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)**:
+  * **Soporte de Respuestas JSON para Peticiones Asíncronas (`sincronizarFormatosDrive`):**
+    * Se dotó al método de detección de peticiones AJAX (`ajax=true` o encabezado `X-Requested-With: XMLHttpRequest`).
+    * Al procesar mediante AJAX, el servidor responde con estructuras JSON estandarizadas (`{"success": true, "message": "..."}` o `{"success": false, "message": "..."}`) sin forzar redirecciones HTTP de página completa.
+    * Si la sesión expira o no cuenta con permisos suficientes, retorna HTTP 403 Forbidden en formato JSON en lugar de redireccionar bruscamente.
+* **[inc/scripts_assets.jsp](file:///src/main/webapp/inc/scripts_assets.jsp)**:
+  * **Funciones Globales `sincronizarDriveConConfirmacion` y `ejecutarSincronizacionDrive`:**
+    * **Modal de Confirmación Previa:** Al hacer clic en "Sincronizar Drive", se despliega una ventana interactiva SweetAlert2 consultando si el usuario desea iniciar la sincronización, con botones claros `[Sí, sincronizar]` (verde) y `[Cancelar]` (gris con foco inicial), previniendo activaciones accidentales.
+    * **Petición con AbortController:** La sincronización se ejecuta mediante `fetch` asíncrono vinculado a un objeto `AbortController`.
+    * **Botón "Cancelar operación" durante el Progreso:** Mientras los formatos se generan y suben a Drive, la ventana modal con animación de carga presenta un botón rojo visible `[Cancelar operación]`.
+    * **Restauración Inmediata de la Interfaz:** Si el usuario decide cancelar la operación, la petición en el navegador se aborta al instante (`abortController.abort()`), se cierra el modal de carga y se muestra una notificación informativa sin recargar la página ni perder el contenido que el usuario esté redactando en el formulario.
+    * **Notificaciones Claras de Resultado:** Al finalizar exitosamente, se muestra alerta de éxito con confirmación y, en la vista de lista, se refresca suavemente el DataTable (`ajax.reload`) sin pestañeos de página.
+* **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp) y [lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp)**:
+  * Se actualizaron los botones de "Sincronizar Drive" para invocar `sincronizarDriveConConfirmacion(id, modo, isFromLista)`, reemplazando la navegación síncrona bloqueante anterior por la nueva experiencia fluida y cancelable.
+
+

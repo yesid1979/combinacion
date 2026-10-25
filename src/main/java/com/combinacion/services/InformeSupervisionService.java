@@ -2228,23 +2228,59 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         
         int id = ParseUtils.parseInt(request.getParameter("id"));
         String modoParam = request.getParameter("modo");
-
         String fromParam = request.getParameter("from");
+        boolean isAjax = "true".equalsIgnoreCase(request.getParameter("ajax")) 
+                || "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"));
 
         if (!esAdminCuentas) {
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                com.google.gson.JsonObject err = new com.google.gson.JsonObject();
+                err.addProperty("success", false);
+                err.addProperty("message", "No tiene permisos para sincronizar formatos en Drive.");
+                response.getWriter().write(err.toString());
+                return;
+            }
             request.getSession().setAttribute("errorMessage", "No tiene permisos para sincronizar formatos en Drive.");
             response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
             return;
         }
 
-        if (id > 0) {
+        if (id <= 0) {
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                com.google.gson.JsonObject err = new com.google.gson.JsonObject();
+                err.addProperty("success", false);
+                err.addProperty("message", "ID de informe no válido.");
+                response.getWriter().write(err.toString());
+                return;
+            }
+        } else {
             final String realPath = request.getServletContext().getRealPath("/");
             try {
                 actualizarFormatosEnDrive(id, realPath);
+                if (isAjax) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    com.google.gson.JsonObject ok = new com.google.gson.JsonObject();
+                    ok.addProperty("success", true);
+                    ok.addProperty("message", "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
+                    response.getWriter().write(ok.toString());
+                    return;
+                }
                 request.getSession().setAttribute("successMessage", "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
             } catch (Throwable ex) {
                 System.err.println("Error al sincronizar con Google Drive para informe ID " + id + ": " + ex.getMessage());
                 ex.printStackTrace();
+                if (isAjax) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    com.google.gson.JsonObject err = new com.google.gson.JsonObject();
+                    err.addProperty("success", false);
+                    err.addProperty("message", "Error al sincronizar con Google Drive: " + (ex.getMessage() != null ? ex.getMessage() : ex.toString()));
+                    response.getWriter().write(err.toString());
+                    return;
+                }
                 request.getSession().setAttribute("errorMessage", "Error al sincronizar con Google Drive: " + ex.getMessage());
             }
         }

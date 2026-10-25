@@ -721,9 +721,9 @@
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                         <c:if test="${not empty informe.id and esAdminCuentas}">
-                            <a href="informes?action=syncDrive&id=${informe.id}${not empty modo ? '&modo='.concat(modo) : ''}" class="btn btn-outline-success px-4 shadow-sm" title="Regenerar y subir los formatos actualizados (Word, Excel y PDF) a Google Drive" onclick="this.classList.add('disabled'); this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\' role=\'status\' aria-hidden=\'true\'></span>Sincronizando con Drive...';">
+                            <button type="button" class="btn btn-outline-success px-4 shadow-sm" title="Regenerar y subir los formatos actualizados (Word, Excel y PDF) a Google Drive" onclick="sincronizarDriveConConfirmacion(${informe.id}, '${not empty modo ? modo : ''}', false)">
                                 <i class="bi bi-cloud-arrow-up me-2"></i>Sincronizar Drive
-                            </a>
+                            </button>
                         </c:if>
                         
                         <%-- Lógica del botón Revisar (Idéntica a la de la lista) --%>
