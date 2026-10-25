@@ -304,7 +304,9 @@
           con opciones para **`[Continuar Revisión]`** (restaura el modal) o **`[Descartar y proceder]`**.
         * El botón principal `[Revisar]` se transforma dinámicamente en **`[⤢ Continuar Revisión]`** con estilo ámbar destacado (`btn-warning fw-bold`), permitiendo restaurar la ventana con un simple clic desde la barra de botones.
       * Se integró protección `beforeunload` para impedir que el usuario pierda sus observaciones si recarga la página o cierra la pestaña por error.
-      * En la vista de lista (`lista_informes.jsp`), si el usuario tiene una revisión minimizada de una cuenta y hace clic en "Revisar" sobre otra fila distinta, el sistema le consulta si desea continuar la revisión pendiente o descartarla antes de abrir la nueva cuenta.
+    * **Remoción del Botón "Revisar" de la Lista General ([lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp)):**
+      * Se eliminó el botón `[Revisar]` de la columna de acciones en la tabla general de cuentas.
+      * **Justificación de Negocio y Usabilidad:** Un revisor, supervisor o personal de Contratación no debe emitir conceptos a ciegas desde la tabla sin antes abrir e inspeccionar minuciosamente el informe (vía modo visualización `action=view` con el ojito o edición `action=edit`). La columna de acciones queda limpia y compacta (`[ 👁 Ver ] [ ✏️ Editar ] [ 📥 Descargar / 🔒 ] [ ☁️ Sincronizar ] [ 🗑️ Borrar ]`), y el flujo de revisión se centraliza exclusivamente en [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp).
     * **Restauración Instantánea al 100%:**
       * Al presionar el botón `[Maximizar]` o el botón `[Continuar Revisión]`, el modal regresa al centro de la pantalla con **todo el texto redactado intacto**, la acción seleccionada y el revisor asignado (si aplica), permitiendo continuar redactando o aplicar la decisión.
     * **Opción de Cancelación Explícita:**
