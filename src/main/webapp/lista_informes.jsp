@@ -402,6 +402,97 @@
             });
         }
 
+        // Estado global para permitir minimizar y restaurar el modal de revisión sin perder texto
+        var _modalRevisionStateLista = {
+            activo: false,
+            idInforme: null,
+            estadoActual: null,
+            tipoRolModal: null,
+            accion: null,
+            obs: '',
+            revisorId: ''
+        };
+        var _isMinimizingModalLista = false;
+
+        function mostrarWidgetRevisionMinimizadoLista() {
+            var viejo = document.getElementById('widgetRevisionMinimizadoLista');
+            if (viejo) viejo.remove();
+
+            var accionBadge = 'bg-primary';
+            if (_modalRevisionStateLista.accion === 'DEVUELTA') accionBadge = 'bg-danger';
+            else if (_modalRevisionStateLista.accion === 'APROBADA PARA IMPRESION') accionBadge = 'bg-success';
+            else if (_modalRevisionStateLista.accion === 'EN REVISION SUPERVISOR') accionBadge = 'bg-info text-dark';
+
+            var textoObs = _modalRevisionStateLista.obs ? _modalRevisionStateLista.obs.trim() : '';
+            var preview = textoObs.length > 0 ? (textoObs.substring(0, 55) + (textoObs.length > 55 ? '...' : '')) : '(Sin observaciones escritas aún)';
+
+            var div = document.createElement('div');
+            div.id = 'widgetRevisionMinimizadoLista';
+            div.className = 'card shadow-lg border-primary';
+            div.style.cssText = 'position: fixed; bottom: 20px; right: 25px; width: 360px; max-width: 90vw; z-index: 1070; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);';
+            div.innerHTML = `
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2 px-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-pencil-square me-2 fs-6"></i>
+                        <strong style="font-size: 0.88rem;">Revisión en Curso</strong>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-light py-0 px-2 me-1" title="Restaurar ventana" onclick="restaurarModalRevisionLista()">
+                            <i class="bi bi-arrows-angle-expand"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" title="Cancelar revisión" onclick="descartarModalRevisionMinimizadoLista()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-2 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge ` + accionBadge + `" style="font-size: 0.74rem;">` + (_modalRevisionStateLista.accion || 'REVISIÓN') + `</span>
+                        <small class="text-muted">` + textoObs.length + ` caracteres</small>
+                    </div>
+                    <p class="small text-truncate mb-0 text-muted" style="max-height: 40px; font-style: italic;">
+                        ` + preview + `
+                    </p>
+                </div>
+                <div class="card-footer bg-white p-2 d-flex justify-content-between align-items-center">
+                    <small class="text-success fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-check-circle-fill me-1"></i>Texto guardado (Pantalla interactiva)
+                    </small>
+                    <button type="button" class="btn btn-primary btn-sm px-3 py-1 shadow-sm" onclick="restaurarModalRevisionLista()">
+                        <i class="bi bi-arrows-angle-expand me-1"></i>Maximizar
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(div);
+        }
+
+        window.restaurarModalRevisionLista = function() {
+            var w = document.getElementById('widgetRevisionMinimizadoLista');
+            if (w) w.remove();
+            if (_modalRevisionStateLista.activo) {
+                abrirModalRevision(_modalRevisionStateLista.idInforme, _modalRevisionStateLista.estadoActual, _modalRevisionStateLista.tipoRolModal);
+            }
+        };
+
+        window.descartarModalRevisionMinimizadoLista = function() {
+            Swal.fire({
+                title: '¿Descartar revisión?',
+                text: 'Si cancelas ahora, se perderán las observaciones redactadas.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, descartar',
+                cancelButtonText: 'Continuar revisando'
+            }).then((r) => {
+                if (r.isConfirmed) {
+                    _modalRevisionStateLista = { activo: false };
+                    var w = document.getElementById('widgetRevisionMinimizadoLista');
+                    if (w) w.remove();
+                }
+            });
+        };
+
         function abrirModalRevision(idInforme, estadoActual, tipoRolModal) {
             let opcionesHTML = '';
             let opcionesRevisores = `<option value="">-- Seleccione un Revisor --</option>
@@ -453,10 +544,20 @@
                 `;
             }
 
+            _isMinimizingModalLista = false;
+
             Swal.fire({
                 title: 'Revisión de Cuenta de Cobro',
                 html: `
-                    <p class="text-muted">Seleccione la acción a tomar para esta cuenta:</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-primary fw-bold" style="font-size: 0.9rem;">
+                            <i class="bi bi-shield-check me-1"></i>Acción de Revisión
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 shadow-sm" id="btn-minimizar-swal-lista" title="Minimizar para consultar la tabla libremente">
+                            <i class="bi bi-dash-square me-1"></i>Minimizar
+                        </button>
+                    </div>
+                    <p class="text-muted text-start mb-2">Seleccione la acción a tomar para esta cuenta:</p>
                     <div class="mb-3">
                         <select id="swal-accion" class="form-select">
                             ` + opcionesHTML + `
@@ -470,15 +571,18 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-start w-100">Observaciones (Obligatorio si devuelve):</label>
-                        <textarea id="swal-obs" class="form-control" rows="3" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
+                        <textarea id="swal-obs" class="form-control" rows="4" placeholder="Escriba aquí el motivo o sugerencias..."></textarea>
                     </div>
                 `,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
                 showCancelButton: true,
-                confirmButtonText: 'Aplicar',
-                cancelButtonText: 'Cancelar',
+                confirmButtonText: '<i class="bi bi-check-circle me-1"></i> Aplicar',
+                cancelButtonText: '<i class="bi bi-x-circle me-1"></i> Cancelar',
                 didOpen: () => {
                     const accionSelect = document.getElementById('swal-accion');
                     const divRevisor = document.getElementById('div-revisor');
+                    const btnMinimizar = document.getElementById('btn-minimizar-swal-lista');
                     
                     accionSelect.addEventListener('change', () => {
                         if (accionSelect.value === 'VISTO BUENO CONTRATACION') {
@@ -487,7 +591,44 @@
                             divRevisor.style.display = 'none';
                         }
                     });
+
+                    // Restaurar valores si venía de un estado minimizado
+                    if (_modalRevisionStateLista.activo && _modalRevisionStateLista.idInforme === idInforme) {
+                        if (_modalRevisionStateLista.accion) {
+                            accionSelect.value = _modalRevisionStateLista.accion;
+                        }
+                        if (_modalRevisionStateLista.obs) {
+                            document.getElementById('swal-obs').value = _modalRevisionStateLista.obs;
+                        }
+                        if (_modalRevisionStateLista.revisorId && document.getElementById('swal-revisor')) {
+                            document.getElementById('swal-revisor').value = _modalRevisionStateLista.revisorId;
+                        }
+                    }
+
                     accionSelect.dispatchEvent(new Event('change'));
+
+                    // Manejador del botón Minimizar
+                    if (btnMinimizar) {
+                        btnMinimizar.addEventListener('click', function() {
+                            var curAccion = document.getElementById('swal-accion') ? document.getElementById('swal-accion').value : '';
+                            var curObs = document.getElementById('swal-obs') ? document.getElementById('swal-obs').value : '';
+                            var curRev = document.getElementById('swal-revisor') ? document.getElementById('swal-revisor').value : '';
+
+                            _modalRevisionStateLista = {
+                                activo: true,
+                                idInforme: idInforme,
+                                estadoActual: estadoActual,
+                                tipoRolModal: tipoRolModal,
+                                accion: curAccion,
+                                obs: curObs,
+                                revisorId: curRev
+                            };
+
+                            _isMinimizingModalLista = true;
+                            Swal.close();
+                            mostrarWidgetRevisionMinimizadoLista();
+                        });
+                    }
                 },
                 preConfirm: () => {
                     const accion = document.getElementById('swal-accion').value;
@@ -505,7 +646,15 @@
                     return { accion: accion, obs: obs, revisorId: revisorId };
                 }
             }).then((result) => {
+                if (_isMinimizingModalLista) {
+                    return;
+                }
+
                 if (result.isConfirmed) {
+                    _modalRevisionStateLista = { activo: false };
+                    var w = document.getElementById('widgetRevisionMinimizadoLista');
+                    if (w) w.remove();
+
                     // Enviar por POST a procesar_revision.jsp
                     const form = document.createElement('form');
                     form.method = 'POST';
@@ -545,6 +694,10 @@
                     form.appendChild(inputModo);
                     document.body.appendChild(form);
                     form.submit();
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    _modalRevisionStateLista = { activo: false };
+                    var w = document.getElementById('widgetRevisionMinimizadoLista');
+                    if (w) w.remove();
                 }
             });
         }

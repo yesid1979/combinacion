@@ -279,6 +279,28 @@
       * **Supervisor:** Alerta informativa cuando una cuenta llega a su bandeja de supervisión o cuando un contratista vuelve a radicar una cuenta devuelta corregida.
       * **Contratación:** Alerta cuando una cuenta ingresa para revisión del área de Contratación.
 
+---
+
+### 7. Modal de Revisión Minimizable y Protegido contra Cierres Accidentales (Modo Lectura y Modo Edición)
+* **Problema Resuelto:**
+  * Al auditar una cuenta de cobro, los revisores, supervisores o el equipo de Contratación abrían el modal de revisión y comenzaban a redactar observaciones de devolución. Sin embargo, el modal bloqueaba la pantalla con un fondo oscuro, impidiendo desplazarse por el formulario para verificar actividades, valores, fechas o evidencias en Drive.
+  * Peor aún: si el usuario presionaba accidentalmente la tecla `Escape` o hacía clic por fuera del modal, este se cerraba de inmediato y borraba todo el texto redactado en las observaciones.
+* **Solución Implementada:**
+  * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp) y [lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp):**
+    * **Protección Total contra Pérdida de Datos:**
+      * Se configuraron `allowOutsideClick: false` y `allowEscapeKey: false`. Se eliminó por completo el riesgo de cierres accidentales que borren el trabajo del revisor.
+    * **Botón "Minimizar" en el Encabezado del Modal:**
+      * Al presionar `[Minimizar]`, el modal se oculta y el fondo oscuro desaparece al 100%.
+      * La pantalla queda **totalmente activa y libre para scroll, lectura o edición** (tanto en el ojito `action=view` como en edición `action=edit` para Contratación).
+    * **Widget Flotante en la Esquina Inferior Derecha:**
+      * Muestra una tarjeta compacta y elegante con el estado de la revisión (`[DEVUELTA]`, `[APROBADA]`, etc.), contador de caracteres redactados y extracto de lo escrito.
+      * Incluye indicador de seguridad: *"Texto guardado (Pantalla interactiva)"*.
+    * **Restauración Instantánea al 100%:**
+      * Al presionar el botón `[Maximizar]`, el modal regresa al centro de la pantalla con **todo el texto redactado intacto**, la acción seleccionada y el revisor asignado (si aplica), permitiendo continuar redactando o aplicar la decisión.
+    * **Opción de Cancelación Explícita:**
+      * Solo se descartan las observaciones si el usuario presiona voluntariamente *"Cancelar"* y confirma en un diálogo de advertencia.
+
+
 
 
 
