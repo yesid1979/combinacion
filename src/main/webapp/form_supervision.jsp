@@ -3,25 +3,31 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%
-    // Recuperar observaciones_revision directamente de la BD para no tocar el backend Java
+    // Recuperar observaciones_revision y estado_previo_devolucion directamente de la BD
     String obsRev = "";
+    String estPrev = "";
     try {
         if (request.getAttribute("informe") != null) {
             com.combinacion.models.InformeSupervision inf = (com.combinacion.models.InformeSupervision)request.getAttribute("informe");
-            if (inf.getId() > 0) {
+            if (inf.getId() != null && inf.getId() > 0) {
                 try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
-                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT observaciones_revision FROM informes_supervision WHERE id = ?")) {
+                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT observaciones_revision, estado_previo_devolucion FROM informes_supervision WHERE id = ?")) {
                     ps.setInt(1, inf.getId());
                     try (java.sql.ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
                             obsRev = rs.getString(1);
+                            estPrev = rs.getString(2);
                         }
                     }
+                }
+                if ((estPrev == null || estPrev.trim().isEmpty()) && "DEVUELTA".equals(inf.getEstadoRadicacion())) {
+                    estPrev = new com.combinacion.dao.InformeSupervisionDAO().obtenerEstadoPrevioDevolucion(inf.getId());
                 }
             }
         }
     } catch (Exception ignore) {}
     request.setAttribute("obsRevision", obsRev);
+    request.setAttribute("estadoPrevioDevolucion", estPrev != null ? estPrev.trim() : "");
 %>
 <!DOCTYPE html>
 <html lang="es">
@@ -585,6 +591,7 @@
                     
                     <!-- Sección de Radicación o Asignación -->
                     <c:set var="esBorradorDevuelta" value="${empty informe.estadoRadicacion || informe.estadoRadicacion == 'BORRADOR' || informe.estadoRadicacion == 'DEVUELTA'}" />
+                    <c:set var="esDevuelta" value="${informe.estadoRadicacion == 'DEVUELTA'}" />
                     
                     <c:if test="${not readonly && (esBorradorDevuelta || esAdminCuentas)}">
                         <div class="card mt-4 border-primary bg-light">
@@ -594,17 +601,67 @@
                                         <h5 class="card-title text-primary"><i class="bi bi-info-circle"></i> Radicación</h5>
                                         <p class="card-text text-muted">Debes **Guardar el Informe** por primera vez antes de poder seleccionar un revisor y radicar la cuenta de cobro.</p>
                                     </c:when>
-                                    <c:otherwise>
+                                    <c:when test="${esDevuelta}">
                                         <c:choose>
-                                            <c:when test="${esBorradorDevuelta}">
-                                                <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
-                                                <p class="card-text text-muted small">Seleccione la persona encargada de revisar su cuenta y haga clic en Radicar.</p>
+                                            <c:when test="${estadoPrevioDevolucion == 'EN REVISION SUPERVISOR'}">
+                                                <h5 class="card-title text-success"><i class="bi bi-arrow-repeat me-1"></i> Reingreso Directo a Supervisión</h5>
+                                                <div class="alert alert-success d-flex align-items-center mb-0 py-3 shadow-sm border-success">
+                                                    <i class="bi bi-person-check-fill fs-2 text-success me-3"></i>
+                                                    <div>
+                                                        <strong class="d-block mb-1">Cuenta devuelta por el Supervisor</strong>
+                                                        <span class="small text-muted">Una vez guarde las correcciones solicitadas y haga clic en <strong>"Volver a Radicar (Enviar a Supervisión)"</strong>, la cuenta regresará <strong>directamente al Supervisor</strong> para su aprobación definitiva, sin requerir reasignar revisor ni repetir etapas previas.</span>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="id_revisor_asignado" value="${not empty informe.idRevisorAsignado ? informe.idRevisorAsignado : 0}">
+                                            </c:when>
+                                            <c:when test="${estadoPrevioDevolucion == 'EN REVISION CONTRATACION'}">
+                                                <h5 class="card-title text-primary"><i class="bi bi-arrow-repeat me-1"></i> Reingreso Directo a Contratación</h5>
+                                                <div class="alert alert-primary d-flex align-items-center mb-0 py-3 shadow-sm border-primary">
+                                                    <i class="bi bi-building-check fs-2 text-primary me-3"></i>
+                                                    <div>
+                                                        <strong class="d-block mb-1">Cuenta devuelta por Contratación</strong>
+                                                        <span class="small text-muted">Una vez guarde las correcciones solicitadas y haga clic en <strong>"Volver a Radicar (Enviar a Contratación)"</strong>, la cuenta regresará <strong>directamente a Contratación</strong> sin reiniciar el flujo inicial.</span>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="id_revisor_asignado" value="${not empty informe.idRevisorAsignado ? informe.idRevisorAsignado : 0}">
                                             </c:when>
                                             <c:otherwise>
-                                                <h5 class="card-title text-primary"><i class="bi bi-person-gear"></i> Asignar / Cambiar Revisor</h5>
-                                                <p class="card-text text-muted small">Como administrador, puedes reasignar esta cuenta a otro revisor sin cambiar su estado.</p>
+                                                <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
+                                                <p class="card-text text-muted small">Esta cuenta fue devuelta en etapa de revisión. Verifique el revisor encargado y haga clic en Volver a Radicar.</p>
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Asignar a Revisor:</label>
+                                                        <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
+                                                            <option value="">-- Seleccione un Revisor --</option>
+                                                            <option value="0" ${informe.idRevisorAsignado != null && informe.idRevisorAsignado == 0 ? 'selected' : ''}>-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                                            <c:forEach var="rev" items="${listaRevisores}">
+                                                                <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
+                                                            </c:forEach>
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </c:otherwise>
                                         </c:choose>
+                                    </c:when>
+                                    <c:when test="${esBorradorDevuelta}">
+                                        <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
+                                        <p class="card-text text-muted small">Seleccione la persona encargada de revisar su cuenta y haga clic en Radicar.</p>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Asignar a Revisor:</label>
+                                                <select class="form-select" name="id_revisor_asignado" id="revisor_select" required>
+                                                    <option value="">-- Seleccione un Revisor --</option>
+                                                    <option value="0" ${informe.idRevisorAsignado != null && informe.idRevisorAsignado == 0 ? 'selected' : ''}>-- Sin Revisor (Pasar directo a Contratación) --</option>
+                                                    <c:forEach var="rev" items="${listaRevisores}">
+                                                        <option value="${rev.id}" ${informe.idRevisorAsignado == rev.id ? 'selected' : ''}>${rev.nombreCompleto}</option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <h5 class="card-title text-primary"><i class="bi bi-person-gear"></i> Asignar / Cambiar Revisor</h5>
+                                        <p class="card-text text-muted small">Como administrador, puedes reasignar esta cuenta a otro revisor sin cambiar su estado.</p>
                                         <div class="row align-items-center">
                                             <div class="col-md-6">
                                                 <label class="form-label">Asignar a Revisor:</label>
@@ -710,7 +767,17 @@
                             </div>
                             <c:if test="${informe.estadoRadicacion == 'DEVUELTA'}">
                                 <hr class="border-primary">
-                                <small class="mb-0 fw-bold text-danger"><i class="bi bi-info-circle me-1"></i>La cuenta se encuentra DEVUELTA. Por favor corrige los detalles mencionados y vuelve a radicarla.</small>
+                                <c:choose>
+                                    <c:when test="${estadoPrevioDevolucion == 'EN REVISION SUPERVISOR'}">
+                                        <small class="mb-0 fw-bold text-danger"><i class="bi bi-info-circle me-1"></i>La cuenta se encuentra DEVUELTA por el Supervisor. Corrige los detalles mencionados; al volver a radicarla, regresará directamente al Supervisor para su aprobación.</small>
+                                    </c:when>
+                                    <c:when test="${estadoPrevioDevolucion == 'EN REVISION CONTRATACION'}">
+                                        <small class="mb-0 fw-bold text-danger"><i class="bi bi-info-circle me-1"></i>La cuenta se encuentra DEVUELTA por Contratación. Corrige los detalles mencionados; al volver a radicarla, regresará directamente a Contratación.</small>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <small class="mb-0 fw-bold text-danger"><i class="bi bi-info-circle me-1"></i>La cuenta se encuentra DEVUELTA. Por favor corrige los detalles mencionados y vuelve a radicarla.</small>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
                             </div>
                         </div>
@@ -792,6 +859,21 @@
                                     <c:when test="${empty informe.id}">
                                         <button type="button" class="btn btn-secondary px-5 fw-bold shadow-sm" disabled title="Guarde el informe primero para poder radicarlo">
                                             <i class="bi bi-send-fill me-2"></i>Radicar Cuenta
+                                        </button>
+                                    </c:when>
+                                    <c:when test="${esDevuelta and estadoPrevioDevolucion == 'EN REVISION SUPERVISOR'}">
+                                        <button type="submit" class="btn btn-success px-5 fw-bold shadow-sm" onclick="return setRadicarDevuelta()">
+                                            <i class="bi bi-send-check me-2"></i>Volver a Radicar (Enviar a Supervisión)
+                                        </button>
+                                    </c:when>
+                                    <c:when test="${esDevuelta and estadoPrevioDevolucion == 'EN REVISION CONTRATACION'}">
+                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicarDevuelta()">
+                                            <i class="bi bi-send-check me-2"></i>Volver a Radicar (Enviar a Contratación)
+                                        </button>
+                                    </c:when>
+                                    <c:when test="${esDevuelta}">
+                                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="return setRadicar()">
+                                            <i class="bi bi-send-fill me-2"></i>Volver a Radicar Cuenta
                                         </button>
                                     </c:when>
                                     <c:otherwise>
@@ -2159,11 +2241,19 @@
             });
 
             function setRadicar() {
-                var rev = document.getElementById("revisor_select").value;
-                if (!rev && rev !== "0") {
-                    Swal.fire('Atención', 'Debe seleccionar un revisor (o la opción Sin Revisor) para poder radicar la cuenta.', 'warning');
-                    return false;
+                var revSelect = document.getElementById("revisor_select");
+                if (revSelect) {
+                    var rev = revSelect.value;
+                    if (!rev && rev !== "0") {
+                        Swal.fire('Atención', 'Debe seleccionar un revisor (o la opción Sin Revisor) para poder radicar la cuenta.', 'warning');
+                        return false;
+                    }
                 }
+                document.getElementById("radicar_input").value = "true";
+                return true;
+            }
+
+            function setRadicarDevuelta() {
                 document.getElementById("radicar_input").value = "true";
                 return true;
             }

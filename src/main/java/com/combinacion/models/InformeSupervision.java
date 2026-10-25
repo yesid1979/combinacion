@@ -59,6 +59,7 @@ public class InformeSupervision implements Serializable {
     
     // Radicación
     private String estadoRadicacion;
+    private String estadoPrevioDevolucion;
     private Date fechaRadicacion;
     private Integer idRevisorAsignado;
     private String observacionesRevision;
@@ -197,6 +198,9 @@ public class InformeSupervision implements Serializable {
 
     public String getEstadoRadicacion() { return estadoRadicacion; }
     public void setEstadoRadicacion(String estadoRadicacion) { this.estadoRadicacion = estadoRadicacion; }
+
+    public String getEstadoPrevioDevolucion() { return estadoPrevioDevolucion; }
+    public void setEstadoPrevioDevolucion(String estadoPrevioDevolucion) { this.estadoPrevioDevolucion = estadoPrevioDevolucion; }
     
     public Date getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(Date fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }

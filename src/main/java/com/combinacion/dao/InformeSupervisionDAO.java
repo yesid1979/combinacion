@@ -254,6 +254,7 @@ public class InformeSupervisionDAO {
         info.setUrlDriveEvidencias(rs.getString("url_drive_evidencias"));
         try { info.setSoportesJson(rs.getString("soportes_json")); } catch (SQLException e) {}
         try { info.setEstadoRadicacion(rs.getString("estado_radicacion")); } catch (SQLException e) {}
+        try { info.setEstadoPrevioDevolucion(rs.getString("estado_previo_devolucion")); } catch (SQLException e) {}
         try { info.setObservacionesRevision(rs.getString("observaciones_revision")); } catch (SQLException e) {}
         try {
             int revId = rs.getInt("id_revisor_asignado");
@@ -426,6 +427,50 @@ public class InformeSupervisionDAO {
         }
     }
 
+    public void limpiarEstadoPrevioDevolucion(int id) {
+        String sql = "UPDATE informes_supervision SET estado_previo_devolucion = NULL WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception ignore) {}
+    }
+
+    public String obtenerEstadoPrevioDevolucion(int idInforme) {
+        String estadoPrevio = null;
+        String sql = "SELECT estado_previo_devolucion FROM informes_supervision WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idInforme);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    estadoPrevio = rs.getString("estado_previo_devolucion");
+                }
+            }
+        } catch (Exception ignore) {}
+
+        if (estadoPrevio != null && !estadoPrevio.trim().isEmpty()) {
+            return estadoPrevio.trim();
+        }
+
+        // Fallback histórico consultando historial_radicacion
+        String sqlHist = "SELECT estado_anterior FROM historial_radicacion WHERE id_informe = ? AND estado_nuevo = 'DEVUELTA' ORDER BY fecha_cambio DESC, id DESC LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlHist)) {
+            ps.setInt(1, idInforme);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String est = rs.getString("estado_anterior");
+                    if (est != null && !est.trim().isEmpty() && !"DEVUELTA".equals(est.trim())) {
+                        return est.trim();
+                    }
+                }
+            }
+        } catch (Exception ignore) {}
+
+        return "RADICADA";
+    }
+
     public void eliminar(int id) {
         String sql = "DELETE FROM informes_supervision WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -503,6 +548,7 @@ public class InformeSupervisionDAO {
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN arl VARCHAR(150)"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN es_contratista_nuevo VARCHAR(10) DEFAULT 'NO'"); } catch (Exception ignore) {}
             try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN supervisor_id INT REFERENCES supervisores(id)"); } catch (Exception ignore) {}
+            try { stmt.execute("ALTER TABLE informes_supervision ADD COLUMN estado_previo_devolucion VARCHAR(50)"); } catch (Exception ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
         }

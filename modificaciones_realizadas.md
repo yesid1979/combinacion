@@ -217,4 +217,33 @@
 * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp) y [lista_informes.jsp](file:///src/main/webapp/lista_informes.jsp)**:
   * Se actualizaron los botones de "Sincronizar Drive" para invocar `sincronizarDriveConConfirmacion(id, modo, isFromLista)`, reemplazando la navegación síncrona bloqueante anterior por la nueva experiencia fluida y cancelable.
 
+---
+
+### 5. Flujo Inteligente de Devolución y Reingreso Directo a Supervisión / Contratación al Volver a Radicar
+* **Problema Resuelto:**
+  * Cuando un informe o cuenta de cobro ya había avanzado hasta la fase de **Supervisión** (`EN REVISION SUPERVISOR`) o **Contratación** (`EN REVISION CONTRATACION`) y era devuelto al contratista (`DEVUELTA`), al corregir las observaciones y hacer clic en *"Volver a Radicar"*, el sistema reiniciaba el ciclo obligando al contratista a seleccionar un revisor y pasando por `RADICADA`, lo que generaba reprocesos y demoras innecesarias.
+* **Solución Implementada:**
+  * **[InformeSupervision.java](file:///src/main/java/com/combinacion/models/InformeSupervision.java):**
+    * Se incorporó el campo `estadoPrevioDevolucion` con sus correspondientes métodos getter y setter.
+  * **[InformeSupervisionDAO.java](file:///src/main/java/com/combinacion/dao/InformeSupervisionDAO.java):**
+    * Se añadió la columna `estado_previo_devolucion VARCHAR(50)` en la base de datos con verificación DDL preventiva.
+    * Se mapeó el nuevo campo en `mapResultSetToInforme`.
+    * Se implementaron los métodos `obtenerEstadoPrevioDevolucion(int idInforme)` (con fallback automático a `historial_radicacion` para cuentas históricas devueltas con anterioridad) y `limpiarEstadoPrevioDevolucion(int idInforme)`.
+  * **[UsuarioDAO.java](file:///src/main/java/com/combinacion/dao/UsuarioDAO.java):**
+    * Se añadió el método `obtenerPorCedula(String cedula)` para localizar supervisores o usuarios activos mediante sanitización de cédula con expresión regular, permitiendo identificar al supervisor del contrato para el envío de notificaciones.
+  * **[procesar_revision.jsp](file:///src/main/webapp/procesar_revision.jsp):**
+    * Al devolver una cuenta (`accion = 'DEVUELTA'`), se registra de forma persistente en `estado_previo_devolucion` el estado exacto en el que se encontraba la cuenta (`EN REVISION SUPERVISOR`, `EN REVISION CONTRATACION`, etc.).
+    * En cualquier otra acción de avance o aprobación, dicho campo se limpia.
+  * **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java):**
+    * En `construirFormData`, cuando el contratista envía con `radicar=true` sobre una cuenta devuelta:
+      * Si fue devuelta por el Supervisor, la cuenta reingresa directamente con estado **`EN REVISION SUPERVISOR`**.
+      * Si fue devuelta por Contratación, la cuenta reingresa directamente con estado **`EN REVISION CONTRATACION`**.
+      * Si fue devuelta por un Revisor, mantiene el reingreso estándar a **`RADICADA`**.
+    * En `actualizar`, se registra en `historial_radicacion` la traza de re-radicación directa, se limpia `estado_previo_devolucion` y se despachan las notificaciones por correo electrónico correspondientes (incluyendo correo al supervisor cuando reingresa a su bandeja).
+  * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):**
+    * Se carga el `estadoPrevioDevolucion` de la cuenta.
+    * Si la cuenta proviene de Supervisión o Contratación, se presenta un panel informativo destacado al contratista explicándole con total claridad que, al guardar las correcciones, la cuenta irá directamente a la bandeja de quien la devolvió (Supervisor o Contratación), sin necesidad de reasignar revisor.
+    * El selector de revisor se omite automáticamente para estos casos y el botón de acción se adapta dinámicamente a **`[Volver a Radicar (Enviar a Supervisión)]`** o **`[Volver a Radicar (Enviar a Contratación)]`**.
+
+
 

@@ -197,7 +197,7 @@ public class InformeSupervisionService {
                 return "El campo 'Fecha de transacción' es obligatorio.";
             }
 
-            boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
+            boolean esRadicacion = form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion) && !"DEVUELTA".equals(form.estadoRadicacion);
             if (esRadicacion) {
                 StringBuilder faltantes = new StringBuilder();
                 if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
@@ -393,6 +393,57 @@ public class InformeSupervisionService {
                                 + "</div></div></body></html>";
                         EmailService.sendEmailHtml(contratista.getCorreo(), subject, bodyHtml);
                     }
+                }
+            } else if ("EN REVISION SUPERVISOR".equals(estadoNuevo)) {
+                try {
+                    String emailSup = null;
+                    String nombreSup = "";
+                    int supId = (info.getSupervisorId() != null && info.getSupervisorId() > 0) ? info.getSupervisorId() : (contrato.getSupervisorId() > 0 ? contrato.getSupervisorId() : 0);
+                    if (supId > 0) {
+                        com.combinacion.models.Supervisor s = supervisorDAO.obtenerPorId(supId);
+                        if (s != null) {
+                            nombreSup = s.getNombre();
+                            if (s.getCedula() != null) {
+                                String cedLimpia = s.getCedula().replaceAll("[^0-9]", "");
+                                com.combinacion.models.Usuario uSup = new com.combinacion.dao.UsuarioDAO().obtenerPorCedula(cedLimpia);
+                                if (uSup != null && uSup.getCorreo() != null && !uSup.getCorreo().trim().isEmpty()) {
+                                    emailSup = uSup.getCorreo().trim();
+                                }
+                            }
+                        }
+                    }
+                    if (emailSup != null && !emailSup.isEmpty()) {
+                        boolean esReingreso = "DEVUELTA".equals(estadoAnterior);
+                        String subject = esReingreso ? ("🔄 Cuenta Corregida Lista para Aprobación - Contrato " + numContrato)
+                                                     : ("📋 Cuenta de Cobro Pendiente de Aprobación - Contrato " + numContrato);
+                        String headerText = esReingreso ? "Cuenta Corregida por el Contratista" : "Cuenta Pendiente de Aprobación";
+                        String descText = esReingreso 
+                            ? ("El contratista ha corregido las observaciones de la cuenta de cobro del <strong>Contrato " + numContrato + "</strong> (Cuota " + cuota + ") y se encuentra lista para su <strong>aprobación definitiva</strong>.")
+                            : ("La cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente a la <strong>Cuota " + cuota + "</strong> ha superado la revisión y se encuentra lista para su <strong>aprobación definitiva</strong>.");
+
+                        String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
+                                + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
+                                + "<div style='background-color: #004884; color: #fff; padding: 20px; text-align: center;'>"
+                                + "<h2 style='margin: 0;'>" + headerText + "</h2>"
+                                + "</div>"
+                                + "<div style='padding: 20px;'>"
+                                + "<p>Hola <strong>" + nombreSup + "</strong>,</p>"
+                                + "<p>" + descText + "</p>"
+                                + "<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + nombreContratista + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + numContrato + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + periodo + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + cuota + "</td></tr>"
+                                + "</table>"
+                                + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #004884; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
+                                + "</div>"
+                                + "<div style='background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #777;'>"
+                                + "<p>Sistema de Gestión Contractual del DAGJP<br>Este es un mensaje automático, por favor no responda.</p>"
+                                + "</div></div></body></html>";
+                        EmailService.sendEmailHtml(emailSup, subject, bodyHtml);
+                    }
+                } catch (Exception exSup) {
+                    System.err.println("Error enviando correo supervisor: " + exSup.getMessage());
                 }
             }
         } catch (Exception ex) {
@@ -2428,16 +2479,40 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             
             InformeSupervision infActualizado = this.obtenerPorId(id);
             String estadoNuevoEfectivo = (infActualizado != null) ? infActualizado.getEstadoRadicacion() : form.estadoRadicacion;
+            boolean eraRadicacionOReingreso = "true".equals(request.getParameter("radicar"));
 
-            if ("RADICADA".equals(estadoNuevoEfectivo) && !"RADICADA".equals(estadoAnterior)) {
+            if ("DEVUELTA".equals(estadoAnterior) && !"DEVUELTA".equals(estadoNuevoEfectivo)) {
+                informeDAO.limpiarEstadoPrevioDevolucion(id);
+                com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
+                hr.setIdInforme(id);
+                hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
+                hr.setEstadoAnterior(estadoAnterior);
+                hr.setEstadoNuevo(estadoNuevoEfectivo);
+                String obs = "Cuenta vuelta a radicar tras correcciones.";
+                if ("EN REVISION SUPERVISOR".equals(estadoNuevoEfectivo)) {
+                    obs = "Cuenta corregida por el contratista. Reingresa directamente a Supervisión para su aprobación.";
+                } else if ("EN REVISION CONTRATACION".equals(estadoNuevoEfectivo)) {
+                    obs = "Cuenta corregida por el contratista. Reingresa directamente a Contratación.";
+                } else if ("VISTO BUENO CONTRATACION".equals(estadoNuevoEfectivo)) {
+                    obs = "Cuenta corregida por el contratista. Reingresa directamente a revisión post-contratación.";
+                }
+                hr.setObservaciones(obs);
+                new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+            } else if ("RADICADA".equals(estadoNuevoEfectivo) && !"RADICADA".equals(estadoAnterior)) {
                 com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                 hr.setIdInforme(id);
                 hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
                 hr.setEstadoAnterior(estadoAnterior);
                 hr.setEstadoNuevo("RADICADA");
-                hr.setObservaciones("DEVUELTA".equals(estadoAnterior) ? "Cuenta vuelta a radicar tras correcciones." : "Cuenta radicada para revisión.");
+                hr.setObservaciones("Cuenta radicada para revisión.");
                 new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
             }
+
+            // Notificaciones de correo si el estado cambió
+            if (infActualizado != null && estadoNuevoEfectivo != null && !estadoNuevoEfectivo.equals(estadoAnterior)) {
+                manejarNotificacionesCorreos(infActualizado, estadoAnterior);
+            }
+
             // Verificar si hay cambios en archivos o radicación para procesar Drive
             boolean tieneArchivosNuevos = false;
             try {
@@ -2451,7 +2526,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             } catch (Exception ignore) {}
 
             boolean tieneArchivosEliminados = (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty());
-            boolean esRadicacion = "RADICADA".equals(form.estadoRadicacion) || "RADICADA".equals(estadoNuevoEfectivo);
+            boolean esRadicacion = (form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion) && !"DEVUELTA".equals(form.estadoRadicacion))
+                    || (estadoNuevoEfectivo != null && !"BORRADOR".equals(estadoNuevoEfectivo) && !"DEVUELTA".equals(estadoNuevoEfectivo));
             boolean faltaCarpetaDrive = (existente != null && (existente.getUrlDriveEvidencias() == null || existente.getUrlDriveEvidencias().trim().isEmpty()));
 
             if (tieneArchivosNuevos || tieneArchivosEliminados || esRadicacion || faltaCarpetaDrive) {
@@ -2461,8 +2537,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 encolarActualizacionDrive(id, realPath);
             }
             
-            if ("RADICADA".equals(estadoNuevoEfectivo)) {
-                request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+            if (eraRadicacionOReingreso) {
+                if ("EN REVISION SUPERVISOR".equals(estadoNuevoEfectivo)) {
+                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Supervisión.");
+                } else if ("EN REVISION CONTRATACION".equals(estadoNuevoEfectivo)) {
+                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Contratación.");
+                } else {
+                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+                }
                 response.sendRedirect("informes");
             } else {
                 request.getSession().setAttribute("successMessage", "La información ha sido actualizada correctamente.");
@@ -2600,7 +2682,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         // Manejo de radicacion
         String radicar = r.getParameter("radicar");
         if ("true".equals(radicar)) {
-            f.estadoRadicacion = "RADICADA";
+            if (exist != null && "DEVUELTA".equals(exist.getEstadoRadicacion())) {
+                String estadoPrevio = informeDAO.obtenerEstadoPrevioDevolucion(exist.getId());
+                if (estadoPrevio != null && !estadoPrevio.trim().isEmpty() && !"DEVUELTA".equals(estadoPrevio.trim())) {
+                    f.estadoRadicacion = estadoPrevio.trim();
+                } else {
+                    f.estadoRadicacion = "RADICADA";
+                }
+            } else {
+                f.estadoRadicacion = "RADICADA";
+            }
         } else {
             f.estadoRadicacion = null;
         }

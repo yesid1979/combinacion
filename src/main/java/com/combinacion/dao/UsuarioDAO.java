@@ -98,6 +98,36 @@ public class UsuarioDAO {
     }
 
     /**
+     * Obtiene un usuario activo por número de cédula (limpia de caracteres no numéricos).
+     */
+    public Usuario obtenerPorCedula(String cedula) {
+        if (cedula == null || cedula.trim().isEmpty()) return null;
+        String cedLimpia = cedula.replaceAll("[^0-9]", "");
+        String sql = "SELECT u.id, u.username, u.password_hash, u.salt, u.nombre_completo, "
+                   + "u.correo, u.cedula, u.celular, u.sexo, u.cargo, u.vinculacion, u.fecha_inicio_contrato, u.fecha_fin_contrato, "
+                   + "u.activo, u.ultimo_acceso, u.fecha_creacion, u.rol_id, u.foto_url, u.firma_url, "
+                   + "r.nombre as rol_nombre "
+                   + "FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id "
+                   + "WHERE regexp_replace(u.cedula, '[^0-9]', '', 'g') = ? AND u.activo = true LIMIT 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cedLimpia);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Usuario u = mapear(rs);
+                    if (u.getRolId() > 0) {
+                        u.setRol(rolDAO.obtenerPorId(u.getRolId()));
+                    }
+                    return u;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * Inserta un nuevo usuario con los campos modernos.
      */
     public int insertar(Usuario usuario) {

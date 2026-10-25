@@ -39,12 +39,15 @@
 
             if (idInforme > 0) {
                 try (Connection conn = DBConnection.getConnection()) {
-                    // Parche: Agregar columna observaciones_revision si no existe
+                    // Parche: Agregar columnas observaciones_revision y estado_previo_devolucion si no existen
                     try {
                         conn.createStatement().execute("ALTER TABLE informes_supervision ADD COLUMN observaciones_revision TEXT");
                     } catch (Exception ignore) {}
+                    try {
+                        conn.createStatement().execute("ALTER TABLE informes_supervision ADD COLUMN estado_previo_devolucion VARCHAR(50)");
+                    } catch (Exception ignore) {}
 
-                    // Obtener la observación anterior (si existe) para armar el histórico (para migracion o fallback, opcional)
+                    // Obtener el estado anterior
                     String estadoAnterior = "RADICADA";
                     try (PreparedStatement psSel = conn.prepareStatement("SELECT estado_radicacion FROM informes_supervision WHERE id = ?")) {
                         psSel.setInt(1, idInforme);
@@ -57,6 +60,12 @@
 
                     // Actualizar el estado y el revisor si aplica
                     String sql = "UPDATE informes_supervision SET estado_radicacion = ?";
+                    if ("DEVUELTA".equals(accion)) {
+                        sql += ", estado_previo_devolucion = ?";
+                    } else {
+                        sql += ", estado_previo_devolucion = NULL";
+                    }
+
                     boolean updateRevisor = false;
                     int idRevisorNuevo = 0;
                     if ("VISTO BUENO CONTRATACION".equals(accion) && revisorIdStr != null && !revisorIdStr.trim().isEmpty()) {
@@ -71,13 +80,15 @@
                     sql += " WHERE id = ?";
                     
                     try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                        ps.setString(1, accion);
-                        if (updateRevisor) {
-                            ps.setInt(2, idRevisorNuevo);
-                            ps.setInt(3, idInforme);
-                        } else {
-                            ps.setInt(2, idInforme);
+                        int paramIdx = 1;
+                        ps.setString(paramIdx++, accion);
+                        if ("DEVUELTA".equals(accion)) {
+                            ps.setString(paramIdx++, estadoAnterior);
                         }
+                        if (updateRevisor) {
+                            ps.setInt(paramIdx++, idRevisorNuevo);
+                        }
+                        ps.setInt(paramIdx++, idInforme);
                         
                         int affected = ps.executeUpdate();
                         if (affected > 0) {
