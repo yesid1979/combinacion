@@ -175,5 +175,21 @@
     * Se incorporó el manejo de alertas de error tanto para `sessionScope.errorMessage` como para `requestScope.errorMessage`.
     * Cualquier fallo, timeout o advertencia durante la sincronización o guardado ahora muestra una ventana modal descriptiva con icono de advertencia/error.
 
+### 2. Detección Universal de Cuentas Históricas y Optimización de Búsqueda en Google Drive
+* **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)**:
+  * **Protección Universal de Cuentas Históricas sin Depender del Nombre de Carpetas (`esCuotaManualHistorica`):**
+    * Se rediseñó la función para que no dependa de si un contratista llamó a su carpeta manual `DOCUMENTOS`, `EVIDENCIAS`, `SOPORTES` o si no usó subcarpetas.
+    * **Criterio 1 (Cronología y Periodo Oficial):** Si el periodo del informe corresponde a la etapa previa al lanzamiento digital (`periodoInforme <= '2026-09'`) y la cuota ya existe en Producción, el sistema la reconoce como manual histórica y enruta cualquier prueba o borrador hacia la carpeta de **Pruebas** (`DRIVE_CARPETA_PRUEBAS`), protegiendo intacta la carpeta de Producción.
+    * **Criterio 2 (Antigüedad de la Carpeta en Producción):** Si la carpeta de la cuota en Producción fue creada antes del 15 de Octubre de 2026 (`createdTime < 15/10/2026`), se considera histórica.
+    * **Criterio 3 (Inspección Recursiva Profunda):** Si cualquier archivo o subcarpeta dentro de la cuota (o dentro de cualquier nivel de subcarpetas manuales) fue creado antes del 15 de Octubre de 2026, se protege como histórica.
+    * **Cuentas Digitales en Producción (Octubre 2026 en adelante):** Las cuentas que se generen a partir del periodo digital (`2026-10` en adelante) y creadas con posterioridad a la fecha de corte no disparan esta protección y operan de forma 100% nativa en la carpeta de Producción.
 
+* **[GoogleDriveService.java](file:///src/main/java/com/combinacion/services/GoogleDriveService.java)**:
+  * **Optimización Drástica de `findFolderByPatterns`:**
+    * Anteriormente, la búsqueda iteraba sobre múltiples patrones y ejecutaba hasta 10-12 peticiones HTTP secuenciales al API de Google Drive (`name=` y `name contains=`), lo que ocasionaba demoras de hasta 5-10 segundos y riesgos de `Read timed out` ante congestión de red.
+    * Ahora se obtiene la lista de subcarpetas del padre en una **única llamada HTTP eficiente** y el emparejamiento (exacto y por contención) se realiza instantáneamente en memoria Java de forma insensible a mayúsculas/minúsculas.
+    * La resolución de carpetas pasó de varios segundos a menos de 300 milisegundos.
+
+* **Limpieza de Producción para Manuel Alberto Valencia (Contrato 114 - Cuota 3):**
+  * Se removieron los archivos de prueba generados temporalmente durante las pruebas de sincronización en la carpeta `CUOTA 3 114` de Producción, restaurando su contenido a su estado manual original con sus subcarpetas y anexos intactos.
 

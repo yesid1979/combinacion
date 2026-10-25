@@ -1614,7 +1614,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 : null;
         String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas, null);
 
-        boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota());
+        boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota(), informe.getPeriodoInforme());
         String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
 
         String nombreCorto = nombreCompleto;
@@ -2703,6 +2703,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     }
 
     public boolean esCuotaManualHistorica(Contrato contrato, String numeroCuota) {
+        return esCuotaManualHistorica(contrato, numeroCuota, null);
+    }
+
+    public boolean esCuotaManualHistorica(Contrato contrato, String numeroCuota, String periodoInforme) {
         if (contrato == null || numeroCuota == null || numeroCuota.trim().isEmpty()) {
             return false;
         }
@@ -2794,28 +2798,62 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 return false;
             }
 
-            // Validar si dentro de la carpeta existente en Producción YA REPOSAN documentos oficiales
-            // históricos generados antes del corte del sistema digital (15 de Octubre de 2026 00:00:00 UTC)
-            com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
-            long corteSistema = 1792022400000L;
+            // CRITERIO 1 (Universal por Periodo): Si el periodo del informe corresponde a la etapa
+            // previa al lanzamiento digital (<= Septiembre 2026 / 2026-09) y ya existe la cuota en Producción,
+            // es una cuenta manual histórica y debe protegerse intacta.
+            if (periodoInforme != null && !periodoInforme.trim().isEmpty()) {
+                String pLimpio = periodoInforme.trim();
+                if (pLimpio.matches("^\\d{4}-\\d{2}$")) {
+                    if (pLimpio.compareTo("2026-10") < 0) {
+                        return true;
+                    }
+                }
+            }
 
-            com.google.api.services.drive.model.FileList filesRes = drive.files().list()
-                    .setQ("'" + cuotaExistenteId + "' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'")
-                    .setFields("files(id, name, createdTime)")
+            com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
+            long corteSistema = 1792022400000L; // 15 de Octubre de 2026 00:00:00 UTC
+
+            // CRITERIO 2: Antigüedad de la propia carpeta de la cuota en Producción
+            // Si la carpeta fue creada antes del 15 de Octubre de 2026, es histórica previa al sistema
+            try {
+                com.google.api.services.drive.model.File cuotaMeta = drive.files().get(cuotaExistenteId)
+                        .setFields("id, name, createdTime")
+                        .execute();
+                if (cuotaMeta != null && cuotaMeta.getCreatedTime() != null) {
+                    if (cuotaMeta.getCreatedTime().getValue() < corteSistema) {
+                        return true;
+                    }
+                }
+            } catch (Exception ignore) {}
+
+            // CRITERIO 3: Inspección profunda de archivos y subcarpetas (recursivo)
+            // No asume nombres específicos como "DOCUMENTOS" o "EVIDENCIAS".
+            // Si la carpeta contiene cualquier elemento creado antes del corte digital, es histórica.
+            com.google.api.services.drive.model.FileList itemsRes = drive.files().list()
+                    .setQ("'" + cuotaExistenteId + "' in parents and trashed = false")
+                    .setFields("files(id, name, mimeType, createdTime)")
                     .execute();
 
-            if (filesRes != null && filesRes.getFiles() != null) {
-                for (com.google.api.services.drive.model.File file : filesRes.getFiles()) {
-                    String fName = file.getName() != null ? file.getName().toUpperCase() : "";
-                    boolean esDocumentoOficial = fName.contains("DS-") 
-                                              || fName.contains("INFORME") 
-                                              || fName.contains("CUENTA") 
-                                              || fName.contains("FACTURA");
-                    if (esDocumentoOficial && file.getCreatedTime() != null) {
-                        long fileCreated = file.getCreatedTime().getValue();
-                        if (fileCreated < corteSistema) {
-                            return true; // Cuenta histórica con documentos oficiales previos: se protege intacta
-                        }
+            if (itemsRes != null && itemsRes.getFiles() != null && !itemsRes.getFiles().isEmpty()) {
+                for (com.google.api.services.drive.model.File item : itemsRes.getFiles()) {
+                    if (item.getCreatedTime() != null && item.getCreatedTime().getValue() < corteSistema) {
+                        return true;
+                    }
+                    if ("application/vnd.google-apps.folder".equals(item.getMimeType())) {
+                        try {
+                            com.google.api.services.drive.model.FileList subFiles = drive.files().list()
+                                    .setQ("'" + item.getId() + "' in parents and trashed = false")
+                                    .setFields("files(id, name, createdTime)")
+                                    .setPageSize(10)
+                                    .execute();
+                            if (subFiles != null && subFiles.getFiles() != null && !subFiles.getFiles().isEmpty()) {
+                                for (com.google.api.services.drive.model.File subFile : subFiles.getFiles()) {
+                                    if (subFile.getCreatedTime() != null && subFile.getCreatedTime().getValue() < corteSistema) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignore) {}
                     }
                 }
             }

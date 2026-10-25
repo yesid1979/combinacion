@@ -198,39 +198,51 @@ public class GoogleDriveService {
      * Busca una carpeta existente dentro de parentId que coincida con alguno de los patrones dados.
      */
     public static String findFolderByPatterns(String parentId, String... searchPatterns) throws Exception {
-        if (parentId == null || parentId.trim().isEmpty() || searchPatterns == null) return null;
+        if (parentId == null || parentId.trim().isEmpty() || searchPatterns == null || searchPatterns.length == 0) return null;
         Drive driveService = getDriveService();
 
+        // Obtener la lista de subcarpetas existentes dentro de parentId en una sola llamada eficiente
+        FileList res = null;
+        try {
+            String query = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents";
+            res = executeWithRetry(() -> driveService.files().list()
+                    .setQ(query)
+                    .setSpaces("drive")
+                    .setFields("files(id, name)")
+                    .setPageSize(100)
+                    .execute());
+        } catch (Exception e) {
+            System.err.println("Aviso Drive: Error listando carpetas en '" + parentId + "': " + e.getMessage());
+        }
+
+        if (res == null || res.getFiles() == null || res.getFiles().isEmpty()) {
+            return null;
+        }
+
+        java.util.List<File> folders = res.getFiles();
+
+        // 1. Pase exacto (coincidencia de nombre exacto ignorando mayúsculas/minúsculas y espacios extras)
         for (String pattern : searchPatterns) {
             if (pattern == null || pattern.trim().isEmpty()) continue;
-            String clean = pattern.replace("\\", "\\\\").replace("'", "\\'");
-
-            try {
-                // Primero buscar por coincidencia exacta
-                String queryExact = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents and name='" + clean + "'";
-                FileList res = executeWithRetry(() -> driveService.files().list()
-                        .setQ(queryExact)
-                        .setSpaces("drive")
-                        .setFields("files(id, name)")
-                        .execute());
-                if (res != null && res.getFiles() != null && !res.getFiles().isEmpty()) {
-                    return res.getFiles().get(0).getId();
+            String pTrim = pattern.trim().toUpperCase();
+            for (File f : folders) {
+                if (f.getName() != null && f.getName().trim().equalsIgnoreCase(pTrim)) {
+                    return f.getId();
                 }
-
-                // Luego buscar por contenido (name contains '...')
-                String queryContains = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents and name contains '" + clean + "'";
-                res = executeWithRetry(() -> driveService.files().list()
-                        .setQ(queryContains)
-                        .setSpaces("drive")
-                        .setFields("files(id, name)")
-                        .execute());
-                if (res != null && res.getFiles() != null && !res.getFiles().isEmpty()) {
-                    return res.getFiles().get(0).getId();
-                }
-            } catch (Exception e) {
-                System.err.println("Aviso Drive: Error buscando patrón '" + pattern + "': " + e.getMessage());
             }
         }
+
+        // 2. Pase por contención (contains)
+        for (String pattern : searchPatterns) {
+            if (pattern == null || pattern.trim().isEmpty()) continue;
+            String pTrim = pattern.trim().toUpperCase();
+            for (File f : folders) {
+                if (f.getName() != null && f.getName().toUpperCase().contains(pTrim)) {
+                    return f.getId();
+                }
+            }
+        }
+
         return null;
     }
 
