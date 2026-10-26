@@ -143,12 +143,20 @@ public class SupervisionReportGenerator {
         if (nf instanceof DecimalFormat) {
             ((DecimalFormat) nf).applyPattern("#,##0");
         }
-        Number valorMostrarNums = contrato.getValorVigente();
-        String valorMostrarLetras = contrato.getValorVigenteLetras();
         
-        String valorNumeros = valorMostrarNums != null ? "$ " + nf.format(valorMostrarNums).replace(',', '.') : "$ 0";
-        reps.put("${VALOR_INICIAL_LETRAS}", valorMostrarLetras != null ? valorMostrarLetras.toUpperCase() : "");
-        reps.put("${VALOR_INICIAL_NUMEROS}", valorNumeros);
+        // 1. Valor inicial del contrato (siempre el valor original antes de adición)
+        Number valorInicialNums = contrato.getValorTotalNumeros();
+        String valorInicialLetras = contrato.getValorTotalLetras();
+        String valorInicialStr = valorInicialNums != null ? "$ " + nf.format(valorInicialNums).replace(',', '.') : "$ 0";
+        reps.put("${VALOR_INICIAL_LETRAS}", valorInicialLetras != null ? valorInicialLetras.toUpperCase() : "");
+        reps.put("${VALOR_INICIAL_NUMEROS}", valorInicialStr);
+
+        // 2. Valor total vigente del contrato (con adición si existe, para la columna 'Valor Total del Contrato' en el Resumen Financiero)
+        Number valorTotalNums = contrato.getValorVigente();
+        String valorTotalStr = valorTotalNums != null ? "$ " + nf.format(valorTotalNums).replace(',', '.') : "$ 0";
+        reps.put("${VALOR_TOTAL_NUMEROS}", valorTotalStr);
+        reps.put("${VALOR_TOTAL_CONTRATO}", valorTotalStr);
+        reps.put("${VALOR_TOTAL}", valorTotalStr);
 
         // Datos del Informe
         reps.put("${PERIODO_INFORME}", info.getPeriodoInforme() != null ? formatearPeriodo(info.getPeriodoInforme()) : "");
@@ -175,8 +183,47 @@ public class SupervisionReportGenerator {
         reps.put("${TERMINACION_ANTICIPADA}", info.getTerminacionAnticipada() != null && !info.getTerminacionAnticipada().trim().isEmpty() ? info.getTerminacionAnticipada() : "N/A");
         reps.put("${ADICIONES}", info.getAdiciones() != null && !info.getAdiciones().trim().isEmpty() ? info.getAdiciones() : "N/A");
         reps.put("${PRORROGAS}", info.getProrrogas() != null && !info.getProrrogas().trim().isEmpty() ? info.getProrrogas() : "N/A");
-        reps.put("${RECIBO_SATISFACCION}", info.getReciboSatisfaccion() != null && !info.getReciboSatisfaccion().trim().isEmpty() ? info.getReciboSatisfaccion() : "N/A");
-        reps.put("${CONSTANCIA_PAZ_SALVO}", info.getConstanciaPazSalvo() != null && !info.getConstanciaPazSalvo().trim().isEmpty() ? info.getConstanciaPazSalvo() : "N/A");
+        boolean esInformeFinal = (info.getTipoInforme() != null && info.getTipoInforme().toUpperCase().contains("FINAL"));
+        if (!esInformeFinal && contrato != null && contrato.getNumCuotasNumero() > 0) {
+            int totalCuotasContrato = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
+            int cuotaActualParsed = com.combinacion.util.ParseUtils.parseInt(info.getNumeroCuota());
+            if (cuotaActualParsed > 0 && cuotaActualParsed >= totalCuotasContrato) {
+                esInformeFinal = true;
+            }
+        }
+
+        String numContratoConAnio = (contrato != null && contrato.getNumeroContrato() != null) ? contrato.getNumeroContrato().trim() : "";
+        if (contrato != null && contrato.getAnio() != null && contrato.getAnio() > 0 && !numContratoConAnio.contains(String.valueOf(contrato.getAnio()))) {
+            numContratoConAnio += " de " + contrato.getAnio();
+        }
+
+        String textoReciboLegal = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContratoConAnio + ".";
+        String textoPazSalvoLegal = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
+
+        String valRecibo = info.getReciboSatisfaccion();
+        if (esInformeFinal) {
+            if (valRecibo == null || valRecibo.trim().isEmpty() || "N/A".equalsIgnoreCase(valRecibo.trim())) {
+                valRecibo = textoReciboLegal;
+            }
+        } else {
+            if (valRecibo == null || valRecibo.trim().isEmpty()) {
+                valRecibo = "N/A";
+            }
+        }
+
+        String valPazSalvo = info.getConstanciaPazSalvo();
+        if (esInformeFinal) {
+            if (valPazSalvo == null || valPazSalvo.trim().isEmpty() || "N/A".equalsIgnoreCase(valPazSalvo.trim())) {
+                valPazSalvo = textoPazSalvoLegal;
+            }
+        } else {
+            if (valPazSalvo == null || valPazSalvo.trim().isEmpty()) {
+                valPazSalvo = "N/A";
+            }
+        }
+
+        reps.put("${RECIBO_SATISFACCION}", valRecibo);
+        reps.put("${CONSTANCIA_PAZ_SALVO}", valPazSalvo);
         
         reps.put("${VALOR_CUOTA_PAGAR}", info.getValorCuotaPagar() != null ? "$ " + nf.format(info.getValorCuotaPagar()).replace(',', '.') : "$ 0");
         reps.put("${VALOR_ACUMULADO}", info.getValorAccumuladoPagado() != null ? "$ " + nf.format(info.getValorAccumuladoPagado()).replace(',', '.') : "$ 0");
@@ -265,6 +312,27 @@ public class SupervisionReportGenerator {
                     
                     if (esEncargado) {
                         xml = xml.replace("Nombre y firma del Supervisor", "Nombre y firma del Supervisor (E)");
+                    }
+                    
+                    // Asegurar consistencia en la tabla 'Resumen contable y financiero':
+                    // la columna 'Valor Total del Contrato' debe reflejar el valor total vigente con adición
+                    if (contrato != null && contrato.isTieneAdicion()) {
+                        String vTotal = reps.get("${VALOR_TOTAL_NUMEROS}");
+                        String vInicial = reps.get("${VALOR_INICIAL_NUMEROS}");
+                        if (vTotal != null && vInicial != null && !vTotal.equals(vInicial)) {
+                            int idxResumen = xml.indexOf("Resumen contable y financiero");
+                            if (idxResumen != -1) {
+                                int idxTable = xml.indexOf("<w:tbl", idxResumen);
+                                int idxEndTable = (idxTable != -1) ? xml.indexOf("</w:tbl>", idxTable) : -1;
+                                if (idxTable != -1 && idxEndTable != -1) {
+                                    String tblSub = xml.substring(idxTable, idxEndTable);
+                                    if (tblSub.contains(vInicial)) {
+                                        String updatedTbl = tblSub.replace(vInicial, vTotal);
+                                        xml = xml.substring(0, idxTable) + updatedTbl + xml.substring(idxEndTable);
+                                    }
+                                }
+                            }
+                        }
                     }
                     
                     // Forzar que TODAS las filas de las tablas puedan dividirse entre páginas 

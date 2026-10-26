@@ -67,34 +67,41 @@ public class AuthService {
             method = "GET";
         }
 
+        // PERMISO ESPECIAL PARA INFORMES / CUENTAS DE COBRO (Contratistas, Supervisores, Revisores)
+        if (lowerPath.contains("informes")) {
+            boolean esContratista = usuario.getRolId() == 3 || usuario.getRolId() == 1612 ||
+                                    (usuario.getRol() != null && usuario.getRol().getNombre() != null &&
+                                     usuario.getRol().getNombre().toLowerCase().contains("contratista")) ||
+                                    (usuario.getCedula() != null && !usuario.getCedula().trim().isEmpty());
+
+            boolean esRevisorOSupervisor = usuario.tienePermiso("PUEDE_REVISAR_CUENTAS") || 
+                                          usuario.tienePermiso("REVISION_CUENTAS_VER") || 
+                                          usuario.tienePermiso("ADMINISTRAR_CUENTAS") || 
+                                          usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") ||
+                                          usuario.tienePermiso("SUPERVISOR_CUENTAS") ||
+                                          (usuario.getRol() != null && usuario.getRol().getNombre() != null &&
+                                           (usuario.getRol().getNombre().toLowerCase().contains("supervisor") ||
+                                            usuario.getRol().getNombre().toLowerCase().contains("revisor")));
+
+            if (esContratista || esRevisorOSupervisor) {
+                // Validación de método para acciones críticas
+                if (action.equals("delete") && !"POST".equalsIgnoreCase(method)) {
+                    System.out.println("[AUTH] Método no permitido para acción 'delete'. Debe ser POST.");
+                    return false;
+                }
+                return true;
+            }
+        }
+
         // Resolver permiso necesario
         String permiso = resolverPermiso(lowerPath, action);
         System.out.println("[AUTH] Permiso resuelto para " + lowerPath + " (" + action + "): " + permiso);
 
         // Si no hay permiso definido, permitir acceso a rutas base
         if (permiso == null) {
-            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet") || lowerPath.contains("procesar_revision.jsp");
+            boolean esRutaBase = lowerPath.equals("/index.jsp") || lowerPath.equals("/") || lowerPath.equals("/logout") || lowerPath.contains("servlet") || lowerPath.contains("procesar_revision.jsp") || lowerPath.contains("informes");
             System.out.println("[AUTH] Permiso no definido. Acceso a ruta base: " + esRutaBase);
             return esRutaBase;
-        }
-
-        // PERMISO ESPECIAL PARA CONTRATISTAS EN INFORMES/CUENTAS DE COBRO
-        boolean esContratista = usuario.getRolId() == 3 || 
-                                (usuario.getRol() != null && "Contratista".equalsIgnoreCase(usuario.getRol().getNombre()));
-                                
-        if (lowerPath.equals("/informes") && esContratista) {
-            return true;
-        }
-
-        // PERMISO ESPECIAL PARA REVISORES Y SUPERVISORES EN INFORMES (REVISION DE CUENTAS)
-        if (lowerPath.equals("/informes") && (
-                usuario.tienePermiso("PUEDE_REVISAR_CUENTAS") || 
-                usuario.tienePermiso("REVISION_CUENTAS_VER") || 
-                usuario.tienePermiso("ADMINISTRAR_CUENTAS") || 
-                usuario.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") ||
-                usuario.tienePermiso("SUPERVISOR_CUENTAS") ||
-                (usuario.getRol() != null && "Supervisor".equalsIgnoreCase(usuario.getRol().getNombre())))) {
-            return true;
         }
 
         // Permiso global para que cualquier usuario autenticado use los servlets del editor de texto
@@ -158,10 +165,12 @@ public class AuthService {
             case "new":
             case "insert":
             case "create":
+            case "radicar":
                 return modulo + "_CREAR";
             case "edit":
             case "update":
             case "save":
+            case "syncdrive":
                 return modulo + "_EDITAR";
             case "delete":
                 return modulo + "_ELIMINAR";

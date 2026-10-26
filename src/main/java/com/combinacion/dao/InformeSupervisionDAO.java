@@ -553,4 +553,18 @@ public class InformeSupervisionDAO {
             e.printStackTrace();
         }
     }
+
+    public void actualizarReciboYPazSalvo(int id, String tipoInforme, String reciboSatisfaccion, String constanciaPazSalvo) {
+        String sql = "UPDATE informes_supervision SET tipo_informe = ?, recibo_satisfaccion = ?, constancia_paz_salvo = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tipoInforme);
+            ps.setString(2, reciboSatisfaccion);
+            ps.setString(3, constanciaPazSalvo);
+            ps.setInt(4, id);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("Error al actualizar recibo y paz y salvo en BD para informe ID " + id + ": " + ex.getMessage());
+        }
+    }
 }

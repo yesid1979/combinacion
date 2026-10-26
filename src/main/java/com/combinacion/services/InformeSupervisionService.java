@@ -264,7 +264,39 @@ public class InformeSupervisionService {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
                 }
 
-                if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
+                // Salvaguarda contra vaciado accidental: si el concepto entrante está vacío o todas sus actividades son ""
+                // pero en la base de datos ya existían actividades documentadas, preservar el concepto existente
+                boolean tieneActividadesEntrantes = false;
+                if (info.getConceptoSupervisor() != null && !info.getConceptoSupervisor().trim().isEmpty() && !"[]".equals(info.getConceptoSupervisor().trim())) {
+                    try {
+                        org.json.JSONArray arrIn = new org.json.JSONArray(info.getConceptoSupervisor());
+                        for (int ai = 0; ai < arrIn.length(); ai++) {
+                            String actText = arrIn.getJSONObject(ai).optString("actividad", "").trim();
+                            if (!actText.isEmpty() && !"<p><br></p>".equals(actText)) {
+                                tieneActividadesEntrantes = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception ignore) {}
+                }
+
+                boolean existenteTieneActividades = false;
+                if (existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
+                    try {
+                        org.json.JSONArray arrEx = new org.json.JSONArray(existente.getConceptoSupervisor());
+                        for (int ai = 0; ai < arrEx.length(); ai++) {
+                            String actText = arrEx.getJSONObject(ai).optString("actividad", "").trim();
+                            if (!actText.isEmpty() && !"<p><br></p>".equals(actText)) {
+                                existenteTieneActividades = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception ignore) {}
+                }
+
+                if ((!tieneActividadesEntrantes || info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existenteTieneActividades) {
+                    info.setConceptoSupervisor(existente.getConceptoSupervisor());
+                } else if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
                     info.setConceptoSupervisor(existente.getConceptoSupervisor());
                 }
                 if (info.getValorCuotaPagar() == null && existente.getValorCuotaPagar() != null) {
@@ -539,6 +571,12 @@ public class InformeSupervisionService {
         info.setProrrogas(f.prorrogas);
         info.setReciboSatisfaccion(f.reciboSatisfaccion);
         info.setConstanciaPazSalvo(f.constanciaPazSalvo);
+        if (f.contratoId > 0) {
+            Contrato cont = this.obtenerContrato(f.contratoId);
+            if (cont != null) {
+                asegurarTextosInformeFinal(info, cont);
+            }
+        }
         
         info.setValorCuotaPagar(ParseUtils.parseBigDecimal(f.valorCuotaPagar));
         info.setValorAccumuladoPagado(ParseUtils.parseBigDecimal(f.valorAccumuladoPagado));
@@ -1134,6 +1172,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
+                asegurarTextosInformeFinal(informe, contrato);
                 if (contrato.isTieneAdicion()) {
                     com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
                     poblarTextosModificacion(contrato, informeAuto);
@@ -1166,6 +1205,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
+                asegurarTextosInformeFinal(informe, contrato);
                 if (contrato.isTieneAdicion()) {
                     com.combinacion.models.InformeSupervision informeAuto = new com.combinacion.models.InformeSupervision();
                     poblarTextosModificacion(contrato, informeAuto);
@@ -2099,6 +2139,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
             if (contrato == null) return;
 
+            // Asegurar que si es cuenta final, tenga los textos legales oficiales de recibo y paz y salvo
+            asegurarTextosInformeFinal(informe, contrato);
+            if ("FINAL".equalsIgnoreCase(informe.getTipoInforme())) {
+                try {
+                    informeDAO.actualizarReciboYPazSalvo(informe.getId(), informe.getTipoInforme(), informe.getReciboSatisfaccion(), informe.getConstanciaPazSalvo());
+                } catch (Exception ignore) {}
+            }
+
             String cuotaFolderId = resolverCuotaFolderId(informe, contrato);
             if (cuotaFolderId == null) {
                 System.err.println("No se pudo resolver la carpeta de Drive para el informe ID " + informeId);
@@ -2702,6 +2750,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         
         String conceptoJson = r.getParameter("concepto_supervisor_json");
         if (conceptoJson != null && !conceptoJson.isEmpty()) {
+            if (conceptoJson.startsWith("B64:")) {
+                try {
+                    byte[] decoded = java.util.Base64.getDecoder().decode(conceptoJson.substring(4));
+                    conceptoJson = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                } catch (Exception ex) {
+                    System.err.println("Error decodificando concepto Base64: " + ex.getMessage());
+                }
+            }
             try {
                 org.json.JSONArray arr = new org.json.JSONArray(conceptoJson);
                 for (int i = 0; i < arr.length(); i++) {
@@ -2893,6 +2949,37 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (adVacio) informe.setAdiciones(adicionTxt);
         if (proVacio) informe.setProrrogas(prorrogaTxt);
         if (modVacio) informe.setModificaciones(modificacionTxt);
+    }
+
+    public void asegurarTextosInformeFinal(InformeSupervision informe, Contrato contrato) {
+        if (informe == null || contrato == null) return;
+
+        boolean esInformeFinal = (informe.getTipoInforme() != null && informe.getTipoInforme().toUpperCase().contains("FINAL"));
+        if (!esInformeFinal && contrato.getNumCuotasNumero() > 0) {
+            int totalCuotas = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
+            int cuotaActual = ParseUtils.parseInt(informe.getNumeroCuota());
+            if (cuotaActual > 0 && cuotaActual >= totalCuotas) {
+                esInformeFinal = true;
+                informe.setTipoInforme("FINAL");
+            }
+        }
+
+        if (esInformeFinal) {
+            String numContrato = (contrato.getNumeroContrato() != null) ? contrato.getNumeroContrato().trim() : "";
+            if (contrato.getAnio() != null && contrato.getAnio() > 0 && !numContrato.contains(String.valueOf(contrato.getAnio()))) {
+                numContrato += " de " + contrato.getAnio();
+            }
+
+            String textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
+            String textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
+
+            if (informe.getReciboSatisfaccion() == null || informe.getReciboSatisfaccion().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getReciboSatisfaccion().trim())) {
+                informe.setReciboSatisfaccion(textoRecibo);
+            }
+            if (informe.getConstanciaPazSalvo() == null || informe.getConstanciaPazSalvo().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getConstanciaPazSalvo().trim())) {
+                informe.setConstanciaPazSalvo(textoPazSalvo);
+            }
+        }
     }
 
     public boolean esCuotaManualHistorica(Contrato contrato, String numeroCuota) {

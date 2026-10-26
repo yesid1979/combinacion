@@ -158,7 +158,7 @@
                     <span class="badge bg-primary px-3 py-2">${contrato.contratistaNombre}</span>
                 </div>
 
-                <form action="informes?action=${action}&contrato_id=${contrato.id}<c:if test="${action == 'update'}">&id=${informe.id}</c:if>" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
+                <form action="${pageContext.request.contextPath}/informes" method="POST" id="informeForm" class="needs-validation" enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="action" value="${action}">
                     <input type="hidden" name="contrato_id" value="${contrato.id}">
                     <c:if test="${action == 'update'}">
@@ -456,11 +456,11 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Recibo a Satisfacción de Servicios</label>
-                                    <textarea class="form-control" name="recibo_satisfaccion" id="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</textarea>
+                                    <textarea class="form-control" name="recibo_satisfaccion" id="recibo_satisfaccion" rows="2" ${readonly ? 'readonly' : ''}><c:choose><c:when test="${informe.tipoInforme == 'FINAL' && (empty informe.reciboSatisfaccion || informe.reciboSatisfaccion == 'N/A')}">Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° ${contrato.numeroContrato}${not empty contrato.anio and contrato.anio > 0 ? ' de ' : ''}${not empty contrato.anio and contrato.anio > 0 ? contrato.anio : ''}.</c:when><c:otherwise>${empty informe.reciboSatisfaccion ? 'N/A' : informe.reciboSatisfaccion}</c:otherwise></c:choose></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Constancia de Paz y Salvo</label>
-                                    <textarea class="form-control" name="constancia_paz_salvo" id="constancia_paz_salvo" rows="2" ${readonly ? 'readonly' : ''}>${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}</textarea>
+                                    <textarea class="form-control" name="constancia_paz_salvo" id="constancia_paz_salvo" rows="2" ${readonly ? 'readonly' : ''}><c:choose><c:when test="${informe.tipoInforme == 'FINAL' && (empty informe.constanciaPazSalvo || informe.constanciaPazSalvo == 'N/A')}">El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.</c:when><c:otherwise>${empty informe.constanciaPazSalvo ? 'N/A' : informe.constanciaPazSalvo}</c:otherwise></c:choose></textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Concepto Supervisor (Obligaciones y Actividades)</label>
@@ -1976,6 +1976,17 @@
             var obligacionesJson = [];
             var count = parseInt($('input[name="obligaciones_count"]').val()) || 0;
             
+            // Salvaguarda frontend: si hay obligaciones pero los editores no se inicializaron en pantalla, impedir submit
+            if (count > 0 && $('#actividades_container_0 textarea').length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de carga en la página',
+                    text: 'Los editores de actividades no se han inicializado correctamente en el navegador. Por favor recarga la página (Ctrl + F5) antes de continuar.',
+                    confirmButtonColor: '#d33'
+                });
+                return false;
+            }
+            
             for (var i = 0; i < count; i++) {
                 var obj = {};
                 var $obligacion = $('input[name="obligacion_' + i + '"]');
@@ -2005,7 +2016,13 @@
                 obligacionesJson.push(obj);
             }
             $('#informeForm').find('input[name="concepto_supervisor_json"]').remove();
-            $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(JSON.stringify(obligacionesJson)));
+            var jsonStr = JSON.stringify(obligacionesJson);
+            try {
+                var b64Payload = 'B64:' + btoa(unescape(encodeURIComponent(jsonStr)));
+                $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(b64Payload));
+            } catch(b64Err) {
+                $('#informeForm').append($('<input type="hidden" name="concepto_supervisor_json">').val(jsonStr));
+            }
             $('input[name="obligaciones_count"]').removeAttr('name');
             
             // Eliminar los nombres de TODOS los inputs de tipo file que estén realmente vacíos
@@ -2022,6 +2039,21 @@
                 var clean = $(this).val().replace(/\./g, '');
                 $(this).val(clean);
             });
+            
+            // Si es informe final, asegurar textos oficiales de recibo y paz y salvo antes de enviar
+            if ($('#tipo_informe').val() === 'FINAL') {
+                var numContrato = $('#numero_contrato_display').val();
+                var textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
+                var textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
+                var curR = $('#recibo_satisfaccion').val();
+                if (!curR || curR.trim() === '' || curR.trim() === 'N/A') {
+                    $('#recibo_satisfaccion').val(textoRecibo);
+                }
+                var curP = $('#constancia_paz_salvo').val();
+                if (!curP || curP.trim() === '' || curP.trim() === 'N/A') {
+                    $('#constancia_paz_salvo').val(textoPazSalvo);
+                }
+            }
             
             setTimeout(function() {
                 submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
@@ -2080,6 +2112,18 @@
                         }
                     }
                     $('#valor_acumulado').val(formatMoney(nuevoAcumulado)).trigger('input');
+                }
+
+                // Si la cuota seleccionada es la última del contrato, auto-seleccionar INFORME FINAL
+                var maxCuota = 0;
+                $('select[name="numero_cuota"] option').each(function() {
+                    var v = parseInt($(this).val());
+                    if (!isNaN(v) && v > maxCuota) maxCuota = v;
+                });
+                if (maxCuota > 0 && cuota >= maxCuota) {
+                    if (!$('#tipo_informe').is(':disabled') && $('#tipo_informe').val() !== 'FINAL') {
+                        $('#tipo_informe').val('FINAL').trigger('change');
+                    }
                 }
             });
             
@@ -2216,6 +2260,24 @@
                     updateObservacionesFinancieras();
                 }
 
+                function asegurarTextosFinal() {
+                    var tipo = $('#tipo_informe').val();
+                    if (tipo === 'FINAL') {
+                        var numContrato = $('#numero_contrato_display').val();
+                        var textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
+                        var textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
+                        
+                        var curR = $('#recibo_satisfaccion').val();
+                        if (!curR || curR.trim() === '' || curR.trim() === 'N/A') {
+                            $('#recibo_satisfaccion').val(textoRecibo);
+                        }
+                        var curP = $('#constancia_paz_salvo').val();
+                        if (!curP || curP.trim() === '' || curP.trim() === 'N/A') {
+                            $('#constancia_paz_salvo').val(textoPazSalvo);
+                        }
+                    }
+                }
+
                 $('#tipo_informe').change(function() {
                     var tipo = $(this).val();
                     togglePagoSeguridadSocial();
@@ -2224,12 +2286,7 @@
                     if ($(this).is(':disabled')) return;
                     
                     if (tipo === 'FINAL') {
-                        var numContrato = $('#numero_contrato_display').val();
-                        var textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
-                        var textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
-                        
-                        $('#recibo_satisfaccion').val(textoRecibo);
-                        $('#constancia_paz_salvo').val(textoPazSalvo);
+                        asegurarTextosFinal();
                     } else {
                         $('#recibo_satisfaccion').val('N/A');
                         $('#constancia_paz_salvo').val('N/A');
@@ -2238,6 +2295,7 @@
                 
                 // Ejecutar al inicio para ajustar estado según valor cargado
                 togglePagoSeguridadSocial();
+                asegurarTextosFinal();
             });
 
             function setRadicar() {

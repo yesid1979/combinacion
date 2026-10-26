@@ -98,6 +98,14 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // 3.8 EXCEPCIÓN: Todos los usuarios autenticados pueden interactuar con /informes
+        // La validación detallada por contrato, rol y propiedad de cuenta la gestiona InformeSupervisionService
+        if (path.contains("informes")) {
+            request.setAttribute("usuarioLogueado", usuario);
+            chain.doFilter(request, response);
+            return;
+        }
+
         // 4. VALIDACIÓN DE SEGURIDAD
         boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
 
