@@ -561,7 +561,7 @@
                                 </div>
                                 <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">Seguridad Social <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control" name="file_seguridad_social" accept="application/pdf" ${readonly ? 'disabled' : ''}>
+                                    <input type="file" class="form-control" name="file_seguridad_social" id="file_seguridad_social" accept="application/pdf" required ${readonly ? 'disabled' : ''}>
                                 </div>
                                  <div class="col-md-6 req-cuota-todas">
                                     <label class="form-label">RPC (Registro Presupuestal) <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
@@ -642,6 +642,17 @@
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>
+                                        
+                                        <!-- Campo de aclaraciones del contratista al volver a radicar una cuenta devuelta -->
+                                        <div class="mt-3 pt-3 border-top">
+                                            <label for="observaciones_devolucion" class="form-label fw-bold text-dark">
+                                                <i class="bi bi-chat-left-text text-primary me-1"></i>Aclaraciones / Observaciones sobre las correcciones realizadas <span class="badge bg-light text-secondary border fw-normal">Opcional</span>:
+                                            </label>
+                                            <textarea class="form-control" name="observaciones_devolucion" id="observaciones_devolucion" rows="3" placeholder="Detalla aquí qué subsanaste o qué aclaraciones deseas remitir a quien revise tu cuenta nuevamente (ej: se adjuntó la planilla corregida, se modificó la actividad 2, etc.)...">${fn:escapeXml(not empty informe.observacionesContratista ? informe.observacionesContratista : '')}</textarea>
+                                            <div class="form-text text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>Esta aclaración quedará registrada en el <strong>Historial de Radicación y Revisiones</strong> para conocimiento del revisor o supervisor al reingresar.
+                                            </div>
+                                        </div>
                                     </c:when>
                                     <c:when test="${esBorradorDevuelta}">
                                         <h5 class="card-title text-primary"><i class="bi bi-send-check"></i> Radicar Cuenta de Cobro</h5>
@@ -1881,6 +1892,15 @@
             
             var esRadicacion = ($('#radicar_input').val() === 'true');
             if (esRadicacion) {
+                // Validación estricta para informe FINAL: El pago de la seguridad social es obligatorio
+                if ($('#tipo_informe').val() === 'FINAL') {
+                    var $pagoSS = $('#pago_seguridad_social');
+                    if (!$pagoSS.val() || $pagoSS.val().trim() === '') {
+                        isValid = false;
+                        if (!firstInvalid) firstInvalid = $pagoSS;
+                    }
+                }
+
                 $(this).find('[required]').each(function() {
                     var $el = $(this);
                     if ($el.is('input[type="file"]')) {
@@ -2448,7 +2468,9 @@
 
                         $('#container_pago_seguridad').hide();
                         $('#pago_seguridad_social').prop('required', false);
+                        $('#file_seguridad_social').prop('required', false);
                     } else {
+                        $('#file_seguridad_social').prop('required', true);
                         // Ocultar campos de afiliación y quitar asteriscos
                         $('#container_afiliaciones_nuevo').slideUp(200);
                         $('#eps, #afp_pension, #arl').prop('required', false).each(function() {

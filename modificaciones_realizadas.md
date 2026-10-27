@@ -416,3 +416,40 @@
        * **Obligaciones 3, 4, 5, 6 y 7:** Textos completos de jornadas, estudios de acción de repetición y la tabla de 11 acciones constitucionales tramitadas.
      * Se reconstruyó la estructura JSON oficial y se actualizó directamente el campo `concepto_supervisor` del informe 330 en la base de datos PostgreSQL de producción, restaurando la totalidad de la información sin ninguna pérdida.
 
+
+---
+
+### 7. Campo de Aclaraciones / Observaciones del Contratista al Volver a Radicar Cuentas Devueltas
+* **Requerimiento Solicitado:**
+  * Permitir que el contratista, al tener su cuenta en estado `DEVUELTA` y proceder a corregirla, disponga de un campo específico para detallar qué aclaraciones u observaciones tiene frente a lo solicitado antes de presionar *"Volver a Radicar"*.
+* **Solución Implementada:**
+  * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):**
+    * Se integró en la sección de radicación para cuentas devueltas (`esDevuelta`) un campo `<textarea>` denominado `observaciones_devolucion`, opcional y con texto de ayuda descriptivo.
+    * Funciona para todos los destinos de re-radicación: Reingreso directo a Supervisión, Reingreso directo a Contratación o Revisor asignado.
+    * Mantiene la carga del texto redactado (`informe.observacionesContratista`) para que si el usuario guarda el informe como borrador antes de radicar, no pierda lo escrito.
+  * **[InformeSupervision.java](file:///src/main/java/com/combinacion/models/InformeSupervision.java) e [InformeSupervisionDAO.java](file:///src/main/java/com/combinacion/dao/InformeSupervisionDAO.java):**
+    * Adición del atributo y métodos getter/setter `observacionesContratista`.
+    * Creación preventiva de la columna `observaciones_contratista TEXT` y métodos de persistencia `actualizarObservacionesContratista` y `limpiarObservacionesContratista`.
+  * **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java):**
+    * En `actualizar(...)`: Si la cuenta está devuelta y el usuario guarda sin radicar, se almacena en borrador su observación.
+    * Al ejecutar el reingreso ("Volver a Radicar"), se concatena automáticamente la aclaración del contratista a la traza de auditoría de [HistorialRadicacionDAO.java](file:///src/main/java/com/combinacion/dao/HistorialRadicacionDAO.java), registrándose con fecha, nombre del contratista y texto detallado en la tabla *"Historial de Radicación y Revisiones"*.
+
+---
+
+### 8. Corrección de Destino en Google Drive, Limpieza de Marca "BORRADOR" y Validación de Cuota Final
+* **Causa Raíz Identificada:**
+  * Las cuentas procesadas digitalmente en el sistema que contenían carpetas creadas en Drive antes del corte del 15 de octubre (como la Cuota 4 del contrato 1978 de Carmen Yanila Moreno, creada manualmente el 2 de octubre) eran marcadas erróneamente por `esCuotaManualHistorica()` como cuentas manuales históricas.
+  * Debido a ello, `resolverCuotaFolderId()` desviaba la sincronización y actualización de formatos a la carpeta de **PRUEBAS** (`DRIVE_CARPETA_PRUEBAS`), dejando intactos los archivos del 18 de octubre en la carpeta real de **PRODUCCIÓN** (`CUOTA 4 126`), los cuales aún conservaban la marca de agua de borrador y el formato previo Word con relaciones fragmentadas que impedía abrirlo en Google Docs.
+* **Soluciones Implementadas:**
+  1. **Enrutamiento Inteligente por Periodo y Protección de Cuentas Anteriores ([InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)):**
+     * **Cuentas Anteriores (`periodo < 2026-10` - ej. Cuotas 1, 2, 3 de mayo a septiembre):** Se registran en la base de datos para garantizar el **dato financiero** (acumulado anterior, saldo por cancelar y consecutivo), y cualquier archivo que el sistema genere se aísla en la carpeta **`pruebas cuenta de cobro`**, **garantizando que ningún archivo manual previo subido a la carpeta oficial de Producción sea tocado ni sobreescrito**.
+     * **Cuentas Activas de la Era Digital (`periodo >= 2026-10` - octubre en adelante):** Independientemente del número de cuota (sea Cuota 1 para un contrato nuevo que inició en octubre, Cuota 2, Cuota 3, Cuota 4 o Cuota 8), el sistema reconoce de inmediato que corresponde a la cuenta en trámite del nuevo sistema y se deposita **exclusivamente en la carpeta oficial de Producción** (`DRIVE_CARPETA_CUENTAS_COBRO`).
+     * En `actualizarFormatosEnDrive()` se integró `uploadOrReplaceByPattern()` para formatos Word, Gestión y PDF Unificado (con prefijos `3. INFORME DE SUPERVISI`, `5. INFORME DE GESTI` e `INFORME GESTI`), asegurando que cualquier versión anterior obsoleta (como las del 18 de octubre con marca "BORRADOR" o con nombres sin espacios) sea reemplazada automáticamente por los documentos oficiales limpios y aprobados.
+     * Se asegura la migración y reubicación automática de la Planilla de Seguridad Social (`file_seguridad_social`) y RPC a la carpeta oficial de la cuota en producción.
+  2. **Validación Obligatoria del Campo "El pago de la seguridad social es: *" en Cuotas Finales:**
+     * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):** En `togglePagoSeguridadSocial()` y en la validación del evento `submit`, si el `tipo_informe` es `FINAL`, se exige de manera estricta que `#pago_seguridad_social` esté seleccionado (`Al Día` o `Mes vencido`). Si está vacío, el formulario detiene el envío, conmuta a la pestaña *Seguridad Social* y enfoca el campo con alerta explicativa.
+     * **[InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java):** En `insertar(...)` y `actualizar(...)`, se valida a nivel de servidor que cuando `tipoInforme == 'FINAL'`, `pagoSeguridadSocial` no sea nulo ni vacío al radicar.
+  3. **Obligatoriedad de Documento PDF de Seguridad Social al Radicar:**
+     * Se añadió el atributo `required` a `input[name="file_seguridad_social"]`, validado dinámicamente para que impida radicar si el contratista no lo adjunta (a menos que sea contratista nuevo en cuota 1 o ya exista en soportes previos).
+  4. **Protección de Permisos de Sincronización:**
+     * La funcionalidad manual de sincronización se mantiene reservada **únicamente para Administradores y Contratación** (`ADMINISTRAR_CUENTAS`), garantizando que la sincronización para Supervisores, Revisores y Contratistas opere de manera 100% automática y transparente en cada radicación, revisión y aprobación.

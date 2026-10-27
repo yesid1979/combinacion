@@ -63,6 +63,7 @@ public class InformeSupervision implements Serializable {
     private Date fechaRadicacion;
     private Integer idRevisorAsignado;
     private String observacionesRevision;
+    private String observacionesContratista;
     private Date fechaActualizacion;
     private Integer anio;
     
@@ -216,6 +217,9 @@ public class InformeSupervision implements Serializable {
     
     public String getObservacionesRevision() { return observacionesRevision; }
     public void setObservacionesRevision(String observacionesRevision) { this.observacionesRevision = observacionesRevision; }
+
+    public String getObservacionesContratista() { return observacionesContratista; }
+    public void setObservacionesContratista(String observacionesContratista) { this.observacionesContratista = observacionesContratista; }
 
     public Contrato getContrato() { return contrato; }
     public void setContrato(Contrato contrato) { this.contrato = contrato; }

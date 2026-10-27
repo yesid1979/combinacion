@@ -106,6 +106,11 @@ public class InformeSupervisionService {
                     if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
                     if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
                     if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                    if ("FINAL".equalsIgnoreCase(form.tipoInforme)) {
+                        if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty() || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
+                            faltantes.append("El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
+                        }
+                    }
                     if (faltantes.length() > 0) {
                         return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
                     }
@@ -203,6 +208,11 @@ public class InformeSupervisionService {
                 if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
                 if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
                 if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                if ("FINAL".equalsIgnoreCase(form.tipoInforme)) {
+                    if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty() || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
+                        faltantes.append("El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
+                    }
+                }
                 if (faltantes.length() > 0) {
                     return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
                 }
@@ -2313,7 +2323,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
             
             if (docxFile != null && docxFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+                String docxPrefix = (esCuota1 ? "5. INFORME DE SUPERVISI" : (esCuotaAdicion ? "6. INFORME DE SUPERVISI" : "3. INFORME DE SUPERVISI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId, docxPrefix);
             }
             if (xlsxFile != null && xlsxFile.exists()) {
                 String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
@@ -2324,10 +2335,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
             }
             if (gestionFile != null && gestionFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId);
+                String gestionPrefix = (esCuota1 ? "12. INFORME DE GESTI" : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId, gestionPrefix);
             }
             if (gestionPdfFile != null && gestionPdfFile.exists()) {
-                com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId);
+                String gestionPdfPrefix = (esCuota1 ? "12. INFORME DE GESTI" : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId, gestionPdfPrefix);
             }
             
             // Lógica para merge con SS si existe
@@ -2355,9 +2368,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 
                 if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
                     String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
+                    String mergedPrefix = esCuota1 ? "13. INFORME GESTI" : "INFORME GESTI";
                     java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
                     if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
-                        com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(mergedFile, mergedName, "application/pdf", cuotaFolderId);
+                        com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(mergedFile, mergedName, "application/pdf", cuotaFolderId, mergedPrefix);
                         System.out.println("Archivo unificado generado y subido con exito: " + mergedName);
                     } else {
                         System.err.println("Aviso: mergePdfs no pudo unir gestion y seguridad social.");
@@ -2594,9 +2608,11 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             InformeSupervision infActualizado = this.obtenerPorId(id);
             String estadoNuevoEfectivo = (infActualizado != null) ? infActualizado.getEstadoRadicacion() : form.estadoRadicacion;
             boolean eraRadicacionOReingreso = "true".equals(request.getParameter("radicar"));
+            String obsDevolucionParam = request.getParameter("observaciones_devolucion");
 
             if ("DEVUELTA".equals(estadoAnterior) && !"DEVUELTA".equals(estadoNuevoEfectivo)) {
                 informeDAO.limpiarEstadoPrevioDevolucion(id);
+                informeDAO.limpiarObservacionesContratista(id);
                 com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                 hr.setIdInforme(id);
                 hr.setIdUsuarioCambio(u != null ? u.getId() : 0);
@@ -2610,8 +2626,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 } else if ("VISTO BUENO CONTRATACION".equals(estadoNuevoEfectivo)) {
                     obs = "Cuenta corregida por el contratista. Reingresa directamente a revisión post-contratación.";
                 }
+                String aclaracion = (obsDevolucionParam != null && !obsDevolucionParam.trim().isEmpty())
+                        ? obsDevolucionParam.trim()
+                        : (existente != null ? existente.getObservacionesContratista() : null);
+                if (aclaracion != null && !aclaracion.trim().isEmpty()) {
+                    obs += "\n\nAclaraciones del contratista:\n" + aclaracion.trim();
+                }
                 hr.setObservaciones(obs);
                 new com.combinacion.dao.HistorialRadicacionDAO().registrarCambio(hr);
+            } else if ("DEVUELTA".equals(estadoAnterior) && obsDevolucionParam != null) {
+                informeDAO.actualizarObservacionesContratista(id, obsDevolucionParam.trim());
             } else if ("RADICADA".equals(estadoNuevoEfectivo) && !"RADICADA".equals(estadoAnterior)) {
                 com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                 hr.setIdInforme(id);
@@ -3085,7 +3109,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 String pLimpio = periodoInforme.trim();
                 if (pLimpio.matches("^\\d{4}-\\d{2}$")) {
                     if (pLimpio.compareTo("2026-10") < 0) {
-                        return true;
+                        return true; // Cuota anterior histórica: proteger producción enviando a pruebas
+                    } else {
+                        return false; // Cuota activa de la era digital: va a producción
                     }
                 }
             }

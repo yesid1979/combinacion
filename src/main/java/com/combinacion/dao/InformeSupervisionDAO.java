@@ -256,6 +256,7 @@ public class InformeSupervisionDAO {
         try { info.setEstadoRadicacion(rs.getString("estado_radicacion")); } catch (SQLException e) {}
         try { info.setEstadoPrevioDevolucion(rs.getString("estado_previo_devolucion")); } catch (SQLException e) {}
         try { info.setObservacionesRevision(rs.getString("observaciones_revision")); } catch (SQLException e) {}
+        try { info.setObservacionesContratista(rs.getString("observaciones_contratista")); } catch (SQLException e) {}
         try {
             int revId = rs.getInt("id_revisor_asignado");
             if (!rs.wasNull()) {
@@ -434,6 +435,25 @@ public class InformeSupervisionDAO {
             ps.setInt(1, id);
             ps.executeUpdate();
         } catch (Exception ignore) {}
+    }
+
+    public void actualizarObservacionesContratista(int id, String observaciones) {
+        String sql = "UPDATE informes_supervision SET observaciones_contratista = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            try {
+                conn.createStatement().execute("ALTER TABLE informes_supervision ADD COLUMN IF NOT EXISTS observaciones_contratista TEXT");
+            } catch (Exception ignore) {}
+            ps.setString(1, observaciones);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void limpiarObservacionesContratista(int id) {
+        actualizarObservacionesContratista(id, null);
     }
 
     public String obtenerEstadoPrevioDevolucion(int idInforme) {
