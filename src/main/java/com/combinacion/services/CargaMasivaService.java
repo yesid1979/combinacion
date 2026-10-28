@@ -402,11 +402,26 @@ public class CargaMasivaService {
                     if (isRowEmpty(row))
                         continue;
 
-                    // Ignorar filas que son encabezados (sucede si la tabla tiene sub-encabezados o encabezados combinados)
+                    // Ignorar filas que son encabezados (sucede si la tabla tiene sub-encabezados o varias pestañas)
+                    int rowHeaderMatches = 0;
+                    for (String cell : row) {
+                        if (cell == null || cell.trim().isEmpty()) continue;
+                        String cNorm = normalizeText(cell);
+                        if (cNorm.contains("contrato") || cNorm.contains("supervisor") || 
+                            cNorm.contains("cedula") || cNorm.contains("objeto") || 
+                            cNorm.contains("ordenador") || cNorm.contains("presupuest") ||
+                            cNorm.contains("cdp") || cNorm.contains("rpc") ||
+                            cNorm.contains("actividades") || cNorm.contains("valor")) {
+                            rowHeaderMatches++;
+                        }
+                    }
                     String checkTrd = get(row, map, "trd_proceso").toLowerCase();
                     String checkNum = get(row, map, "numero_contrato").toLowerCase();
-                    if (checkTrd.contains("trd del proceso") || checkTrd.equals("trd") || 
+                    if (rowHeaderMatches >= 5 || checkTrd.contains("trd del proceso") || checkTrd.equals("trd") || 
                         checkNum.contains("número de contrato") || checkNum.contains("numero de contrato") || checkNum.equals("numero")) {
+                        if (rowHeaderMatches >= 5) {
+                            map = mapHeaders(row, log);
+                        }
                         log.append("Se ignoró una fila de encabezado detectada en la posición ").append(i + 1).append(".\n");
                         continue;
                     }
@@ -728,19 +743,26 @@ public class CargaMasivaService {
 
             // ===== ORDENADORES DEL GASTO =====
             if (h.contains("organismo") && !h.contains("direccion")) {
-                map.put("organismo", i);
-            } else if (h.contains("direccion") && h.contains("organismo") && !h.contains("actividades")) {
-                map.put("direccion_organismo", i);
+                safePut(map, "organismo", i);
+                continue;
+            } else if (h.contains("direccion") && (h.contains("organismo") || h.contains("entidad")) && !h.contains("actividades")) {
+                safePut(map, "direccion_organismo", i);
+                continue;
             } else if (h.contains("nombre") && h.contains("ordenador")) {
-                map.put("nombre_ordenador", i);
+                safePut(map, "nombre_ordenador", i);
+                continue;
             } else if (h.contains("cedula") && h.contains("ordenador")) {
-                map.put("cedula_ordenador", i);
+                safePut(map, "cedula_ordenador", i);
+                continue;
             } else if (h.contains("cargo") && h.contains("ordenador")) {
-                map.put("cargo_ordenador", i);
+                safePut(map, "cargo_ordenador", i);
+                continue;
             } else if (h.contains("decreto") && h.contains("nombramiento")) {
-                map.put("decreto_nombramiento", i);
+                safePut(map, "decreto_nombramiento", i);
+                continue;
             } else if (h.contains("acta") && h.contains("posesion")) {
-                map.put("acta_posesion", i);
+                safePut(map, "acta_posesion", i);
+                continue;
             }
 
             // --- FIXES SPECIFICOS SOLICITADOS ---
@@ -856,17 +878,27 @@ public class CargaMasivaService {
 
             // ===== CONTRATISTAS =====
             else if (h.contains("nombre") && h.contains("contratista")) {
-                map.put("contratista_nombre", i);
+                safePut(map, "contratista_nombre", i);
             } else if (h.contains("cedula") && h.contains("contratista")) {
-                map.put("contratista_cedula", i);
+                safePut(map, "contratista_cedula", i);
             } else if ((h.contains("dv") || (h.contains("digito") && h.contains("verificacion"))) && !h.contains("cdp")) {
-                map.put("contratista_dv", i);
-            } else if (h.contains("telefono") || h.contains("telefonico")) {
-                map.put("contratista_telefono", i);
-            } else if (h.contains("correo") || (h.contains("electronico") && !h.contains("facturador") && !h.contains("factura")) || h.contains("email")) {
-                map.put("contratista_correo", i);
-            } else if (h.contains("direccion") && !h.contains("organismo") && !h.startsWith("descri")) {
-                map.put("contratista_direccion", i);
+                safePut(map, "contratista_dv", i);
+            } else if ((h.contains("telefono") || h.contains("telefonico") || h.contains("celular"))
+                    && !h.contains("supervisor") && !h.contains("ordenador") && !h.contains("organismo")) {
+                safePut(map, "contratista_telefono", i);
+            } else if ((h.contains("correo") || (h.contains("electronico") && !h.contains("facturador") && !h.contains("factura")) || h.contains("email"))
+                    && !h.contains("supervisor") && !h.contains("ordenador") && !h.contains("organismo") && !h.contains("entidad")) {
+                safePut(map, "contratista_correo", i);
+            } else if (h.contains("direccion") && !h.contains("organismo") && !h.contains("ordenador")
+                    && !h.contains("supervisor") && !h.contains("entidad") && !h.contains("dependencia")
+                    && !h.contains("subdireccion") && !h.startsWith("descri")) {
+                // Si aparece antes de la seccion de contratistas e inmediatamente despues de organismo, es direccion_organismo
+                if (map.containsKey("organismo") && !map.containsKey("direccion_organismo")
+                        && !map.containsKey("contratista_nombre") && !map.containsKey("contratista_cedula")) {
+                    safePut(map, "direccion_organismo", i);
+                } else {
+                    safePut(map, "contratista_direccion", i);
+                }
             } else if (h.contains("dia") && h.contains("nacimiento")) {
                 map.put("contratista_dia_nac", i);
             } else if (h.contains("mes") && h.contains("nacimiento")) {
@@ -1246,7 +1278,7 @@ public class CargaMasivaService {
                 contratista.setCedula(rawCedula); // Conservar el valor original de Excel
             }
             
-            // Siempre actualizar campos desde el Excel
+            // Actualizar campos desde el Excel respetando direccion, correo y telefono ya registrados en BD
             String valDv = get(row, map, "contratista_dv");
             if (valDv != null && valDv.endsWith(".0")) {
                 valDv = valDv.substring(0, valDv.length() - 2);
@@ -1256,10 +1288,45 @@ public class CargaMasivaService {
             } else if (!exists) {
                 contratista.setDv("");
             }
-            contratista.setNombre(nombre.isEmpty() ? "Sin Nombre" : nombre);
-            contratista.setTelefono(get(row, map, "contratista_telefono"));
-            contratista.setCorreo(get(row, map, "contratista_correo"));
-            contratista.setDireccion(get(row, map, "contratista_direccion"));
+
+            if (!nombre.isEmpty()) {
+                contratista.setNombre(nombre);
+            } else if (!exists || contratista.getNombre() == null || contratista.getNombre().trim().isEmpty()) {
+                contratista.setNombre("Sin Nombre");
+            }
+
+            // Telefono: si ya tiene dato registrado en BD, NO reemplazarlo
+            String nuevoTelefono = get(row, map, "contratista_telefono");
+            boolean tieneTelefonoBD = exists && contratista.getTelefono() != null && !contratista.getTelefono().trim().isEmpty();
+            if (!tieneTelefonoBD) {
+                if (!nuevoTelefono.isEmpty() && !nuevoTelefono.equalsIgnoreCase("null")) {
+                    contratista.setTelefono(nuevoTelefono);
+                } else if (!exists) {
+                    contratista.setTelefono("");
+                }
+            }
+
+            // Correo: si ya tiene dato registrado en BD, NO reemplazarlo
+            String nuevoCorreo = get(row, map, "contratista_correo");
+            boolean tieneCorreoBD = exists && contratista.getCorreo() != null && !contratista.getCorreo().trim().isEmpty();
+            if (!tieneCorreoBD) {
+                if (!nuevoCorreo.isEmpty() && !nuevoCorreo.equalsIgnoreCase("null")) {
+                    contratista.setCorreo(nuevoCorreo);
+                } else if (!exists) {
+                    contratista.setCorreo("");
+                }
+            }
+
+            // Direccion: si ya tiene dato registrado en BD, NO reemplazarla
+            String nuevaDireccion = get(row, map, "contratista_direccion");
+            boolean tieneDireccionBD = exists && contratista.getDireccion() != null && !contratista.getDireccion().trim().isEmpty();
+            if (!tieneDireccionBD) {
+                if (!nuevaDireccion.isEmpty() && !nuevaDireccion.equalsIgnoreCase("null")) {
+                    contratista.setDireccion(nuevaDireccion);
+                } else if (!exists) {
+                    contratista.setDireccion("");
+                }
+            }
 
             // Construir fecha de nacimiento
             String dia = get(row, map, "contratista_dia_nac");
@@ -1285,14 +1352,27 @@ public class CargaMasivaService {
                 }
             }
 
-            // Textos largos
-            contratista.setFormacionTitulo(get(row, map, "contratista_formacion"));
-            contratista.setDescripcionFormacion(get(row, map, "contratista_desc_formacion"));
-            contratista.setTarjetaProfesional(get(row, map, "contratista_tarjeta"));
-            contratista.setDescripcionTarjeta(get(row, map, "contratista_desc_tarjeta"));
-            contratista.setExperiencia(get(row, map, "contratista_experiencia"));
-            contratista.setDescripcionExperiencia(get(row, map, "contratista_desc_experiencia"));
-            contratista.setRestricciones(get(row, map, "contratista_restricciones"));
+            // Textos largos (no sobreescribir con vacio si el contratista ya existe en BD)
+            String valFormacion = get(row, map, "contratista_formacion");
+            if (!valFormacion.isEmpty() || !exists) contratista.setFormacionTitulo(valFormacion);
+
+            String valDescFormacion = get(row, map, "contratista_desc_formacion");
+            if (!valDescFormacion.isEmpty() || !exists) contratista.setDescripcionFormacion(valDescFormacion);
+
+            String valTarjeta = get(row, map, "contratista_tarjeta");
+            if (!valTarjeta.isEmpty() || !exists) contratista.setTarjetaProfesional(valTarjeta);
+
+            String valDescTarjeta = get(row, map, "contratista_desc_tarjeta");
+            if (!valDescTarjeta.isEmpty() || !exists) contratista.setDescripcionTarjeta(valDescTarjeta);
+
+            String valExperiencia = get(row, map, "contratista_experiencia");
+            if (!valExperiencia.isEmpty() || !exists) contratista.setExperiencia(valExperiencia);
+
+            String valDescExperiencia = get(row, map, "contratista_desc_experiencia");
+            if (!valDescExperiencia.isEmpty() || !exists) contratista.setDescripcionExperiencia(valDescExperiencia);
+
+            String valRestricciones = get(row, map, "contratista_restricciones");
+            if (!valRestricciones.isEmpty() || !exists) contratista.setRestricciones(valRestricciones);
 
             if (exists) {
                 if (contratistaDAO.actualizar(contratista)) {
