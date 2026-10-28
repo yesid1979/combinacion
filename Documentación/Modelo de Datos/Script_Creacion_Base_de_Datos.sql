@@ -1,0 +1,437 @@
+-- =============================================================================
+-- SISTEMA DE COMBINACIÓN DE CORRESPONDENCIA Y SUPERVISIÓN CONTRACTUAL - DAGJP
+-- ALCALDÍA DISTRITAL DE SANTIAGO DE CALI
+-- MOTOR DE BASE DE DATOS: PostgreSQL 14+ (Codificación UTF-8)
+-- SCRIPT DE CREACIÓN DE ESQUEMA, TABLAS, ÍNDICES, VISTAS Y DATOS SEMILLA
+-- =============================================================================
+
+SET client_encoding = 'UTF8';
+
+-- -----------------------------------------------------------------------------
+-- 1. TABLA: roles
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------------------------------
+-- 2. TABLA: permisos
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS permisos (
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(100) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    modulo VARCHAR(100) NOT NULL,
+    descripcion TEXT
+);
+
+-- -----------------------------------------------------------------------------
+-- 3. TABLA: rol_permisos
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS rol_permisos (
+    rol_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    permiso_id INT NOT NULL REFERENCES permisos(id) ON DELETE CASCADE,
+    PRIMARY KEY (rol_id, permiso_id)
+);
+
+-- -----------------------------------------------------------------------------
+-- 4. TABLA: usuarios
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    salt VARCHAR(255) NOT NULL,
+    nombre_completo VARCHAR(255) NOT NULL,
+    correo VARCHAR(200),
+    cedula VARCHAR(50),
+    celular VARCHAR(50),
+    sexo VARCHAR(20),
+    cargo VARCHAR(200),
+    vinculacion VARCHAR(100),
+    fecha_inicio_contrato DATE,
+    fecha_fin_contrato DATE,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    ultimo_acceso TIMESTAMP,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rol_id INT REFERENCES roles(id),
+    foto_url VARCHAR(500),
+    firma_url VARCHAR(500)
+);
+
+-- -----------------------------------------------------------------------------
+-- 5. TABLA: usuario_permisos
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS usuario_permisos (
+    usuario_id INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    permiso_id INT NOT NULL REFERENCES permisos(id) ON DELETE CASCADE,
+    PRIMARY KEY (usuario_id, permiso_id)
+);
+
+-- -----------------------------------------------------------------------------
+-- 6. TABLA: contratistas
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS contratistas (
+    id SERIAL PRIMARY KEY,
+    cedula VARCHAR(50) NOT NULL,
+    dv VARCHAR(10),
+    nombre VARCHAR(255) NOT NULL,
+    telefono VARCHAR(100),
+    correo VARCHAR(200),
+    direccion VARCHAR(300),
+    fecha_nacimiento DATE,
+    edad INT,
+    formacion_titulo TEXT,
+    descripcion_formacion TEXT,
+    tarjeta_profesional VARCHAR(150),
+    descripcion_tarjeta TEXT,
+    experiencia TEXT,
+    descripcion_experiencia TEXT,
+    restricciones TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_contratistas_cedula ON contratistas(cedula);
+
+-- -----------------------------------------------------------------------------
+-- 7. TABLA: supervisores
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS supervisores (
+    id SERIAL PRIMARY KEY,
+    cedula VARCHAR(50),
+    nombre VARCHAR(255) NOT NULL,
+    cargo VARCHAR(255)
+);
+
+CREATE INDEX IF NOT EXISTS idx_supervisores_cedula ON supervisores(cedula);
+
+-- -----------------------------------------------------------------------------
+-- 8. TABLA: ordenadores_gasto
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ordenadores_gasto (
+    id SERIAL PRIMARY KEY,
+    organismo VARCHAR(300),
+    direccion_organismo VARCHAR(300),
+    nombre_ordenador VARCHAR(255) NOT NULL,
+    cedula_ordenador VARCHAR(50),
+    cargo_ordenador VARCHAR(255),
+    decreto_nombramiento VARCHAR(255),
+    acta_posesion VARCHAR(255)
+);
+
+-- -----------------------------------------------------------------------------
+-- 9. TABLA: estructuradores
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS estructuradores (
+    id SERIAL PRIMARY KEY,
+    juridico_nombre VARCHAR(255),
+    juridico_cargo VARCHAR(255),
+    tecnico_nombre VARCHAR(255),
+    tecnico_cargo VARCHAR(255),
+    financiero_nombre VARCHAR(255),
+    financiero_cargo VARCHAR(255)
+);
+
+-- -----------------------------------------------------------------------------
+-- 10. TABLA: presupuesto_detalles
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS presupuesto_detalles (
+    id SERIAL PRIMARY KEY,
+    cdp_numero VARCHAR(100),
+    cdp_fecha DATE,
+    cdp_valor NUMERIC(18, 2),
+    cdp_vencimiento DATE,
+    rp_numero VARCHAR(100),
+    rp_fecha DATE,
+    apropiacion_presupuestal VARCHAR(255),
+    id_paa VARCHAR(100),
+    id_paa_si_no VARCHAR(10),
+    codigo_dane VARCHAR(100),
+    inversion VARCHAR(50),
+    funcionamiento VARCHAR(50),
+    ficha_ebi_nombre TEXT,
+    ficha_ebi_objetivo TEXT,
+    ficha_ebi_actividades TEXT,
+    certificado_insuficiencia VARCHAR(150),
+    fecha_insuficiencia DATE,
+    cdp_adicion TEXT,
+    cdp_valor_adicion NUMERIC(18, 2),
+    rp_adicion TEXT,
+    rp_fecha_adicion DATE
+);
+
+-- -----------------------------------------------------------------------------
+-- 11. TABLA: contratos
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS contratos (
+    id SERIAL PRIMARY KEY,
+    trd_proceso VARCHAR(150),
+    numero_contrato VARCHAR(100) NOT NULL,
+    tipo_contrato VARCHAR(150),
+    nivel VARCHAR(100),
+    objeto TEXT,
+    modalidad VARCHAR(150),
+    estado VARCHAR(100),
+    periodo VARCHAR(100),
+    anio INT,
+    fecha_suscripcion DATE,
+    fecha_inicio DATE,
+    fecha_terminacion DATE,
+    fecha_aprobacion DATE,
+    fecha_ejecucion DATE,
+    fecha_arl DATE,
+    plazo_ejecucion TEXT,
+    plazo_meses INT,
+    plazo_dias INT,
+    valor_total_letras TEXT,
+    valor_total_numeros NUMERIC(18, 2),
+    valor_antes_iva NUMERIC(18, 2),
+    valor_iva NUMERIC(18, 2),
+    valor_antes_iva_letras TEXT,
+    valor_iva_letras TEXT,
+    valor_cuota_letras TEXT,
+    valor_cuota_numero NUMERIC(18, 2),
+    valor_cuota_antes_iva_letras TEXT,
+    valor_cuota_antes_iva NUMERIC(18, 2),
+    valor_cuota_iva_letras TEXT,
+    valor_cuota_iva NUMERIC(18, 2),
+    num_cuotas_letras VARCHAR(255),
+    num_cuotas_numero INT,
+    valor_media_cuota_letras TEXT,
+    valor_media_cuota_numero NUMERIC(18, 2),
+    actividades_entregables TEXT,
+    liquidacion_acuerdo TEXT,
+    liquidacion_articulo TEXT,
+    liquidacion_decreto TEXT,
+    circular_honorarios TEXT,
+    contratista_id INT REFERENCES contratistas(id) ON DELETE SET NULL,
+    supervisor_id INT REFERENCES supervisores(id) ON DELETE SET NULL,
+    ordenador_id INT REFERENCES ordenadores_gasto(id) ON DELETE SET NULL,
+    presupuesto_id INT REFERENCES presupuesto_detalles(id) ON DELETE SET NULL,
+    estructurador_id INT REFERENCES estructuradores(id) ON DELETE SET NULL,
+    apoyo_supervision TEXT,
+    fecha_idoneidad DATE,
+    fecha_estructurador DATE,
+    adicion_si_no VARCHAR(20),
+    numero_cuotas_adicion INT,
+    valor_total_adicion_letras TEXT,
+    valor_total_adicion NUMERIC(18, 2),
+    valor_contrato_mas_adicion_letras TEXT,
+    valor_contrato_mas_adicion NUMERIC(18, 2),
+    enlace_secop TEXT,
+    iva_si_no VARCHAR(10),
+    facturador_electronico VARCHAR(50),
+    numero_modificacion VARCHAR(50),
+    fecha_modificacion DATE
+);
+
+CREATE INDEX IF NOT EXISTS idx_contratos_numero ON contratos(numero_contrato);
+CREATE INDEX IF NOT EXISTS idx_contratos_contratista ON contratos(contratista_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_supervisor ON contratos(supervisor_id);
+
+-- -----------------------------------------------------------------------------
+-- 12. TABLA: informes_supervision
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS informes_supervision (
+    id SERIAL PRIMARY KEY,
+    contrato_id INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+    periodo_informe VARCHAR(100),
+    tipo_informe VARCHAR(50),
+    numero_cuota VARCHAR(20),
+    fecha_inicio_periodo DATE,
+    fecha_fin_periodo DATE,
+    modificaciones TEXT,
+    suspensiones TEXT,
+    reanudaciones TEXT,
+    cesiones TEXT,
+    terminacion_anticipada TEXT,
+    adiciones TEXT,
+    prorrogas TEXT,
+    recibo_satisfaccion VARCHAR(20),
+    constancia_paz_salvo VARCHAR(20),
+    valor_cuota_pagar NUMERIC(18, 2),
+    valor_acumulado_pagado NUMERIC(18, 2),
+    saldo_por_cancelar NUMERIC(18, 2),
+    planilla_numero VARCHAR(100),
+    planilla_pin VARCHAR(100),
+    planilla_operador VARCHAR(100),
+    planilla_fecha_pago DATE,
+    planilla_periodo VARCHAR(50),
+    pago_seguridad_social NUMERIC(18, 2),
+    concepto_supervisor TEXT,
+    observaciones_financieras TEXT,
+    observaciones_tecnicas TEXT,
+    recomendaciones TEXT,
+    fecha_suscripcion DATE,
+    url_drive_evidencias TEXT,
+    consecutivo_cobro VARCHAR(100),
+    estado_radicacion VARCHAR(50) DEFAULT 'BORRADOR',
+    id_revisor_asignado INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    anio INT,
+    soportes_json TEXT,
+    eps VARCHAR(150),
+    afp_pension VARCHAR(150),
+    arl VARCHAR(150),
+    es_contratista_nuevo VARCHAR(10) DEFAULT 'NO',
+    supervisor_id INT REFERENCES supervisores(id) ON DELETE SET NULL,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_informes_contrato ON informes_supervision(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_informes_estado ON informes_supervision(estado_radicacion);
+
+-- -----------------------------------------------------------------------------
+-- 13. TABLA: historial_radicacion
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS historial_radicacion (
+    id SERIAL PRIMARY KEY,
+    id_informe INT NOT NULL REFERENCES informes_supervision(id) ON DELETE CASCADE,
+    id_usuario_cambio INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    estado_anterior VARCHAR(50),
+    estado_nuevo VARCHAR(50) NOT NULL,
+    observaciones TEXT,
+    fecha_cambio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_historial_informe ON historial_radicacion(id_informe);
+
+-- -----------------------------------------------------------------------------
+-- 14. TABLA: consecutivos_cobro
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS consecutivos_cobro (
+    id SERIAL PRIMARY KEY,
+    cedula VARCHAR(50) NOT NULL,
+    contrato VARCHAR(50) NOT NULL,
+    numero_cuota VARCHAR(20) NOT NULL,
+    consecutivo VARCHAR(50) NOT NULL,
+    fecha_carga TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cargado_por INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    anio INT,
+    UNIQUE (cedula, contrato, numero_cuota)
+);
+
+-- -----------------------------------------------------------------------------
+-- 15. TABLA: notificaciones_usuario
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notificaciones_usuario (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    id_informe INT REFERENCES informes_supervision(id) ON DELETE CASCADE,
+    titulo VARCHAR(255) NOT NULL,
+    mensaje TEXT NOT NULL,
+    tipo VARCHAR(50) DEFAULT 'INFO',
+    url VARCHAR(500),
+    leida BOOLEAN DEFAULT FALSE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_user_leida ON notificaciones_usuario(id_usuario, leida);
+CREATE INDEX IF NOT EXISTS idx_notif_user_fecha ON notificaciones_usuario(id_usuario, fecha_creacion DESC);
+
+-- -----------------------------------------------------------------------------
+-- 16. TABLA: auditoria_sistema
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS auditoria_sistema (
+    id SERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    username VARCHAR(100) NOT NULL,
+    nombres_apellidos VARCHAR(255) NOT NULL,
+    tipo_accion VARCHAR(100) NOT NULL,
+    accion_realizada TEXT NOT NULL,
+    tipo_usuario VARCHAR(100),
+    ip_address VARCHAR(45)
+);
+
+-- -----------------------------------------------------------------------------
+-- 17. TABLA: configuracion
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS configuracion (
+    id SERIAL PRIMARY KEY,
+    clave VARCHAR(150) NOT NULL UNIQUE,
+    valor TEXT,
+    descripcion TEXT
+);
+
+-- -----------------------------------------------------------------------------
+-- 18. TABLA: revisores_documento
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS revisores_documento (
+    id SERIAL PRIMARY KEY,
+    tipo_documento VARCHAR(100) NOT NULL,
+    nombre_completo VARCHAR(255) NOT NULL,
+    cargo VARCHAR(255),
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- -----------------------------------------------------------------------------
+-- 19. TABLA: verbos_conjugacion
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS verbos_conjugacion (
+    id SERIAL PRIMARY KEY,
+    tercera_persona VARCHAR(150) NOT NULL,
+    primera_persona VARCHAR(150) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- -----------------------------------------------------------------------------
+-- VISTAS DE RESUMEN Y CONTROL DE CUOTAS
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW vista_resumen_contratos_cuotas AS
+SELECT 
+    c.id AS contrato_id,
+    c.numero_contrato,
+    c.anio,
+    ct.nombre AS nombres_apellidos,
+    ct.cedula AS cedula_contratista,
+    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor') AS supervisor,
+    STRING_AGG(DISTINCT COALESCE(u.nombre_completo, 'Sin revisor'), ', ') AS revisor,
+    STRING_AGG(inf.id::text, ', ' ORDER BY (CASE WHEN inf.numero_cuota ~ '^[0-9]+$' THEN inf.numero_cuota::int ELSE 9999 END), inf.id) AS ids_informes,
+    MAX(CASE WHEN inf.numero_cuota = '1' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_1,
+    MAX(CASE WHEN inf.numero_cuota = '2' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_2,
+    MAX(CASE WHEN inf.numero_cuota = '3' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_3,
+    MAX(CASE WHEN inf.numero_cuota = '4' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_4,
+    MAX(CASE WHEN inf.numero_cuota = '5' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_5,
+    MAX(CASE WHEN inf.numero_cuota = '6' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_6,
+    MAX(CASE WHEN inf.numero_cuota = '7' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_7,
+    MAX(CASE WHEN inf.numero_cuota = '8' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_8,
+    MAX(CASE WHEN inf.numero_cuota = '9' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_9,
+    MAX(CASE WHEN inf.numero_cuota = '10' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_10,
+    MAX(CASE WHEN inf.numero_cuota = '11' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_11,
+    MAX(CASE WHEN inf.numero_cuota = '12' THEN COALESCE(inf.estado_radicacion, 'BORRADOR') END) AS cuota_12,
+    COUNT(inf.id) AS total_cuotas_registradas
+FROM contratos c
+LEFT JOIN contratistas ct ON c.contratista_id = ct.id
+LEFT JOIN supervisores s_con ON c.supervisor_id = s_con.id
+INNER JOIN informes_supervision inf ON inf.contrato_id = c.id
+LEFT JOIN supervisores s_inf ON inf.supervisor_id = s_inf.id
+LEFT JOIN usuarios u ON inf.id_revisor_asignado = u.id
+GROUP BY 
+    c.id, c.numero_contrato, c.anio, ct.nombre, ct.cedula,
+    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor')
+ORDER BY c.id DESC;
+
+CREATE OR REPLACE VIEW vista_informes_cuotas_detalle AS
+SELECT 
+    inf.id AS id_informe,
+    c.id AS contrato_id,
+    c.numero_contrato,
+    c.anio,
+    ct.nombre AS nombres_apellidos,
+    ct.cedula AS cedula_contratista,
+    COALESCE(s_inf.nombre, s_con.nombre, 'Sin supervisor') AS supervisor,
+    COALESCE(u.nombre_completo, 'Sin revisor') AS revisor,
+    inf.numero_cuota,
+    COALESCE(inf.estado_radicacion, 'BORRADOR') AS estado_radicacion,
+    inf.periodo_informe,
+    inf.fecha_creacion
+FROM informes_supervision inf
+INNER JOIN contratos c ON inf.contrato_id = c.id
+LEFT JOIN contratistas ct ON c.contratista_id = ct.id
+LEFT JOIN supervisores s_con ON c.supervisor_id = s_con.id
+LEFT JOIN supervisores s_inf ON inf.supervisor_id = s_inf.id
+LEFT JOIN usuarios u ON inf.id_revisor_asignado = u.id
+ORDER BY inf.id DESC;
+
