@@ -13,25 +13,28 @@ public class AuthFilter implements Filter {
     private final AuthService authService = new AuthService();
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-                         FilterChain chain) throws IOException, ServletException {
+            FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
         String servletPath = request.getServletPath();
-        String action = request.getParameter("action");
+        String action = obtenerActionSegura(request);
         String method = request.getMethod();
 
         String path = servletPath;
-        if (request.getPathInfo() != null) path += request.getPathInfo();
-        if (path == null) path = "/";
+        if (request.getPathInfo() != null)
+            path += request.getPathInfo();
+        if (path == null)
+            path = "/";
         path = path.replace("//", "/");
 
         System.out.println("[FILTER] Ruta solicitada: " + path + ", Acción: " + action + ", Método: " + method);
@@ -46,7 +49,6 @@ public class AuthFilter implements Filter {
         // 2. SESIÓN
         HttpSession session = request.getSession(false);
         Usuario usuario = (session != null) ? (Usuario) session.getAttribute("usuario") : null;
-
 
         // Refrescar sesión para tomar cambios de permisos en caliente
         if (usuario != null) {
@@ -82,7 +84,7 @@ public class AuthFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        
+
         // 3.6 EXCEPCIÓN: Todos los contratistas pueden consultar su consecutivo
         if (path.equals("/consecutivos") && "check".equals(action)) {
             System.out.println("[FILTER] Acceso a check de consecutivo permitido.");
@@ -91,15 +93,18 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 3.7 EXCEPCIÓN: Todos los usuarios autenticados pueden consultar sus propias notificaciones
+        // 3.7 EXCEPCIÓN: Todos los usuarios autenticados pueden consultar sus propias
+        // notificaciones
         if (path.equals("/notificaciones")) {
             request.setAttribute("usuarioLogueado", usuario);
             chain.doFilter(request, response);
             return;
         }
 
-        // 3.8 EXCEPCIÓN: Todos los usuarios autenticados pueden interactuar con /informes
-        // La validación detallada por contrato, rol y propiedad de cuenta la gestiona InformeSupervisionService
+        // 3.8 EXCEPCIÓN: Todos los usuarios autenticados pueden interactuar con
+        // /informes
+        // La validación detallada por contrato, rol y propiedad de cuenta la gestiona
+        // InformeSupervisionService
         if (path.contains("informes")) {
             request.setAttribute("usuarioLogueado", usuario);
             chain.doFilter(request, response);
@@ -110,7 +115,8 @@ public class AuthFilter implements Filter {
         boolean autorizado = authService.puedeAccederExtendido(usuario, path, action, method);
 
         if (!autorizado) {
-            System.err.println("[FILTER] 403 FORBIDDEN: Usuario '" + usuario.getUsername() + "' denegado en '" + path + "' (Accion: " + action + ")");
+            System.err.println("[FILTER] 403 FORBIDDEN: Usuario '" + usuario.getUsername() + "' denegado en '" + path
+                    + "' (Accion: " + action + ")");
             String requestedWith = request.getHeader("X-Requested-With");
             if ("XMLHttpRequest".equals(requestedWith)) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado: " + path);
@@ -122,6 +128,30 @@ public class AuthFilter implements Filter {
 
         request.setAttribute("usuarioLogueado", usuario);
         chain.doFilter(request, response);
+    }
+
+    private String obtenerActionSegura(HttpServletRequest request) {
+        String qs = request.getQueryString();
+        if (qs != null && !qs.isEmpty()) {
+            for (String pair : qs.split("&")) {
+                int idx = pair.indexOf('=');
+                if (idx > 0) {
+                    String key = pair.substring(0, idx);
+                    if ("action".equalsIgnoreCase(key)) {
+                        try {
+                            return java.net.URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+                        } catch (Exception e) {
+                            return pair.substring(idx + 1);
+                        }
+                    }
+                }
+            }
+        }
+        String ct = request.getContentType();
+        if (ct != null && ct.toLowerCase().startsWith("multipart/")) {
+            return null;
+        }
+        return request.getParameter("action");
     }
 
     private boolean isPublicResource(String path) {
@@ -140,5 +170,6 @@ public class AuthFilter implements Filter {
     }
 
     @Override
-    public void destroy() {}
+    public void destroy() {
+    }
 }

@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import com.combinacion.models.Rol;
 
-
 import com.combinacion.dao.UsuarioDAO;
 import com.combinacion.models.Usuario;
 import com.combinacion.util.PasswordUtils;
@@ -28,7 +27,6 @@ public class UsuarioService {
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
     private final Gson gson = new Gson();
     private final RolService rolService = new RolService();
-
 
     /**
      * Lista todos los usuarios.
@@ -48,7 +46,8 @@ public class UsuarioService {
      * Autentica un usuario por username y password.
      */
     public Usuario autenticar(String username, String password) {
-        if (username == null || password == null) return null;
+        if (username == null || password == null)
+            return null;
         Usuario usuario = usuarioDAO.obtenerPorUsername(username.trim());
         if (usuario != null && PasswordUtils.verifyPassword(password, usuario.getPasswordHash(), usuario.getSalt())) {
             return usuario;
@@ -58,11 +57,12 @@ public class UsuarioService {
 
     /**
      * Crea un nuevo usuario.
+     * 
      * @return null si fue exitoso, o mensaje de error.
      */
     public String crear(String username, String password, String nombreCompleto,
-                        String correo, String cedula, String celular, String sexo, 
-                        String vinculacion, java.sql.Date fechaInicio, java.sql.Date fechaFin, int rolId) {
+            String correo, String cedula, String celular, String sexo,
+            String vinculacion, java.sql.Date fechaInicio, java.sql.Date fechaFin, int rolId) {
         // Validaciones
         if (username == null || username.trim().isEmpty()) {
             return "El nombre de usuario es obligatorio.";
@@ -116,12 +116,13 @@ public class UsuarioService {
 
     /**
      * Actualiza los datos de un usuario (sin cambiar la contraseña).
+     * 
      * @return null si fue exitoso, o mensaje de error.
      */
     public String actualizar(int id, String username, String nombreCompleto,
-                             String correo, String cedula, String celular, String sexo, 
-                             String vinculacion, java.sql.Date fechaInicio, java.sql.Date fechaFin, 
-                             boolean activo, int rolId) {
+            String correo, String cedula, String celular, String sexo,
+            String vinculacion, java.sql.Date fechaInicio, java.sql.Date fechaFin,
+            boolean activo, int rolId) {
         if (username == null || username.trim().isEmpty()) {
             return "El nombre de usuario es obligatorio.";
         }
@@ -192,9 +193,11 @@ public class UsuarioService {
     }
 
     public String actualizarPerfil(int id, String nombre, String correo, String celular) {
-        if (nombre == null || nombre.trim().isEmpty()) return "El nombre es obligatorio.";
-        if (correo == null || correo.trim().isEmpty()) return "El correo es obligatorio.";
-        
+        if (nombre == null || nombre.trim().isEmpty())
+            return "El nombre es obligatorio.";
+        if (correo == null || correo.trim().isEmpty())
+            return "El correo es obligatorio.";
+
         if (usuarioDAO.actualizarPerfil(id, nombre.trim(), correo.trim(), celular != null ? celular.trim() : "")) {
             try {
                 Usuario u = usuarioDAO.obtenerPorId(id);
@@ -202,14 +205,16 @@ public class UsuarioService {
                     String cedLimpia = u.getCedula().replaceAll("[^0-9]", "");
                     if (!cedLimpia.isEmpty()) {
                         try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
-                             java.sql.PreparedStatement ps = conn.prepareStatement("UPDATE contratistas SET correo = ? WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ?")) {
+                                java.sql.PreparedStatement ps = conn.prepareStatement(
+                                        "UPDATE contratistas SET correo = ? WHERE regexp_replace(cedula, '[^0-9]', '', 'g') = ?")) {
                             ps.setString(1, correo.trim());
                             ps.setString(2, cedLimpia);
                             ps.executeUpdate();
                         }
                     }
                 }
-            } catch (Exception ignoreSync) {}
+            } catch (Exception ignoreSync) {
+            }
             return null;
         }
         return "Error al actualizar los datos en la base de datos.";
@@ -237,7 +242,8 @@ public class UsuarioService {
      * Verifica si una cédula ya existe.
      */
     public boolean existeCedula(String cedula, int excludeId) {
-        if (cedula == null || cedula.trim().isEmpty()) return false;
+        if (cedula == null || cedula.trim().isEmpty())
+            return false;
         return usuarioDAO.existeCedula(cedula.trim(), excludeId);
     }
 
@@ -245,7 +251,8 @@ public class UsuarioService {
      * Verifica si un username ya existe.
      */
     public boolean existeUsername(String username, int excludeId) {
-        if (username == null || username.trim().isEmpty()) return false;
+        if (username == null || username.trim().isEmpty())
+            return false;
         return usuarioDAO.existeUsername(username.trim(), excludeId);
     }
 
@@ -255,7 +262,7 @@ public class UsuarioService {
     public String generarJsonDataTables(int draw, int start, int length,
             String searchValue, String sortCol, String orderDir) {
 
-        int total    = usuarioDAO.contarTotal();
+        int total = usuarioDAO.contarTotal();
         int filtered = usuarioDAO.countFiltered(searchValue);
         List<Usuario> list = usuarioDAO.findWithPagination(start, length, searchValue, sortCol, orderDir);
 
@@ -263,7 +270,7 @@ public class UsuarioService {
         jsonResponse.addProperty("draw", draw);
         jsonResponse.addProperty("recordsTotal", total);
         jsonResponse.addProperty("recordsFiltered", filtered);
- 
+
         JsonArray dataArray = new JsonArray();
 
         for (Usuario u : list) {
@@ -277,15 +284,16 @@ public class UsuarioService {
             rowArr.add(String.valueOf(u.getId()));
             dataArray.add(rowArr);
         }
- 
+
         jsonResponse.add("data", dataArray);
         return gson.toJson(jsonResponse);
     }
 
-public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession();
         Usuario logged = (Usuario) session.getAttribute("usuario");
-        if (logged == null) return;
+        if (logged == null)
+            return;
 
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");
@@ -295,20 +303,30 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         String edadStr = request.getParameter("edad");
 
         String error = this.actualizarPerfil(logged.getId(), nombre, correo, celular);
-        
+
         if (logged.getCedula() != null && !logged.getCedula().trim().isEmpty()) {
             com.combinacion.dao.ContratistaDAO cDao = new com.combinacion.dao.ContratistaDAO();
             com.combinacion.models.Contratista c = cDao.obtenerPorCedula(logged.getCedula());
             if (c != null) {
-                if (nombre != null && !nombre.trim().isEmpty()) c.setNombre(nombre.trim());
-                if (correo != null && !correo.trim().isEmpty()) c.setCorreo(correo.trim());
-                if (celular != null) c.setTelefono(celular.trim());
-                if (direccion != null) c.setDireccion(direccion.trim());
+                if (nombre != null && !nombre.trim().isEmpty())
+                    c.setNombre(nombre.trim());
+                if (correo != null && !correo.trim().isEmpty())
+                    c.setCorreo(correo.trim());
+                if (celular != null)
+                    c.setTelefono(celular.trim());
+                if (direccion != null)
+                    c.setDireccion(direccion.trim());
                 if (fechaNacimientoStr != null && !fechaNacimientoStr.trim().isEmpty()) {
-                    try { c.setFechaNacimiento(java.sql.Date.valueOf(fechaNacimientoStr.trim())); } catch (Exception e) {}
+                    try {
+                        c.setFechaNacimiento(java.sql.Date.valueOf(fechaNacimientoStr.trim()));
+                    } catch (Exception e) {
+                    }
                 }
                 if (edadStr != null && !edadStr.trim().isEmpty()) {
-                    try { c.setEdad(Integer.parseInt(edadStr.trim())); } catch (Exception e) {}
+                    try {
+                        c.setEdad(Integer.parseInt(edadStr.trim()));
+                    } catch (Exception e) {
+                    }
                 }
                 cDao.actualizar(c);
             }
@@ -333,7 +351,8 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
     public void cambiarMiPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession();
         Usuario logged = (Usuario) session.getAttribute("usuario");
-        if (logged == null) return;
+        if (logged == null)
+            return;
 
         String oldPass = request.getParameter("oldPass");
         String newPass = request.getParameter("newPass");
@@ -381,32 +400,78 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         response.getWriter().write(new Gson().toJson(res));
     }
 
-    public void subirFotoPerfil(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private byte[] decodificarBase64Flexible(String b64) {
+        if (b64 == null || b64.trim().isEmpty())
+            return null;
+        String clean = b64.trim();
+        int commaIdx = clean.indexOf(',');
+        if (commaIdx != -1) {
+            clean = clean.substring(commaIdx + 1).trim();
+        }
+        // Convertir de URL-safe Base64 (- y _) a Base64 estándar (+ y /) y limpiar
+        // saltos
+        clean = clean.replace('-', '+').replace('_', '/').replaceAll("\\s+", "");
+        int mod = clean.length() % 4;
+        if (mod == 2)
+            clean += "==";
+        else if (mod == 3)
+            clean += "=";
+        return java.util.Base64.getDecoder().decode(clean);
+    }
+
+    public void subirFotoPerfil(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         Usuario logged = (Usuario) session.getAttribute("usuario");
         Map<String, Object> res = new HashMap<>();
-        if (logged == null) return;
+        if (logged == null)
+            return;
 
         try {
-            Part filePart = request.getPart("foto");
-            if (filePart != null && filePart.getSize() > 0) {
-                String fileName = "profile_" + logged.getId() + "_" + System.currentTimeMillis() + ".jpg";
-                String uploadPath = request.getServletContext().getRealPath("/") + "uploads" + File.separator + "profile";
-                
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
+            byte[] fileBytes = null;
+            String fotoBase64 = request.getParameter("fotoBase64");
+            if (fotoBase64 != null && !fotoBase64.trim().isEmpty()) {
+                fileBytes = decodificarBase64Flexible(fotoBase64);
+            } else {
+                Part filePart = request.getPart("foto");
+                if (filePart != null && filePart.getSize() > 0) {
+                    try (java.io.InputStream is = filePart.getInputStream();
+                            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                        byte[] buf = new byte[8192];
+                        int r;
+                        while ((r = is.read(buf)) != -1)
+                            baos.write(buf, 0, r);
+                        fileBytes = baos.toByteArray();
+                    }
+                }
+            }
 
-                filePart.write(uploadPath + File.separator + fileName);
-                
+            if (fileBytes != null && fileBytes.length > 0) {
+                String uniquePhotoId = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 10) + "_"
+                        + System.currentTimeMillis();
+                String fileName = "profile_" + logged.getId() + "_" + uniquePhotoId + ".jpg";
+                String uploadPath = request.getServletContext().getRealPath("/") + "uploads" + File.separator
+                        + "profile";
+
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists())
+                    uploadDir.mkdirs();
+
+                java.nio.file.Files.write(new File(uploadDir, fileName).toPath(), fileBytes);
+
                 String fotoUrl = "uploads/profile/" + fileName;
                 if (this.actualizarFoto(logged.getId(), fotoUrl)) {
                     logged.setFotoUrl(fotoUrl);
+                    session.setAttribute("usuario", logged);
                     res.put("success", true);
                     res.put("url", fotoUrl);
                 } else {
                     res.put("success", false);
                     res.put("message", "Error al guardar URL en BD");
                 }
+            } else {
+                res.put("success", false);
+                res.put("message", "No se recibió el archivo de imagen.");
             }
         } catch (Exception e) {
             res.put("success", false);
@@ -421,7 +486,8 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         Usuario logged = (Usuario) session.getAttribute("usuario");
         Map<String, Object> res = new HashMap<>();
         if (logged != null) {
-            // Se asume que UsuarioDAO tiene un método para actualizar la firma, por ejemplo, en base al id
+            // Se asume que UsuarioDAO tiene un método para actualizar la firma, por
+            // ejemplo, en base al id
             if (new com.combinacion.dao.UsuarioDAO().actualizarFirma(logged.getId(), null)) {
                 logged.setFirmaUrl(null);
                 session.setAttribute("usuario", logged);
@@ -437,31 +503,65 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         response.getWriter().write(new Gson().toJson(res));
     }
 
-    public void subirFirmaPerfil(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void subirFirmaPerfil(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         HttpSession session = request.getSession();
         Usuario logged = (Usuario) session.getAttribute("usuario");
         Map<String, Object> res = new HashMap<>();
-        if (logged == null) return;
+        if (logged == null)
+            return;
 
         try {
-            Part filePart = request.getPart("firma");
-            if (filePart != null && filePart.getSize() > 0) {
-                String submittedFileName = filePart.getSubmittedFileName();
-                String ext = ".png";
-                if (submittedFileName != null && (submittedFileName.toLowerCase().endsWith(".jpg") || submittedFileName.toLowerCase().endsWith(".jpeg"))) {
-                    ext = ".jpg";
+            byte[] fileBytes = null;
+            String submittedFileName = request.getParameter("fileName");
+            String mimeType = "image/png";
+
+            String firmaBase64 = request.getParameter("firmaBase64");
+            if (firmaBase64 != null && !firmaBase64.trim().isEmpty()) {
+                fileBytes = decodificarBase64Flexible(firmaBase64);
+            } else {
+                Part filePart = request.getPart("firma");
+                if (filePart != null && filePart.getSize() > 0) {
+                    submittedFileName = filePart.getSubmittedFileName();
+                    if (filePart.getContentType() != null) {
+                        mimeType = filePart.getContentType();
+                    }
+                    try (java.io.InputStream is = filePart.getInputStream();
+                            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                        byte[] buf = new byte[8192];
+                        int r;
+                        while ((r = is.read(buf)) != -1)
+                            baos.write(buf, 0, r);
+                        fileBytes = baos.toByteArray();
+                    }
                 }
-                String cedulaClean = (logged.getCedula() != null) ? logged.getCedula().replaceAll("[^0-9]", "") : "0";
-                String driveFileName = "firma_user_" + logged.getId() + "_" + cedulaClean + ext;
-                
-                String mimeType = filePart.getContentType() != null ? filePart.getContentType() : ("image/" + (ext.equals(".png") ? "png" : "jpeg"));
-                
-                String masterFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_SISTEMA", "configuracion_SistemaContratacion"), null);
-                String folderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_FIRMAS", "FIRMAS_CONTRATISTAS"), masterFolderId);
-                
-                try (java.io.InputStream is = filePart.getInputStream()) {
-                    String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, filePart.getSize(), driveFileName, mimeType, folderId);
-                    
+            }
+
+            if (fileBytes != null && fileBytes.length > 0) {
+                String ext = ".png";
+                if (submittedFileName != null && (submittedFileName.toLowerCase().endsWith(".jpg")
+                        || submittedFileName.toLowerCase().endsWith(".jpeg"))) {
+                    ext = ".jpg";
+                    mimeType = "image/jpeg";
+                }
+                String cedulaClean = (logged.getCedula() != null && !logged.getCedula().trim().isEmpty())
+                        ? logged.getCedula().replaceAll("[^0-9]", "")
+                        : String.valueOf(logged.getId());
+                String uniqueUuid = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+                String driveFileName = "firma_user_" + logged.getId() + "_" + cedulaClean + "_" + uniqueUuid + "_"
+                        + System.currentTimeMillis() + ext;
+
+                String masterFolderId = com.combinacion.services.GoogleDriveService
+                        .resolveFolderIdOrGetOrCreate(com.combinacion.dao.ConfiguracionDAO
+                                .getValor("DRIVE_CARPETA_SISTEMA", "configuracion_SistemaContratacion"), null);
+                String folderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(
+                        com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_FIRMAS", "FIRMAS_CONTRATISTAS"),
+                        masterFolderId);
+
+                try (java.io.InputStream is = new java.io.ByteArrayInputStream(fileBytes)) {
+                    String fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is,
+                            fileBytes.length, driveFileName, mimeType, folderId);
+
                     if (fileId != null && !fileId.isEmpty()) {
                         String firmaUrl = "ImageServlet?id=" + fileId;
                         if (new com.combinacion.dao.UsuarioDAO().actualizarFirma(logged.getId(), firmaUrl)) {
@@ -473,10 +573,17 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
                             res.put("success", false);
                             res.put("message", "Error al guardar URL de la firma en BD");
                         }
+                    } else {
+                        res.put("success", false);
+                        res.put("message", "No fue posible obtener el ID del archivo en Google Drive.");
                     }
                 }
+            } else {
+                res.put("success", false);
+                res.put("message", "No se recibió ningún archivo de firma.");
             }
         } catch (Exception e) {
+            e.printStackTrace();
             res.put("success", false);
             res.put("message", e.getMessage());
         }
@@ -515,7 +622,7 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
                 }
             }
             this.actualizarPermisosEspeciales(id, ids);
-            
+
             // Sincronizar sesión si se están actualizando los propios permisos
             HttpSession session = request.getSession(false);
             if (session != null) {
@@ -525,8 +632,15 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
                     session.setAttribute("usuario", actualizado);
                 }
             }
-            
-            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+
+            try {
+                com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession()
+                        .getAttribute("usuario");
+                if (__u != null)
+                    com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización",
+                            "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr());
+            } catch (Exception ex) {
+            }
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
         } catch (Exception e) {
             e.printStackTrace();
@@ -542,7 +656,7 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
     }
 
     public void mostrarFormulario(HttpServletRequest request, HttpServletResponse response,
-                                    Usuario usuario) throws ServletException, IOException {
+            Usuario usuario) throws ServletException, IOException {
         List<Rol> roles = rolService.listarTodos();
         request.setAttribute("listRoles", roles);
         if (usuario != null) {
@@ -580,10 +694,13 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         java.sql.Date fechaInicio = parseDate(request.getParameter("fecha_inicio"));
         java.sql.Date fechaFin = parseDate(request.getParameter("fecha_fin"));
         int rolId = 0;
-        try { rolId = Integer.parseInt(request.getParameter("rol_id")); } catch (Exception ignored) {}
+        try {
+            rolId = Integer.parseInt(request.getParameter("rol_id"));
+        } catch (Exception ignored) {
+        }
 
-        String error = this.crear(username, password, nombreCompleto, correo, 
-                                          cedula, celular, sexo, vinculacion, fechaInicio, fechaFin, rolId);
+        String error = this.crear(username, password, nombreCompleto, correo,
+                cedula, celular, sexo, vinculacion, fechaInicio, fechaFin, rolId);
         if (error != null) {
             request.setAttribute("error", error);
             Usuario u = new Usuario();
@@ -599,7 +716,14 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             u.setRolId(rolId);
             mostrarFormulario(request, response, u);
         } else {
-            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación", "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            try {
+                com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession()
+                        .getAttribute("usuario");
+                if (__u != null)
+                    com.combinacion.dao.AuditoriaDAO.registrar(__u, "Creación",
+                            "Registro creado en " + this.getClass().getSimpleName(), request.getRemoteAddr());
+            } catch (Exception ex) {
+            }
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=created");
         }
     }
@@ -617,12 +741,13 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             String vinculacion = request.getParameter("vinculacion");
             java.sql.Date fechaInicio = parseDate(request.getParameter("fecha_inicio"));
             java.sql.Date fechaFin = parseDate(request.getParameter("fecha_fin"));
-            boolean activo = "on".equals(request.getParameter("activo")) || "true".equals(request.getParameter("activo"));
+            boolean activo = "on".equals(request.getParameter("activo"))
+                    || "true".equals(request.getParameter("activo"));
             int rolId = Integer.parseInt(request.getParameter("rol_id"));
 
-            String error = this.actualizar(id, username, nombreCompleto, correo, 
-                                                   cedula, celular, sexo, vinculacion, fechaInicio, fechaFin,
-                                                   activo, rolId);
+            String error = this.actualizar(id, username, nombreCompleto, correo,
+                    cedula, celular, sexo, vinculacion, fechaInicio, fechaFin,
+                    activo, rolId);
             if (error != null) {
                 request.setAttribute("error", error);
                 Usuario u = new Usuario();
@@ -640,8 +765,15 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
                 u.setRolId(rolId);
                 mostrarFormulario(request, response, u);
             } else {
-                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización", "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
-            response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
+                try {
+                    com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession()
+                            .getAttribute("usuario");
+                    if (__u != null)
+                        com.combinacion.dao.AuditoriaDAO.registrar(__u, "Actualización",
+                                "Registro actualizado en " + this.getClass().getSimpleName(), request.getRemoteAddr());
+                } catch (Exception ex) {
+                }
+                response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=updated");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -657,10 +789,18 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
 
             String error = this.cambiarPassword(id, nuevaPassword);
             if (error != null) {
-                response.sendRedirect(request.getContextPath() + "/admin/usuarios?action=edit&id=" + id + "&error=" + java.net.URLEncoder.encode(error, "UTF-8"));
+                response.sendRedirect(request.getContextPath() + "/admin/usuarios?action=edit&id=" + id + "&error="
+                        + java.net.URLEncoder.encode(error, "UTF-8"));
             } else {
-                try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Cambio de Clave", "Contraseña cambiada en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
-            response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=password_changed");
+                try {
+                    com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession()
+                            .getAttribute("usuario");
+                    if (__u != null)
+                        com.combinacion.dao.AuditoriaDAO.registrar(__u, "Cambio de Clave",
+                                "Contraseña cambiada en " + this.getClass().getSimpleName(), request.getRemoteAddr());
+                } catch (Exception ex) {
+                }
+                response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=password_changed");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -673,7 +813,14 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             this.eliminar(id);
-            try { com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario"); if(__u!=null) com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación", "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr()); } catch(Exception ex){}
+            try {
+                com.combinacion.models.Usuario __u = (com.combinacion.models.Usuario) request.getSession()
+                        .getAttribute("usuario");
+                if (__u != null)
+                    com.combinacion.dao.AuditoriaDAO.registrar(__u, "Eliminación",
+                            "Registro eliminado en " + this.getClass().getSimpleName(), request.getRemoteAddr());
+            } catch (Exception ex) {
+            }
             response.sendRedirect(request.getContextPath() + "/admin/usuarios?status=deleted");
         } catch (Exception e) {
             e.printStackTrace();
@@ -685,10 +832,13 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             throws IOException {
         String cedula = request.getParameter("cedula");
         int excludeId = 0;
-        try { excludeId = Integer.parseInt(request.getParameter("id")); } catch (Exception ignored) {}
-        
+        try {
+            excludeId = Integer.parseInt(request.getParameter("id"));
+        } catch (Exception ignored) {
+        }
+
         boolean existe = this.existeCedula(cedula, excludeId);
-        
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"exists\": " + existe + "}");
@@ -698,10 +848,13 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
             throws IOException {
         String username = request.getParameter("username");
         int excludeId = 0;
-        try { excludeId = Integer.parseInt(request.getParameter("id")); } catch (Exception ignored) {}
-        
+        try {
+            excludeId = Integer.parseInt(request.getParameter("id"));
+        } catch (Exception ignored) {
+        }
+
         boolean existe = this.existeUsername(username, excludeId);
-        
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"exists\": " + existe + "}");
@@ -719,9 +872,8 @@ public void actualizarMiPerfil(HttpServletRequest request, HttpServletResponse r
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(
-            this.generarJsonDataTables(
-                parseIntSafe(draw, 1), start, length, search, sortCol, orderDir)
-        );
+                this.generarJsonDataTables(
+                        parseIntSafe(draw, 1), start, length, search, sortCol, orderDir));
     }
 
     private int parseIntSafe(String val, int defaultVal) {

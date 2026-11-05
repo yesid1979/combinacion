@@ -32,8 +32,12 @@ public class ImageUploadServlet extends HttpServlet {
             Part filePart = request.getPart("file");
             if (filePart != null && filePart.getSize() > 0) {
                 String submittedFileName = filePart.getSubmittedFileName();
+                String uniqueId = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 10) + "_" + System.currentTimeMillis();
                 if (submittedFileName == null || submittedFileName.trim().isEmpty()) {
-                    submittedFileName = "imagen_editor_" + System.currentTimeMillis() + ".jpg";
+                    submittedFileName = "imagen_editor_" + uniqueId + ".jpg";
+                } else {
+                    String safeName = submittedFileName.trim().replaceAll("[^a-zA-Z0-9._-]", "_");
+                    submittedFileName = "img_" + uniqueId + "_" + safeName;
                 }
                 
                 String mimeType = filePart.getContentType() != null ? filePart.getContentType() : "image/jpeg";

@@ -30,10 +30,34 @@ public class UsuarioServlet extends HttpServlet {
     private final UsuarioService usuarioService = new UsuarioService();
     private final RolService rolService = new RolService();
 
+    private String obtenerActionSegura(HttpServletRequest request) {
+        String qs = request.getQueryString();
+        if (qs != null && !qs.isEmpty()) {
+            for (String pair : qs.split("&")) {
+                int idx = pair.indexOf('=');
+                if (idx > 0) {
+                    String key = pair.substring(0, idx);
+                    if ("action".equalsIgnoreCase(key)) {
+                        try {
+                            return java.net.URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+                        } catch (Exception e) {
+                            return pair.substring(idx + 1);
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            return request.getParameter("action");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
+        String action = obtenerActionSegura(request);
         String uri = request.getRequestURI();
 
         // --- SEGURIDAD ABSOLUTA: Si no es ruta /admin/, BLOQUEAR todo excepto el perfil propio ---
@@ -90,7 +114,7 @@ public class UsuarioServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        String action = request.getParameter("action");
+        String action = obtenerActionSegura(request);
         String uri = request.getRequestURI();
 
         // --- SEGURIDAD ABSOLUTA: Si no es ruta /admin/, SOLO permitir acciones de perfil propio ---
