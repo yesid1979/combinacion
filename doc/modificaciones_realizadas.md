@@ -453,3 +453,58 @@
      * Se añadió el atributo `required` a `input[name="file_seguridad_social"]`, validado dinámicamente para que impida radicar si el contratista no lo adjunta (a menos que sea contratista nuevo en cuota 1 o ya exista en soportes previos).
   4. **Protección de Permisos de Sincronización:**
      * La funcionalidad manual de sincronización se mantiene reservada **únicamente para Administradores y Contratación** (`ADMINISTRAR_CUENTAS`), garantizando que la sincronización para Supervisores, Revisores y Contratistas opere de manera 100% automática y transparente en cada radicación, revisión y aprobación.
+
+---
+
+## Fecha: 5 de Noviembre de 2026
+
+### 1. Solución al Error `403 Forbidden` al Subir Firma en PNG y Foto de Perfil en "Mi Perfil"
+* **Problema Resuelto:**
+  * Cuando un contratista o usuario intentaba subir o cambiar su firma en formato `.png` desde `perfil.jsp` (`/usuarios?action=uploadFirma`), el sistema arrojaba una alerta con el error **`403 Forbidden`**.
+* **Causas Raíz Identificadas:**
+  1. **Consumo prematuro de parámetros en peticiones `multipart/form-data`:** En [AuthFilter.java](file:///src/main/java/com/combinacion/util/AuthFilter.java), se invocaba `request.getParameter("action")` antes de llegar al Servlet. En Tomcat, invocar `getParameter()` dentro de un `Filter` sobre una petición `multipart/form-data` (o cuando el archivo supera el `maxPostSize` de 2 MB para parámetros) falla al parsear los *parts* y retorna `action = null`, perdiendo incluso el parámetro `?action=uploadFirma` de la cadena de consulta (Query String). Al recibir `action == null` en [UsuarioServlet.java](file:///src/main/java/com/combinacion/servlets/UsuarioServlet.java), la validación de seguridad de `doPost()` respondía con `HTTP 403 SC_FORBIDDEN`.
+  2. **Inspección de Binarios en Proxy Inverso / WAF (Nginx / ModSecurity):** El envío de flujos binarios crudos `.png` mediante `multipart/form-data` disparaba falsos positivos en las reglas de inspección del WAF/Nginx, devolviendo la página HTML `<h1>403 Forbidden</h1>`.
+* **Solución Implementada:**
+  * **[AuthFilter.java](file:///src/main/java/com/combinacion/util/AuthFilter.java) y [UsuarioServlet.java](file:///src/main/java/com/combinacion/servlets/UsuarioServlet.java):**
+    * Se implementó el método `obtenerActionSegura(HttpServletRequest request)` que extrae en primera instancia el parámetro `action` directamente desde `request.getQueryString()` (`?action=uploadFirma` o `?action=uploadPhoto`) sin consumir ni alterar el flujo `multipart/form-data` antes de llegar al Servlet.
+  * **[perfil.jsp](file:///src/main/webapp/perfil.jsp):**
+    * Se implementó la función `convertirImagenABase64UrlSafe()` mediante HTML5 `<canvas>` y `FileReader`.
+    * Al seleccionar o arrastrar la firma `.png`, el navegador optimiza proporcionalmente las dimensiones (máximo `900x360 px` conservando el **100% de la transparencia original del PNG**) y codifica la imagen en **Base64 URL-Safe (`firmaBase64`)** (únicamente caracteres `A-Za-z0-9-_`), enviándola en una petición `POST` estándar a `/usuarios?action=uploadFirma` que no es bloqueada por el WAF ni por límites de `multipart`.
+  * **[UsuarioService.java](file:///src/main/java/com/combinacion/services/UsuarioService.java):**
+    * Se agregó el método `decodificarBase64Flexible(String b64)` y se actualizaron `subirFirmaPerfil()` y `subirFotoPerfil()` para procesar tanto envíos en `Base64 URL-Safe` (`firmaBase64` / `fotoBase64`) como envíos `multipart/form-data` tradicionales (`request.getPart("firma")`), actualizando `target/combinacion.war`.
+
+---
+
+### 2. Identificador Único (`UUID` + `Timestamp`) en Firmas e Imágenes para Evitar Colisiones por Nombre
+* **Problema Resuelto:**
+  * Garantizar que si varios usuarios suben archivos con el mismo nombre (por ejemplo `firma.png` o `imagen.png`), jamás se repitan ni se sobrescriban entre sí en Google Drive o en el servidor, y evitar que el caché del navegador (`ImageServlet?id=...`) mantenga visible una firma anterior tras actualizarla.
+* **Solución Implementada:**
+  * **[UsuarioService.java](file:///src/main/java/com/combinacion/services/UsuarioService.java):**
+    * En `subirFirmaPerfil()`, se ignora el nombre del archivo local del usuario y se genera siempre un identificador único combinando `ID de usuario` + `Cédula` + `UUID aleatorio de 12 caracteres` + `Timestamp en milisegundos`:
+      ```java
+      String uniqueUuid = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+      String driveFileName = "firma_user_" + logged.getId() + "_" + cedulaClean + "_" + uniqueUuid + "_" + System.currentTimeMillis() + ext;
+      ```
+    * En `subirFotoPerfil()`, las fotos de perfil se guardan con formato `profile_<id>_<uuid>_<timestamp>.jpg`.
+  * **[ImageUploadServlet.java](file:///src/main/java/com/combinacion/servlets/ImageUploadServlet.java):**
+    * Todas las imágenes insertadas en el editor de actividades anteponen un prefijo único `img_<uuid>_<timestamp>_<nombreLimpio>` antes de subirse a la carpeta `IMAGENES_EDITOR_WEB` en Google Drive.
+
+---
+
+### 3. Preservación de Datos de Contacto del Contratista en Cargas Masivas y Sincronización con Google Sheets
+* **Problema Resuelto:**
+  * Al ejecutar la Carga Masiva desde Excel o la Sincronización con Google Sheets, si las columnas de dirección, correo o teléfono venían vacías en el archivo maestro, se sobrescribían los datos que el contratista ya había actualizado en su perfil.
+* **Solución Implementada:**
+  * **[ContratistaDAO.java](file:///src/main/java/com/combinacion/dao/ContratistaDAO.java) y [CargaMasivaService.java](file:///src/main/java/com/combinacion/services/CargaMasivaService.java):**
+    * En `ContratistaDAO.actualizar()`, se protegen las columnas `correo`, `telefono`, `direccion`, `fecha_nacimiento` y `edad` mediante expresiones SQL `COALESCE(NULLIF(TRIM(?), ''), columna_actual)`, asegurando que un valor vacío o nulo entrante jamás borre un dato ya registrado en la base de datos.
+
+---
+
+### 4. Actualización Integral de la Documentación Técnica, Modelo de Datos, Arquitectura y Pruebas Reales
+* **Archivos Generados y Actualizados en `Documentación/`:**
+  * **`Documentación/Modelo de Datos/`:**
+    * `Diccionario de Datos.docx`, `Modelo_Relacional_Base_de_Datos.docx` (con `Diagrama entidad relacion.png` real de las 20 tablas y 4 vistas), `Script_Creacion_Base_de_Datos.sql`, `Script_Creacion_Base_de_Datos.txt` y `Backup_Base_de_Datos_combinacion.sql` (esquema completo y 8,586 registros reales).
+  * **`Documentación/Arquitectura/`:**
+    * `Diagrama_de_Arquitectura_Sistemas.docx` y `Entregables_Arquitectura_Empresarial.docx` acompañados de 4 diagramas de arquitectura en alta resolución (`1_Diagrama_Arquitectura_Capas_MVC.png` a `4_Diagrama_Flujo_Negocio_Supervision_y_Radicacion.png`).
+  * **`Documentación/Pruebas/`:**
+    * `Informe Pruebas de Seguridad.docx` (incluyendo la matriz detallada del comportamiento paso a paso del sistema frente a 10 tipos de ataques cibernéticos), `Casos de Prueba Funcionalidad e Integracion.docx`, `Informe Pruebas de Rendimiento.docx`, `Informe Pruebas de Estres Concurrencia.docx` y los 5 gráficos técnicos (`Grafico_1` a `Grafico_5`).
