@@ -277,6 +277,9 @@ CREATE TABLE IF NOT EXISTS informes_supervision (
     arl VARCHAR(150),
     es_contratista_nuevo VARCHAR(10) DEFAULT 'NO',
     supervisor_id INT REFERENCES supervisores(id) ON DELETE SET NULL,
+    observaciones_revision TEXT,
+    estado_previo_devolucion VARCHAR(50),
+    observaciones_contratista TEXT,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -377,8 +380,66 @@ CREATE TABLE IF NOT EXISTS verbos_conjugacion (
 );
 
 -- -----------------------------------------------------------------------------
--- VISTAS DE RESUMEN Y CONTROL DE CUOTAS
+-- 20. TABLA: google_oauth_token
 -- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS google_oauth_token (
+    id VARCHAR(50) PRIMARY KEY,
+    token_data TEXT
+);
+
+-- -----------------------------------------------------------------------------
+-- VISTAS DE RESUMEN, ALERTAS Y CONTROL DE CUOTAS
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW vista_contratos_proximos_a_vencer AS
+SELECT 
+    c.id AS contrato_id,
+    c.numero_contrato,
+    c.anio,
+    ct.cedula AS cedula_contratista,
+    ct.nombre AS nombres_apellidos,
+    ct.telefono,
+    ct.correo,
+    s.nombre AS supervisor,
+    c.fecha_inicio,
+    c.fecha_terminacion,
+    (c.fecha_terminacion - CURRENT_DATE) AS dias_para_vencer,
+    CASE 
+        WHEN (c.fecha_terminacion - CURRENT_DATE) < 0 THEN 'VENCIDO'
+        WHEN (c.fecha_terminacion - CURRENT_DATE) <= 15 THEN 'CRITICO'
+        WHEN (c.fecha_terminacion - CURRENT_DATE) <= 30 THEN 'PROXIMO'
+        ELSE 'NORMAL'
+    END AS nivel_alerta,
+    c.plazo_ejecucion AS plazo,
+    c.valor_total_numeros AS valor_contrato,
+    COUNT(inf.id) AS total_cuentas_registradas,
+    COUNT(CASE WHEN inf.estado_radicacion IS NOT NULL AND inf.estado_radicacion <> 'BORRADOR' THEN 1 END) AS total_cuentas_radicadas
+FROM contratos c
+LEFT JOIN contratistas ct ON c.contratista_id = ct.id
+LEFT JOIN supervisores s ON c.supervisor_id = s.id
+LEFT JOIN informes_supervision inf ON inf.contrato_id = c.id
+GROUP BY c.id, c.numero_contrato, c.anio, ct.cedula, ct.nombre, ct.telefono, ct.correo, s.nombre, c.fecha_inicio, c.fecha_terminacion, c.plazo_ejecucion, c.valor_total_numeros;
+
+CREATE OR REPLACE VIEW vista_personas_sin_cuentas_radicadas AS
+SELECT 
+    c.id AS contrato_id,
+    c.numero_contrato,
+    c.anio,
+    ct.cedula,
+    ct.nombre AS nombres_apellidos,
+    ct.telefono,
+    ct.correo,
+    s.nombre AS supervisor,
+    c.fecha_inicio,
+    c.fecha_terminacion,
+    (c.fecha_terminacion - CURRENT_DATE) AS dias_para_vencer,
+    c.plazo_ejecucion AS plazo,
+    c.valor_total_numeros AS valor_contrato
+FROM contratos c
+LEFT JOIN contratistas ct ON c.contratista_id = ct.id
+LEFT JOIN supervisores s ON c.supervisor_id = s.id
+LEFT JOIN informes_supervision inf ON inf.contrato_id = c.id AND inf.estado_radicacion IS NOT NULL AND inf.estado_radicacion <> 'BORRADOR'
+GROUP BY c.id, c.numero_contrato, c.anio, ct.cedula, ct.nombre, ct.telefono, ct.correo, s.nombre, c.fecha_inicio, c.fecha_terminacion, c.plazo_ejecucion, c.valor_total_numeros
+HAVING COUNT(inf.id) = 0;
 CREATE OR REPLACE VIEW vista_resumen_contratos_cuotas AS
 SELECT 
     c.id AS contrato_id,
