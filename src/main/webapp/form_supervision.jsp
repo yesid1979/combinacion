@@ -477,8 +477,8 @@
                                                 <c:forEach var="item" items="${listaObligaciones}" varStatus="status">
                                                     <tr>
                                                         <td class="bg-light">
-                                                            <input type="hidden" name="obligacion_${status.index}" value="${item.obligacion}">
-                                                            <small class="text-muted d-block" style="white-space: pre-wrap;">${item.obligacion}</small>
+                                                            <input type="hidden" name="obligacion_${status.index}" value="${fn:escapeXml(item.obligacion)}">
+                                                            <small class="text-muted d-block" style="white-space: pre-wrap;"><c:out value="${item.obligacion}" /></small>
                                                         </td>
                                                         <td>
                                                             <textarea id="raw_actividad_${status.index}" style="display:none;">${item.actividad}</textarea>

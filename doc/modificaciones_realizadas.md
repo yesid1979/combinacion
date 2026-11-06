@@ -508,3 +508,26 @@
     * `Diagrama_de_Arquitectura_Sistemas.docx` y `Entregables_Arquitectura_Empresarial.docx` acompañados de 4 diagramas de arquitectura en alta resolución (`1_Diagrama_Arquitectura_Capas_MVC.png` a `4_Diagrama_Flujo_Negocio_Supervision_y_Radicacion.png`).
   * **`Documentación/Pruebas/`:**
     * `Informe Pruebas de Seguridad.docx` (incluyendo la matriz detallada del comportamiento paso a paso del sistema frente a 10 tipos de ataques cibernéticos), `Casos de Prueba Funcionalidad e Integracion.docx`, `Informe Pruebas de Rendimiento.docx`, `Informe Pruebas de Estres Concurrencia.docx` y los 5 gráficos técnicos (`Grafico_1` a `Grafico_5`).
+
+---
+
+## Fecha: 6 de Noviembre de 2026
+
+### 1. Corrección de Truncamiento en Obligaciones Contractuales con Comillas y Caracteres Especiales
+* **Problema Identificado:**
+  * En el contrato 118 (`4121.010.26.1.118`) y en otros contratos cuyas obligaciones contienen comillas dobles (por ejemplo, `... y divulgación jurídica de "Sinfonía", la plataforma tecnológica...`), la actividad 6 aparecía truncada en el formulario de supervisión (`form_supervision.jsp`) mostrando únicamente `"6. Brindar apoyo al Departamento, desde su área del conocimiento en la elaboración de boletines informativos, boletín de relatoría jurídica y divulgación jurídica de "` y perdiendo todo el texto posterior.
+  * **Causa Raíz:**
+    1. En `form_supervision.jsp`, el valor de la obligación se inyectaba en el atributo HTML sin escapar: `<input type="hidden" name="obligacion_${status.index}" value="${item.obligacion}">`. Al encontrarse una comilla doble `"`, el navegador cerraba el atributo `value` prematuramente, cortando la cadena al momento de serializar el JSON en JavaScript.
+    2. En `ObligacionesParser.java`, el método `decodificarConcepto` leía directamente el texto guardado en el JSON de la base de datos sin cotejarlo con el texto maestro y oficial del contrato en `contratos.actividades_entregables`.
+* **Solución Implementada:**
+  * **[form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):**
+    * Se aplicó escape XML y de etiquetas seguro en el atributo `value` y en el texto visible:
+      ```jsp
+      <input type="hidden" name="obligacion_${status.index}" value="${fn:escapeXml(item.obligacion)}">
+      <small class="text-muted d-block" style="white-space: pre-wrap;"><c:out value="${item.obligacion}" /></small>
+      ```
+  * **[ObligacionesParser.java](file:///src/main/java/com/combinacion/util/ObligacionesParser.java):**
+    * Se robusteció `decodificarConcepto(String conceptoDb, String actividadesContrato)` para tomar como fuente canónica de verdad las obligaciones oficiales del contrato extraídas con `parsearObligaciones(actividadesContrato)`. Si el texto en base de datos quedó incompleto o truncado por comillas en guardados previos, se restituye automáticamente la redacción íntegra y oficial del contrato.
+  * **Saneamiento en Base de Datos PostgreSQL:**
+    * Se ejecutó script de saneamiento sobre la base de datos de producción (`informes_supervision`), restaurando la redacción íntegra de la obligación 6 en todos los informes existentes (IDs 230, 233, 236 y 373) y corrigiendo las obligaciones en los 30 informes afectados a nivel general.
+
