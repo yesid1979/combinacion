@@ -531,3 +531,25 @@
   * **Saneamiento en Base de Datos PostgreSQL:**
     * Se ejecutó script de saneamiento sobre la base de datos de producción (`informes_supervision`), restaurando la redacción íntegra de la obligación 6 en todos los informes existentes (IDs 230, 233, 236 y 373) y corrigiendo las obligaciones en los 30 informes afectados a nivel general.
 
+---
+
+## Fecha: 10 de Noviembre de 2026
+
+### 1. Ampliación y Consolidación Integral del Manual de Instalación Técnica ([Manual_de_Instalacion.docx](file:///Documentación/Manuales/Manual_de_Instalacion.docx))
+* **Objetivo:**
+  * Ampliar y robustecer el documento técnico de instalación y despliegue del sistema conforme a la estructura, especificaciones, componentes y procedimientos documentados en el *Manual Técnico Normativo.pdf* (46 páginas) de la Alcaldía Distrital de Santiago de Cali - DAGJP.
+* **Secciones y Contenido Integrado:**
+  * **Encabezado y Control de Cambios:** Tabla institucional con código `MAGT04.04.01.P004.G001 | VERSIÓN: 002` y registro de versiones (Versión 1.0 y 2.0 por Yesid Javier Piedrahita Correa).
+  * **Capítulo 1: Introducción y Marco Normativo:** Marco institucional del DAGJP, Subdirección de Doctrina y Asuntos Normativos y Subdirección de Gestión Contractual; sustento legal bajo el Decreto Extraordinario 411.0.20.0516 de 2016 (art. 55 num 5), Ley 80 de 1993, Ley 1150 de 2007, Ley 1955 de 2019, Ley 789 de 2002 art. 50, Decreto 1082 de 2015 y Decreto 1990 de 2016.
+  * **Capítulo 2: Definiciones y Arquitectura Tecnológica:** Conceptualización de JEE 1.8, ciclo de vida de páginas JSP, Servlets concurrentes multihilo, patrón arquitectónico MVC con diagrama de flujo relacional (`p9_2_Image96.png`), IDE NetBeans 8.2 / Maven y motor de base de datos PostgreSQL; capas lógicas (Presentación, Aplicación y Persistencia) y diagrama de despliegue en dos servidores físicos o virtuales.
+  * **Capítulo 3: Pre-requisitos de Instalación:** Tablas comparativas de hardware y software para Servidor de Aplicaciones (4 vCPU Xeon, 8-12 GB RAM, 80 GB SSD) y Servidor de Base de Datos (4 vCPU, 12-16 GB RAM, 100 GB - 1 TB SSD); matriz de puertos de red (8080/80/443, 5432, 587/465 y HTTPS 443 saliente hacia Google APIs).
+  * **Capítulo 4: Instalación Paso a Paso en Linux (Ubuntu Server 20.04/22.04 LTS):** Comandos e instrucciones detalladas para instalación de PostgreSQL (`apt install postgresql`), Java JDK 8 (`openjdk-8-jdk`), configuración permanente de `JAVA_HOME` en `/etc/environment`, instalación de Apache Tomcat 8.5/9.0 con usuario de sistema dedicado, configuración de servicio systemd (`tomcat.service`) y consola Tomcat Web Application Manager.
+  * **Capítulo 5: Instalación Paso a Paso en Windows Server:** Descarga e instalación de PostgreSQL EnterpriseDB, configuración de superusuario `postgres` y puerto 5432, administración gráfica con pgAdmin 4, instalación de JDK 8, configuración de variables de entorno del sistema (`JAVA_HOME` y `%JAVA_HOME%\bin` en `Path`), instalación de Tomcat en Windows, creación del servicio de Windows con `service.bat install` y acceso a Tomcat Web Manager.
+  * **Capítulo 6: Configuración del Pool JNDI, Base de Datos y Parámetros del Sistema:** Declaración de recurso `jdbc/combinacion` en `context.xml` con codificación `UTF-8`, copia de driver `postgresql-42.5.4.jar` en `lib/`, inicialización DDL y mecanismo de auto-parcheo en tiempo de ejecución (`DatabasePatcher.ensureSchema()`), credenciales OAuth2 de Google Drive/Sheets en `src/main/resources/` persistidas con `JDBCDataStoreFactory` en `google_tokens`, y configuración SMTP institucional.
+  * **Capítulo 7: Compilación, Empaquetado y Despliegue del WAR:** Ciclo de vida con Maven (`mvn clean package -DskipTests`), métodos de despliegue mediante la consola Web Application Manager y mediante copia directa a `webapps/`, verificación en `catalina.out` y acceso inicial a la pantalla de login.
+  * **Capítulo 8: Afinamiento de Rendimiento (Tuning), Seguridad y Mantenimiento:** Ajustes de memoria JVM en `setenv.sh`/`setenv.bat` (`-Xms2048m -Xmx4096m -XX:+UseG1GC`), configuración de Proxy Inverso Nginx con SSL/TLS (HTTPS), hardening de Tomcat (ocultamiento de versión, RemoteAddrValve) y scripts de respaldo automatizado diario con `pg_dump`.
+  * **Capítulo 9: Solución de Problemas Frecuentes (Troubleshooting):** Matriz de contingencias con síntomas, causas y soluciones paso a paso para errores JNDI, caídas de conexión PostgreSQL, agotamiento de heap space, codificación de caracteres y permisos 403.
+  * **Firmas de Aprobación y Aceptación:** Tabla formal con Líder Funcional DAGJP, Desarrollador/Responsable Técnico (Yesid Javier Piedrahita Correa) y Comité Técnico Operativo / Supervisor.
+  * **Ilustraciones Integradas:** Inserción de 19 capturas de pantalla, diagramas de arquitectura y consolas de configuración extraídas directamente del documento normativo oficial.
+
+
