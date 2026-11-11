@@ -1,6 +1,26 @@
 # Registro de Modificaciones Realizadas
 
 ## Fecha: 11 de Noviembre de 2026
+### Módulo: Soportes y Evidencias de Cuentas de Cobro con Adición y Cuota Final (`form_supervision.jsp`, `InformeSupervisionService.java`)
+
+* **Ajuste en los documentos requeridos y visualizados según el tipo de cuenta:**
+  * **Cuentas normales (Cuota 1):** Mantiene la exigencia de los documentos iniciales habituales (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica, Seguridad Social, y certificados opcionales).
+  * **Cuentas normales intermedias (Cuotas posteriores que no son finales):** Únicamente se pide y muestra la Seguridad Social (y Factura Electrónica si es responsable de IVA).
+  * **Cuota Final (especialmente cuando hay Adición):**
+    * **SOLO** se solicitan y muestran los siguientes documentos:
+      1. `Contrato Secop II` (`file_secop`)
+      2. `RPC` (`file_rpc`)
+      3. `Modificación No` (`file_modificacion`) - cuando el contrato tiene adición
+      4. `Seguridad Social` (`file_seguridad_social`)
+      5. `Cada uno de los Paz y Salvos` (Orfeo, Gestión de Procesos y Creaciones)
+    * **Se ocultan estrictamente** los documentos de la primera cuota (`RUT`, `Cédula`, `Certificación Corrección Monetaria`, `Certificado Medicina Prepagada`, `Certificado Dependientes`, `Ficha Técnica`), incluso si existían archivos precargados o guardados en la cuenta.
+  * **Backend (`InformeSupervisionService.java`):**
+    * Al procesar cualquier cuota posterior a la 1 (incluyendo adiciones y cuota final), se purgan del JSON de soportes las claves de documentos exclusivos de cuota 1 (`file_rut`, `file_cedula`, etc.) para que no se hereden ni persistan indebidamente en Drive ni en la base de datos.
+    * Se mantiene la herencia selectiva de `file_rpc`, `file_modificacion` y `file_secop` únicamente cuando corresponda.
+
+---
+
+## Fecha: 11 de Noviembre de 2026
 ### Módulo: Descarga de Plantilla de Consecutivos de Cobro (`ConsecutivoServlet.java`)
 
 * **Filtro estricto de contratos activos en la plantilla Excel (`descargarPlantilla`):**

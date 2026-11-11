@@ -515,7 +515,7 @@
                         <!-- Tab 6: Soportes -->
                         <div class="tab-pane fade" id="soportes" role="tabpanel">
                             <div class="section-title">Soportes y Evidencias (Documentos PDF)</div>
-                            <div class="alert alert-info">
+                            <div class="alert alert-info" id="alerta-soportes-info">
                                 <i class="bi bi-info-circle-fill me-2"></i> Los documentos requeridos cambian dependiendo de si es la Cuota 1 o una cuota posterior.
                             </div>
                             <div class="row g-3">
@@ -531,56 +531,56 @@
                                         <input type="file" class="form-control border-primary" name="file_factura" accept="application/pdf, text/xml" ${readonly ? 'disabled' : ''}>
                                     </div>
                                 </c:if>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">RUT <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">Cédula <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
-                                    <label class="form-label">Contrato Secop II <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
+                                <div class="col-md-6 req-secop">
+                                    <label class="form-label">Contrato Secop II <span class="text-danger ast-secop" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_secop" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">Certificación Corrección Monetaria</label>
                                     <input type="file" class="form-control" name="file_correccion_monetaria" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">Certificado Medicina Prepagada</label>
                                     <input type="file" class="form-control" name="file_medicina_prepagada" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">Certificado Dependientes</label>
                                     <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-1">
+                                <div class="col-md-6 req-cuota-1-only">
                                     <label class="form-label">Ficha Técnica <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_ficha_tecnica" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-todas">
+                                <div class="col-md-6 req-seguridad-social">
                                     <label class="form-label">Seguridad Social <span class="text-danger">*</span></label>
                                     <input type="file" class="form-control" name="file_seguridad_social" id="file_seguridad_social" accept="application/pdf" required ${readonly ? 'disabled' : ''}>
                                 </div>
-                                 <div class="col-md-6 req-cuota-todas">
-                                    <label class="form-label">RPC (Registro Presupuestal) <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
+                                 <div class="col-md-6 req-rpc">
+                                    <label class="form-label">RPC (Registro Presupuestal) <span class="text-danger ast-rpc" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_rpc" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6 req-cuota-adicion-only" style="display: none;">
-                                    <label class="form-label text-primary fw-bold">Modificación No 001</label>
+                                <div class="col-md-6 req-modificacion" style="display: none;">
+                                    <label class="form-label text-primary fw-bold">Modificación No <c:out value="${not empty contrato.numeroModificacion ? contrato.numeroModificacion : '001'}"/> <span class="text-danger ast-modificacion" style="display:none;">*</span></label>
                                     <input type="file" class="form-control border-primary" name="file_modificacion" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Paz y salvo Orfeo (Opcional)</label>
+                                <div class="col-md-6 req-paz-salvo">
+                                    <label class="form-label">Paz y salvo Orfeo <span class="text-danger ast-paz-salvo" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_paz_salvo_orfeo" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Paz y salvo Gestión de Procesos (Opcional)</label>
+                                <div class="col-md-6 req-paz-salvo">
+                                    <label class="form-label">Paz y salvo Gestión de Procesos <span class="text-danger ast-paz-salvo" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_paz_salvo_procesos" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Paz y salvo Creaciones (Opcional)</label>
+                                <div class="col-md-6 req-paz-salvo">
+                                    <label class="form-label">Paz y salvo Creaciones <span class="text-danger ast-paz-salvo" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_paz_salvo_creaciones" accept="application/pdf, image/*" ${readonly ? 'disabled' : ''}>
                                 </div>
                             </div>
@@ -1108,9 +1108,14 @@
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
-            function manejarVisibilidadReq(selector, mostrar) {
+            function manejarVisibilidadReq(selector, mostrar, forzarOcultar) {
                 $(selector).each(function() {
                     var $div = $(this);
+                    if (forzarOcultar) {
+                        $div.hide();
+                        $div.find('input[type="file"]').prop('required', false);
+                        return;
+                    }
                     // Consider it has a document if it has the uploaded file UI or the badge
                     var tieneDocumento = $div.find('.alert-secondary').length > 0 || $div.find('.badge.bg-success').length > 0;
                     if (mostrar || tieneDocumento) {
@@ -1125,46 +1130,95 @@
                 });
             }
 
-            // Lógica para mostrar/ocultar soportes según la cuota
+            // Lógica para mostrar/ocultar soportes según la cuota y tipo de informe
             function actualizarCamposSoportes() {
                 var cuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                var cuotaNum = parseInt(cuotaStr) || 0;
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
-                var esAdicion = "${contrato.adicionSiNo}".toLowerCase() === "si";
-                
-                var esFirmaAdicion = (esAdicion && parseInt(cuotaStr) === cuotasNormales);
-                var esCuotaAdicionPosterior = (esAdicion && parseInt(cuotaStr) > cuotasNormales);
+                var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
+                var totalCuotas = cuotasNormales + cuotasAdicion;
+                var tieneAdicion = "${contrato.adicionSiNo}".toLowerCase() === "si" || cuotasAdicion > 0;
+                var tipoInforme = $('#tipo_informe').val();
 
-                if (cuotaStr == "1") {
-                    manejarVisibilidadReq('.req-cuota-1', true);
-                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
-                    
-                    // Hacer requeridos los soportes de la Cuota 1 si no están cargados
-                    $('input[name="file_ficha_tecnica"]').prop('required', true);
+                // Calcular maxCuota de las opciones si existen
+                var maxCuota = 0;
+                $('select[name="numero_cuota"] option').each(function() {
+                    var v = parseInt($(this).val());
+                    if (!isNaN(v) && v > maxCuota) maxCuota = v;
+                });
+                if (maxCuota === 0) {
+                    maxCuota = totalCuotas > 0 ? totalCuotas : cuotasNormales;
+                }
+
+                var esCuotaFinal = (tipoInforme === 'FINAL' || (maxCuota > 0 && cuotaNum >= maxCuota));
+
+                if (esCuotaFinal) {
+                    // CUOTA FINAL:
+                    // 1. Ocultar estrictamente todos los documentos de la Cuota 1 (RUT, Cédula, Corrección, Dependientes, Prepagada, Ficha)
+                    manejarVisibilidadReq('.req-cuota-1-only', false, true);
+
+                    // 2. Mostrar y requerir Contrato Secop II y RPC
+                    manejarVisibilidadReq('.req-secop', true);
+                    manejarVisibilidadReq('.req-rpc', true);
                     $('input[name="file_secop"]').prop('required', true);
+                    $('input[name="file_rpc"]').prop('required', true);
+
+                    // 3. Seguridad Social siempre visible y requerida
+                    $('input[name="file_seguridad_social"]').closest('div').show();
+                    $('input[name="file_seguridad_social"]').prop('required', true);
+
+                    // 4. Paz y salvos: requeridos y visibles en cuota final
+                    manejarVisibilidadReq('.req-paz-salvo', true);
+                    $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
+                    $('input[name="file_paz_salvo_procesos"]').prop('required', true);
+                    $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
+
+                    // 5. Modificación No: SOLO si tiene adición
+                    if (tieneAdicion) {
+                        manejarVisibilidadReq('.req-modificacion', true);
+                        $('input[name="file_modificacion"]').prop('required', true);
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final (con Adición):</strong> Solo se requiere cargar Contrato Secop II, RPC, Modificación No, Seguridad Social y cada uno de los Paz y Salvos.');
+                    } else {
+                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final:</strong> Solo se requiere cargar Contrato Secop II, RPC, Seguridad Social y cada uno de los Paz y Salvos.');
+                    }
+
+                    // Asegurar que los de cuota 1 no sean requeridos
+                    $('input[name="file_ficha_tecnica"], input[name="file_cedula"], input[name="file_rut"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"]').prop('required', false);
+
+                } else if (cuotaStr == "1") {
+                    // CUOTA 1 (Cuenta normal cuota 1):
+                    manejarVisibilidadReq('.req-cuota-1-only', true);
+                    manejarVisibilidadReq('.req-secop', true);
+                    manejarVisibilidadReq('.req-rpc', true);
+                    manejarVisibilidadReq('.req-modificacion', false, true);
+                    manejarVisibilidadReq('.req-paz-salvo', false, true);
+
                     $('input[name="file_cedula"]').prop('required', true);
                     $('input[name="file_rut"]').prop('required', true);
-                    $('input[name="file_rpc"]').prop('required', true);
-                } else if (esFirmaAdicion) {
-                    manejarVisibilidadReq('.req-cuota-1', false);
-                    
-                    manejarVisibilidadReq('.req-cuota-adicion-only', true);
-                    $('input[name="file_secop"]').closest('div').show();
-                    $('input[name="file_ficha_tecnica"]').closest('div').show();
-                    
-                    // Hacer requeridos los de adicion
-                    $('input[name="file_modificacion"]').prop('required', true);
                     $('input[name="file_secop"]').prop('required', true);
+                    $('input[name="file_rpc"]').prop('required', true);
                     $('input[name="file_ficha_tecnica"]').prop('required', true);
-                    $('input[name="file_cedula"], input[name="file_rut"]').prop('required', false);
-                } else if (esCuotaAdicionPosterior) {
-                    manejarVisibilidadReq('.req-cuota-1', false);
-                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
-                    $('input[name="file_ficha_tecnica"], input[name="file_secop"], input[name="file_cedula"], input[name="file_rut"], input[name="file_rpc"], input[name="file_modificacion"]').prop('required', false);
+                    $('input[name="file_seguridad_social"]').prop('required', true);
+
+                    $('input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+
+                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
+
                 } else {
-                    manejarVisibilidadReq('.req-cuota-1', false);
-                    manejarVisibilidadReq('.req-cuota-adicion-only', false);
-                    $('input[name="file_secop"]').prop('required', false);
-                    $('input[name="file_ficha_tecnica"], input[name="file_cedula"], input[name="file_rut"], input[name="file_rpc"], input[name="file_modificacion"]').prop('required', false);
+                    // CUOTAS INTERMEDIAS (Cuentas normales intermedias):
+                    manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                    manejarVisibilidadReq('.req-secop', false, true);
+                    manejarVisibilidadReq('.req-rpc', false, true);
+                    manejarVisibilidadReq('.req-modificacion', false, true);
+                    manejarVisibilidadReq('.req-paz-salvo', false, true);
+
+                    $('input[name="file_seguridad_social"]').closest('div').show();
+                    $('input[name="file_seguridad_social"]').prop('required', true);
+
+                    $('input[name="file_cedula"], input[name="file_rut"], input[name="file_secop"], input[name="file_rpc"], input[name="file_ficha_tecnica"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"], input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+
+                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
                 }
                 actualizarAsteriscosArchivos();
             }
@@ -1178,22 +1232,23 @@
                             $label = $input.closest('div').find('.form-label, small.fw-bold').first();
                         }
                         
-                        // Si ya esta cargado, ya no es requerido
-                        if ($label.find('.badge.bg-success').length > 0 || $input.prevAll('.alert-secondary').length > 0 || $input.closest('div').find('.alert-secondary').length > 0) {
+                        var yaCargado = ($label.find('.badge.bg-success').length > 0 || 
+                                         $input.prevAll('.alert-secondary').length > 0 || 
+                                         $input.closest('div').find('.alert-secondary').length > 0);
+
+                        // Si ya está cargado, ya no es requerido
+                        if (yaCargado) {
                             $input.prop('required', false);
-                            $label.find('.ast-cuota-1').hide();
-                        }
-                        
-                        // Refrescar asterisco
-                        if ($input.prop('required') && $input.is(':visible')) {
-                            $label.find('.ast-cuota-1').show();
-                            if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1').length === 0) {
-                                $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
-                            }
+                            $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
                         } else {
-                            $label.find('.req-asterisk').remove();
-                            if (!$input.prop('required')) {
-                                $label.find('.ast-cuota-1').hide();
+                            // Refrescar asterisco según si el input es required y está visible
+                            if ($input.prop('required') && $input.is(':visible')) {
+                                $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo').show();
+                                if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
+                                    $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
+                                }
+                            } else {
+                                $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
                             }
                         }
                     });
@@ -1301,6 +1356,8 @@
             if (isReadonly) {
                 $('input[type="file"]').each(function() {
                     $(this).hide();
+                    var $div = $(this).closest('.col-md-6, .col-md-12');
+                    if (!$div.is(':visible')) return;
                     var $label = $(this).prevAll('.form-label, small.fw-bold').first();
                     if ($label.find('.badge.bg-success').length === 0) {
                         $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargó documento</div>');
@@ -2301,6 +2358,7 @@
                 $('#tipo_informe').change(function() {
                     var tipo = $(this).val();
                     togglePagoSeguridadSocial();
+                    actualizarCamposSoportes();
                     
                     // Solo actualizar si no estamos en modo readonly
                     if ($(this).is(':disabled')) return;

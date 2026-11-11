@@ -1885,6 +1885,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 } catch (Exception ignore) {}
             }
             
+            // Si NO es Cuota 1, purgar documentos que son exclusivos de la Cuota 1 (evitar que persistan en cuota final o adiciones)
+            if (!esCuota1) {
+                String[] docsExclusivosCuota1 = {"file_rut", "file_cedula", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica"};
+                for (String k : docsExclusivosCuota1) {
+                    soportes.remove(k);
+                }
+            }
+            
             // LOGICA AUTOMATICA DE HERENCIA PARA ADICIONES
             boolean esAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo());
             boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null && informe.getNumeroCuota().equals(String.valueOf(contrato.getNumCuotasNumero())));
@@ -1912,13 +1920,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
 
-            if (esFirmaAdicion) {
+            if (esFirmaAdicion || esCuotaAdicionPosterior) {
                 java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
                 for (com.combinacion.models.InformeSupervision inf : informes) {
-                    if ("1".equals(inf.getNumeroCuota()) && inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
+                    if (inf.getId() != null && inf.getId().equals(informe.getId())) continue;
+                    if (inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
-                            String[] keys = {"file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"};
+                            String[] keys = {"file_rpc", "file_modificacion", "file_secop"};
                             for (String k : keys) {
                                 if (sop.has(k) && !soportes.has(k)) {
                                     org.json.JSONObject fileObj = sop.getJSONObject(k);
@@ -1927,25 +1936,6 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 }
                             }
                         } catch (Exception e) {}
-                        break;
-                    }
-                }
-            } else if (esCuotaAdicionPosterior) {
-                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
-                for (com.combinacion.models.InformeSupervision inf : informes) {
-                    if (String.valueOf(contrato.getNumCuotasNumero()).equals(inf.getNumeroCuota()) && inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
-                        try {
-                            org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
-                            String[] keys = {"file_rpc", "file_modificacion", "file_secop", "file_ficha_tecnica", "file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes"};
-                            for (String k : keys) {
-                                if (sop.has(k) && !soportes.has(k)) {
-                                    org.json.JSONObject fileObj = sop.getJSONObject(k);
-                                    fileObj.put("needs_copy", true);
-                                    soportes.put(k, fileObj);
-                                }
-                            }
-                        } catch (Exception e) {}
-                        break;
                     }
                 }
             }
@@ -1960,21 +1950,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         String oldId = fileObj.getString("id");
                         String newName = fileObj.getString("name");
                         
-                        // Renombrar los archivos heredados si estamos en la cuota de adición (Cuota 4)
-                        if (esFirmaAdicion) {
-                            if ("file_cedula".equals(key)) {
-                                newName = "7. CEDULA - " + nombreCorto + ".pdf";
-                            } else if ("file_rut".equals(key)) {
-                                newName = "8. RUT - " + nombreCorto + ".pdf";
-                            } else if ("file_correccion_monetaria".equals(key)) {
-                                newName = "10. CERTIFICACION CORRECCION MONETARIA - " + nombreCorto + ".pdf";
-                            } else if ("file_medicina_prepagada".equals(key)) {
-                                newName = "11. CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto + ".pdf";
-                            } else if ("file_certificado_dependientes".equals(key)) {
-                                newName = "12. CERTIFICADO DEPENDIENTES - " + nombreCorto + ".pdf";
-                            }
-                        }
-                        
+
                         String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName, cuotaFolderId);
                         fileObj.put("name", newName);
                         fileObj.put("id", newId);
