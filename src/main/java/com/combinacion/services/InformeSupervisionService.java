@@ -1246,6 +1246,17 @@ public class InformeSupervisionService {
                                             foundSecop = true;
                                         }
                                     }
+                                    // Arrastrar también documentos que ya se tienen (cédula, rut, etc.) para la cuota nueva de adición
+                                    String[] personalKeys = { "file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica" };
+                                    for (String pk : personalKeys) {
+                                        if (!newSoportes.has(pk)) {
+                                            org.json.JSONObject pData = getLatestFile(sAnteriores, pk);
+                                            if (pData != null) {
+                                                pData.put("needs_copy", true);
+                                                newSoportes.put(pk, pData);
+                                            }
+                                        }
+                                    }
                                 }
                                 System.out.println("newSoportes actuales: " + newSoportes.toString());
                             } catch (Exception e) {
@@ -2071,20 +2082,6 @@ public class InformeSupervisionService {
                 }
             }
 
-            // Solo si el contrato TIENE ADICIÓN y es Cuota Final, purgar documentos que son
-            // exclusivos de inicio de cuota 1
-            int cuotaIntVal = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-            int maxCuotasTotales = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
-            boolean esCuotaFinal = "FINAL".equalsIgnoreCase(informe.getTipoInforme())
-                    || (maxCuotasTotales > 0 && cuotaIntVal >= maxCuotasTotales);
-            if (contrato.isTieneAdicion() && esCuotaFinal) {
-                String[] docsExclusivosCuota1 = { "file_rut", "file_cedula", "file_correccion_monetaria",
-                        "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica" };
-                for (String k : docsExclusivosCuota1) {
-                    soportes.remove(k);
-                }
-            }
-
             // LOGICA AUTOMATICA DE HERENCIA PARA ADICIONES
             boolean esAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo());
             boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null
@@ -2092,6 +2089,16 @@ public class InformeSupervisionService {
             boolean esCuotaAdicionPosterior = (esAdicion && informe.getNumeroCuota() != null
                     && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato
                             .getNumCuotasNumero());
+
+            // En la Cuota final del contrato inicial antes de la adición (Cuota 4 / esFirmaAdicion):
+            // purgar documentos que son exclusivos de inicio de cuota 1 (RUT, Cédula, etc.)
+            if (contrato.isTieneAdicion() && esFirmaAdicion) {
+                String[] docsExclusivosCuota1 = { "file_rut", "file_cedula", "file_correccion_monetaria",
+                        "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica" };
+                for (String k : docsExclusivosCuota1) {
+                    soportes.remove(k);
+                }
+            }
 
             // HERENCIA GENERAL DE RPC DE CUOTA 1 O PREVIAS PARA TODAS LAS CUOTAS > 1
             if (!esCuota1 && !soportes.has("file_rpc")) {
@@ -2118,7 +2125,32 @@ public class InformeSupervisionService {
                 }
             }
 
-            if (esFirmaAdicion || esCuotaAdicionPosterior) {
+            if (esCuotaAdicionPosterior) {
+                // Cuota 5 en adelante: arrastrar documentos que ya se tienen de cuotas previas (cédula, rut, secop, etc.)
+                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
+                        .listarPorContrato(contrato.getId());
+                for (com.combinacion.models.InformeSupervision inf : informes) {
+                    if (inf.getId() != null && inf.getId().equals(informe.getId()))
+                        continue;
+                    if (inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
+                        try {
+                            org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
+                            String[] keys = { "file_cedula", "file_rut", "file_correccion_monetaria",
+                                    "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica",
+                                    "file_rpc", "file_modificacion", "file_secop" };
+                            for (String k : keys) {
+                                if (sop.has(k) && !soportes.has(k)) {
+                                    org.json.JSONObject fileObj = sop.getJSONObject(k);
+                                    fileObj.put("needs_copy", true);
+                                    soportes.put(k, fileObj);
+                                }
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            } else if (esFirmaAdicion) {
+                // Cuota 4 (firma adición): heredar únicamente RPC, Modificación y Secop
                 java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
                         .listarPorContrato(contrato.getId());
                 for (com.combinacion.models.InformeSupervision inf : informes) {
