@@ -1885,8 +1885,11 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 } catch (Exception ignore) {}
             }
             
-            // Si NO es Cuota 1, purgar documentos que son exclusivos de la Cuota 1 (evitar que persistan en cuota final o adiciones)
-            if (!esCuota1) {
+            // Si es Cuota Final, purgar documentos que son exclusivos de inicio de cuota 1
+            int cuotaIntVal = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+            int maxCuotasTotales = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
+            boolean esCuotaFinal = "FINAL".equalsIgnoreCase(informe.getTipoInforme()) || (maxCuotasTotales > 0 && cuotaIntVal >= maxCuotasTotales);
+            if (esCuotaFinal) {
                 String[] docsExclusivosCuota1 = {"file_rut", "file_cedula", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica"};
                 for (String k : docsExclusivosCuota1) {
                     soportes.remove(k);
