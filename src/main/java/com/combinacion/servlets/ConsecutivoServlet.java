@@ -320,11 +320,11 @@ public class ConsecutivoServlet extends HttpServlet {
             String sql = "SELECT ct.cedula, ct.nombre, c.numero_contrato " +
                          "FROM contratos c " +
                          "JOIN contratistas ct ON c.contratista_id = ct.id " +
-                         "WHERE c.fecha_terminacion >= CURRENT_DATE " +
+                         "WHERE (c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date >= CURRENT_DATE " +
                          "  AND (c.estado IS NULL OR UPPER(TRIM(c.estado)) NOT IN ('TERMINADO', 'TERMINADO ANTICIPADO', 'CERRADO', 'ANULADO', 'LIQUIDADO', 'NO HAB')) ";
             
             if (anio != null) {
-                sql += "AND (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM c.fecha_terminacion) = ?)) ";
+                sql += "AND (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM (c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date) = ?)) ";
             }
             
             sql += "ORDER BY c.numero_contrato ASC";

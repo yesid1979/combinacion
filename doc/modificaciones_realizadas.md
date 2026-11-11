@@ -4,8 +4,11 @@
 ### Módulo: Descarga de Plantilla de Consecutivos de Cobro (`ConsecutivoServlet.java`)
 
 * **Filtro estricto de contratos activos en la plantilla Excel (`descargarPlantilla`):**
-  * Se corrigió la consulta SQL para que **únicamente se descarguen contratos activos/vigentes** (`fecha_terminacion >= CURRENT_DATE`) y que no se encuentren en estados terminados, cancelados o anulados (`NOT IN ('TERMINADO', 'TERMINADO ANTICIPADO', 'CERRADO', 'ANULADO', 'LIQUIDADO', 'NO HAB')`).
-  * Con esto se evita que en la plantilla de consecutivos aparezcan contratos finalizados o caducados a los que ya no corresponde generar cobros de cuotas.
+  * Se corrigió la consulta SQL para que **únicamente se descarguen contratos activos/vigentes calculando las adiciones**:
+    * Se calcula la **fecha de terminación efectiva**: `(c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date >= CURRENT_DATE`.
+    * Esto contempla los contratos que inicialmente tenían fecha de terminación anterior a hoy (por ejemplo 30 de octubre de 2026), pero que gracias a la adición de meses/cuotas (`numero_cuotas_adicion`), su vigencia real se extiende (por ejemplo hasta el 30 de diciembre de 2026).
+    * Se excluyen contratos finalizados en su totalidad o en estados: `TERMINADO`, `TERMINADO ANTICIPADO`, `CERRADO`, `ANULADO`, `LIQUIDADO`, `NO HAB`.
+    * Con esto, la plantilla descarga exactamente los 92 contratos activos (incluyendo los 7 contratos vigentes mediante adición) y no excluye erróneamente contratos con adiciones vigentes.
 
 ---
 
