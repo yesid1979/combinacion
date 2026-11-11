@@ -15,11 +15,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet(name = "ConsecutivoServlet", urlPatterns = {"/consecutivos"})
-@MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-    maxFileSize = 1024 * 1024 * 10,      // 10 MB
-    maxRequestSize = 1024 * 1024 * 15    // 15 MB
+@WebServlet(name = "ConsecutivoServlet", urlPatterns = { "/consecutivos" })
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+        maxFileSize = 1024 * 1024 * 10, // 10 MB
+        maxRequestSize = 1024 * 1024 * 15 // 15 MB
 )
 public class ConsecutivoServlet extends HttpServlet {
 
@@ -48,7 +47,7 @@ public class ConsecutivoServlet extends HttpServlet {
         }
 
         String action = request.getParameter("action");
-        
+
         if ("template".equals(action)) {
             descargarPlantilla(request, response);
             return;
@@ -65,7 +64,7 @@ public class ConsecutivoServlet extends HttpServlet {
             request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
             return;
         }
-        
+
         request.setAttribute("aniosDisponibles", consecutivoDAO.obtenerAniosDisponibles());
         request.setAttribute("anioActual", java.time.Year.now().getValue());
         request.getRequestDispatcher("consecutivos.jsp").forward(request, response);
@@ -76,33 +75,45 @@ public class ConsecutivoServlet extends HttpServlet {
         int start = 0;
         int length = 10;
         String search = "";
-        
-        try { draw = Integer.parseInt(request.getParameter("draw")); } catch (Exception e) {}
-        try { start = Integer.parseInt(request.getParameter("start")); } catch (Exception e) {}
-        try { length = Integer.parseInt(request.getParameter("length")); } catch (Exception e) {}
-        
+
+        try {
+            draw = Integer.parseInt(request.getParameter("draw"));
+        } catch (Exception e) {
+        }
+        try {
+            start = Integer.parseInt(request.getParameter("start"));
+        } catch (Exception e) {
+        }
+        try {
+            length = Integer.parseInt(request.getParameter("length"));
+        } catch (Exception e) {
+        }
+
         search = request.getParameter("search[value]");
-        
+
         Integer anio = null;
         String anioStr = request.getParameter("anio");
         if (anioStr != null && !anioStr.trim().isEmpty()) {
-            try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+            try {
+                anio = Integer.parseInt(anioStr);
+            } catch (Exception e) {
+            }
         }
-        
+
         int recordsTotal = consecutivoDAO.contarTodos(null, anio);
         int recordsFiltered = consecutivoDAO.contarTodos(search, anio);
         List<ConsecutivoCobro> data = consecutivoDAO.obtenerTodosPaginados(start, length, search, anio);
-        
+
         StringBuilder json = new StringBuilder();
         json.append("{");
         json.append("\"draw\": ").append(draw).append(", ");
         json.append("\"recordsTotal\": ").append(recordsTotal).append(", ");
         json.append("\"recordsFiltered\": ").append(recordsFiltered).append(", ");
         json.append("\"data\": [");
-        
+
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy hh:mm a");
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
-        
+
         for (int i = 0; i < data.size(); i++) {
             ConsecutivoCobro c = data.get(i);
             json.append("{");
@@ -112,20 +123,23 @@ public class ConsecutivoServlet extends HttpServlet {
             json.append("\"contrato\": \"").append(escapeJson(c.getContrato())).append("\", ");
             json.append("\"numeroCuota\": \"").append(escapeJson(c.getNumeroCuota())).append("\", ");
             json.append("\"consecutivo\": \"").append(escapeJson(c.getConsecutivo())).append("\", ");
-            json.append("\"fechaCarga\": \"").append(c.getFechaCarga() != null ? sdf.format(c.getFechaCarga()) : "").append("\"");
+            json.append("\"fechaCarga\": \"").append(c.getFechaCarga() != null ? sdf.format(c.getFechaCarga()) : "")
+                    .append("\"");
             json.append("}");
-            if (i < data.size() - 1) json.append(",");
+            if (i < data.size() - 1)
+                json.append(",");
         }
-        
+
         json.append("]}");
-        
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(json.toString());
     }
 
     private String escapeJson(String input) {
-        if (input == null) return "";
+        if (input == null)
+            return "";
         return input.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
     }
 
@@ -139,9 +153,10 @@ public class ConsecutivoServlet extends HttpServlet {
         }
 
         String action = request.getParameter("action");
-        
+
         if ("check".equals(action)) {
-            System.out.println("[ConsecutivoServlet] DEBUG CHECK -> Cedula: " + request.getParameter("cedula") + ", Contrato: " + request.getParameter("contrato") + ", Cuota: " + request.getParameter("cuota"));
+            System.out.println("[ConsecutivoServlet] DEBUG CHECK -> Cedula: " + request.getParameter("cedula")
+                    + ", Contrato: " + request.getParameter("contrato") + ", Cuota: " + request.getParameter("cuota"));
             consultarConsecutivo(request, response);
             return;
         }
@@ -171,18 +186,21 @@ public class ConsecutivoServlet extends HttpServlet {
             response.getWriter().write("{\"success\": false}");
             return;
         }
-        
+
         List<Integer> ids = new ArrayList<>();
         for (String id : idsStr) {
-            try { ids.add(Integer.parseInt(id)); } catch (Exception e) {}
+            try {
+                ids.add(Integer.parseInt(id));
+            } catch (Exception e) {
+            }
         }
-        
+
         boolean ok = consecutivoDAO.eliminarVarios(ids);
         response.setContentType("application/json");
         response.getWriter().write("{\"success\": " + ok + "}");
     }
 
-    private void procesarCarga(HttpServletRequest request, HttpServletResponse response, int cargadoPor) 
+    private void procesarCarga(HttpServletRequest request, HttpServletResponse response, int cargadoPor)
             throws ServletException, IOException {
         Part filePart = request.getPart("fileExcel");
         if (filePart == null || filePart.getSize() == 0) {
@@ -193,13 +211,16 @@ public class ConsecutivoServlet extends HttpServlet {
         Integer anio = null;
         String anioStr = request.getParameter("anio_carga");
         if (anioStr != null && !anioStr.trim().isEmpty()) {
-            try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+            try {
+                anio = Integer.parseInt(anioStr);
+            } catch (Exception e) {
+            }
         }
 
         List<ConsecutivoCobro> list = new ArrayList<>();
         try (InputStream fileContent = filePart.getInputStream();
-             Workbook workbook = WorkbookFactory.create(fileContent)) {
-             
+                Workbook workbook = WorkbookFactory.create(fileContent)) {
+
             Sheet sheet = workbook.getSheetAt(0);
             boolean firstRow = true;
             for (Row row : sheet) {
@@ -207,7 +228,7 @@ public class ConsecutivoServlet extends HttpServlet {
                     firstRow = false;
                     continue; // Saltar encabezados
                 }
-                
+
                 String cedula = getCellValue(row.getCell(0));
                 if (cedula != null) {
                     cedula = cedula.replaceAll("[^0-9]", "");
@@ -219,18 +240,20 @@ public class ConsecutivoServlet extends HttpServlet {
 
                 if (cuota != null) {
                     cuota = cuota.trim();
-                    if (cuota.endsWith(".0")) cuota = cuota.substring(0, cuota.length() - 2);
+                    if (cuota.endsWith(".0"))
+                        cuota = cuota.substring(0, cuota.length() - 2);
                 }
                 if (consecutivo != null) {
                     consecutivo = consecutivo.trim();
-                    if (consecutivo.endsWith(".0")) consecutivo = consecutivo.substring(0, consecutivo.length() - 2);
+                    if (consecutivo.endsWith(".0"))
+                        consecutivo = consecutivo.substring(0, consecutivo.length() - 2);
                 }
-                
+
                 if (cedula != null && !cedula.trim().isEmpty() &&
-                    contrato != null && !contrato.trim().isEmpty() &&
-                    cuota != null && !cuota.trim().isEmpty() &&
-                    consecutivo != null && !consecutivo.trim().isEmpty()) {
-                    
+                        contrato != null && !contrato.trim().isEmpty() &&
+                        cuota != null && !cuota.trim().isEmpty() &&
+                        consecutivo != null && !consecutivo.trim().isEmpty()) {
+
                     ConsecutivoCobro c = new ConsecutivoCobro();
                     c.setCedula(cedula.trim());
                     c.setContrato(contrato.trim());
@@ -240,19 +263,19 @@ public class ConsecutivoServlet extends HttpServlet {
                     list.add(c);
                 }
             }
-            
+
             if (list.isEmpty()) {
                 response.sendRedirect("consecutivos?action=list&error=empty_or_invalid");
                 return;
             }
-            
+
             boolean success = consecutivoDAO.guardarMasivo(list, cargadoPor);
             if (success) {
                 response.sendRedirect("consecutivos?action=list&status=uploaded&count=" + list.size());
             } else {
                 response.sendRedirect("consecutivos?action=list&error=db_error");
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect("consecutivos?action=list&error=parse_error");
@@ -272,10 +295,10 @@ public class ConsecutivoServlet extends HttpServlet {
                 // Ignore
             }
         }
-        
+
         String consecutivo = consecutivoDAO.obtenerConsecutivo(cedula, contrato, cuota, anio);
         System.out.println("[ConsecutivoServlet] DEBUG RESULTADO -> Consecutivo encontrado: " + consecutivo);
-        
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         if (consecutivo != null) {
@@ -286,7 +309,8 @@ public class ConsecutivoServlet extends HttpServlet {
     }
 
     private String getCellValue(Cell cell) {
-        if (cell == null) return "";
+        if (cell == null)
+            return "";
         org.apache.poi.ss.usermodel.DataFormatter formatter = new org.apache.poi.ss.usermodel.DataFormatter();
         return formatter.formatCellValue(cell);
     }
@@ -298,8 +322,8 @@ public class ConsecutivoServlet extends HttpServlet {
         try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
             org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Consecutivos");
             org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
-            
-            String[] headers = {"Cédula", "Nombre", "Contrato", "Cuota", "Consecutivo"};
+
+            String[] headers = { "Cédula", "Nombre", "Contrato", "Cuota", "Consecutivo" };
             org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font font = workbook.createFont();
             font.setBold(true);
@@ -314,46 +338,50 @@ public class ConsecutivoServlet extends HttpServlet {
             Integer anio = null;
             String anioStr = request.getParameter("anio");
             if (anioStr != null && !anioStr.trim().isEmpty()) {
-                try { anio = Integer.parseInt(anioStr); } catch (Exception e) {}
+                try {
+                    anio = Integer.parseInt(anioStr);
+                } catch (Exception e) {
+                }
             }
 
             String sql = "SELECT ct.cedula, ct.nombre, c.numero_contrato " +
-                         "FROM contratos c " +
-                         "JOIN contratistas ct ON c.contratista_id = ct.id " +
-                         "WHERE (c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date >= CURRENT_DATE " +
-                         "  AND (c.estado IS NULL OR UPPER(TRIM(c.estado)) NOT IN ('TERMINADO', 'TERMINADO ANTICIPADO', 'CERRADO', 'ANULADO', 'LIQUIDADO', 'NO HAB')) ";
-            
+                    "FROM contratos c " +
+                    "JOIN contratistas ct ON c.contratista_id = ct.id " +
+                    "WHERE (c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date >= CURRENT_DATE "
+                    +
+                    "  AND (c.estado IS NULL OR UPPER(TRIM(c.estado)) NOT IN ('TERMINADO', 'TERMINADO ANTICIPADO', 'CERRADO', 'ANULADO', 'LIQUIDADO', 'NO HAB')) ";
+
             if (anio != null) {
                 sql += "AND (c.anio = ? OR (c.anio IS NULL AND EXTRACT(YEAR FROM (c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date) = ?)) ";
             }
-            
+
             sql += "ORDER BY c.numero_contrato ASC";
-            
+
             int rowNum = 1;
             try (java.sql.Connection conn = com.combinacion.util.DBConnection.getConnection();
-                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
-                 
-                 if (anio != null) {
-                     ps.setInt(1, anio);
-                     ps.setInt(2, anio);
-                 }
-                 
-                 try (java.sql.ResultSet rs = ps.executeQuery()) {
-                     while (rs.next()) {
-                     org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
-                     String rawCed = rs.getString("cedula");
-                     String cleanCed = (rawCed != null) ? rawCed.replaceAll("[^0-9]", "") : "";
-                     row.createCell(0).setCellValue(cleanCed);
-                     row.createCell(1).setCellValue(rs.getString("nombre"));
-                     row.createCell(2).setCellValue(rs.getString("numero_contrato"));
-                     row.createCell(3).setCellValue(""); // Cuota
-                     row.createCell(4).setCellValue(""); // Consecutivo
-                     }
-                 }
+                    java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                if (anio != null) {
+                    ps.setInt(1, anio);
+                    ps.setInt(2, anio);
+                }
+
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+                        String rawCed = rs.getString("cedula");
+                        String cleanCed = (rawCed != null) ? rawCed.replaceAll("[^0-9]", "") : "";
+                        row.createCell(0).setCellValue(cleanCed);
+                        row.createCell(1).setCellValue(rs.getString("nombre"));
+                        row.createCell(2).setCellValue(rs.getString("numero_contrato"));
+                        row.createCell(3).setCellValue(""); // Cuota
+                        row.createCell(4).setCellValue(""); // Consecutivo
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
             // Si no hay contratos vigentes, poner un ejemplo
             if (rowNum == 1) {
                 org.apache.poi.ss.usermodel.Row example = sheet.createRow(1);
