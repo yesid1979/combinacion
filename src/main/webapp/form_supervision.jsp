@@ -1178,12 +1178,12 @@
                         $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
 
                     } else if (esInicioAdicion && !esUltimaCuota) {
-                        // 2. Cuota siguiente donde arranca la adición: pide todos los documentos como Cuota 1 + Modificación No
+                        // 2. Cuota siguiente donde arranca la adición: pide todos los documentos como Cuota 1 + Modificación No + Paz y Salvos
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
                         manejarVisibilidadReq('.req-modificacion', true);
-                        manejarVisibilidadReq('.req-paz-salvo', false);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_cedula"]').prop('required', true);
                         $('input[name="file_rut"]').prop('required', true);
@@ -1192,9 +1192,11 @@
                         $('input[name="file_modificacion"]').prop('required', true);
                         $('input[name="file_ficha_tecnica"]').prop('required', true);
                         $('input[name="file_seguridad_social"]').prop('required', true);
-                        $('input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+                        $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
+                        $('input[name="file_paz_salvo_procesos"]').prop('required', true);
+                        $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
 
-                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Al iniciar la adición, debe adjuntar los documentos como en la primera cuota (Cédula, RUT, Contrato Secop II, RPC, Modificación No, Ficha Técnica y Seguridad Social).');
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Al iniciar la adición, debe adjuntar los documentos de inicio (Cédula, RUT, Contrato Secop II, RPC, Modificación No, Ficha Técnica, Seguridad Social y Paz y Salvos).');
 
                     } else if (esUltimaCuota) {
                         // 3. Cuota Final con adición: SOLO Secop II, RPC, Modificación No, Seguridad Social y Paz y Salvos
