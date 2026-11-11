@@ -1,5 +1,14 @@
 # Registro de Modificaciones Realizadas
 
+## Fecha: 11 de Noviembre de 2026
+### Módulo: Descarga de Plantilla de Consecutivos de Cobro (`ConsecutivoServlet.java`)
+
+* **Filtro estricto de contratos activos en la plantilla Excel (`descargarPlantilla`):**
+  * Se corrigió la consulta SQL para que **únicamente se descarguen contratos activos/vigentes** (`fecha_terminacion >= CURRENT_DATE`) y que no se encuentren en estados terminados, cancelados o anulados (`NOT IN ('TERMINADO', 'TERMINADO ANTICIPADO', 'CERRADO', 'ANULADO', 'LIQUIDADO', 'NO HAB')`).
+  * Con esto se evita que en la plantilla de consecutivos aparezcan contratos finalizados o caducados a los que ya no corresponde generar cobros de cuotas.
+
+---
+
 ## Fecha: 21 de Octubre de 2026
 ### Módulo: Gestión y Asignación de Consecutivos de Cobro
 
