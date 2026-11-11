@@ -1165,7 +1165,7 @@
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
                         manejarVisibilidadReq('.req-modificacion', false, true);
-                        manejarVisibilidadReq('.req-paz-salvo', false, true);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_cedula"]').prop('required', true);
                         $('input[name="file_rut"]').prop('required', true);
@@ -1229,12 +1229,12 @@
                         }
 
                     } else {
-                        // 4. Cuotas intermedias del contrato inicial (ej. Cuotas 2 y 3 si cuotasNormales es 4): solo seguridad social
+                        // 4. Cuotas intermedias del contrato inicial (ej. Cuotas 2 y 3 si cuotasNormales es 4): solo seguridad social requerida, paz y salvos visibles opcionales
                         manejarVisibilidadReq('.req-cuota-1-only', false, true);
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
                         manejarVisibilidadReq('.req-modificacion', false);
-                        manejarVisibilidadReq('.req-paz-salvo', false);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_seguridad_social"]').closest('div').show();
                         $('input[name="file_seguridad_social"]').prop('required', true);
@@ -1248,13 +1248,15 @@
                     // ==========================================================================================
                     // RAMA CONTRATOS NORMALES (Comportamiento estándar de siempre, sin adición)
                     // ==========================================================================================
+                    // En contratos normales los Paz y Salvos siempre están visibles (opcionales)
+                    manejarVisibilidadReq('.req-paz-salvo', true);
+
                     if (cuotaStr == "1") {
                         // Cuota 1 normal
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
                         manejarVisibilidadReq('.req-modificacion', false, true);
-                        manejarVisibilidadReq('.req-paz-salvo', false, true);
 
                         $('input[name="file_ficha_tecnica"]').prop('required', true);
                         $('input[name="file_secop"]').prop('required', true);
@@ -1272,12 +1274,10 @@
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
                         
-                        // En cuota final de contrato normal, habilitar paz y salvos (opcionales)
+                        // En cuota final de contrato normal, habilitar texto de paz y salvos
                         if (esUltimaCuota) {
-                            manejarVisibilidadReq('.req-paz-salvo', true);
-                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Informe Final:</strong> Se requiere la planilla de Seguridad Social y se habilitan los Paz y Salvos.');
+                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Informe Final:</strong> Se requiere la planilla de Seguridad Social y se encuentran disponibles los Paz y Salvos.');
                         } else {
-                            manejarVisibilidadReq('.req-paz-salvo', false);
                             $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
                         }
 
