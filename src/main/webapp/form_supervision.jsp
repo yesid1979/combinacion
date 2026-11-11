@@ -1137,7 +1137,7 @@
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                 var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
                 var totalCuotas = cuotasNormales + cuotasAdicion;
-                var tieneAdicion = "${contrato.adicionSiNo}".toLowerCase() === "si" || cuotasAdicion > 0;
+                var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || cuotasAdicion > 0;
                 var tipoInforme = $('#tipo_informe').val();
 
                 // Calcular maxCuota de las opciones si existen
@@ -1150,10 +1150,17 @@
                     maxCuota = totalCuotas > 0 ? totalCuotas : cuotasNormales;
                 }
 
-                var esCuotaFinal = (tipoInforme === 'FINAL' || (maxCuota > 0 && cuotaNum >= maxCuota));
+                // Es cuota de adición o cuota final si:
+                // 1. El tipo de informe es FINAL
+                // 2. O la cuota es >= maxCuota
+                // 3. O tiene adición y la cuota es >= cuotasNormales (o cuota > 1 en contrato con adición)
+                var esCuotaAdicionOFinal = (tipoInforme === 'FINAL') 
+                                        || (maxCuota > 0 && cuotaNum >= maxCuota)
+                                        || (tieneAdicion && cuotasNormales > 0 && cuotaNum >= cuotasNormales)
+                                        || (tieneAdicion && cuotaNum > 1);
 
-                if (esCuotaFinal) {
-                    // CUOTA FINAL:
+                if (esCuotaAdicionOFinal) {
+                    // CUOTA FINAL / CUOTA CON ADICIÓN:
                     // 1. Ocultar estrictamente todos los documentos de la Cuota 1 (RUT, Cédula, Corrección, Dependientes, Prepagada, Ficha)
                     manejarVisibilidadReq('.req-cuota-1-only', false, true);
 
@@ -1167,20 +1174,20 @@
                     $('input[name="file_seguridad_social"]').closest('div').show();
                     $('input[name="file_seguridad_social"]').prop('required', true);
 
-                    // 4. Paz y salvos: requeridos y visibles en cuota final
+                    // 4. Paz y salvos: requeridos y visibles en cuota final / adición
                     manejarVisibilidadReq('.req-paz-salvo', true);
                     $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
                     $('input[name="file_paz_salvo_procesos"]').prop('required', true);
                     $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
 
-                    // 5. Modificación No: SOLO si tiene adición
+                    // 5. Modificación No: visible si tiene adición o si ya tiene archivo cargado
                     if (tieneAdicion) {
                         manejarVisibilidadReq('.req-modificacion', true);
                         $('input[name="file_modificacion"]').prop('required', true);
-                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final (con Adición):</strong> Solo se requiere cargar Contrato Secop II, RPC, Modificación No, Seguridad Social y cada uno de los Paz y Salvos.');
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición / Final:</strong> Se requiere cargar Contrato Secop II, RPC, Modificación No, Seguridad Social y cada uno de los Paz y Salvos.');
                     } else {
-                        manejarVisibilidadReq('.req-modificacion', false, true);
-                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final:</strong> Solo se requiere cargar Contrato Secop II, RPC, Seguridad Social y cada uno de los Paz y Salvos.');
+                        manejarVisibilidadReq('.req-modificacion', false);
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final:</strong> Se requiere cargar Contrato Secop II, RPC, Seguridad Social y cada uno de los Paz y Salvos.');
                     }
 
                     // Asegurar que los de cuota 1 no sean requeridos
@@ -1191,8 +1198,8 @@
                     manejarVisibilidadReq('.req-cuota-1-only', true);
                     manejarVisibilidadReq('.req-secop', true);
                     manejarVisibilidadReq('.req-rpc', true);
-                    manejarVisibilidadReq('.req-modificacion', false, true);
-                    manejarVisibilidadReq('.req-paz-salvo', false, true);
+                    manejarVisibilidadReq('.req-modificacion', false);
+                    manejarVisibilidadReq('.req-paz-salvo', false);
 
                     $('input[name="file_cedula"]').prop('required', true);
                     $('input[name="file_rut"]').prop('required', true);
@@ -1208,10 +1215,10 @@
                 } else {
                     // CUOTAS INTERMEDIAS (Cuentas normales intermedias):
                     manejarVisibilidadReq('.req-cuota-1-only', false, true);
-                    manejarVisibilidadReq('.req-secop', false, true);
-                    manejarVisibilidadReq('.req-rpc', false, true);
-                    manejarVisibilidadReq('.req-modificacion', false, true);
-                    manejarVisibilidadReq('.req-paz-salvo', false, true);
+                    manejarVisibilidadReq('.req-secop', false);
+                    manejarVisibilidadReq('.req-rpc', false);
+                    manejarVisibilidadReq('.req-modificacion', false);
+                    manejarVisibilidadReq('.req-paz-salvo', false);
 
                     $('input[name="file_seguridad_social"]').closest('div').show();
                     $('input[name="file_seguridad_social"]').prop('required', true);
