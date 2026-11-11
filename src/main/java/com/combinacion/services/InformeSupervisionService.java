@@ -1,6 +1,6 @@
 package com.combinacion.services;
-import com.combinacion.util.SupervisionReportGenerator;
 
+import com.combinacion.util.SupervisionReportGenerator;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
-
 
 import com.combinacion.dao.ContratoDAO;
 import com.combinacion.dao.InformeSupervisionDAO;
@@ -55,30 +54,33 @@ public class InformeSupervisionService {
 
     private static final Object INSERT_LOCK = new Object();
 
-    private static final java.util.concurrent.ExecutorService DRIVE_SYNC_EXECUTOR = 
-        java.util.concurrent.Executors.newFixedThreadPool(3, new java.util.concurrent.ThreadFactory() {
-            private int counter = 1;
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "DriveSync-Worker-" + (counter++));
-                t.setDaemon(true);
-                return t;
-            }
-        });
+    private static final java.util.concurrent.ExecutorService DRIVE_SYNC_EXECUTOR = java.util.concurrent.Executors
+            .newFixedThreadPool(3, new java.util.concurrent.ThreadFactory() {
+                private int counter = 1;
 
-    private static final java.util.Set<Integer> INFORMES_EN_PROCESO_DRIVE = 
-        java.util.concurrent.ConcurrentHashMap.newKeySet();
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r, "DriveSync-Worker-" + (counter++));
+                    t.setDaemon(true);
+                    return t;
+                }
+            });
+
+    private static final java.util.Set<Integer> INFORMES_EN_PROCESO_DRIVE = java.util.concurrent.ConcurrentHashMap
+            .newKeySet();
 
     public void encolarActualizacionDrive(int informeId, String realPath) {
         if (!INFORMES_EN_PROCESO_DRIVE.add(informeId)) {
-            System.out.println("El informe ID " + informeId + " ya se encuentra en cola o procesándose en Drive. Se omite duplicado.");
+            System.out.println("El informe ID " + informeId
+                    + " ya se encuentra en cola o procesándose en Drive. Se omite duplicado.");
             return;
         }
         DRIVE_SYNC_EXECUTOR.submit(() -> {
             try {
                 actualizarFormatosEnDrive(informeId, realPath);
             } catch (Throwable ex) {
-                System.err.println("Error procesando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
+                System.err.println(
+                        "Error procesando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
             } finally {
                 INFORMES_EN_PROCESO_DRIVE.remove(informeId);
             }
@@ -103,19 +105,26 @@ public class InformeSupervisionService {
                 boolean esRadicacion = "RADICADA".equalsIgnoreCase(form.estadoRadicacion);
                 if (esRadicacion) {
                     StringBuilder faltantes = new StringBuilder();
-                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
-                    if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
-                    if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                    if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty())
+                        faltantes.append("Período del informe (Mes y Año). ");
+                    if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty())
+                        faltantes.append("Número de cuota. ");
+                    if (form.supervisorId == null || form.supervisorId <= 0)
+                        faltantes.append("Supervisor asignado a este informe. ");
                     if ("FINAL".equalsIgnoreCase(form.tipoInforme)) {
-                        if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty() || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
-                            faltantes.append("El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
+                        if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty()
+                                || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
+                            faltantes.append(
+                                    "El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
                         }
                     }
                     if (faltantes.length() > 0) {
-                        return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
+                        return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: "
+                                + faltantes.toString();
                     }
                 } else {
-                    // Modo BORRADOR: permitir guardar sin trabas, asignando valores por defecto si no vienen
+                    // Modo BORRADOR: permitir guardar sin trabas, asignando valores por defecto si
+                    // no vienen
                     if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) {
                         java.util.List<InformeSupervision> previos = this.listarPorContrato(form.contratoId);
                         int sig = (previos != null) ? previos.size() + 1 : 1;
@@ -130,49 +139,52 @@ public class InformeSupervisionService {
                     }
                 }
 
-            InformeSupervision info = mapFormToModel(form);
-            if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
-                info.setEstadoRadicacion("BORRADOR");
-            }
-            // Asignar el año desde el contrato
-            Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
-            if (contrato != null) {
-                if (contrato.getAnio() != null && contrato.getAnio() > 0) {
-                    info.setAnio(contrato.getAnio());
-                } else if (contrato.getFechaTerminacion() != null) {
-                    java.util.Calendar cal = java.util.Calendar.getInstance();
-                    cal.setTime(contrato.getFechaTerminacion());
-                    info.setAnio(cal.get(java.util.Calendar.YEAR));
+                InformeSupervision info = mapFormToModel(form);
+                if (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) {
+                    info.setEstadoRadicacion("BORRADOR");
                 }
-            }
-
-            // Asignar supervisor por defecto del contrato si no se especificó en el informe
-            if ((info.getSupervisorId() == null || info.getSupervisorId() <= 0) && contrato != null && contrato.getSupervisorId() > 0) {
-                info.setSupervisorId(contrato.getSupervisorId());
-            }
-
-            // Validar duplicado: misma combinación de contrato, período, tipo e número de cuota
-            if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(), info.getNumeroCuota())) {
-                return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
-            }
-            
-            // Recalcular valores financieros de manera segura antes de guardar
-            recalcularValoresFinancieros(info);
-            
-            String daoResult = informeDAO.insertar(info);
-            if (daoResult == null) {
-                if (outCreated != null && outCreated.length > 0) {
-                    outCreated[0] = info;
+                // Asignar el año desde el contrato
+                Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
+                if (contrato != null) {
+                    if (contrato.getAnio() != null && contrato.getAnio() > 0) {
+                        info.setAnio(contrato.getAnio());
+                    } else if (contrato.getFechaTerminacion() != null) {
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTime(contrato.getFechaTerminacion());
+                        info.setAnio(cal.get(java.util.Calendar.YEAR));
+                    }
                 }
-                manejarNotificacionesCorreos(info, null);
-                return null; // Éxito
-            } else {
-                return "No se pudo guardar el informe en la base de datos: " + daoResult;
+
+                // Asignar supervisor por defecto del contrato si no se especificó en el informe
+                if ((info.getSupervisorId() == null || info.getSupervisorId() <= 0) && contrato != null
+                        && contrato.getSupervisorId() > 0) {
+                    info.setSupervisorId(contrato.getSupervisorId());
+                }
+
+                // Validar duplicado: misma combinación de contrato, período, tipo e número de
+                // cuota
+                if (informeDAO.existeDuplicado(info.getContratoId(), info.getPeriodoInforme(), info.getTipoInforme(),
+                        info.getNumeroCuota())) {
+                    return "Ya existe una cuenta de cobro registrada para este contrato con el mismo período, tipo e número de cuota. No se permite duplicar.";
+                }
+
+                // Recalcular valores financieros de manera segura antes de guardar
+                recalcularValoresFinancieros(info);
+
+                String daoResult = informeDAO.insertar(info);
+                if (daoResult == null) {
+                    if (outCreated != null && outCreated.length > 0) {
+                        outCreated[0] = info;
+                    }
+                    manejarNotificacionesCorreos(info, null);
+                    return null; // Éxito
+                } else {
+                    return "No se pudo guardar el informe en la base de datos: " + daoResult;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "Error al procesar el informe: " + e.getMessage();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error al procesar el informe: " + e.getMessage();
-        }
         } // End synchronized
     }
 
@@ -183,44 +195,53 @@ public class InformeSupervisionService {
                 if (form.contratoId <= 0 && existente.getContratoId() != null) {
                     form.contratoId = existente.getContratoId();
                 }
-                if ((form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) && existente.getPeriodoInforme() != null) {
+                if ((form.periodoInforme == null || form.periodoInforme.trim().isEmpty())
+                        && existente.getPeriodoInforme() != null) {
                     form.periodoInforme = existente.getPeriodoInforme();
                 }
-                if ((form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) && existente.getNumeroCuota() != null) {
+                if ((form.numeroCuota == null || form.numeroCuota.trim().isEmpty())
+                        && existente.getNumeroCuota() != null) {
                     form.numeroCuota = existente.getNumeroCuota();
                 }
                 if ((form.supervisorId == null || form.supervisorId <= 0) && existente.getSupervisorId() != null) {
                     form.supervisorId = existente.getSupervisorId();
                 }
             }
-            
+
             if (form.contratoId <= 0) {
                 return "Error: No se identificó el contrato asociado a esta cuenta de cobro.";
             }
-            
+
             if (form.fechaSuscripcion == null || form.fechaSuscripcion.trim().isEmpty()) {
                 return "El campo 'Fecha de transacción' es obligatorio.";
             }
 
-            boolean esRadicacion = form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion) && !"DEVUELTA".equals(form.estadoRadicacion);
+            boolean esRadicacion = form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion)
+                    && !"DEVUELTA".equals(form.estadoRadicacion);
             if (esRadicacion) {
                 StringBuilder faltantes = new StringBuilder();
-                if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty()) faltantes.append("Período del informe (Mes y Año). ");
-                if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty()) faltantes.append("Número de cuota. ");
-                if (form.supervisorId == null || form.supervisorId <= 0) faltantes.append("Supervisor asignado a este informe. ");
+                if (form.periodoInforme == null || form.periodoInforme.trim().isEmpty())
+                    faltantes.append("Período del informe (Mes y Año). ");
+                if (form.numeroCuota == null || form.numeroCuota.trim().isEmpty())
+                    faltantes.append("Número de cuota. ");
+                if (form.supervisorId == null || form.supervisorId <= 0)
+                    faltantes.append("Supervisor asignado a este informe. ");
                 if ("FINAL".equalsIgnoreCase(form.tipoInforme)) {
-                    if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty() || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
-                        faltantes.append("El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
+                    if (form.pagoSeguridadSocial == null || form.pagoSeguridadSocial.trim().isEmpty()
+                            || "N/A".equalsIgnoreCase(form.pagoSeguridadSocial.trim())) {
+                        faltantes.append(
+                                "El pago de la seguridad social es: * (Al Día o Mes vencido) para el informe FINAL. ");
                     }
                 }
                 if (faltantes.length() > 0) {
-                    return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: " + faltantes.toString();
+                    return "Para radicar la cuenta es necesario diligenciar todos los campos obligatorios: "
+                            + faltantes.toString();
                 }
             }
-            
+
             InformeSupervision info = mapFormToModel(form);
             info.setId(id);
-            
+
             // Asignar el año desde el contrato
             Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
             if (contrato != null) {
@@ -249,14 +270,15 @@ public class InformeSupervisionService {
                     try {
                         org.json.JSONObject dbObj = new org.json.JSONObject(dbSoportes);
                         org.json.JSONObject inObj = new org.json.JSONObject(inSoportes);
-                        
+
                         java.util.Set<String> eliminados = new java.util.HashSet<>();
                         if (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty()) {
                             for (String s : form.soportesEliminados.split(",")) {
-                                if (!s.trim().isEmpty()) eliminados.add(s.trim());
+                                if (!s.trim().isEmpty())
+                                    eliminados.add(s.trim());
                             }
                         }
-                        
+
                         // Preservar todas las llaves de la BD que no fueron explícitamente eliminadas
                         java.util.Iterator<String> it = dbObj.keys();
                         while (it.hasNext()) {
@@ -274,10 +296,13 @@ public class InformeSupervisionService {
                     info.setEstadoRadicacion(existente.getEstadoRadicacion());
                 }
 
-                // Salvaguarda contra vaciado accidental: si el concepto entrante está vacío o todas sus actividades son ""
-                // pero en la base de datos ya existían actividades documentadas, preservar el concepto existente
+                // Salvaguarda contra vaciado accidental: si el concepto entrante está vacío o
+                // todas sus actividades son ""
+                // pero en la base de datos ya existían actividades documentadas, preservar el
+                // concepto existente
                 boolean tieneActividadesEntrantes = false;
-                if (info.getConceptoSupervisor() != null && !info.getConceptoSupervisor().trim().isEmpty() && !"[]".equals(info.getConceptoSupervisor().trim())) {
+                if (info.getConceptoSupervisor() != null && !info.getConceptoSupervisor().trim().isEmpty()
+                        && !"[]".equals(info.getConceptoSupervisor().trim())) {
                     try {
                         org.json.JSONArray arrIn = new org.json.JSONArray(info.getConceptoSupervisor());
                         for (int ai = 0; ai < arrIn.length(); ai++) {
@@ -287,7 +312,8 @@ public class InformeSupervisionService {
                                 break;
                             }
                         }
-                    } catch (Exception ignore) {}
+                    } catch (Exception ignore) {
+                    }
                 }
 
                 boolean existenteTieneActividades = false;
@@ -301,12 +327,18 @@ public class InformeSupervisionService {
                                 break;
                             }
                         }
-                    } catch (Exception ignore) {}
+                    } catch (Exception ignore) {
+                    }
                 }
 
-                if ((!tieneActividadesEntrantes || info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existenteTieneActividades) {
+                if ((!tieneActividadesEntrantes || info.getConceptoSupervisor() == null
+                        || info.getConceptoSupervisor().trim().isEmpty()
+                        || "[]".equals(info.getConceptoSupervisor().trim())) && existenteTieneActividades) {
                     info.setConceptoSupervisor(existente.getConceptoSupervisor());
-                } else if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty() || "[]".equals(info.getConceptoSupervisor().trim())) && existente.getConceptoSupervisor() != null && !existente.getConceptoSupervisor().trim().isEmpty()) {
+                } else if ((info.getConceptoSupervisor() == null || info.getConceptoSupervisor().trim().isEmpty()
+                        || "[]".equals(info.getConceptoSupervisor().trim()))
+                        && existente.getConceptoSupervisor() != null
+                        && !existente.getConceptoSupervisor().trim().isEmpty()) {
                     info.setConceptoSupervisor(existente.getConceptoSupervisor());
                 }
                 if (info.getValorCuotaPagar() == null && existente.getValorCuotaPagar() != null) {
@@ -318,14 +350,15 @@ public class InformeSupervisionService {
                 if (info.getFechaFinPeriodo() == null && existente.getFechaFinPeriodo() != null) {
                     info.setFechaFinPeriodo(existente.getFechaFinPeriodo());
                 }
-                if ((info.getPeriodoInforme() == null || info.getPeriodoInforme().trim().isEmpty()) && existente.getPeriodoInforme() != null) {
+                if ((info.getPeriodoInforme() == null || info.getPeriodoInforme().trim().isEmpty())
+                        && existente.getPeriodoInforme() != null) {
                     info.setPeriodoInforme(existente.getPeriodoInforme());
                 }
             }
-            
+
             // Recalcular valores financieros de manera segura antes de actualizar
             recalcularValoresFinancieros(info);
-            
+
             String daoResult = informeDAO.actualizar(info);
             if (daoResult == null) {
                 manejarNotificacionesCorreos(info, existente != null ? existente.getEstadoRadicacion() : null);
@@ -346,8 +379,9 @@ public class InformeSupervisionService {
         }
 
         Contrato contrato = this.obtenerContrato(info.getContratoId());
-        if (contrato == null) return;
-        
+        if (contrato == null)
+            return;
+
         String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "";
         String nombreContratista = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre() : "";
         String periodo = com.combinacion.util.ParseUtils.formatearPeriodo(info.getPeriodoInforme());
@@ -359,13 +393,12 @@ public class InformeSupervisionService {
             if ("RADICADA".equals(estadoNuevo)) {
                 if (info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() > 0) {
                     notifDAO.crear(new com.combinacion.models.Notificacion(
-                        info.getIdRevisorAsignado(),
-                        info.getId(),
-                        "🔔 Nueva Cuenta Radicada",
-                        "El contratista radicó la cuenta del Contrato " + numContrato + " (Cuota " + cuota + ").",
-                        "INFO",
-                        "informes?action=edit&id=" + info.getId()
-                    ));
+                            info.getIdRevisorAsignado(),
+                            info.getId(),
+                            "🔔 Nueva Cuenta Radicada",
+                            "El contratista radicó la cuenta del Contrato " + numContrato + " (Cuota " + cuota + ").",
+                            "INFO",
+                            "informes?action=edit&id=" + info.getId()));
 
                     com.combinacion.dao.UsuarioDAO usuarioDAO = new com.combinacion.dao.UsuarioDAO();
                     com.combinacion.models.Usuario revisor = usuarioDAO.obtenerPorId(info.getIdRevisorAsignado());
@@ -380,10 +413,14 @@ public class InformeSupervisionService {
                                 + "<p>Hola <strong>" + revisor.getNombreCompleto() + "</strong>,</p>"
                                 + "<p>Se ha radicado una cuenta de cobro que requiere de su revisión en la plataforma.</p>"
                                 + "<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + nombreContratista + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + numContrato + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + periodo + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + cuota + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + nombreContratista + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + numContrato + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + periodo + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + cuota + "</td></tr>"
                                 + "</table>"
                                 + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para realizar la revisión correspondiente.</p>"
                                 + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #1976D2; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
@@ -399,13 +436,13 @@ public class InformeSupervisionService {
                 if (contratista != null) {
                     if (contratista.getCedula() != null) {
                         notifDAO.crearParaUsuarioPorCedula(
-                            contratista.getCedula(),
-                            info.getId(),
-                            "⚠️ Cuenta Devuelta",
-                            "Su cuenta del Contrato " + numContrato + " (Cuota " + cuota + ") fue devuelta con observaciones.",
-                            "DANGER",
-                            "informes?action=edit&id=" + info.getId()
-                        );
+                                contratista.getCedula(),
+                                info.getId(),
+                                "⚠️ Cuenta Devuelta",
+                                "Su cuenta del Contrato " + numContrato + " (Cuota " + cuota
+                                        + ") fue devuelta con observaciones.",
+                                "DANGER",
+                                "informes?action=edit&id=" + info.getId());
                     }
 
                     if (contratista.getCorreo() != null && !contratista.getCorreo().isEmpty()) {
@@ -427,7 +464,9 @@ public class InformeSupervisionService {
                                 + "</div>"
                                 + "<div style='padding: 20px;'>"
                                 + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
-                                + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota " + cuota + ") ha sido revisada y <strong>devuelta con observaciones</strong>.</p>"
+                                + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato
+                                + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota "
+                                + cuota + ") ha sido revisada y <strong>devuelta con observaciones</strong>.</p>"
                                 + obsHtml
                                 + "<p style='margin-top: 20px;'>Por favor ingrese al sistema para verificar las correcciones solicitadas y vuelva a radicarla una vez ajustada.</p>"
                                 + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #D32F2F; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ver Detalles e Ingresar</a></div>"
@@ -438,19 +477,21 @@ public class InformeSupervisionService {
                         EmailService.sendEmailHtml(contratista.getCorreo(), subject, bodyHtml);
                     }
                 }
-            } else if ("VISTO BUENO CONTRATACION".equals(estadoNuevo) || "EN REVISION FINAL".equals(estadoNuevo) || "APROBADA PARA IMPRESION".equals(estadoNuevo)) {
-                if (!"VISTO BUENO CONTRATACION".equals(estadoAnterior) && !"EN REVISION FINAL".equals(estadoAnterior) && !"APROBADA PARA IMPRESION".equals(estadoAnterior)) {
+            } else if ("VISTO BUENO CONTRATACION".equals(estadoNuevo) || "EN REVISION FINAL".equals(estadoNuevo)
+                    || "APROBADA PARA IMPRESION".equals(estadoNuevo)) {
+                if (!"VISTO BUENO CONTRATACION".equals(estadoAnterior) && !"EN REVISION FINAL".equals(estadoAnterior)
+                        && !"APROBADA PARA IMPRESION".equals(estadoAnterior)) {
                     com.combinacion.models.Contratista contratista = contrato.getContratista();
                     if (contratista != null) {
                         if (contratista.getCedula() != null) {
                             notifDAO.crearParaUsuarioPorCedula(
-                                contratista.getCedula(),
-                                info.getId(),
-                                "✅ Cuenta Aprobada",
-                                "Su cuenta del Contrato " + numContrato + " (Cuota " + cuota + ") ha superado la revisión.",
-                                "SUCCESS",
-                                "informes?action=edit&id=" + info.getId()
-                            );
+                                    contratista.getCedula(),
+                                    info.getId(),
+                                    "✅ Cuenta Aprobada",
+                                    "Su cuenta del Contrato " + numContrato + " (Cuota " + cuota
+                                            + ") ha superado la revisión.",
+                                    "SUCCESS",
+                                    "informes?action=edit&id=" + info.getId());
                         }
                         if (contratista.getCorreo() != null && !contratista.getCorreo().isEmpty()) {
                             String subject = "✅ Cuenta de Cobro Aprobada - Contrato " + numContrato;
@@ -461,7 +502,9 @@ public class InformeSupervisionService {
                                     + "</div>"
                                     + "<div style='padding: 20px;'>"
                                     + "<p>Hola <strong>" + nombreContratista + "</strong>,</p>"
-                                    + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota " + cuota + ") ha superado exitosamente la revisión.</p>"
+                                    + "<p>Le informamos que su cuenta de cobro del <strong>Contrato " + numContrato
+                                    + "</strong> correspondiente al período <strong>" + periodo + "</strong> (Cuota "
+                                    + cuota + ") ha superado exitosamente la revisión.</p>"
                                     + "<p style='margin-top: 20px;'>Este mensaje es una confirmación de que el trámite continúa su curso normal en la entidad.</p>"
                                     + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #388E3C; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
                                     + "</div>"
@@ -477,7 +520,8 @@ public class InformeSupervisionService {
                     String emailSup = null;
                     String nombreSup = "";
                     String cedSup = null;
-                    int supId = (info.getSupervisorId() != null && info.getSupervisorId() > 0) ? info.getSupervisorId() : (contrato.getSupervisorId() > 0 ? contrato.getSupervisorId() : 0);
+                    int supId = (info.getSupervisorId() != null && info.getSupervisorId() > 0) ? info.getSupervisorId()
+                            : (contrato.getSupervisorId() > 0 ? contrato.getSupervisorId() : 0);
                     if (supId > 0) {
                         com.combinacion.models.Supervisor s = supervisorDAO.obtenerPorId(supId);
                         if (s != null) {
@@ -485,7 +529,8 @@ public class InformeSupervisionService {
                             cedSup = s.getCedula();
                             if (s.getCedula() != null) {
                                 String cedLimpia = s.getCedula().replaceAll("[^0-9]", "");
-                                com.combinacion.models.Usuario uSup = new com.combinacion.dao.UsuarioDAO().obtenerPorCedula(cedLimpia);
+                                com.combinacion.models.Usuario uSup = new com.combinacion.dao.UsuarioDAO()
+                                        .obtenerPorCedula(cedLimpia);
                                 if (uSup != null && uSup.getCorreo() != null && !uSup.getCorreo().trim().isEmpty()) {
                                     emailSup = uSup.getCorreo().trim();
                                 }
@@ -498,23 +543,31 @@ public class InformeSupervisionService {
                     // Notificación en campanita al supervisor
                     if (cedSup != null) {
                         notifDAO.crearParaUsuarioPorCedula(
-                            cedSup,
-                            info.getId(),
-                            esReingreso ? "🔄 Cuenta Corregida" : "📋 Cuenta para Supervisión",
-                            esReingreso ? ("El contratista volvió a radicar la cuenta corregida del Contrato " + numContrato + " (Cuota " + cuota + ").")
-                                        : ("La cuenta del Contrato " + numContrato + " (Cuota " + cuota + ") está en su bandeja de supervisión."),
-                            "INFO",
-                            "informes?action=edit&id=" + info.getId()
-                        );
+                                cedSup,
+                                info.getId(),
+                                esReingreso ? "🔄 Cuenta Corregida" : "📋 Cuenta para Supervisión",
+                                esReingreso
+                                        ? ("El contratista volvió a radicar la cuenta corregida del Contrato "
+                                                + numContrato + " (Cuota " + cuota + ").")
+                                        : ("La cuenta del Contrato " + numContrato + " (Cuota " + cuota
+                                                + ") está en su bandeja de supervisión."),
+                                "INFO",
+                                "informes?action=edit&id=" + info.getId());
                     }
 
                     if (emailSup != null && !emailSup.isEmpty()) {
-                        String subject = esReingreso ? ("🔄 Cuenta Corregida Lista para Aprobación - Contrato " + numContrato)
-                                                     : ("📋 Cuenta de Cobro Pendiente de Aprobación - Contrato " + numContrato);
-                        String headerText = esReingreso ? "Cuenta Corregida por el Contratista" : "Cuenta Pendiente de Aprobación";
-                        String descText = esReingreso 
-                            ? ("El contratista ha corregido las observaciones de la cuenta de cobro del <strong>Contrato " + numContrato + "</strong> (Cuota " + cuota + ") y se encuentra lista para su <strong>aprobación definitiva</strong>.")
-                            : ("La cuenta de cobro del <strong>Contrato " + numContrato + "</strong> correspondiente a la <strong>Cuota " + cuota + "</strong> ha superado la revisión y se encuentra lista para su <strong>aprobación definitiva</strong>.");
+                        String subject = esReingreso
+                                ? ("🔄 Cuenta Corregida Lista para Aprobación - Contrato " + numContrato)
+                                : ("📋 Cuenta de Cobro Pendiente de Aprobación - Contrato " + numContrato);
+                        String headerText = esReingreso ? "Cuenta Corregida por el Contratista"
+                                : "Cuenta Pendiente de Aprobación";
+                        String descText = esReingreso
+                                ? ("El contratista ha corregido las observaciones de la cuenta de cobro del <strong>Contrato "
+                                        + numContrato + "</strong> (Cuota " + cuota
+                                        + ") y se encuentra lista para su <strong>aprobación definitiva</strong>.")
+                                : ("La cuenta de cobro del <strong>Contrato " + numContrato
+                                        + "</strong> correspondiente a la <strong>Cuota " + cuota
+                                        + "</strong> ha superado la revisión y se encuentra lista para su <strong>aprobación definitiva</strong>.");
 
                         String bodyHtml = "<html><body style='font-family: Arial, sans-serif; color: #333;'>"
                                 + "<div style='max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>"
@@ -525,10 +578,14 @@ public class InformeSupervisionService {
                                 + "<p>Hola <strong>" + nombreSup + "</strong>,</p>"
                                 + "<p>" + descText + "</p>"
                                 + "<table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + nombreContratista + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + numContrato + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + periodo + "</td></tr>"
-                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" + cuota + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contratista:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + nombreContratista + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Contrato:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + numContrato + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Período:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + periodo + "</td></tr>"
+                                + "<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Cuota:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>"
+                                + cuota + "</td></tr>"
                                 + "</table>"
                                 + "<div style='text-align: center; margin-top: 30px;'><a href='https://juridica.cali.gov.co/combinacion/' style='background-color: #004884; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ingresar al Sistema</a></div>"
                                 + "</div>"
@@ -543,13 +600,13 @@ public class InformeSupervisionService {
             } else if ("EN REVISION CONTRATACION".equals(estadoNuevo)) {
                 try {
                     notifDAO.crearParaRol(
-                        "Contratacion",
-                        info.getId(),
-                        "🏛️ Cuenta en Contratación",
-                        "La cuenta del Contrato " + numContrato + " (Cuota " + cuota + ") está en revisión de Contratación.",
-                        "INFO",
-                        "informes?action=edit&id=" + info.getId()
-                    );
+                            "Contratacion",
+                            info.getId(),
+                            "🏛️ Cuenta en Contratación",
+                            "La cuenta del Contrato " + numContrato + " (Cuota " + cuota
+                                    + ") está en revisión de Contratación.",
+                            "INFO",
+                            "informes?action=edit&id=" + info.getId());
                 } catch (Exception exCont) {
                     System.err.println("Error notificando contratacion: " + exCont.getMessage());
                 }
@@ -569,7 +626,7 @@ public class InformeSupervisionService {
         info.setTipoInforme(f.tipoInforme);
         info.setNumeroCuota(f.numeroCuota);
         info.setConsecutivoCobro(f.consecutivoCobro);
-        
+
         info.setFechaInicioPeriodo(ParseUtils.parseDate(f.fechaInicioPeriodo));
         info.setFechaFinPeriodo(ParseUtils.parseDate(f.fechaFinPeriodo));
         info.setModificaciones(f.modificaciones);
@@ -587,29 +644,35 @@ public class InformeSupervisionService {
                 asegurarTextosInformeFinal(info, cont);
             }
         }
-        
+
         info.setValorCuotaPagar(ParseUtils.parseBigDecimal(f.valorCuotaPagar));
         info.setValorAccumuladoPagado(ParseUtils.parseBigDecimal(f.valorAccumuladoPagado));
         info.setSaldoPorCancelar(ParseUtils.parseBigDecimal(f.saldoPorCancelar));
-        
-        boolean esNuevo = "SI".equalsIgnoreCase(f.esContratistaNuevo) || "true".equalsIgnoreCase(f.esContratistaNuevo) || "on".equalsIgnoreCase(f.esContratistaNuevo);
+
+        boolean esNuevo = "SI".equalsIgnoreCase(f.esContratistaNuevo) || "true".equalsIgnoreCase(f.esContratistaNuevo)
+                || "on".equalsIgnoreCase(f.esContratistaNuevo);
         info.setEsContratistaNuevo(esNuevo ? "SI" : "NO");
         info.setEps(f.eps);
         info.setAfpPension(f.afpPension);
         info.setArl(f.arl);
-        
+
         if (esNuevo) {
-            info.setPlanillaNumero((f.planillaNumero != null && !f.planillaNumero.trim().isEmpty()) ? f.planillaNumero : "N/A");
+            info.setPlanillaNumero(
+                    (f.planillaNumero != null && !f.planillaNumero.trim().isEmpty()) ? f.planillaNumero : "N/A");
             info.setPlanillaPin((f.planillaPin != null && !f.planillaPin.trim().isEmpty()) ? f.planillaPin : "N/A");
-            info.setPlanillaOperador((f.planillaOperador != null && !f.planillaOperador.trim().isEmpty()) ? f.planillaOperador : "N/A");
+            info.setPlanillaOperador(
+                    (f.planillaOperador != null && !f.planillaOperador.trim().isEmpty()) ? f.planillaOperador : "N/A");
             info.setPlanillaPeriodo("N/A");
             info.setPlanillaFechaPago(null);
             info.setPagoSeguridadSocial("N/A");
             if (f.observacionesFinancieras == null || f.observacionesFinancieras.trim().isEmpty()) {
                 String epsTxt = (f.eps != null && !f.eps.trim().isEmpty()) ? f.eps.trim() : "EPS";
-                String afpTxt = (f.afpPension != null && !f.afpPension.trim().isEmpty()) ? f.afpPension.trim() : "FONDO DE PENSIÓN";
+                String afpTxt = (f.afpPension != null && !f.afpPension.trim().isEmpty()) ? f.afpPension.trim()
+                        : "FONDO DE PENSIÓN";
                 String arlTxt = (f.arl != null && !f.arl.trim().isEmpty()) ? f.arl.trim() : "ARL";
-                f.observacionesFinancieras = "El contratista aporta certificado de afiliación a salud – " + epsTxt + ", Fondo de pensión – " + afpTxt + ", y ARL - " + arlTxt + ", soporte válido para la presentación de la primera cuota del presente contrato";
+                f.observacionesFinancieras = "El contratista aporta certificado de afiliación a salud – " + epsTxt
+                        + ", Fondo de pensión – " + afpTxt + ", y ARL - " + arlTxt
+                        + ", soporte válido para la presentación de la primera cuota del presente contrato";
             }
         } else {
             info.setPlanillaNumero(f.planillaNumero);
@@ -619,7 +682,7 @@ public class InformeSupervisionService {
             info.setPlanillaPeriodo(f.planillaPeriodo);
             info.setPagoSeguridadSocial(f.pagoSeguridadSocial);
         }
-        
+
         info.setConceptoSupervisor(f.conceptoSupervisor);
         info.setObservacionesFinancieras(f.observacionesFinancieras);
         info.setObservacionesTecnicas(f.observacionesTecnicas);
@@ -629,22 +692,24 @@ public class InformeSupervisionService {
         info.setSoportesJson(f.soportesJson);
         info.setEstadoRadicacion(f.estadoRadicacion);
         info.setIdRevisorAsignado(f.idRevisorAsignado);
-        
+
         return info;
     }
 
     private void recalcularValoresFinancieros(InformeSupervision info) {
-        if (info == null || info.getContratoId() == null || info.getNumeroCuota() == null) return;
+        if (info == null || info.getContratoId() == null || info.getNumeroCuota() == null)
+            return;
         try {
             int currentCuota = ParseUtils.parseInt(info.getNumeroCuota());
-            if (currentCuota <= 0) return;
+            if (currentCuota <= 0)
+                return;
 
             java.util.List<InformeSupervision> previos = this.listarPorContrato(info.getContratoId());
             java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
-            
+
             java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
-            if(previos != null && !previos.isEmpty()) {
-                for(InformeSupervision prev : previos) {
+            if (previos != null && !previos.isEmpty()) {
+                for (InformeSupervision prev : previos) {
                     if (prev.getId() != null && info.getId() != null && prev.getId().equals(info.getId())) {
                         continue;
                     }
@@ -654,30 +719,35 @@ public class InformeSupervisionService {
                         if (numCuota != null && cuotasSumadas.contains(numCuota)) {
                             continue;
                         }
-                        if(prev.getValorCuotaPagar() != null){
+                        if (prev.getValorCuotaPagar() != null) {
                             acumulado = acumulado.add(prev.getValorCuotaPagar());
-                            if (numCuota != null) cuotasSumadas.add(numCuota);
+                            if (numCuota != null)
+                                cuotasSumadas.add(numCuota);
                         }
                     }
                 }
             }
-            
-            // Garantizar precisión matemática si faltan cuotas históricas en la base de datos
+
+            // Garantizar precisión matemática si faltan cuotas históricas en la base de
+            // datos
             int cuotasFaltantes = (currentCuota - 1) - cuotasSumadas.size();
             if (cuotasFaltantes > 0) {
-                java.math.BigDecimal cuotaActual = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar() : java.math.BigDecimal.ZERO;
-                java.math.BigDecimal historicoFaltante = cuotaActual.multiply(new java.math.BigDecimal(cuotasFaltantes));
+                java.math.BigDecimal cuotaActual = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar()
+                        : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal historicoFaltante = cuotaActual
+                        .multiply(new java.math.BigDecimal(cuotasFaltantes));
                 acumulado = acumulado.add(historicoFaltante);
             }
-            
+
             info.setValorAccumuladoPagado(acumulado);
-            
+
             Contrato contrato = contratoDAO.obtenerPorId(info.getContratoId());
             if (contrato != null) {
                 java.math.BigDecimal total = contrato.getValorVigente();
-                
+
                 if (total != null) {
-                    java.math.BigDecimal cuota = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal cuota = info.getValorCuotaPagar() != null ? info.getValorCuotaPagar()
+                            : java.math.BigDecimal.ZERO;
                     java.math.BigDecimal saldo = total.subtract(acumulado).subtract(cuota);
                     if (saldo.compareTo(java.math.BigDecimal.ZERO) < 0) {
                         saldo = java.math.BigDecimal.ZERO;
@@ -756,20 +826,21 @@ public class InformeSupervisionService {
         return c;
     }
 
-public void listar(HttpServletRequest request, HttpServletResponse response)
+    public void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         java.util.List<InformeSupervision> listaFinal = obtenerListaInformes(request);
         String modo = (String) request.getAttribute("modo");
-        
+
         request.setAttribute("listaInformes", listaFinal);
         request.setAttribute("revisoresList", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
     }
 
     public java.util.List<InformeSupervision> obtenerListaInformes(HttpServletRequest request) {
-        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-        
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession()
+                .getAttribute("usuario");
+
         // Refrescar usuario desde BD para tener los permisos actualizados en caliente
         if (u != null) {
             com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(u.getId());
@@ -778,14 +849,19 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 u = freshUser;
             }
         }
-        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR") || u.tienePermiso("ADMINISTRAR_CUENTAS"));
-        boolean esRevisor = u != null && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
-        boolean esSupervisorRol = (u != null && (u.tienePermiso("SUPERVISOR_CUENTAS") || (u.getRol() != null && "Supervisor".equalsIgnoreCase(u.getRol().getNombre()))));
-        boolean esContratistaBase = (u != null && (u.getRolId() == 3 || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
-        
+        boolean esAdmin = u != null && (u.esAdministrador() || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR")
+                || u.tienePermiso("ADMINISTRAR_CUENTAS"));
+        boolean esRevisor = u != null
+                && (u.tienePermiso("PUEDE_REVISAR_CUENTAS") || u.tienePermiso("REVISION_CUENTAS_VER"));
+        boolean esSupervisorRol = (u != null && (u.tienePermiso("SUPERVISOR_CUENTAS")
+                || (u.getRol() != null && "Supervisor".equalsIgnoreCase(u.getRol().getNombre()))));
+        boolean esContratistaBase = (u != null && (u.getRolId() == 3
+                || (u.getRol() != null && "Contratista".equalsIgnoreCase(u.getRol().getNombre()))));
+
         String modo = request.getParameter("modo");
-        
-        // Asignar modo por defecto si entran sin parámetro (ej. desde un enlace manual o error)
+
+        // Asignar modo por defecto si entran sin parámetro (ej. desde un enlace manual
+        // o error)
         if (modo == null || modo.trim().isEmpty()) {
             if (esContratistaBase) {
                 modo = "mis_cuentas";
@@ -793,10 +869,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 modo = "revision";
             }
         }
-        
+
         String contratoIdStr = request.getParameter("contrato_id");
         java.util.List<InformeSupervision> listaFinal = new java.util.ArrayList<>();
-        
+
         // 1. Lógica para Contratistas: Buscar sus contratos y sus propios informes
         java.util.List<Integer> misContratosIds = new java.util.ArrayList<>();
         if (esContratistaBase && !"revision".equals(modo)) {
@@ -818,9 +894,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 if (!misContratos.isEmpty()) {
                     request.setAttribute("misContratos", misContratos);
                     request.setAttribute("contrato", misContratos.get(0)); // Default para botón "Nuevo"
-                    for(Contrato con : misContratos) {
+                    for (Contrato con : misContratos) {
                         misContratosIds.add(con.getId());
-                        if (contratoIdStr == null || contratoIdStr.isEmpty() || com.combinacion.util.ParseUtils.parseInt(contratoIdStr) == con.getId()) {
+                        if (contratoIdStr == null || contratoIdStr.isEmpty()
+                                || com.combinacion.util.ParseUtils.parseInt(contratoIdStr) == con.getId()) {
                             listaFinal.addAll(this.listarPorContrato(con.getId()));
                         }
                     }
@@ -831,8 +908,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 request.setAttribute("error", "No se encontraron tus datos como contratista.");
             }
         }
-        
-        // 2. Lógica para Admin / Revisor / Supervisor: Agregar informes que deben revisar
+
+        // 2. Lógica para Admin / Revisor / Supervisor: Agregar informes que deben
+        // revisar
         if ((esAdmin || esRevisor || esSupervisorRol) && !"mis_cuentas".equals(modo)) {
             java.util.List<InformeSupervision> todos = new java.util.ArrayList<>();
             if (contratoIdStr != null && !contratoIdStr.isEmpty()) {
@@ -849,10 +927,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             } else {
                 todos = this.listarTodos();
             }
-            
-            String userCedulaLimpia = (u != null && u.getCedula() != null) ? u.getCedula().replaceAll("[^0-9]", "") : "";
-            
-            // Detectar si el usuario está buscando o filtrando específicamente por cuentas DEVUELTAS
+
+            String userCedulaLimpia = (u != null && u.getCedula() != null) ? u.getCedula().replaceAll("[^0-9]", "")
+                    : "";
+
+            // Detectar si el usuario está buscando o filtrando específicamente por cuentas
+            // DEVUELTAS
             String col7Search = request.getParameter("columns[7][search][value]");
             String searchBox = request.getParameter("search[value]");
             String estadoParam = request.getParameter("estado");
@@ -863,28 +943,31 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             for (InformeSupervision info : todos) {
                 // Evitar duplicados si ya los cargó por ser su propio contrato
                 if (misContratosIds.contains(info.getContratoId())) {
-                    continue; 
+                    continue;
                 }
-                
+
                 if (esAdmin) {
                     listaFinal.add(info);
                 } else {
                     boolean agregado = false;
-                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores ni devueltas,
+                    // Un revisor básico solo ve las cuentas asignadas a él que no sean borradores
+                    // ni devueltas,
                     // a menos que explícitamente filtre o busque por DEVUELTA.
-                    if (esRevisor && info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId() 
+                    if (esRevisor && info.getIdRevisorAsignado() != null && info.getIdRevisorAsignado() == u.getId()
                             && !"BORRADOR".equals(info.getEstadoRadicacion())) {
                         if (!"DEVUELTA".equals(info.getEstadoRadicacion()) || buscandoDevueltas) {
                             listaFinal.add(info);
                             agregado = true;
                         }
                     }
-                    // Un supervisor ve las cuentas de los contratos que tiene asignados (titular o encargado)
+                    // Un supervisor ve las cuentas de los contratos que tiene asignados (titular o
+                    // encargado)
                     if (!agregado && !userCedulaLimpia.isEmpty()) {
                         String supCed = null;
                         if (info.getSupervisor() != null && info.getSupervisor().getCedula() != null) {
                             supCed = info.getSupervisor().getCedula().replaceAll("[^0-9]", "");
-                        } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null && info.getContrato().getSupervisor().getCedula() != null) {
+                        } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null
+                                && info.getContrato().getSupervisor().getCedula() != null) {
                             supCed = info.getContrato().getSupervisor().getCedula().replaceAll("[^0-9]", "");
                         }
                         if (supCed != null && userCedulaLimpia.equals(supCed)
@@ -897,18 +980,20 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
         }
-        
-        // Se elimina el ordenamiento en Java para respetar estrictamente el orden de la base de datos (SQL)
-        // que ya implementa la lógica de la Fila India (FIFO) por estado y por fecha de radicación.
-        
+
+        // Se elimina el ordenamiento en Java para respetar estrictamente el orden de la
+        // base de datos (SQL)
+        // que ya implementa la lógica de la Fila India (FIFO) por estado y por fecha de
+        // radicación.
+
         request.setAttribute("modo", modo); // Pasar el modo a la vista para cambiar el título si se desea
         request.setAttribute("esAdminGlobal", esAdmin);
         request.setAttribute("esRevisorGlobal", esRevisor);
         request.setAttribute("esSupervisorGlobal", esSupervisorRol);
-        
+
         return listaFinal;
     }
-    
+
     public void devolverDatosDataTables(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String drawStr = request.getParameter("draw");
         int draw = (drawStr != null && !drawStr.isEmpty()) ? Integer.parseInt(drawStr) : 1;
@@ -917,7 +1002,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         String lengthStr = request.getParameter("length");
         int length = (lengthStr != null && !lengthStr.isEmpty()) ? Integer.parseInt(lengthStr) : 10;
         String searchValue = request.getParameter("search[value]");
-        if (searchValue != null) searchValue = searchValue.toLowerCase();
+        if (searchValue != null)
+            searchValue = searchValue.toLowerCase();
 
         java.util.List<InformeSupervision> listaTotal = obtenerListaInformes(request);
         int recordsTotal = listaTotal.size();
@@ -934,29 +1020,33 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             boolean matchGlobal = true;
             if (searchValue != null && !searchValue.isEmpty()) {
                 matchGlobal = false;
-                if (info.getContrato() != null && info.getContrato().getNumeroContrato() != null 
+                if (info.getContrato() != null && info.getContrato().getNumeroContrato() != null
                         && info.getContrato().getNumeroContrato().toLowerCase().contains(searchValue)) {
                     matchGlobal = true;
                 }
-                if (info.getContrato() != null && info.getContrato().getContratistaNombre() != null 
+                if (info.getContrato() != null && info.getContrato().getContratistaNombre() != null
                         && info.getContrato().getContratistaNombre().toLowerCase().contains(searchValue)) {
                     matchGlobal = true;
                 }
                 if (info.getPeriodoInforme() != null && info.getPeriodoInforme().toLowerCase().contains(searchValue)) {
                     matchGlobal = true;
                 }
-                if (info.getEstadoRadicacion() != null && info.getEstadoRadicacion().toLowerCase().contains(searchValue)) {
+                if (info.getEstadoRadicacion() != null
+                        && info.getEstadoRadicacion().toLowerCase().contains(searchValue)) {
                     matchGlobal = true;
                 }
                 // Si el filtro coincide con BORRADOR al estar vacío
-                if ((info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) && "borrador".contains(searchValue)) {
+                if ((info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty())
+                        && "borrador".contains(searchValue)) {
                     matchGlobal = true;
                 }
             }
 
             boolean matchEstado = true;
             if (estadoFilter != null && !estadoFilter.isEmpty()) {
-                String currentEstado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion().toUpperCase();
+                String currentEstado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty())
+                        ? "BORRADOR"
+                        : info.getEstadoRadicacion().toUpperCase();
                 if (!currentEstado.equals(estadoFilter)) {
                     matchEstado = false;
                 }
@@ -986,55 +1076,65 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("America/Bogota"));
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
         nf.setMaximumFractionDigits(0);
-        
+
         boolean esAdminGlobal = false;
         boolean esRevisorGlobal = false;
-        if (request.getAttribute("esAdminGlobal") != null) esAdminGlobal = (Boolean) request.getAttribute("esAdminGlobal");
-        if (request.getAttribute("esRevisorGlobal") != null) esRevisorGlobal = (Boolean) request.getAttribute("esRevisorGlobal");
+        if (request.getAttribute("esAdminGlobal") != null)
+            esAdminGlobal = (Boolean) request.getAttribute("esAdminGlobal");
+        if (request.getAttribute("esRevisorGlobal") != null)
+            esRevisorGlobal = (Boolean) request.getAttribute("esRevisorGlobal");
         String modo = (String) request.getAttribute("modo");
 
         for (InformeSupervision info : page) {
             com.google.gson.JsonObject row = new com.google.gson.JsonObject();
-            
+
             // 0: Contrato
             row.addProperty("contrato", info.getContrato() != null ? info.getContrato().getNumeroContrato() : "");
-            
+
             // 1: Contratista
             row.addProperty("contratista", info.getContrato() != null ? info.getContrato().getContratistaNombre() : "");
-            
+
             // 2: Periodo
-            row.addProperty("periodo", info.getPeriodoInforme() != null ? ParseUtils.formatearPeriodo(info.getPeriodoInforme()) : "");
-            
+            row.addProperty("periodo",
+                    info.getPeriodoInforme() != null ? ParseUtils.formatearPeriodo(info.getPeriodoInforme()) : "");
+
             // 3: Tipo
             row.addProperty("tipo", info.getTipoInforme());
-            
+
             // 4: Cuota
             row.addProperty("cuota", info.getNumeroCuota());
-            
-            // 5: Fecha Registro (Si está radicada o en revisión, mostrar la fecha de su último cambio de estado para que coincida con el orden de la fila india)
-            String estadoLabel = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion().toUpperCase();
+
+            // 5: Fecha Registro (Si está radicada o en revisión, mostrar la fecha de su
+            // último cambio de estado para que coincida con el orden de la fila india)
+            String estadoLabel = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty())
+                    ? "BORRADOR"
+                    : info.getEstadoRadicacion().toUpperCase();
             java.util.Date dateToShow = info.getFechaCreacion();
-            if (("RADICADA".equals(estadoLabel) || "VISTO BUENO CONTRATACION".equals(estadoLabel) || "EN REVISION FINAL".equals(estadoLabel)) && info.getFechaRadicacion() != null) {
+            if (("RADICADA".equals(estadoLabel) || "VISTO BUENO CONTRATACION".equals(estadoLabel)
+                    || "EN REVISION FINAL".equals(estadoLabel)) && info.getFechaRadicacion() != null) {
                 dateToShow = info.getFechaRadicacion();
             }
             row.addProperty("fechaRegistro", dateToShow != null ? sdf.format(dateToShow) : "");
             row.addProperty("fechaRegistroTime", dateToShow != null ? dateToShow.getTime() : 0);
-            
+
             // 6: Valor Cuota
-            row.addProperty("valorCuota", info.getValorCuotaPagar() != null ? nf.format(info.getValorCuotaPagar()) : "$ 0");
-            
+            row.addProperty("valorCuota",
+                    info.getValorCuotaPagar() != null ? nf.format(info.getValorCuotaPagar()) : "$ 0");
+
             // 7: Estado
-            String estado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR" : info.getEstadoRadicacion();
+            String estado = (info.getEstadoRadicacion() == null || info.getEstadoRadicacion().isEmpty()) ? "BORRADOR"
+                    : info.getEstadoRadicacion();
             row.addProperty("estado", estado);
-            
+
             // Info adicional para construir las acciones en JS
             row.addProperty("id", info.getId());
             row.addProperty("modo", modo != null ? modo : "");
             row.addProperty("esAdminCuentas", esAdminGlobal);
             row.addProperty("esRevisorCuentas", esRevisorGlobal);
             row.addProperty("idRevisorAsignado", info.getIdRevisorAsignado() != null ? info.getIdRevisorAsignado() : 0);
-            
-            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession()
+                    .getAttribute("usuario");
             row.addProperty("usuarioActualId", u != null ? u.getId() : 0);
 
             boolean esSupervisorContrato = false;
@@ -1043,7 +1143,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 String sCed = "";
                 if (info.getSupervisor() != null && info.getSupervisor().getCedula() != null) {
                     sCed = info.getSupervisor().getCedula().replaceAll("[^0-9]", "");
-                } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null && info.getContrato().getSupervisor().getCedula() != null) {
+                } else if (info.getContrato() != null && info.getContrato().getSupervisor() != null
+                        && info.getContrato().getSupervisor().getCedula() != null) {
                     sCed = info.getContrato().getSupervisor().getCedula().replaceAll("[^0-9]", "");
                 }
                 if (!uCed.isEmpty() && uCed.equals(sCed)) {
@@ -1073,15 +1174,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(contratoId);
                 java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
                 com.google.gson.JsonObject cuotasValores = new com.google.gson.JsonObject();
-                
-                if(previos != null && !previos.isEmpty()){
+
+                if (previos != null && !previos.isEmpty()) {
                     java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
-                    for(com.combinacion.models.InformeSupervision prev : previos){
+                    for (com.combinacion.models.InformeSupervision prev : previos) {
                         String numCuota = prev.getNumeroCuota();
                         if (numCuota != null && cuotasSumadas.contains(numCuota)) {
                             continue; // Ya sumamos la versión más reciente de esta cuota
                         }
-                        if(prev.getValorCuotaPagar() != null){
+                        if (prev.getValorCuotaPagar() != null) {
                             acumulado = acumulado.add(prev.getValorCuotaPagar());
                             if (numCuota != null) {
                                 cuotasSumadas.add(numCuota);
@@ -1098,20 +1199,22 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 boolean esPrimeraCuotaAdicion = false;
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0) {
                     int totalCuotas = contrato.getNumCuotasNumero();
-                int ultimaNormal = totalCuotas;
-                if (siguienteCuota == ultimaNormal) {
+                    int ultimaNormal = totalCuotas;
+                    if (siguienteCuota == ultimaNormal) {
                         esPrimeraCuotaAdicion = true;
                     }
                 }
 
-                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es la primera cuota de adicion
-                if(previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
+                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es
+                // la primera cuota de adicion
+                if (previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
                     org.json.JSONObject newSoportes = new org.json.JSONObject();
                     boolean foundRpc = false, foundMod = false, foundSecop = false;
                     System.out.println("Auto-cargando soportes para cuota: " + siguienteCuota);
                     for (int i = 0; i < previos.size(); i++) {
                         String sJson = previos.get(i).getSoportesJson();
-                        System.out.println("Revisando previo cuota " + previos.get(i).getNumeroCuota() + " -> JSON: " + sJson);
+                        System.out.println(
+                                "Revisando previo cuota " + previos.get(i).getNumeroCuota() + " -> JSON: " + sJson);
                         if (sJson != null && !sJson.isEmpty()) {
                             try {
                                 org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
@@ -1123,7 +1226,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                         foundRpc = true;
                                     }
                                 }
-                                boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0 && siguienteCuota > contrato.getNumCuotasNumero();
+                                boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo())
+                                        && contrato.getNumCuotasNumero() > 0
+                                        && siguienteCuota > contrato.getNumCuotasNumero();
                                 if (esAdicionAvanzada) {
                                     if (!foundMod) {
                                         org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
@@ -1159,14 +1264,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())) {
                     poblarTextosModificacion(contrato, informeAuto);
                 }
-                
+
                 request.setAttribute("informeAuto", informeAuto);
                 // --------------------------------------------------------------------------------
-                
-                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(null, contrato.getActividadesEntregables()));
+
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser
+                        .decodificarConcepto(null, contrato.getActividadesEntregables()));
             }
         }
-        
+
         request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "insert");
@@ -1190,7 +1296,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
                 int cuotaActualParsed = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
                 request.setAttribute("siguienteCuota", cuotaActualParsed);
-                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser
+                        .decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
             }
         }
         request.setAttribute("readonly", true);
@@ -1221,36 +1328,42 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     poblarTextosModificacion(contrato, informeAuto);
                     request.setAttribute("informeAuto", informeAuto);
                 }
-                
+
                 int cuotaActualParsed = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
                 request.setAttribute("siguienteCuota", cuotaActualParsed);
-                
-                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser.decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
-                
-                // Determinar si es la PRIMERA cuota de adición para NO autocargar el RPC de las cuotas normales
+
+                request.setAttribute("listaObligaciones", com.combinacion.util.ObligacionesParser
+                        .decodificarConcepto(informe.getConceptoSupervisor(), contrato.getActividadesEntregables()));
+
+                // Determinar si es la PRIMERA cuota de adición para NO autocargar el RPC de las
+                // cuotas normales
                 boolean esPrimeraCuotaAdicion = false;
                 if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0) {
                     int totalCuotas = contrato.getNumCuotasNumero();
-                int ultimaNormal = totalCuotas;
-                int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                if (cuotaActual == ultimaNormal) {
+                    int ultimaNormal = totalCuotas;
+                    int cuotaActual = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                    if (cuotaActual == ultimaNormal) {
                         esPrimeraCuotaAdicion = true;
                     }
                 }
-                
-                // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la primera cuota de adición)
+
+                // Auto-cargar RPC, Modificacion y Secop si no lo tiene (excepto en la primera
+                // cuota de adición)
                 String currentJson = informe.getSoportesJson();
-                java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(informe.getContratoId());
-                
+                java.util.List<com.combinacion.models.InformeSupervision> previos = this
+                        .listarPorContrato(informe.getContratoId());
+
                 // Calcular acumulado previo si el actual es 0 (para borradores viejos)
                 java.math.BigDecimal acumulado = java.math.BigDecimal.ZERO;
                 com.google.gson.JsonObject cuotasValores = new com.google.gson.JsonObject();
                 if (previos != null && !previos.isEmpty()) {
                     java.util.Set<String> cuotasSumadas = new java.util.HashSet<>();
                     for (com.combinacion.models.InformeSupervision prev : previos) {
-                        if (prev.getId() == informe.getId()) continue; // Skip itself
+                        if (prev.getId() == informe.getId())
+                            continue; // Skip itself
                         String numCuota = prev.getNumeroCuota();
-                        if (numCuota != null && cuotasSumadas.contains(numCuota)) continue;
+                        if (numCuota != null && cuotasSumadas.contains(numCuota))
+                            continue;
                         if (prev.getValorCuotaPagar() != null) {
                             acumulado = acumulado.add(prev.getValorCuotaPagar());
                             if (numCuota != null) {
@@ -1262,16 +1375,19 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
                 request.setAttribute("acumuladoPrevio", acumulado);
                 request.setAttribute("cuotasValoresJson", cuotasValores.toString());
-                
+
                 if (!esPrimeraCuotaAdicion) {
                     if (previos != null && !previos.isEmpty()) {
-                        org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty()) ? new org.json.JSONObject(currentJson) : new org.json.JSONObject();
+                        org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty())
+                                ? new org.json.JSONObject(currentJson)
+                                : new org.json.JSONObject();
                         boolean foundRpc = currentObj.has("file_rpc");
                         boolean foundMod = currentObj.has("file_modificacion");
                         boolean foundSecop = currentObj.has("file_secop");
-                        
+
                         for (int i = 0; i < previos.size(); i++) {
-                            if (previos.get(i).getId() == informe.getId()) continue; // Skip itself
+                            if (previos.get(i).getId() == informe.getId())
+                                continue; // Skip itself
                             String sJson = previos.get(i).getSoportesJson();
                             if (sJson != null && !sJson.isEmpty()) {
                                 try {
@@ -1284,11 +1400,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                             foundRpc = true;
                                         }
                                     }
-                                    int cuotaActualStr = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
-                                    boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0 && cuotaActualStr > contrato.getNumCuotasNumero();
+                                    int cuotaActualStr = com.combinacion.util.ParseUtils
+                                            .parseInt(informe.getNumeroCuota());
+                                    boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo())
+                                            && contrato.getNumCuotasNumero() > 0
+                                            && cuotaActualStr > contrato.getNumCuotasNumero();
                                     if (esAdicionAvanzada) {
                                         if (!foundMod) {
-                                            org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                            org.json.JSONObject modData = getLatestFile(sAnteriores,
+                                                    "file_modificacion");
                                             if (modData != null) {
                                                 modData.put("needs_copy", true);
                                                 currentObj.put("file_modificacion", modData);
@@ -1304,7 +1424,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                             }
                                         }
                                     }
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             }
                         }
                         if (currentObj.length() > 0) {
@@ -1314,7 +1435,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
         }
-        
+
         request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "update");
@@ -1323,45 +1444,53 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
     }
 
-    public void descargarArchivoDirecto(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void descargarArchivoDirecto(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String idStr = request.getParameter("id");
         String tipo = request.getParameter("tipo");
-        if (idStr == null || idStr.isEmpty() || tipo == null) return;
-        
+        if (idStr == null || idStr.isEmpty() || tipo == null)
+            return;
+
         InformeSupervision informe = this.obtenerPorId(Integer.parseInt(idStr));
-        if (informe == null) return;
+        if (informe == null)
+            return;
         Contrato contrato = this.obtenerContrato(informe.getContratoId());
-        
+
         java.io.File file = null;
         String fileName = "";
         String mime = "";
         boolean tieneIva = contrato != null && contrato.isFacturadorElectronicoOConIva();
-        
+
         try {
             if ("ds".equals(tipo)) {
-                if (tieneIva) return;
-                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+                if (tieneIva)
+                    return;
+                String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato,
+                        request.getServletContext().getRealPath("/"));
                 file = new java.io.File(xlsxPath);
                 fileName = "DS_Cuota_" + informe.getNumeroCuota() + ".xlsx";
                 mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
             } else if ("supervision".equals(tipo)) {
-                String path = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+                String path = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato,
+                        request.getServletContext().getRealPath("/"));
                 java.io.File docx = new java.io.File(path);
                 file = docx;
                 fileName = "Informe_Supervision_Cuota_" + informe.getNumeroCuota() + ".docx";
                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             } else if ("gestion".equals(tipo)) {
-                String path = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+                String path = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato,
+                        request.getServletContext().getRealPath("/"));
                 java.io.File docx = new java.io.File(path);
                 file = docx;
                 fileName = "Informe_Gestion_Cuota_" + informe.getNumeroCuota() + ".docx";
                 mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             }
-            
+
             if (file != null && file.exists()) {
                 response.setContentType(mime);
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-                try (java.io.FileInputStream fis = new java.io.FileInputStream(file); java.io.OutputStream os = response.getOutputStream()) {
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(file);
+                        java.io.OutputStream os = response.getOutputStream()) {
                     byte[] buffer = new byte[4096];
                     int bytesRead;
                     while ((bytesRead = fis.read(buffer)) != -1) {
@@ -1372,11 +1501,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "No se pudo generar el documento solicitado.");
             }
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generando documento: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Error generando documento: " + e.getMessage());
         }
     }
 
-    public void descargarInforme(HttpServletRequest request, HttpServletResponse response) 
+    public void descargarInforme(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isEmpty()) {
@@ -1400,8 +1530,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
 
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
-            
-            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim()
+                    : "";
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
             if (parts.length >= 4) {
@@ -1422,47 +1553,57 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
-                                        ? informe.getConsecutivoCobro().trim() 
-                                        : (tieneIva ? "FACTURA" : "XXXX");
+            String consecutivoStr = (informe.getConsecutivoCobro() != null
+                    && !informe.getConsecutivoCobro().trim().isEmpty())
+                            ? informe.getConsecutivoCobro().trim()
+                            : (tieneIva ? "FACTURA" : "XXXX");
 
             String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
             String shortContrato = "4121";
             if (!numContrato.isEmpty()) {
                 String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
                 String[] partsNum = cleanNum.split("\\.");
-                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+                if (partsNum.length > 0)
+                    shortContrato = partsNum[0].trim();
             }
-            
+
             String docxName;
             String xlsxName;
             String gestionName;
-            
+
             if (esCuota1) {
                 docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
                 xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
                 gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
             } else if (esCuotaAdicion) {
-                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
+                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " "
+                        + nombreCorto + ".xlsx";
+                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
             } else {
-                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
+                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " "
+                        + nombreCorto + ".xlsx";
                 gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
             }
-            
-            // Archivo DOCX temporal de supervisión (se preserva en Word para firma del supervisor)
-            String filePathDocx = SupervisionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+
+            // Archivo DOCX temporal de supervisión (se preserva en Word para firma del
+            // supervisor)
+            String filePathDocx = SupervisionReportGenerator.generarDocx(informe, contrato,
+                    request.getServletContext().getRealPath("/"));
             if (filePathDocx != null) {
                 docxFile = new File(filePathDocx);
             }
-            
+
             // Archivo XLSX temporal (solo si no tiene IVA)
             String xlsxPdfName = null;
             if (!tieneIva) {
                 try {
-                    String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato, request.getServletContext().getRealPath("/"));
+                    String xlsxPath = com.combinacion.util.CuentaCobroGenerator.generarExcel(informe, contrato,
+                            request.getServletContext().getRealPath("/"));
                     if (xlsxPath != null) {
                         xlsxFile = new File(xlsxPath);
                         if (xlsxFile.exists()) {
@@ -1476,11 +1617,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     System.out.println("No se pudo generar el Excel o PDF: " + e.getMessage());
                 }
             }
-            
+
             // Archivo de Gestion temporal
             String gestionPdfName = null;
             try {
-                String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, request.getServletContext().getRealPath("/"));
+                String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato,
+                        request.getServletContext().getRealPath("/"));
                 if (gestionPath != null) {
                     gestionFile = new File(gestionPath);
                     if (gestionFile.exists()) {
@@ -1505,15 +1647,17 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 } else {
                     primerBloque = numContrato;
                 }
-                
+
                 String safeName = nombreCorto.replaceAll("[^a-zA-Z0-9.\\- ]", "");
-                String zipFileName = primerBloque + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " " + safeName + ".zip";
-                
+                String zipFileName = primerBloque + (!ultimoBloque.isEmpty() ? " - " + ultimoBloque : "") + " "
+                        + safeName + ".zip";
+
                 response.setContentType("application/zip");
                 response.setHeader("Content-Disposition", "attachment; filename=\"" + zipFileName + "\"");
-                
-                try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
-                    
+
+                try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(
+                        response.getOutputStream())) {
+
                     // Agregar DOCX (Supervision)
                     zos.putNextEntry(new java.util.zip.ZipEntry(docxName));
                     try (FileInputStream fis = new FileInputStream(docxFile)) {
@@ -1524,7 +1668,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                     }
                     zos.closeEntry();
-                    
+
                     // Agregar DOCX (Gestion)
                     if (gestionFile != null && gestionFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(gestionName));
@@ -1537,7 +1681,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                         zos.closeEntry();
                     }
-                    
+
                     // Agregar PDF (Gestion)
                     if (gestionPdfFile != null && gestionPdfFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(gestionPdfName));
@@ -1550,7 +1694,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                         zos.closeEntry();
                     }
-                    
+
                     // Agregar XLSX (Cuenta Cobro)
                     if (xlsxFile != null && xlsxFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(xlsxName));
@@ -1563,7 +1707,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                         zos.closeEntry();
                     }
-                    
+
                     // Agregar XLSX PDF (Cuenta Cobro en PDF)
                     if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
                         zos.putNextEntry(new java.util.zip.ZipEntry(xlsxPdfName));
@@ -1576,30 +1720,33 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                         zos.closeEntry();
                     }
-                    
+
                     // Agregar anexos
                     if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
-                            
+
                             // Asegurar que el RPC esté incluido en el ZIP si no está en esta cuota
                             if (!soportes.has("file_rpc") && !esCuota1) {
-                                java.util.List<com.combinacion.models.InformeSupervision> previos = this.listarPorContrato(informe.getContratoId());
+                                java.util.List<com.combinacion.models.InformeSupervision> previos = this
+                                        .listarPorContrato(informe.getContratoId());
                                 if (previos != null) {
                                     for (com.combinacion.models.InformeSupervision prev : previos) {
                                         if (prev.getSoportesJson() != null && !prev.getSoportesJson().isEmpty()) {
                                             try {
-                                                org.json.JSONObject sAnteriores = new org.json.JSONObject(prev.getSoportesJson());
+                                                org.json.JSONObject sAnteriores = new org.json.JSONObject(
+                                                        prev.getSoportesJson());
                                                 if (sAnteriores.has("file_rpc")) {
                                                     soportes.put("file_rpc", sAnteriores.getJSONObject("file_rpc"));
                                                     break; // Se encontró el RPC
                                                 }
-                                            } catch (Exception ignore) {}
+                                            } catch (Exception ignore) {
+                                            }
                                         }
                                     }
                                 }
                             }
-                            
+
                             java.util.Set<String> addedEntries = new java.util.HashSet<>();
                             for (String key : soportes.keySet()) {
                                 String zipPath = "";
@@ -1621,15 +1768,17 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                         while (addedEntries.contains(entryName)) {
                                             int dotIndex = fileName.lastIndexOf('.');
                                             if (dotIndex > 0) {
-                                                entryName = zipPath + fileName.substring(0, dotIndex) + " (" + counter + ")" + fileName.substring(dotIndex);
+                                                entryName = zipPath + fileName.substring(0, dotIndex) + " (" + counter
+                                                        + ")" + fileName.substring(dotIndex);
                                             } else {
                                                 entryName = zipPath + fileName + " (" + counter + ")";
                                             }
                                             counter++;
                                         }
                                         addedEntries.add(entryName);
-                                        
-                                        try (java.io.InputStream in = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+
+                                        try (java.io.InputStream in = com.combinacion.services.GoogleDriveService
+                                                .downloadFile(fileId)) {
                                             if (in != null) {
                                                 boolean entryOpen = false;
                                                 try {
@@ -1639,7 +1788,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                                     int length;
                                                     if ("file_seguridad_social".equals(key)) {
                                                         tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
-                                                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(
+                                                                tempSegSoc)) {
                                                             while ((length = in.read(buffer)) >= 0) {
                                                                 zos.write(buffer, 0, length);
                                                                 fos.write(buffer, 0, length);
@@ -1656,11 +1806,13 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                                     }
                                                 }
                                             } else {
-                                                System.err.println("Aviso: No se pudo obtener InputStream para " + fileName + " (fileId: " + fileId + ")");
+                                                System.err.println("Aviso: No se pudo obtener InputStream para "
+                                                        + fileName + " (fileId: " + fileId + ")");
                                             }
                                         }
                                     } catch (Exception ex) {
-                                        System.err.println("No se pudo descargar o agregar anexo " + fileName + " al ZIP: " + ex.getMessage());
+                                        System.err.println("No se pudo descargar o agregar anexo " + fileName
+                                                + " al ZIP: " + ex.getMessage());
                                     }
                                 }
                             }
@@ -1668,10 +1820,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             System.err.println("Error procesando anexos: " + ex.getMessage());
                         }
                     }
-                    
+
                     // Unir informe de gestión con seguridad social si ambos existen
-                    if (gestionPdfFile != null && gestionPdfFile.exists() && tempSegSoc != null && tempSegSoc.exists()) {
-                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
+                    if (gestionPdfFile != null && gestionPdfFile.exists() && tempSegSoc != null
+                            && tempSegSoc.exists()) {
+                        String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf"
+                                : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
                         java.io.File mergedFile = null;
                         try {
                             mergedFile = java.io.File.createTempFile("merged", ".pdf");
@@ -1687,7 +1841,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 zos.closeEntry();
                             }
                         } catch (Exception mEx) {
-                            System.err.println("Aviso al unir informe de gestión con seguridad social: " + mEx.getMessage());
+                            System.err.println(
+                                    "Aviso al unir informe de gestión con seguridad social: " + mEx.getMessage());
                         } finally {
                             if (mergedFile != null && mergedFile.exists()) {
                                 mergedFile.delete();
@@ -1697,28 +1852,36 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             } else {
                 if (!response.isCommitted()) {
-                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No se pudo generar el informe de supervision principal.");
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            "No se pudo generar el informe de supervision principal.");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             if (!response.isCommitted()) {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al generar el documento: " + e.getMessage());
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Error al generar el documento: " + e.getMessage());
             }
         } finally {
-            if (docxFile != null && docxFile.exists()) docxFile.delete();
-            if (xlsxFile != null && xlsxFile.exists()) xlsxFile.delete();
-            if (xlsxPdfFile != null && xlsxPdfFile.exists()) xlsxPdfFile.delete();
-            if (gestionFile != null && gestionFile.exists()) gestionFile.delete();
-            if (gestionPdfFile != null && gestionPdfFile.exists()) gestionPdfFile.delete();
-            if (tempSegSoc != null && tempSegSoc.exists()) tempSegSoc.delete();
+            if (docxFile != null && docxFile.exists())
+                docxFile.delete();
+            if (xlsxFile != null && xlsxFile.exists())
+                xlsxFile.delete();
+            if (xlsxPdfFile != null && xlsxPdfFile.exists())
+                xlsxPdfFile.delete();
+            if (gestionFile != null && gestionFile.exists())
+                gestionFile.delete();
+            if (gestionPdfFile != null && gestionPdfFile.exists())
+                gestionPdfFile.delete();
+            if (tempSegSoc != null && tempSegSoc.exists())
+                tempSegSoc.delete();
         }
     }
-    
+
     private org.json.JSONObject getLatestFile(org.json.JSONObject soportes, String baseKey) {
         org.json.JSONObject latest = null;
         int maxVersion = -1;
-        
+
         java.util.Iterator<String> keys = soportes.keys();
         while (keys.hasNext()) {
             String k = keys.next();
@@ -1732,17 +1895,20 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         maxVersion = v;
                         latest = soportes.optJSONObject(k);
                     }
-                } catch (NumberFormatException e) {}
+                } catch (NumberFormatException e) {
+                }
             }
         }
         return latest;
     }
 
-    public void exportarPdf(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {  }
+    public void exportarPdf(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    }
 
     public String resolverCuotaFolderId(InformeSupervision informe, Contrato contrato) throws Exception {
-        if (informe == null || contrato == null) return null;
+        if (informe == null || contrato == null)
+            return null;
         String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
         String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
         String shortContrato = "4121";
@@ -1750,18 +1916,20 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (!numContrato.isEmpty()) {
             String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
             String[] partsNum = cleanNum.split("\\.");
-            if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+            if (partsNum.length > 0)
+                shortContrato = partsNum[0].trim();
             if (partsNum.length > 1) {
                 String last = partsNum[partsNum.length - 1].trim();
-                if (last.contains("-")) last = last.split("-")[0].trim();
+                if (last.contains("-"))
+                    last = last.split("-")[0].trim();
                 ultimoBloque = last;
             }
         }
 
-        String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
-                                   + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
-                                   + nombreCompleto.toUpperCase();
-        
+        String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "")
+                + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "")
+                + nombreCompleto.toUpperCase();
+
         String cNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota().trim() : "1";
         String cNoPad = cNum;
         String cPad = cNum;
@@ -1769,20 +1937,24 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             int cInt = Integer.parseInt(cNum);
             cNoPad = String.valueOf(cInt);
             cPad = String.format("%02d", cInt);
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
 
         String folderNameCuota = "CUOTA " + cNoPad;
 
         String confProduccion = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_CUENTAS_COBRO", null);
-        String confPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS", "pruebas cuenta de cobro");
+        String confPruebas = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_PRUEBAS",
+                "pruebas cuenta de cobro");
 
         String produccionFolderId = (confProduccion != null && !confProduccion.trim().isEmpty())
                 ? com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null)
                 : null;
-        String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas, null);
+        String pruebasFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confPruebas,
+                null);
 
         boolean esManualVieja = esCuotaManualHistorica(contrato, informe.getNumeroCuota(), informe.getPeriodoInforme());
-        String rootFolderId = esManualVieja ? pruebasFolderId : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
+        String rootFolderId = esManualVieja ? pruebasFolderId
+                : (produccionFolderId != null ? produccionFolderId : pruebasFolderId);
 
         String nombreCorto = nombreCompleto;
         String[] parts = nombreCompleto.split("\\s+");
@@ -1792,19 +1964,24 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             nombreCorto = parts[0] + " " + parts[1];
         }
 
-        String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
-                                        + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
-                                        + nombreCorto.toUpperCase();
+        String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "")
+                + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "")
+                + nombreCorto.toUpperCase();
 
-        String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
+        String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty())
+                ? (shortContrato + " - " + ultimoBloque)
+                : "";
         String principalFolderId = null;
         if (!prefixContrato.isEmpty()) {
-            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId,
+                    folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
         } else {
-            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
+            principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId,
+                    folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
         }
         if (principalFolderId == null) {
-            principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal, rootFolderId);
+            principalFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNamePrincipal,
+                    rootFolderId);
         }
 
         String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
@@ -1812,30 +1989,34 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         String patternConMarca3 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
         String patternConMarca4 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + "  " + ultimoBloque) : null;
         String cuotaFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
-            principalFolderId,
-            patternConMarca1,
-            patternConMarca2,
-            patternConMarca3,
-            patternConMarca4,
-            "CUOTA " + cNoPad,
-            "CUOTA " + cPad,
-            "Cuota " + cNoPad,
-            "Cuota " + cPad
-        );
+                principalFolderId,
+                patternConMarca1,
+                patternConMarca2,
+                patternConMarca3,
+                patternConMarca4,
+                "CUOTA " + cNoPad,
+                "CUOTA " + cPad,
+                "Cuota " + cNoPad,
+                "Cuota " + cPad);
         if (cuotaFolderId == null) {
-            String folderNameCuotaToCreate = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : folderNameCuota;
-            cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuotaToCreate, principalFolderId);
+            String folderNameCuotaToCreate = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque)
+                    : folderNameCuota;
+            cuotaFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(folderNameCuotaToCreate,
+                    principalFolderId);
         }
 
         try {
-            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(
+                    com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"),
+                    cuotaFolderId);
             com.combinacion.services.GoogleDriveService.setPublicViewPermission(cuotaFolderId);
             String driveUrl = "https://drive.google.com/drive/folders/" + evidenciasFolderId + "?usp=sharing";
             if (!driveUrl.equals(informe.getUrlDriveEvidencias())) {
                 informe.setUrlDriveEvidencias(driveUrl);
                 new com.combinacion.dao.InformeSupervisionDAO().actualizarUrlDrive(informe.getId(), driveUrl);
             }
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
 
         return cuotaFolderId;
     }
@@ -1844,11 +2025,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         try {
             System.out.println("Iniciando subida automatica a Drive para informe ID: " + informeId);
             InformeSupervision informe = this.obtenerPorId(informeId);
-            if (informe == null) return;
+            if (informe == null)
+                return;
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
-            if (contrato == null) return;
-            
-            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            if (contrato == null)
+                return;
+
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim()
+                    : "";
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
             if (parts.length >= 4) {
@@ -1874,39 +2058,49 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 System.err.println("No se pudo resolver cuotaFolderId para informe " + informeId);
                 return;
             }
-            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"), cuotaFolderId);
-            
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(
+                    com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS"),
+                    cuotaFolderId);
 
             // 2. Cargar soportes actuales
             org.json.JSONObject soportes = new org.json.JSONObject();
             if (informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
-                try { 
+                try {
                     soportes = new org.json.JSONObject(informe.getSoportesJson());
-                } catch (Exception ignore) {}
+                } catch (Exception ignore) {
+                }
             }
-            
-            // Si es Cuota Final, purgar documentos que son exclusivos de inicio de cuota 1
+
+            // Solo si el contrato TIENE ADICIÓN y es Cuota Final, purgar documentos que son
+            // exclusivos de inicio de cuota 1
             int cuotaIntVal = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
             int maxCuotasTotales = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
-            boolean esCuotaFinal = "FINAL".equalsIgnoreCase(informe.getTipoInforme()) || (maxCuotasTotales > 0 && cuotaIntVal >= maxCuotasTotales);
-            if (esCuotaFinal) {
-                String[] docsExclusivosCuota1 = {"file_rut", "file_cedula", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica"};
+            boolean esCuotaFinal = "FINAL".equalsIgnoreCase(informe.getTipoInforme())
+                    || (maxCuotasTotales > 0 && cuotaIntVal >= maxCuotasTotales);
+            if (contrato.isTieneAdicion() && esCuotaFinal) {
+                String[] docsExclusivosCuota1 = { "file_rut", "file_cedula", "file_correccion_monetaria",
+                        "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica" };
                 for (String k : docsExclusivosCuota1) {
                     soportes.remove(k);
                 }
             }
-            
+
             // LOGICA AUTOMATICA DE HERENCIA PARA ADICIONES
             boolean esAdicion = "Si".equalsIgnoreCase(contrato.getAdicionSiNo());
-            boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null && informe.getNumeroCuota().equals(String.valueOf(contrato.getNumCuotasNumero())));
-            boolean esCuotaAdicionPosterior = (esAdicion && informe.getNumeroCuota() != null && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato.getNumCuotasNumero());
+            boolean esFirmaAdicion = (esAdicion && informe.getNumeroCuota() != null
+                    && informe.getNumeroCuota().equals(String.valueOf(contrato.getNumCuotasNumero())));
+            boolean esCuotaAdicionPosterior = (esAdicion && informe.getNumeroCuota() != null
+                    && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato
+                            .getNumCuotasNumero());
 
             // HERENCIA GENERAL DE RPC DE CUOTA 1 O PREVIAS PARA TODAS LAS CUOTAS > 1
             if (!esCuota1 && !soportes.has("file_rpc")) {
-                java.util.List<com.combinacion.models.InformeSupervision> previosList = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
+                java.util.List<com.combinacion.models.InformeSupervision> previosList = new com.combinacion.dao.InformeSupervisionDAO()
+                        .listarPorContrato(contrato.getId());
                 if (previosList != null) {
                     for (com.combinacion.models.InformeSupervision prevInf : previosList) {
-                        if (prevInf.getId() != null && prevInf.getId().equals(informe.getId())) continue;
+                        if (prevInf.getId() != null && prevInf.getId().equals(informe.getId()))
+                            continue;
                         if (prevInf.getSoportesJson() != null && !prevInf.getSoportesJson().isEmpty()) {
                             try {
                                 org.json.JSONObject prevJson = new org.json.JSONObject(prevInf.getSoportesJson());
@@ -1917,20 +2111,23 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                     soportes.put("file_rpc", copyObj);
                                     break;
                                 }
-                            } catch (Exception ignore) {}
+                            } catch (Exception ignore) {
+                            }
                         }
                     }
                 }
             }
 
             if (esFirmaAdicion || esCuotaAdicionPosterior) {
-                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO().listarPorContrato(contrato.getId());
+                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
+                        .listarPorContrato(contrato.getId());
                 for (com.combinacion.models.InformeSupervision inf : informes) {
-                    if (inf.getId() != null && inf.getId().equals(informe.getId())) continue;
+                    if (inf.getId() != null && inf.getId().equals(informe.getId()))
+                        continue;
                     if (inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
-                            String[] keys = {"file_rpc", "file_modificacion", "file_secop"};
+                            String[] keys = { "file_rpc", "file_modificacion", "file_secop" };
                             for (String k : keys) {
                                 if (sop.has(k) && !soportes.has(k)) {
                                     org.json.JSONObject fileObj = sop.getJSONObject(k);
@@ -1938,12 +2135,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                     soportes.put(k, fileObj);
                                 }
                             }
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
                 }
             }
-            
-            // Procesar archivos marcados para copia física (tanto los que venían en JSON como los heredados)
+
+            // Procesar archivos marcados para copia física (tanto los que venían en JSON
+            // como los heredados)
             java.util.Iterator<String> iterKeys = soportes.keys();
             while (iterKeys.hasNext()) {
                 String key = iterKeys.next();
@@ -1952,9 +2151,9 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     try {
                         String oldId = fileObj.getString("id");
                         String newName = fileObj.getString("name");
-                        
 
-                        String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName, cuotaFolderId);
+                        String newId = com.combinacion.services.GoogleDriveService.copyFile(oldId, newName,
+                                cuotaFolderId);
                         fileObj.put("name", newName);
                         fileObj.put("id", newId);
                         fileObj.put("url", "https://drive.google.com/file/d/" + newId + "/view");
@@ -1964,42 +2163,50 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     }
                 }
             }
-            
-            // 3. SUBIR ARCHIVOS ADJUNTOS EN EL FORMULARIO (Soportes y Evidencias) DE INMEDIATO
+
+            // 3. SUBIR ARCHIVOS ADJUNTOS EN EL FORMULARIO (Soportes y Evidencias) DE
+            // INMEDIATO
             java.io.File tempSegSoc = null;
             System.out.println("Iniciando escaneo de partes (archivos adjuntos)...");
             for (Part part : request.getParts()) {
                 String submittedFileName = getFileName(part);
                 if (submittedFileName != null && !submittedFileName.trim().isEmpty() && part.getSize() > 0) {
                     String partName = part.getName();
-                    
+
                     String targetFolderId = cuotaFolderId;
                     if (partName != null && partName.startsWith("evidencia_")) {
                         try {
                             int actIndex = Integer.parseInt(partName.split("_")[1]) + 1;
                             String subFolderName = "Actividad " + actIndex;
-                            targetFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(subFolderName, evidenciasFolderId);
+                            targetFolderId = com.combinacion.services.GoogleDriveService
+                                    .getOrCreateFolder(subFolderName, evidenciasFolderId);
                         } catch (Exception e) {
                             targetFolderId = evidenciasFolderId;
                         }
-                    } else if (partName != null && (partName.equals("file_paz_salvo_orfeo") || partName.equals("file_paz_salvo_procesos") || partName.equals("file_paz_salvo_creaciones"))) {
+                    } else if (partName != null
+                            && (partName.equals("file_paz_salvo_orfeo") || partName.equals("file_paz_salvo_procesos")
+                                    || partName.equals("file_paz_salvo_creaciones"))) {
                         targetFolderId = evidenciasFolderId;
                     }
-                    
+
                     // Renombrar los archivos obligatorios segun la nomenclatura
                     if (partName != null && !partName.startsWith("evidencia_")) {
-                        String ext = submittedFileName.contains(".") ? submittedFileName.substring(submittedFileName.lastIndexOf(".")) : ".pdf";
+                        String ext = submittedFileName.contains(".")
+                                ? submittedFileName.substring(submittedFileName.lastIndexOf("."))
+                                : ".pdf";
                         String baseName = submittedFileName;
                         String cuotaNum = informe.getNumeroCuota() != null ? informe.getNumeroCuota() : "";
-                        
+
                         if ("file_rpc".equals(partName)) {
                             baseName = "1. RPC - " + nombreCorto;
                         } else if ("file_modificacion".equals(partName)) {
                             baseName = "2. OTROSI - " + nombreCorto;
                         } else if ("file_factura".equals(partName)) {
-                            baseName = (esCuotaAdicion ? "4." : (esCuota1 ? "2." : "2.")) + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "4." : (esCuota1 ? "2." : "2."))
+                                    + " FACTURA ELECTRONICA CUOTA " + cuotaNum + " - " + nombreCorto;
                         } else if ("file_secop".equals(partName)) {
-                            baseName = (esCuotaAdicion ? "3. CONTRATO Y PANTALLAZO SECOP - " : "2. CONTRATO SECOP II - ") + nombreCorto;
+                            baseName = (esCuotaAdicion ? "3. CONTRATO Y PANTALLAZO SECOP - "
+                                    : "2. CONTRATO SECOP II - ") + nombreCorto;
                         } else if ("file_ficha_tecnica".equals(partName)) {
                             baseName = (esCuotaAdicion ? "5." : "4.") + " FICHA TECNICA - " + nombreCorto;
                         } else if ("file_cedula".equals(partName)) {
@@ -2007,11 +2214,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         } else if ("file_rut".equals(partName)) {
                             baseName = (esCuotaAdicion ? "8." : "7.") + " RUT - " + nombreCorto;
                         } else if ("file_seguridad_social".equals(partName)) {
-                            baseName = (esCuota1 ? "8." : (esCuotaAdicion ? "9." : "4.")) + " SEGURIDAD SOCIAL CUOTA " + cuotaNum + " - " + nombreCorto;
+                            baseName = (esCuota1 ? "8." : (esCuotaAdicion ? "9." : "4.")) + " SEGURIDAD SOCIAL CUOTA "
+                                    + cuotaNum + " - " + nombreCorto;
                         } else if ("file_correccion_monetaria".equals(partName)) {
-                            baseName = (esCuotaAdicion ? "10." : "9.") + " CERTIFICACION CORRECCION MONETARIA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "10." : "9.") + " CERTIFICACION CORRECCION MONETARIA - "
+                                    + nombreCorto;
                         } else if ("file_medicina_prepagada".equals(partName)) {
-                            baseName = (esCuotaAdicion ? "11." : "10.") + " CERTIFICADO MEDICINA PREPAGADA - " + nombreCorto;
+                            baseName = (esCuotaAdicion ? "11." : "10.") + " CERTIFICADO MEDICINA PREPAGADA - "
+                                    + nombreCorto;
                         } else if ("file_certificado_dependientes".equals(partName)) {
                             baseName = (esCuotaAdicion ? "12." : "11.") + " CERTIFICADO DEPENDIENTES - " + nombreCorto;
                         } else if ("file_paz_salvo_orfeo".equals(partName)) {
@@ -2021,36 +2231,41 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         } else if ("file_paz_salvo_creaciones".equals(partName)) {
                             baseName = "Paz y salvo creaciones Cuota No. " + cuotaNum;
                         }
-                        
+
                         submittedFileName = baseName + ext;
                     }
-                    
-                    System.out.println("Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
-                    String mimeType = part.getContentType() != null ? part.getContentType() : "application/octet-stream";
+
+                    System.out.println(
+                            "Subiendo " + partName + ": " + submittedFileName + " (" + part.getSize() + " bytes)");
+                    String mimeType = part.getContentType() != null ? part.getContentType()
+                            : "application/octet-stream";
                     try {
                         String fileId;
-                        if ("file_seguridad_social".equals(partName) && submittedFileName.toLowerCase().endsWith(".pdf")) {
+                        if ("file_seguridad_social".equals(partName)
+                                && submittedFileName.toLowerCase().endsWith(".pdf")) {
                             tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
                             try (java.io.InputStream is = part.getInputStream();
-                                 java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
+                                    java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
                                 byte[] buf = new byte[8192];
                                 int bytesRead;
                                 while ((bytesRead = is.read(buf)) != -1) {
                                     fos.write(buf, 0, bytesRead);
                                 }
                             }
-                            fileId = com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(tempSegSoc, submittedFileName, mimeType, targetFolderId);
+                            fileId = com.combinacion.services.GoogleDriveService.uploadOrUpdateFile(tempSegSoc,
+                                    submittedFileName, mimeType, targetFolderId);
                         } else {
                             try (java.io.InputStream is = part.getInputStream()) {
-                                fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is, part.getSize(), submittedFileName, mimeType, targetFolderId);
+                                fileId = com.combinacion.services.GoogleDriveService.uploadStreamToDrive(is,
+                                        part.getSize(), submittedFileName, mimeType, targetFolderId);
                             }
                         }
-                        
+
                         org.json.JSONObject fileData = new org.json.JSONObject();
                         fileData.put("name", submittedFileName);
                         fileData.put("id", fileId);
                         fileData.put("url", "https://drive.google.com/file/d/" + fileId + "/view");
-                        
+
                         if (partName != null && !partName.startsWith("evidencia_")) {
                             // Para documentos soporte individuales (ej: paz y salvo, rpc, rut, etc.),
                             // reemplazar la versión previa y eliminar sufijos acumulados (_1, _2...)
@@ -2066,7 +2281,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             String existingKey = null;
                             if (soportes.has(partName)) {
                                 org.json.JSONObject existingObj = soportes.optJSONObject(partName);
-                                if (existingObj != null && (fileId.equals(existingObj.optString("id")) || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
+                                if (existingObj != null && (fileId.equals(existingObj.optString("id"))
+                                        || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
                                     existingKey = partName;
                                 }
                             }
@@ -2074,7 +2290,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 int k = 1;
                                 while (soportes.has(partName + "_" + k)) {
                                     org.json.JSONObject existingObj = soportes.optJSONObject(partName + "_" + k);
-                                    if (existingObj != null && (fileId.equals(existingObj.optString("id")) || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
+                                    if (existingObj != null && (fileId.equals(existingObj.optString("id"))
+                                            || submittedFileName.equalsIgnoreCase(existingObj.optString("name")))) {
                                         existingKey = partName + "_" + k;
                                         break;
                                     }
@@ -2088,29 +2305,38 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 String soportesKey = partName;
                                 if (soportes.has(soportesKey)) {
                                     int k = 1;
-                                    while (soportes.has(partName + "_" + k)) k++;
+                                    while (soportes.has(partName + "_" + k))
+                                        k++;
                                     soportesKey = partName + "_" + k;
                                 }
                                 soportes.put(soportesKey, fileData);
                             }
                         }
-                        
+
                         // Persistir de inmediato en base de datos cada archivo subido
                         informe.setSoportesJson(soportes.toString());
-                        new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
-                        
-                        // Pausa preventiva de 60ms para no saturar el burst rate limit de Google Drive API
-                        try { Thread.sleep(60); } catch (InterruptedException ignore) {}
+                        new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(),
+                                soportes.toString());
+
+                        // Pausa preventiva de 60ms para no saturar el burst rate limit de Google Drive
+                        // API
+                        try {
+                            Thread.sleep(60);
+                        } catch (InterruptedException ignore) {
+                        }
                     } catch (Exception ex) {
                         System.err.println("Error subiendo archivo " + submittedFileName + ": " + ex.getMessage());
                         ex.printStackTrace();
                     }
                 }
             }
-            // 4. GUARDAR INMEDIATAMENTE SOPORTES_JSON EN LA BASE DE DATOS PARA QUE NUNCA SE PIERDAN
+            // 4. GUARDAR INMEDIATAMENTE SOPORTES_JSON EN LA BASE DE DATOS PARA QUE NUNCA SE
+            // PIERDAN
             informe.setSoportesJson(soportes.toString());
-            new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(), soportes.toString());
-            System.out.println("Soportes y evidencias actualizados en base de datos con exito para informe ID " + informe.getId());
+            new com.combinacion.dao.InformeSupervisionDAO().actualizarSoportesJson(informe.getId(),
+                    soportes.toString());
+            System.out.println(
+                    "Soportes y evidencias actualizados en base de datos con exito para informe ID " + informe.getId());
 
             // 5. GENERAR Y SUBIR DOCUMENTOS EXCEL, WORD Y PDF A DRIVE
             actualizarFormatosEnDrive(informeId, request.getServletContext().getRealPath("/"));
@@ -2124,30 +2350,41 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     public void actualizarFormatosEnDrive(int informeId, String realPath) {
         try {
             InformeSupervision informe = this.obtenerPorId(informeId);
-            if (informe == null) return;
+            if (informe == null)
+                return;
             Contrato contrato = this.obtenerContrato(informe.getContratoId());
-            if (contrato == null) return;
+            if (contrato == null)
+                return;
 
-            // Asegurar que si es cuenta final, tenga los textos legales oficiales de recibo y paz y salvo
+            // Asegurar que si es cuenta final, tenga los textos legales oficiales de recibo
+            // y paz y salvo
             asegurarTextosInformeFinal(informe, contrato);
             if ("FINAL".equalsIgnoreCase(informe.getTipoInforme())) {
                 try {
-                    informeDAO.actualizarReciboYPazSalvo(informe.getId(), informe.getTipoInforme(), informe.getReciboSatisfaccion(), informe.getConstanciaPazSalvo());
-                } catch (Exception ignore) {}
+                    informeDAO.actualizarReciboYPazSalvo(informe.getId(), informe.getTipoInforme(),
+                            informe.getReciboSatisfaccion(), informe.getConstanciaPazSalvo());
+                } catch (Exception ignore) {
+                }
             }
 
             String cuotaFolderId = resolverCuotaFolderId(informe, contrato);
             if (cuotaFolderId == null) {
                 System.err.println("No se pudo resolver la carpeta de Drive para el informe ID " + informeId);
-                throw new RuntimeException("No se pudo resolver la carpeta de Drive para la cuota " + informe.getNumeroCuota() + " del contrato " + (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
+                throw new RuntimeException("No se pudo resolver la carpeta de Drive para la cuota "
+                        + informe.getNumeroCuota() + " del contrato "
+                        + (contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : ""));
             }
 
-            String carpetaEvidenciasNombre = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS", "EVIDENCIAS");
-            String evidenciasFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder(carpetaEvidenciasNombre, cuotaFolderId);
+            String carpetaEvidenciasNombre = com.combinacion.dao.ConfiguracionDAO.getValor("DRIVE_CARPETA_EVIDENCIAS",
+                    "EVIDENCIAS");
+            String evidenciasFolderId = com.combinacion.services.GoogleDriveService
+                    .getOrCreateFolder(carpetaEvidenciasNombre, cuotaFolderId);
 
-            // Reconciliar y asegurar que soportes y evidencias de soportes_json existan en Drive y no estén en la papelera
+            // Reconciliar y asegurar que soportes y evidencias de soportes_json existan en
+            // Drive y no estén en la papelera
             try {
-                com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService.getDriveService();
+                com.google.api.services.drive.Drive drive = com.combinacion.services.GoogleDriveService
+                        .getDriveService();
                 if (drive != null && informe.getSoportesJson() != null && !informe.getSoportesJson().isEmpty()) {
                     org.json.JSONObject soportes = new org.json.JSONObject(informe.getSoportesJson());
                     java.util.Iterator<String> keys = soportes.keys();
@@ -2156,10 +2393,13 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         org.json.JSONObject obj = soportes.getJSONObject(k);
                         String fileId = obj.optString("id");
                         String fileName = obj.optString("name");
-                        if (fileId == null || fileId.isEmpty()) continue;
+                        if (fileId == null || fileId.isEmpty())
+                            continue;
                         try {
-                            com.google.api.services.drive.model.File gFile = drive.files().get(fileId).setFields("id, name, parents, trashed").execute();
-                            if (gFile == null) continue;
+                            com.google.api.services.drive.model.File gFile = drive.files().get(fileId)
+                                    .setFields("id, name, parents, trashed").execute();
+                            if (gFile == null)
+                                continue;
                             if (Boolean.TRUE.equals(gFile.getTrashed())) {
                                 com.google.api.services.drive.model.File restoreMeta = new com.google.api.services.drive.model.File();
                                 restoreMeta.setTrashed(false);
@@ -2170,17 +2410,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             if (k.startsWith("evidencia_")) {
                                 try {
                                     int actIndex = Integer.parseInt(k.split("_")[1]) + 1;
-                                    targetFolderId = com.combinacion.services.GoogleDriveService.getOrCreateFolder("Actividad " + actIndex, evidenciasFolderId);
+                                    targetFolderId = com.combinacion.services.GoogleDriveService
+                                            .getOrCreateFolder("Actividad " + actIndex, evidenciasFolderId);
                                 } catch (Exception ex) {
                                     targetFolderId = evidenciasFolderId;
                                 }
-                            } else if (k.equals("file_paz_salvo_orfeo") || k.equals("file_paz_salvo_procesos") || k.equals("file_paz_salvo_creaciones")) {
+                            } else if (k.equals("file_paz_salvo_orfeo") || k.equals("file_paz_salvo_procesos")
+                                    || k.equals("file_paz_salvo_creaciones")) {
                                 targetFolderId = evidenciasFolderId;
                             }
                             java.util.List<String> parents = gFile.getParents();
                             if (parents == null || !parents.contains(targetFolderId)) {
-                                String prevParents = (parents != null && !parents.isEmpty()) ? String.join(",", parents) : null;
-                                com.google.api.services.drive.Drive.Files.Update updateReq = drive.files().update(fileId, null)
+                                String prevParents = (parents != null && !parents.isEmpty()) ? String.join(",", parents)
+                                        : null;
+                                com.google.api.services.drive.Drive.Files.Update updateReq = drive.files()
+                                        .update(fileId, null)
                                         .setAddParents(targetFolderId)
                                         .setFields("id, parents");
                                 if (prevParents != null && !prevParents.isEmpty()) {
@@ -2190,7 +2434,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                 System.out.println("Drive: Reubicado en carpeta correcta: " + fileName);
                             }
                         } catch (Exception ex) {
-                            System.err.println("Aviso Drive al verificar soporte/evidencia " + k + " (" + fileName + "): " + ex.getMessage());
+                            System.err.println("Aviso Drive al verificar soporte/evidencia " + k + " (" + fileName
+                                    + "): " + ex.getMessage());
                         }
                     }
                 }
@@ -2213,14 +2458,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                             }
                         }
                     } catch (Exception e) {
-                        System.err.println("Aviso al migrar contenido de carpeta anterior de evidencias: " + e.getMessage());
+                        System.err.println(
+                                "Aviso al migrar contenido de carpeta anterior de evidencias: " + e.getMessage());
                     }
                 }
             } catch (Exception ex) {
                 System.err.println("Aviso Drive al sincronizar soportes y evidencias: " + ex.getMessage());
             }
 
-            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim()
+                    : "";
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
             if (parts.length >= 4) {
@@ -2241,39 +2488,46 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 }
             }
 
-            String consecutivoStr = (informe.getConsecutivoCobro() != null && !informe.getConsecutivoCobro().trim().isEmpty()) 
-                                        ? informe.getConsecutivoCobro().trim() 
-                                        : (tieneIva ? "FACTURA" : "XXXX");
+            String consecutivoStr = (informe.getConsecutivoCobro() != null
+                    && !informe.getConsecutivoCobro().trim().isEmpty())
+                            ? informe.getConsecutivoCobro().trim()
+                            : (tieneIva ? "FACTURA" : "XXXX");
 
             String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato().trim() : "";
             String shortContrato = "4121";
             if (!numContrato.isEmpty()) {
                 String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
                 String[] partsNum = cleanNum.split("\\.");
-                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+                if (partsNum.length > 0)
+                    shortContrato = partsNum[0].trim();
             }
 
             String docxName;
             String xlsxName;
             String gestionName;
-            
+
             if (esCuota1) {
                 docxName = "5. INFORME DE SUPERVISIÓN CUOTA 1 - " + nombreCorto + ".docx";
                 xlsxName = "3. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA 1 " + nombreCorto + ".xlsx";
                 gestionName = "12. INFORME DE GESTIÓN CUOTA 1 - " + nombreCorto + ".docx";
             } else if (esCuotaAdicion) {
-                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
-                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
+                docxName = "6. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
+                xlsxName = "4. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " "
+                        + nombreCorto + ".xlsx";
+                gestionName = "13. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
             } else {
-                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
-                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " " + nombreCorto + ".xlsx";
+                docxName = "3. INFORME DE SUPERVISIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto
+                        + ".docx";
+                xlsxName = "2. DS-" + shortContrato + "-" + consecutivoStr + " CUOTA " + informe.getNumeroCuota() + " "
+                        + nombreCorto + ".xlsx";
                 gestionName = "5. INFORME DE GESTIÓN CUOTA " + informe.getNumeroCuota() + " - " + nombreCorto + ".docx";
             }
 
             String docxPath = com.combinacion.util.SupervisionReportGenerator.generarDocx(informe, contrato, realPath);
             File docxFile = (docxPath != null) ? new File(docxPath) : null;
-            
+
             File xlsxFile = null;
             File xlsxPdfFile = null;
             String xlsxPdfName = null;
@@ -2289,7 +2543,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     }
                 }
             }
-            
+
             String gestionPath = com.combinacion.util.GestionReportGenerator.generarDocx(informe, contrato, realPath);
             File gestionFile = (gestionPath != null) ? new File(gestionPath) : null;
             File gestionPdfFile = null;
@@ -2300,28 +2554,40 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 com.combinacion.util.PdfGenerator.convertToPdf(gestionFile, gestionPdfFile);
                 gestionPdfName = gestionName.replaceAll("(?i)\\.docx$", ".pdf");
             }
-            
+
             if (docxFile != null && docxFile.exists()) {
-                String docxPrefix = (esCuota1 ? "5. INFORME DE SUPERVISI" : (esCuotaAdicion ? "6. INFORME DE SUPERVISI" : "3. INFORME DE SUPERVISI"));
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(docxFile, docxName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId, docxPrefix);
+                String docxPrefix = (esCuota1 ? "5. INFORME DE SUPERVISI"
+                        : (esCuotaAdicion ? "6. INFORME DE SUPERVISI" : "3. INFORME DE SUPERVISI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(docxFile, docxName,
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId,
+                        docxPrefix);
             }
             if (xlsxFile != null && xlsxFile.exists()) {
-                String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
+                String xlsxPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato
+                        + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxFile, xlsxName,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cuotaFolderId, xlsxPrefix);
             }
             if (xlsxPdfFile != null && xlsxPdfFile.exists()) {
-                String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato + "-";
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName, "application/pdf", cuotaFolderId, xlsxPdfPrefix);
+                String xlsxPdfPrefix = (esCuota1 ? "3. DS-" : (esCuotaAdicion ? "4. DS-" : "2. DS-")) + shortContrato
+                        + "-";
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(xlsxPdfFile, xlsxPdfName,
+                        "application/pdf", cuotaFolderId, xlsxPdfPrefix);
             }
             if (gestionFile != null && gestionFile.exists()) {
-                String gestionPrefix = (esCuota1 ? "12. INFORME DE GESTI" : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionFile, gestionName, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId, gestionPrefix);
+                String gestionPrefix = (esCuota1 ? "12. INFORME DE GESTI"
+                        : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionFile, gestionName,
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", cuotaFolderId,
+                        gestionPrefix);
             }
             if (gestionPdfFile != null && gestionPdfFile.exists()) {
-                String gestionPdfPrefix = (esCuota1 ? "12. INFORME DE GESTI" : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
-                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionPdfFile, gestionPdfName, "application/pdf", cuotaFolderId, gestionPdfPrefix);
+                String gestionPdfPrefix = (esCuota1 ? "12. INFORME DE GESTI"
+                        : (esCuotaAdicion ? "13. INFORME DE GESTI" : "5. INFORME DE GESTI"));
+                com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(gestionPdfFile, gestionPdfName,
+                        "application/pdf", cuotaFolderId, gestionPdfPrefix);
             }
-            
+
             // Lógica para merge con SS si existe
             File tempSegSoc = null;
             try {
@@ -2331,7 +2597,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         org.json.JSONObject ssObj = soportes.getJSONObject("file_seguridad_social");
                         String fileId = ssObj.optString("id");
                         if (fileId != null && !fileId.isEmpty()) {
-                            try (java.io.InputStream is = com.combinacion.services.GoogleDriveService.downloadFile(fileId)) {
+                            try (java.io.InputStream is = com.combinacion.services.GoogleDriveService
+                                    .downloadFile(fileId)) {
                                 tempSegSoc = java.io.File.createTempFile("seg_soc", ".pdf");
                                 try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempSegSoc)) {
                                     byte[] buf = new byte[8192];
@@ -2344,13 +2611,15 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         }
                     }
                 }
-                
+
                 if (tempSegSoc != null && tempSegSoc.exists() && gestionPdfFile != null && gestionPdfFile.exists()) {
-                    String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf" : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
+                    String mergedName = esCuota1 ? "13. INFORME GESTIÓN No.1.pdf"
+                            : "INFORME GESTION No. " + informe.getNumeroCuota() + ".pdf";
                     String mergedPrefix = esCuota1 ? "13. INFORME GESTI" : "INFORME GESTI";
                     java.io.File mergedFile = java.io.File.createTempFile("merged", ".pdf");
                     if (com.combinacion.util.PdfGenerator.mergePdfs(gestionPdfFile, tempSegSoc, mergedFile)) {
-                        com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(mergedFile, mergedName, "application/pdf", cuotaFolderId, mergedPrefix);
+                        com.combinacion.services.GoogleDriveService.uploadOrReplaceByPattern(mergedFile, mergedName,
+                                "application/pdf", cuotaFolderId, mergedPrefix);
                         System.out.println("Archivo unificado generado y subido con exito: " + mergedName);
                     } else {
                         System.err.println("Aviso: mergePdfs no pudo unir gestion y seguridad social.");
@@ -2363,31 +2632,39 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 if (tempSegSoc != null && tempSegSoc.exists()) {
                     tempSegSoc.delete();
                 }
-                if (docxFile != null && docxFile.exists()) docxFile.delete();
-                if (xlsxFile != null && xlsxFile.exists()) xlsxFile.delete();
-                if (xlsxPdfFile != null && xlsxPdfFile.exists()) xlsxPdfFile.delete();
-                if (gestionFile != null && gestionFile.exists()) gestionFile.delete();
-                if (gestionPdfFile != null && gestionPdfFile.exists()) gestionPdfFile.delete();
+                if (docxFile != null && docxFile.exists())
+                    docxFile.delete();
+                if (xlsxFile != null && xlsxFile.exists())
+                    xlsxFile.delete();
+                if (xlsxPdfFile != null && xlsxPdfFile.exists())
+                    xlsxPdfFile.delete();
+                if (gestionFile != null && gestionFile.exists())
+                    gestionFile.delete();
+                if (gestionPdfFile != null && gestionPdfFile.exists())
+                    gestionPdfFile.delete();
             }
 
-            System.out.println("Formatos Word, Excel y PDF actualizados con éxito en Drive para informe ID " + informeId);
+            System.out
+                    .println("Formatos Word, Excel y PDF actualizados con éxito en Drive para informe ID " + informeId);
         } catch (Throwable ex) {
-            System.err.println("Error actualizando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
+            System.err
+                    .println("Error actualizando formatos en Drive para informe " + informeId + ": " + ex.getMessage());
             ex.printStackTrace();
             throw new RuntimeException("Error actualizando formatos en Drive: " + ex.getMessage(), ex);
         }
     }
 
     public void sincronizarFormatosDrive(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        com.combinacion.models.Usuario usuarioSesion = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-        boolean esAdminCuentas = usuarioSesion != null && (usuarioSesion.esAdministrador() 
-                || usuarioSesion.tienePermiso("ADMINISTRAR_CUENTAS") 
+        com.combinacion.models.Usuario usuarioSesion = (com.combinacion.models.Usuario) request.getSession()
+                .getAttribute("usuario");
+        boolean esAdminCuentas = usuarioSesion != null && (usuarioSesion.esAdministrador()
+                || usuarioSesion.tienePermiso("ADMINISTRAR_CUENTAS")
                 || usuarioSesion.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR"));
-        
+
         int id = ParseUtils.parseInt(request.getParameter("id"));
         String modoParam = request.getParameter("modo");
         String fromParam = request.getParameter("from");
-        boolean isAjax = "true".equalsIgnoreCase(request.getParameter("ajax")) 
+        boolean isAjax = "true".equalsIgnoreCase(request.getParameter("ajax"))
                 || "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"));
 
         if (!esAdminCuentas) {
@@ -2401,7 +2678,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 return;
             }
             request.getSession().setAttribute("errorMessage", "No tiene permisos para sincronizar formatos en Drive.");
-            response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
+            response.sendRedirect(
+                    "informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
             return;
         }
 
@@ -2423,30 +2701,37 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     response.setContentType("application/json;charset=UTF-8");
                     com.google.gson.JsonObject ok = new com.google.gson.JsonObject();
                     ok.addProperty("success", true);
-                    ok.addProperty("message", "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
+                    ok.addProperty("message",
+                            "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
                     response.getWriter().write(ok.toString());
                     return;
                 }
-                request.getSession().setAttribute("successMessage", "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
+                request.getSession().setAttribute("successMessage",
+                        "Formatos oficiales (Word, Excel y PDF) generados y sincronizados exitosamente en Google Drive.");
             } catch (Throwable ex) {
-                System.err.println("Error al sincronizar con Google Drive para informe ID " + id + ": " + ex.getMessage());
+                System.err.println(
+                        "Error al sincronizar con Google Drive para informe ID " + id + ": " + ex.getMessage());
                 ex.printStackTrace();
                 if (isAjax) {
                     response.setContentType("application/json;charset=UTF-8");
                     com.google.gson.JsonObject err = new com.google.gson.JsonObject();
                     err.addProperty("success", false);
-                    err.addProperty("message", "Error al sincronizar con Google Drive: " + (ex.getMessage() != null ? ex.getMessage() : ex.toString()));
+                    err.addProperty("message", "Error al sincronizar con Google Drive: "
+                            + (ex.getMessage() != null ? ex.getMessage() : ex.toString()));
                     response.getWriter().write(err.toString());
                     return;
                 }
-                request.getSession().setAttribute("errorMessage", "Error al sincronizar con Google Drive: " + ex.getMessage());
+                request.getSession().setAttribute("errorMessage",
+                        "Error al sincronizar con Google Drive: " + ex.getMessage());
             }
         }
 
         if ("lista".equals(fromParam)) {
-            response.sendRedirect("informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
+            response.sendRedirect(
+                    "informes" + (modoParam != null && !modoParam.trim().isEmpty() ? "?modo=" + modoParam : ""));
         } else {
-            response.sendRedirect("informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
+            response.sendRedirect("informes?action=edit&id=" + id
+                    + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : ""));
         }
     }
 
@@ -2454,7 +2739,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         String name = null;
         try {
             name = part.getSubmittedFileName();
-        } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {
+        }
         if (name == null || name.trim().isEmpty()) {
             String contentDisp = part.getHeader("content-disposition");
             if (contentDisp != null) {
@@ -2472,9 +2758,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 name = name.substring(slash + 1);
             }
             name = name.trim();
-            // Limpiar comillas, apóstrofes y saltos de línea que dañan nombres de archivo y consultas API
+            // Limpiar comillas, apóstrofes y saltos de línea que dañan nombres de archivo y
+            // consultas API
             name = name.replace("\"", "").replace("'", "").replace("\r", "").replace("\n", "").trim();
-            
+
             // Truncar de forma segura si supera 100 caracteres preservando la extensión
             if (name.length() > 100) {
                 int dotIdx = name.lastIndexOf('.');
@@ -2492,7 +2779,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
     public void eliminar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
-        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession()
+                .getAttribute("usuario");
         int id = com.combinacion.util.ParseUtils.parseInt(request.getParameter("id"));
         if (id <= 0) {
             request.getSession().setAttribute("errorMessage", "ID de cuenta inválido.");
@@ -2511,7 +2799,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             return;
         }
         new com.combinacion.dao.InformeSupervisionDAO().eliminar(id);
-        com.combinacion.dao.AuditoriaDAO.registrar(u, "Eliminación de Cuenta", "Se eliminó la cuenta de cobro ID " + id + " (estaba en BORRADOR)", request.getRemoteAddr());
+        com.combinacion.dao.AuditoriaDAO.registrar(u, "Eliminación de Cuenta",
+                "Se eliminó la cuenta de cobro ID " + id + " (estaba en BORRADOR)", request.getRemoteAddr());
         request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido eliminada correctamente.");
         response.sendRedirect("informes");
     }
@@ -2525,7 +2814,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             request.setAttribute("error", error);
             mostrarFormularioNuevo(request, response);
         } else {
-            // Procesar Drive después de guardar exitosamente usando el ID recién creado garantizado
+            // Procesar Drive después de guardar exitosamente usando el ID recién creado
+            // garantizado
             InformeSupervision guardado = createdHolder[0];
             int informeId = (guardado != null && guardado.getId() != null) ? guardado.getId() : 0;
             if (informeId <= 0) {
@@ -2535,13 +2825,16 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     informeId = guardado.getId();
                 }
             }
-            
+
             if (informeId > 0) {
-                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-                
+                com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession()
+                        .getAttribute("usuario");
+
                 // Auditoría
-                com.combinacion.dao.AuditoriaDAO.registrar(u, "Creación de Cuenta", "Se creó la cuenta de cobro ID " + informeId + " para el contrato " + form.contratoId, request.getRemoteAddr());
-                
+                com.combinacion.dao.AuditoriaDAO.registrar(u, "Creación de Cuenta",
+                        "Se creó la cuenta de cobro ID " + informeId + " para el contrato " + form.contratoId,
+                        request.getRemoteAddr());
+
                 if (guardado != null && "RADICADA".equals(guardado.getEstadoRadicacion())) {
                     com.combinacion.models.HistorialRadicacion hr = new com.combinacion.models.HistorialRadicacion();
                     hr.setIdInforme(informeId);
@@ -2554,12 +2847,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 procesarArchivosDrive(informeId, request);
             }
             if (guardado != null && "RADICADA".equals(guardado.getEstadoRadicacion())) {
-                request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+                request.getSession().setAttribute("successMessage",
+                        "La cuenta de cobro ha sido radicada correctamente.");
                 response.sendRedirect("informes");
             } else {
                 request.getSession().setAttribute("successMessage", "El borrador ha sido guardado exitosamente.");
                 String modoParam = request.getParameter("modo");
-                String urlRedirect = "informes?action=edit&id=" + informeId + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
+                String urlRedirect = "informes?action=edit&id=" + informeId
+                        + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
                 response.sendRedirect(urlRedirect);
             }
         }
@@ -2569,23 +2864,28 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         int id = ParseUtils.parseInt(request.getParameter("id"));
         InformeFormData form = construirFormData(request);
-        
+
         com.combinacion.models.InformeSupervision existente = this.obtenerPorId(id);
         String estadoAnterior = (existente != null) ? existente.getEstadoRadicacion() : "";
-        String obsAnterior = (existente != null && existente.getObservacionesRevision() != null) ? existente.getObservacionesRevision() : "";
-        
+        String obsAnterior = (existente != null && existente.getObservacionesRevision() != null)
+                ? existente.getObservacionesRevision()
+                : "";
+
         String error = this.actualizar(id, form);
         if (error != null) {
             request.setAttribute("error", error);
             mostrarFormularioEdicion(request, response);
         } else {
-            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession().getAttribute("usuario");
-            
+            com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession()
+                    .getAttribute("usuario");
+
             // Auditoría
-            com.combinacion.dao.AuditoriaDAO.registrar(u, "Actualización de Cuenta", "Se actualizó la cuenta de cobro ID " + id, request.getRemoteAddr());
-            
+            com.combinacion.dao.AuditoriaDAO.registrar(u, "Actualización de Cuenta",
+                    "Se actualizó la cuenta de cobro ID " + id, request.getRemoteAddr());
+
             InformeSupervision infActualizado = this.obtenerPorId(id);
-            String estadoNuevoEfectivo = (infActualizado != null) ? infActualizado.getEstadoRadicacion() : form.estadoRadicacion;
+            String estadoNuevoEfectivo = (infActualizado != null) ? infActualizado.getEstadoRadicacion()
+                    : form.estadoRadicacion;
             boolean eraRadicacionOReingreso = "true".equals(request.getParameter("radicar"));
             String obsDevolucionParam = request.getParameter("observaciones_devolucion");
 
@@ -2640,12 +2940,17 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         break;
                     }
                 }
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
 
-            boolean tieneArchivosEliminados = (form.soportesEliminados != null && !form.soportesEliminados.trim().isEmpty());
-            boolean esRadicacion = (form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion) && !"DEVUELTA".equals(form.estadoRadicacion))
-                    || (estadoNuevoEfectivo != null && !"BORRADOR".equals(estadoNuevoEfectivo) && !"DEVUELTA".equals(estadoNuevoEfectivo));
-            boolean faltaCarpetaDrive = (existente != null && (existente.getUrlDriveEvidencias() == null || existente.getUrlDriveEvidencias().trim().isEmpty()));
+            boolean tieneArchivosEliminados = (form.soportesEliminados != null
+                    && !form.soportesEliminados.trim().isEmpty());
+            boolean esRadicacion = (form.estadoRadicacion != null && !"BORRADOR".equals(form.estadoRadicacion)
+                    && !"DEVUELTA".equals(form.estadoRadicacion))
+                    || (estadoNuevoEfectivo != null && !"BORRADOR".equals(estadoNuevoEfectivo)
+                            && !"DEVUELTA".equals(estadoNuevoEfectivo));
+            boolean faltaCarpetaDrive = (existente != null && (existente.getUrlDriveEvidencias() == null
+                    || existente.getUrlDriveEvidencias().trim().isEmpty()));
 
             if (tieneArchivosNuevos || tieneArchivosEliminados || esRadicacion || faltaCarpetaDrive) {
                 procesarArchivosDrive(id, request);
@@ -2653,20 +2958,25 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 final String realPath = request.getServletContext().getRealPath("/");
                 encolarActualizacionDrive(id, realPath);
             }
-            
+
             if (eraRadicacionOReingreso) {
                 if ("EN REVISION SUPERVISOR".equals(estadoNuevoEfectivo)) {
-                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Supervisión.");
+                    request.getSession().setAttribute("successMessage",
+                            "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Supervisión.");
                 } else if ("EN REVISION CONTRATACION".equals(estadoNuevoEfectivo)) {
-                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Contratación.");
+                    request.getSession().setAttribute("successMessage",
+                            "La cuenta de cobro ha sido radicada nuevamente y enviada directamente a Contratación.");
                 } else {
-                    request.getSession().setAttribute("successMessage", "La cuenta de cobro ha sido radicada correctamente.");
+                    request.getSession().setAttribute("successMessage",
+                            "La cuenta de cobro ha sido radicada correctamente.");
                 }
                 response.sendRedirect("informes");
             } else {
-                request.getSession().setAttribute("successMessage", "La información ha sido actualizada correctamente.");
+                request.getSession().setAttribute("successMessage",
+                        "La información ha sido actualizada correctamente.");
                 String modoParam = request.getParameter("modo");
-                String urlRedirect = "informes?action=edit&id=" + id + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
+                String urlRedirect = "informes?action=edit&id=" + id
+                        + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
                 response.sendRedirect(urlRedirect);
             }
         }
@@ -2679,12 +2989,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (idParam > 0) {
             exist = informeDAO.obtenerPorId(idParam);
         }
-        
+
         f.contratoId = ParseUtils.parseInt(r.getParameter("contrato_id"));
         if (f.contratoId <= 0 && exist != null && exist.getContratoId() != null) {
             f.contratoId = exist.getContratoId();
         }
-        
+
         String supParam = r.getParameter("supervisor_id");
         if (supParam != null && !supParam.trim().isEmpty()) {
             int sId = ParseUtils.parseInt(supParam);
@@ -2694,7 +3004,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         } else if (exist != null && exist.getSupervisorId() != null) {
             f.supervisorId = exist.getSupervisorId();
         }
-        
+
         f.periodoInforme = r.getParameter("periodo_informe");
         if ((f.periodoInforme == null || f.periodoInforme.trim().isEmpty())) {
             String fallback = r.getParameter("periodo_informe_fallback");
@@ -2707,12 +3017,12 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         if (f.periodoInforme != null && !f.periodoInforme.trim().isEmpty()) {
             f.periodoInforme = com.combinacion.util.ParseUtils.normalizarPeriodo(f.periodoInforme, null);
         }
-        
+
         f.tipoInforme = r.getParameter("tipo_informe");
         if ((f.tipoInforme == null || f.tipoInforme.trim().isEmpty()) && exist != null) {
             f.tipoInforme = exist.getTipoInforme();
         }
-        
+
         f.numeroCuota = r.getParameter("numero_cuota");
         if ((f.numeroCuota == null || f.numeroCuota.trim().isEmpty())) {
             String fallback = r.getParameter("numero_cuota_fallback");
@@ -2750,7 +3060,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         f.afpPension = r.getParameter("afp_pension");
         f.arl = r.getParameter("arl");
         f.esContratistaNuevo = r.getParameter("es_contratista_nuevo");
-        
+
         String conceptoJson = r.getParameter("concepto_supervisor_json");
         if (conceptoJson != null && !conceptoJson.isEmpty()) {
             if (conceptoJson.startsWith("B64:")) {
@@ -2796,14 +3106,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 f.conceptoSupervisor = cleanWordHtml(r.getParameter("concepto_supervisor"));
             }
         }
-        
+
         f.observacionesFinancieras = cleanWordHtml(r.getParameter("observaciones_financieras"));
         f.observacionesTecnicas = cleanWordHtml(r.getParameter("observaciones_tecnicas"));
         f.recomendaciones = cleanWordHtml(r.getParameter("recomendaciones"));
         f.fechaSuscripcion = r.getParameter("fecha_suscripcion");
         f.soportesJson = r.getParameter("soportes_json");
         f.soportesEliminados = r.getParameter("soportes_eliminados");
-        
+
         // Manejo de radicacion
         String radicar = r.getParameter("radicar");
         if ("true".equals(radicar)) {
@@ -2827,25 +3137,27 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
         } else if (exist != null) {
             f.idRevisorAsignado = exist.getIdRevisorAsignado();
         }
-        
+
         return f;
     }
 
     public String cleanWordHtml(String html) {
-        if (html == null || html.isEmpty()) return html;
+        if (html == null || html.isEmpty())
+            return html;
         try {
             // Limpieza cruda antes de Jsoup para atributos mal formados sin comillas
             html = html.replaceAll("(?i)<link[^>]*>", "");
             html = html.replaceAll("(?i)<style[^>]*>[\\s\\S]*?</style>", "");
-            html = html.replaceAll(",(?=[^\\s<])", ", "); // Separar comas pegadas a textos/números para evitar que Word comprima columnas
+            html = html.replaceAll(",(?=[^\\s<])", ", "); // Separar comas pegadas a textos/números para evitar que Word
+                                                          // comprima columnas
             html = html.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
             html = html.replaceAll("(?i)o:p", "span"); // Reemplazar tags <o:p> de word
             html = html.replaceAll("(?i)<meta[^>]*>", "");
-            
+
             org.jsoup.nodes.Document docHtml = org.jsoup.Jsoup.parseBodyFragment(html);
             docHtml.outputSettings().prettyPrint(false); // NO agregar saltos de linea o sangrias artificiales
-            
+
             for (org.jsoup.nodes.Element e : docHtml.getAllElements()) {
                 String style = e.attr("style");
                 if (style != null && !style.isEmpty()) {
@@ -2854,8 +3166,10 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                     style = style.replaceAll("(?i)font-family:[^;]+;?", "");
                     style = style.replaceAll("(?i)font-size:[^;]+;?", "");
                     style = style.replaceAll("(?i)line-height:[^;]+;?", "");
-                    if (style.trim().isEmpty()) e.removeAttr("style");
-                    else e.attr("style", style.trim());
+                    if (style.trim().isEmpty())
+                        e.removeAttr("style");
+                    else
+                        e.attr("style", style.trim());
                 }
                 e.removeAttr("class");
                 e.removeAttr("lang");
@@ -2865,7 +3179,7 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             }
             // Remover comentarios HTML (basura de Word)
             String finalHtml = docHtml.body().html().replaceAll("(?s)<!--.*?-->", "");
-            
+
             // Limpieza final cruda por si quedó basura textual
             finalHtml = finalHtml.replaceAll("(?i)mso-[a-zA-Z0-9\\-]+:[^;\"'>]+;?", "");
             finalHtml = finalHtml.replaceAll("(?i)font-family:[^;\"'>]+;?", "");
@@ -2873,19 +3187,20 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             finalHtml = finalHtml.replaceAll("(?i)line-height:[^;\"'>]+;?", "");
             finalHtml = finalHtml.replaceAll("(?i)<meta[^>]*>", "");
             finalHtml = finalHtml.replaceAll("(?i)<b id=\"docs-internal-guid-[^\"]*\"></b>", "");
-            
+
             // Eliminar tags span vacíos o basura que quedó
             finalHtml = finalHtml.replaceAll("(?i)<span[^>]*>\\s*</span>", "");
-            
+
             // Colapsar saltos de linea br excesivos consecutivos (maximo 1)
             finalHtml = finalHtml.replaceAll("(?i)(<br\\s*/?>\\s*){2,}", "<br>");
             // Eliminar parrafos o divs completamente vacios
             finalHtml = finalHtml.replaceAll("(?i)<p>\\s*(&nbsp;|<br\\s*/?>)?\\s*</p>", "");
             finalHtml = finalHtml.replaceAll("(?i)<div>\\s*(&nbsp;|<br\\s*/?>)?\\s*</div>", "");
-            
+
             // Eliminar br al inicio o fin del texto
-            finalHtml = finalHtml.replaceAll("(?i)^(\\s*<br\\s*/?>)+", "").replaceAll("(?i)(<br\\s*/?>\\s*)+$", "").trim();
-            
+            finalHtml = finalHtml.replaceAll("(?i)^(\\s*<br\\s*/?>)+", "").replaceAll("(?i)(<br\\s*/?>\\s*)+$", "")
+                    .trim();
+
             return finalHtml;
         } catch (Exception ex) {
             return html;
@@ -2895,19 +3210,26 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
     public void poblarTextosModificacion(Contrato contrato, InformeSupervision informe) {
         java.text.NumberFormat nf = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("es", "CO"));
         nf.setMaximumFractionDigits(0);
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new java.util.Locale("es", "CO"));
-        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd 'de' MMMM 'de' yyyy",
+                new java.util.Locale("es", "CO"));
+
         String valTotal = (contrato.getValorTotalAdicion() != null) ? nf.format(contrato.getValorTotalAdicion()) : "$0";
         String valCuota = (contrato.getValorCuotaNumero() != null) ? nf.format(contrato.getValorCuotaNumero()) : "$0";
-        String valTotalLetras = (contrato.getValorTotalAdicionLetras() != null) ? contrato.getValorTotalAdicionLetras().toUpperCase() : "";
-        String valCuotasLetras = (contrato.getValorCuotaLetras() != null) ? contrato.getValorCuotaLetras().toLowerCase() : "";
-        
+        String valTotalLetras = (contrato.getValorTotalAdicionLetras() != null)
+                ? contrato.getValorTotalAdicionLetras().toUpperCase()
+                : "";
+        String valCuotasLetras = (contrato.getValorCuotaLetras() != null) ? contrato.getValorCuotaLetras().toLowerCase()
+                : "";
+
         int numCuotas = contrato.getNumeroCuotasAdicion();
-        String[] cuotasStr = {"cero (0)", "una (1)", "dos (2)", "tres (3)", "cuatro (4)", "cinco (5)", "seis (6)", "siete (7)", "ocho (8)", "nueve (9)", "diez (10)", "once (11)", "doce (12)"};
-        String cuotasTxt = (numCuotas >= 0 && numCuotas <= 12) ? cuotasStr[numCuotas] : numCuotas + " (" + numCuotas + ")";
-        
-        String fechaMod = contrato.getFechaModificacion() != null ? sdf.format(contrato.getFechaModificacion()) : "XX de XXX de 202X";
-        
+        String[] cuotasStr = { "cero (0)", "una (1)", "dos (2)", "tres (3)", "cuatro (4)", "cinco (5)", "seis (6)",
+                "siete (7)", "ocho (8)", "nueve (9)", "diez (10)", "once (11)", "doce (12)" };
+        String cuotasTxt = (numCuotas >= 0 && numCuotas <= 12) ? cuotasStr[numCuotas]
+                : numCuotas + " (" + numCuotas + ")";
+
+        String fechaMod = contrato.getFechaModificacion() != null ? sdf.format(contrato.getFechaModificacion())
+                : "XX de XXX de 202X";
+
         String fechaPror = "XX de XXX de 202X";
         if (contrato.getFechaTerminacion() != null) {
             java.util.Calendar cal = java.util.Calendar.getInstance();
@@ -2915,49 +3237,67 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             cal.add(java.util.Calendar.MONTH, numCuotas);
             fechaPror = sdf.format(cal.getTime());
         }
-        
-        String numMod = contrato.getNumeroModificacion() != null && !contrato.getNumeroModificacion().trim().isEmpty() ? contrato.getNumeroModificacion() : "00X";
+
+        String numMod = contrato.getNumeroModificacion() != null && !contrato.getNumeroModificacion().trim().isEmpty()
+                ? contrato.getNumeroModificacion()
+                : "00X";
         String numContrato = contrato.getNumeroContrato() != null ? contrato.getNumeroContrato() : "XXX";
         if (contrato.getAnio() != null && contrato.getAnio() > 0) {
             numContrato += "-" + contrato.getAnio();
         }
-        
-        String valTotalMod = (contrato.getValorContratoMasAdicion() != null) ? nf.format(contrato.getValorContratoMasAdicion()) : "$0";
-        String valTotalModLetras = (contrato.getValorContratoMasAdicionLetras() != null) ? contrato.getValorContratoMasAdicionLetras().toUpperCase() : "";
-                
-        String adicionTxt = String.format("Mediante Modificación No. %s del %s se adiciona la suma %s (%s).", 
+
+        String valTotalMod = (contrato.getValorContratoMasAdicion() != null)
+                ? nf.format(contrato.getValorContratoMasAdicion())
+                : "$0";
+        String valTotalModLetras = (contrato.getValorContratoMasAdicionLetras() != null)
+                ? contrato.getValorContratoMasAdicionLetras().toUpperCase()
+                : "";
+
+        String adicionTxt = String.format("Mediante Modificación No. %s del %s se adiciona la suma %s (%s).",
                 numMod, fechaMod, valTotalLetras, valTotal);
-                
-        String tipoContratoStr = contrato.getTipoContrato() != null && !contrato.getTipoContrato().trim().isEmpty() ? contrato.getTipoContrato() : "Prestación de servicios";
-        
-        String prorrogaTxt = String.format("Mediante Modificación No. %s del %s se prorroga el Contrato de %s %s hasta el %s.",
+
+        String tipoContratoStr = contrato.getTipoContrato() != null && !contrato.getTipoContrato().trim().isEmpty()
+                ? contrato.getTipoContrato()
+                : "Prestación de servicios";
+
+        String prorrogaTxt = String.format(
+                "Mediante Modificación No. %s del %s se prorroga el Contrato de %s %s hasta el %s.",
                 numMod, fechaMod, tipoContratoStr, numContrato, fechaPror);
-                
-        String modificacionTxt = String.format("Modificación No. %s del %s mediante la cual las partes acordaron: PRORROGAR el Contrato de %s No. %s hasta el %s; y ADICIONAR el Contrato de %s No. %s por la suma de %s (%s). Dicha adición se pagará en %s cuotas iguales, cada una de ellas por valor de %s (%s).\n\nPor lo tanto, el valor total del contrato queda en la suma de %s (%s).",
+
+        String modificacionTxt = String.format(
+                "Modificación No. %s del %s mediante la cual las partes acordaron: PRORROGAR el Contrato de %s No. %s hasta el %s; y ADICIONAR el Contrato de %s No. %s por la suma de %s (%s). Dicha adición se pagará en %s cuotas iguales, cada una de ellas por valor de %s (%s).\n\nPor lo tanto, el valor total del contrato queda en la suma de %s (%s).",
                 numMod,
                 fechaMod,
                 tipoContratoStr,
-                numContrato, 
+                numContrato,
                 fechaPror,
                 tipoContratoStr,
                 numContrato,
                 valTotalLetras, valTotal, cuotasTxt,
                 valCuotasLetras, valCuota,
                 valTotalModLetras, valTotalMod);
-                
-        boolean adVacio = (informe.getAdiciones() == null || informe.getAdiciones().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getAdiciones().trim()));
-        boolean proVacio = (informe.getProrrogas() == null || informe.getProrrogas().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getProrrogas().trim()));
-        boolean modVacio = (informe.getModificaciones() == null || informe.getModificaciones().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getModificaciones().trim()));
-        
-        if (adVacio) informe.setAdiciones(adicionTxt);
-        if (proVacio) informe.setProrrogas(prorrogaTxt);
-        if (modVacio) informe.setModificaciones(modificacionTxt);
+
+        boolean adVacio = (informe.getAdiciones() == null || informe.getAdiciones().trim().isEmpty()
+                || "N/A".equalsIgnoreCase(informe.getAdiciones().trim()));
+        boolean proVacio = (informe.getProrrogas() == null || informe.getProrrogas().trim().isEmpty()
+                || "N/A".equalsIgnoreCase(informe.getProrrogas().trim()));
+        boolean modVacio = (informe.getModificaciones() == null || informe.getModificaciones().trim().isEmpty()
+                || "N/A".equalsIgnoreCase(informe.getModificaciones().trim()));
+
+        if (adVacio)
+            informe.setAdiciones(adicionTxt);
+        if (proVacio)
+            informe.setProrrogas(prorrogaTxt);
+        if (modVacio)
+            informe.setModificaciones(modificacionTxt);
     }
 
     public void asegurarTextosInformeFinal(InformeSupervision informe, Contrato contrato) {
-        if (informe == null || contrato == null) return;
+        if (informe == null || contrato == null)
+            return;
 
-        boolean esInformeFinal = (informe.getTipoInforme() != null && informe.getTipoInforme().toUpperCase().contains("FINAL"));
+        boolean esInformeFinal = (informe.getTipoInforme() != null
+                && informe.getTipoInforme().toUpperCase().contains("FINAL"));
         if (!esInformeFinal && contrato.getNumCuotasNumero() > 0) {
             int totalCuotas = contrato.getNumCuotasNumero() + contrato.getNumeroCuotasAdicion();
             int cuotaActual = ParseUtils.parseInt(informe.getNumeroCuota());
@@ -2969,17 +3309,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
 
         if (esInformeFinal) {
             String numContrato = (contrato.getNumeroContrato() != null) ? contrato.getNumeroContrato().trim() : "";
-            if (contrato.getAnio() != null && contrato.getAnio() > 0 && !numContrato.contains(String.valueOf(contrato.getAnio()))) {
+            if (contrato.getAnio() != null && contrato.getAnio() > 0
+                    && !numContrato.contains(String.valueOf(contrato.getAnio()))) {
                 numContrato += " de " + contrato.getAnio();
             }
 
-            String textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° " + numContrato + ".";
+            String textoRecibo = "Con la firma del presente informe se deja constancia del recibo a satisfacción por parte del DISTRITO DE SANTIAGO DE CALI – DEPARTAMENTO ADMINISTRATIVO DE GESTIÓN JURÍDICA PÚBLICA de los servicios prestados pactados en el contrato N° "
+                    + numContrato + ".";
             String textoPazSalvo = "El contratista a la fecha del presente informe no posee a su cargo elementos devolutivos de propiedad del Distrito de Santiago de Cali, entregados por este organismo para el desempeño de sus actividades. Así mismo se encuentra a paz y salvo con el archivo de gestión documental y el sistema de gestión documental.";
 
-            if (informe.getReciboSatisfaccion() == null || informe.getReciboSatisfaccion().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getReciboSatisfaccion().trim())) {
+            if (informe.getReciboSatisfaccion() == null || informe.getReciboSatisfaccion().trim().isEmpty()
+                    || "N/A".equalsIgnoreCase(informe.getReciboSatisfaccion().trim())) {
                 informe.setReciboSatisfaccion(textoRecibo);
             }
-            if (informe.getConstanciaPazSalvo() == null || informe.getConstanciaPazSalvo().trim().isEmpty() || "N/A".equalsIgnoreCase(informe.getConstanciaPazSalvo().trim())) {
+            if (informe.getConstanciaPazSalvo() == null || informe.getConstanciaPazSalvo().trim().isEmpty()
+                    || "N/A".equalsIgnoreCase(informe.getConstanciaPazSalvo().trim())) {
                 informe.setConstanciaPazSalvo(textoPazSalvo);
             }
         }
@@ -3004,7 +3348,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             if (confProduccion == null || confProduccion.trim().isEmpty()) {
                 return false;
             }
-            String produccionFolderId = com.combinacion.services.GoogleDriveService.resolveFolderIdOrGetOrCreate(confProduccion, null);
+            String produccionFolderId = com.combinacion.services.GoogleDriveService
+                    .resolveFolderIdOrGetOrCreate(confProduccion, null);
             if (produccionFolderId == null) {
                 return false;
             }
@@ -3015,18 +3360,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             if (!numContrato.isEmpty()) {
                 String cleanNum = numContrato.replaceAll("(?i)\\s*-\\s*202\\d.*", "").trim();
                 String[] partsNum = cleanNum.split("\\.");
-                if (partsNum.length > 0) shortContrato = partsNum[0].trim();
+                if (partsNum.length > 0)
+                    shortContrato = partsNum[0].trim();
                 if (partsNum.length > 1) {
                     String last = partsNum[partsNum.length - 1].trim();
-                    if (last.contains("-")) last = last.split("-")[0].trim();
+                    if (last.contains("-"))
+                        last = last.split("-")[0].trim();
                     ultimoBloque = last;
                 }
             }
 
-            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim() : "";
-            String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
-                                       + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
-                                       + nombreCompleto.toUpperCase();
+            String nombreCompleto = contrato.getContratistaNombre() != null ? contrato.getContratistaNombre().trim()
+                    : "";
+            String folderNamePrincipal = (!shortContrato.isEmpty() ? shortContrato + " - " : "")
+                    + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "")
+                    + nombreCompleto.toUpperCase();
 
             String nombreCorto = nombreCompleto;
             String[] parts = nombreCompleto.split("\\s+");
@@ -3036,16 +3384,21 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 nombreCorto = parts[0] + " " + parts[1];
             }
 
-            String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "") 
-                                            + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "") 
-                                            + nombreCorto.toUpperCase();
+            String folderNamePrincipalCorto = (!shortContrato.isEmpty() ? shortContrato + " - " : "")
+                    + (!ultimoBloque.isEmpty() ? ultimoBloque + " " : "")
+                    + nombreCorto.toUpperCase();
 
-            String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty()) ? (shortContrato + " - " + ultimoBloque) : "";
+            String prefixContrato = (!shortContrato.isEmpty() && !ultimoBloque.isEmpty())
+                    ? (shortContrato + " - " + ultimoBloque)
+                    : "";
             String principalProduccionId = null;
             if (!prefixContrato.isEmpty()) {
-                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
+                        produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato,
+                        nombreCompleto, nombreCorto);
             } else {
-                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
+                principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
+                        produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
             }
 
             if (principalProduccionId == null) {
@@ -3059,30 +3412,32 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                 int cInt = Integer.parseInt(cNum);
                 cNoPad = String.valueOf(cInt);
                 cPad = String.format("%02d", cInt);
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
 
             String patternConMarca1 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + " " + ultimoBloque) : null;
             String patternConMarca2 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cNoPad + "  " + ultimoBloque) : null;
             String patternConMarca3 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + " " + ultimoBloque) : null;
             String patternConMarca4 = (!ultimoBloque.isEmpty()) ? ("CUOTA " + cPad + "  " + ultimoBloque) : null;
             String cuotaExistenteId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
-                principalProduccionId,
-                patternConMarca1,
-                patternConMarca2,
-                patternConMarca3,
-                patternConMarca4,
-                "CUOTA " + cNoPad,
-                "CUOTA " + cPad,
-                "Cuota " + cNoPad,
-                "Cuota " + cPad
-            );
+                    principalProduccionId,
+                    patternConMarca1,
+                    patternConMarca2,
+                    patternConMarca3,
+                    patternConMarca4,
+                    "CUOTA " + cNoPad,
+                    "CUOTA " + cPad,
+                    "Cuota " + cNoPad,
+                    "Cuota " + cPad);
 
             if (cuotaExistenteId == null) {
                 return false;
             }
 
-            // CRITERIO 1 (Universal por Periodo): Si el periodo del informe corresponde a la etapa
-            // previa al lanzamiento digital (<= Septiembre 2026 / 2026-09) y ya existe la cuota en Producción,
+            // CRITERIO 1 (Universal por Periodo): Si el periodo del informe corresponde a
+            // la etapa
+            // previa al lanzamiento digital (<= Septiembre 2026 / 2026-09) y ya existe la
+            // cuota en Producción,
             // es una cuenta manual histórica y debe protegerse intacta.
             if (periodoInforme != null && !periodoInforme.trim().isEmpty()) {
                 String pLimpio = periodoInforme.trim();
@@ -3099,7 +3454,8 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
             long corteSistema = 1792022400000L; // 15 de Octubre de 2026 00:00:00 UTC
 
             // CRITERIO 2: Antigüedad de la propia carpeta de la cuota en Producción
-            // Si la carpeta fue creada antes del 15 de Octubre de 2026, es histórica previa al sistema
+            // Si la carpeta fue creada antes del 15 de Octubre de 2026, es histórica previa
+            // al sistema
             try {
                 com.google.api.services.drive.model.File cuotaMeta = drive.files().get(cuotaExistenteId)
                         .setFields("id, name, createdTime")
@@ -3109,11 +3465,13 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                         return true;
                     }
                 }
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
 
             // CRITERIO 3: Inspección profunda de archivos y subcarpetas (recursivo)
             // No asume nombres específicos como "DOCUMENTOS" o "EVIDENCIAS".
-            // Si la carpeta contiene cualquier elemento creado antes del corte digital, es histórica.
+            // Si la carpeta contiene cualquier elemento creado antes del corte digital, es
+            // histórica.
             com.google.api.services.drive.model.FileList itemsRes = drive.files().list()
                     .setQ("'" + cuotaExistenteId + "' in parents and trashed = false")
                     .setFields("files(id, name, mimeType, createdTime)")
@@ -3133,12 +3491,14 @@ public void listar(HttpServletRequest request, HttpServletResponse response)
                                     .execute();
                             if (subFiles != null && subFiles.getFiles() != null && !subFiles.getFiles().isEmpty()) {
                                 for (com.google.api.services.drive.model.File subFile : subFiles.getFiles()) {
-                                    if (subFile.getCreatedTime() != null && subFile.getCreatedTime().getValue() < corteSistema) {
+                                    if (subFile.getCreatedTime() != null
+                                            && subFile.getCreatedTime().getValue() < corteSistema) {
                                         return true;
                                     }
                                 }
                             }
-                        } catch (Exception ignore) {}
+                        } catch (Exception ignore) {
+                        }
                     }
                 }
             }

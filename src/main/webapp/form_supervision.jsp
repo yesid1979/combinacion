@@ -1152,104 +1152,129 @@
 
                 var esUltimaCuota = (tipoInforme === 'FINAL') || (maxCuota > 0 && cuotaNum >= maxCuota) || (totalCuotas > 0 && cuotaNum >= totalCuotas);
 
-                // Cuota siguiente de la adición (inicio de la adición, ej. Cuota 5 cuando cuotasNormales es 4):
-                var esInicioAdicion = tieneAdicion && (
-                    (cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1)) ||
-                    (cuotasNormales > 0 && cuotasAdicion > 0 && cuotaNum === cuotasNormales)
-                );
+                if (tieneAdicion) {
+                    // ==========================================================================================
+                    // RAMA EXCLUSIVA: CONTRATOS QUE TIENEN ADICIÓN
+                    // ==========================================================================================
+                    var esInicioAdicion = (cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1)) ||
+                                          (cuotasNormales > 0 && cuotasAdicion > 0 && cuotaNum === cuotasNormales);
 
-                if (cuotaStr == "1" && !esUltimaCuota) {
-                    // ==========================================
-                    // 1. CUOTA 1 (Cuenta normal primera cuota)
-                    // ==========================================
-                    manejarVisibilidadReq('.req-cuota-1-only', true);
-                    manejarVisibilidadReq('.req-secop', true);
-                    manejarVisibilidadReq('.req-rpc', true);
-                    manejarVisibilidadReq('.req-modificacion', false);
-                    manejarVisibilidadReq('.req-paz-salvo', false);
-
-                    $('input[name="file_cedula"]').prop('required', true);
-                    $('input[name="file_rut"]').prop('required', true);
-                    $('input[name="file_secop"]').prop('required', true);
-                    $('input[name="file_rpc"]').prop('required', true);
-                    $('input[name="file_ficha_tecnica"]').prop('required', true);
-                    $('input[name="file_seguridad_social"]').prop('required', true);
-
-                    $('input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
-
-                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
-
-                } else if (esInicioAdicion && !esUltimaCuota) {
-                    // ====================================================================
-                    // 2. CUOTA SIGUIENTE DE LA ADICIÓN (Pide documentos como Cuota 1 + Modificación No)
-                    // ====================================================================
-                    manejarVisibilidadReq('.req-cuota-1-only', true);
-                    manejarVisibilidadReq('.req-secop', true);
-                    manejarVisibilidadReq('.req-rpc', true);
-                    manejarVisibilidadReq('.req-modificacion', true);
-                    manejarVisibilidadReq('.req-paz-salvo', false);
-
-                    $('input[name="file_cedula"]').prop('required', true);
-                    $('input[name="file_rut"]').prop('required', true);
-                    $('input[name="file_secop"]').prop('required', true);
-                    $('input[name="file_rpc"]').prop('required', true);
-                    $('input[name="file_modificacion"]').prop('required', true);
-                    $('input[name="file_ficha_tecnica"]').prop('required', true);
-                    $('input[name="file_seguridad_social"]').prop('required', true);
-
-                    $('input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
-
-                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Al iniciar la adición, debe adjuntar los documentos como en la primera cuota (Cédula, RUT, Contrato Secop II, RPC, Modificación No, Ficha Técnica y Seguridad Social).');
-
-                } else if (esUltimaCuota) {
-                    // ====================================================================
-                    // 3. CUOTA FINAL (Solo pide Secop II, RPC, Modificación No [si aplica], Seguridad Social y Paz y Salvos)
-                    // ====================================================================
-                    manejarVisibilidadReq('.req-cuota-1-only', false, true);
-
-                    manejarVisibilidadReq('.req-secop', true);
-                    manejarVisibilidadReq('.req-rpc', true);
-                    $('input[name="file_secop"]').prop('required', true);
-                    $('input[name="file_rpc"]').prop('required', true);
-
-                    $('input[name="file_seguridad_social"]').closest('div').show();
-                    $('input[name="file_seguridad_social"]').prop('required', true);
-
-                    if (tieneAdicion) {
-                        manejarVisibilidadReq('.req-modificacion', true);
-                        $('input[name="file_modificacion"]').prop('required', true);
-                    } else {
+                    if (cuotaStr == "1" && !esUltimaCuota) {
+                        // 1. Cuota 1 inicial del contrato
+                        manejarVisibilidadReq('.req-cuota-1-only', true);
+                        manejarVisibilidadReq('.req-secop', true);
+                        manejarVisibilidadReq('.req-rpc', true);
                         manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-paz-salvo', false);
+
+                        $('input[name="file_cedula"]').prop('required', true);
+                        $('input[name="file_rut"]').prop('required', true);
+                        $('input[name="file_secop"]').prop('required', true);
+                        $('input[name="file_rpc"]').prop('required', true);
+                        $('input[name="file_ficha_tecnica"]').prop('required', true);
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
+
+                    } else if (esInicioAdicion && !esUltimaCuota) {
+                        // 2. Cuota siguiente donde arranca la adición: pide todos los documentos como Cuota 1 + Modificación No
+                        manejarVisibilidadReq('.req-cuota-1-only', true);
+                        manejarVisibilidadReq('.req-secop', true);
+                        manejarVisibilidadReq('.req-rpc', true);
+                        manejarVisibilidadReq('.req-modificacion', true);
+                        manejarVisibilidadReq('.req-paz-salvo', false);
+
+                        $('input[name="file_cedula"]').prop('required', true);
+                        $('input[name="file_rut"]').prop('required', true);
+                        $('input[name="file_secop"]').prop('required', true);
+                        $('input[name="file_rpc"]').prop('required', true);
+                        $('input[name="file_modificacion"]').prop('required', true);
+                        $('input[name="file_ficha_tecnica"]').prop('required', true);
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Al iniciar la adición, debe adjuntar los documentos como en la primera cuota (Cédula, RUT, Contrato Secop II, RPC, Modificación No, Ficha Técnica y Seguridad Social).');
+
+                    } else if (esUltimaCuota) {
+                        // 3. Cuota Final con adición: SOLO Secop II, RPC, Modificación No, Seguridad Social y Paz y Salvos
+                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
+
+                        manejarVisibilidadReq('.req-secop', true);
+                        manejarVisibilidadReq('.req-rpc', true);
+                        manejarVisibilidadReq('.req-modificacion', true);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
+
+                        $('input[name="file_secop"]').prop('required', true);
+                        $('input[name="file_rpc"]').prop('required', true);
+                        $('input[name="file_modificacion"]').prop('required', true);
+                        $('input[name="file_seguridad_social"]').closest('div').show();
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
+                        $('input[name="file_paz_salvo_procesos"]').prop('required', true);
+                        $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
+
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota Final (con Adición):</strong> Solo se requiere cargar Contrato Secop II, RPC, Modificación No, Seguridad Social y cada uno de los Paz y Salvos.');
+
+                        $('input[name="file_ficha_tecnica"], input[name="file_cedula"], input[name="file_rut"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"]').prop('required', false);
+
+                    } else {
+                        // 4. Cuotas intermedias de contrato con adición: solo seguridad social
+                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                        manejarVisibilidadReq('.req-secop', false);
+                        manejarVisibilidadReq('.req-rpc', false);
+                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-paz-salvo', false);
+
+                        $('input[name="file_seguridad_social"]').closest('div').show();
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+
+                        $('input[name="file_cedula"], input[name="file_rut"], input[name="file_secop"], input[name="file_rpc"], input[name="file_ficha_tecnica"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"], input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
                     }
 
-                    manejarVisibilidadReq('.req-paz-salvo', true);
-                    $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
-                    $('input[name="file_paz_salvo_procesos"]').prop('required', true);
-                    $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
-
-                    var descTexto = tieneAdicion ? 
-                        '<strong>Cuota Final (con Adición):</strong> Solo se requiere cargar Contrato Secop II, RPC, Modificación No, Seguridad Social y cada uno de los Paz y Salvos.' :
-                        '<strong>Cuota Final:</strong> Solo se requiere cargar Contrato Secop II, RPC, Seguridad Social y cada uno de los Paz y Salvos.';
-                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> ' + descTexto);
-
-                    $('input[name="file_ficha_tecnica"], input[name="file_cedula"], input[name="file_rut"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"]').prop('required', false);
-
                 } else {
-                    // ==========================================
-                    // 4. CUOTAS INTERMEDIAS NORMALES
-                    // ==========================================
-                    manejarVisibilidadReq('.req-cuota-1-only', false, true);
-                    manejarVisibilidadReq('.req-secop', false);
-                    manejarVisibilidadReq('.req-rpc', false);
-                    manejarVisibilidadReq('.req-modificacion', false);
-                    manejarVisibilidadReq('.req-paz-salvo', false);
+                    // ==========================================================================================
+                    // RAMA CONTRATOS NORMALES (Comportamiento estándar de siempre, sin adición)
+                    // ==========================================================================================
+                    if (cuotaStr == "1") {
+                        // Cuota 1 normal
+                        manejarVisibilidadReq('.req-cuota-1-only', true);
+                        manejarVisibilidadReq('.req-secop', true);
+                        manejarVisibilidadReq('.req-rpc', true);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        manejarVisibilidadReq('.req-paz-salvo', false, true);
 
-                    $('input[name="file_seguridad_social"]').closest('div').show();
-                    $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_ficha_tecnica"]').prop('required', true);
+                        $('input[name="file_secop"]').prop('required', true);
+                        $('input[name="file_cedula"]').prop('required', true);
+                        $('input[name="file_rut"]').prop('required', true);
+                        $('input[name="file_rpc"]').prop('required', true);
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
 
-                    $('input[name="file_cedula"], input[name="file_rut"], input[name="file_secop"], input[name="file_rpc"], input[name="file_ficha_tecnica"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"], input[name="file_modificacion"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
+                    } else {
+                        // Cuotas posteriores normales (intermedias o final de contrato normal)
+                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        manejarVisibilidadReq('.req-secop', false);
+                        manejarVisibilidadReq('.req-rpc', false);
+                        
+                        // En cuota final de contrato normal, habilitar paz y salvos (opcionales)
+                        if (esUltimaCuota) {
+                            manejarVisibilidadReq('.req-paz-salvo', true);
+                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Informe Final:</strong> Se requiere la planilla de Seguridad Social y se habilitan los Paz y Salvos.');
+                        } else {
+                            manejarVisibilidadReq('.req-paz-salvo', false);
+                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
+                        }
 
-                    $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
+                        $('input[name="file_seguridad_social"]').closest('div').show();
+                        $('input[name="file_seguridad_social"]').prop('required', true);
+                        $('input[name="file_ficha_tecnica"], input[name="file_secop"], input[name="file_cedula"], input[name="file_rut"], input[name="file_rpc"], input[name="file_modificacion"], input[name="file_correccion_monetaria"], input[name="file_medicina_prepagada"], input[name="file_certificado_dependientes"], input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
+                    }
                 }
                 actualizarAsteriscosArchivos();
             }
