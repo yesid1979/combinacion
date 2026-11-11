@@ -1246,11 +1246,18 @@ public class InformeSupervisionService {
                                             foundSecop = true;
                                         }
                                     }
-                                    // Arrastrar también documentos que ya se tienen (cédula, rut, etc.) para la
-                                    // cuota nueva de adición
-                                    String[] personalKeys = { "file_cedula", "file_rut", "file_correccion_monetaria",
-                                            "file_medicina_prepagada", "file_certificado_dependientes",
-                                            "file_ficha_tecnica" };
+                                    // Arrastrar también documentos que ya se tienen (cédula, etc.) para la
+                                    // cuota nueva de adición. Si es la PRIMERA cuota de la adición, RUT y Ficha Técnica se deben subir de nuevo.
+                                    boolean esPrimeraCuotaAdic = (siguienteCuota == contrato.getNumCuotasNumero() + 1);
+                                    String[] personalKeys;
+                                    if (esPrimeraCuotaAdic) {
+                                        personalKeys = new String[] { "file_cedula", "file_correccion_monetaria",
+                                                "file_medicina_prepagada", "file_certificado_dependientes" };
+                                    } else {
+                                        personalKeys = new String[] { "file_cedula", "file_rut", "file_correccion_monetaria",
+                                                "file_medicina_prepagada", "file_certificado_dependientes",
+                                                "file_ficha_tecnica" };
+                                    }
                                     for (String pk : personalKeys) {
                                         if (!newSoportes.has(pk)) {
                                             org.json.JSONObject pData = getLatestFile(sAnteriores, pk);
@@ -2131,7 +2138,10 @@ public class InformeSupervisionService {
 
             if (esCuotaAdicionPosterior) {
                 // Cuota 5 en adelante: arrastrar documentos que ya se tienen de cuotas previas
-                // (cédula, rut, secop, etc.)
+                // (cédula, etc.). Si es la PRIMERA cuota de la adición, RUT y Ficha Técnica se deben subir de nuevo.
+                boolean esPrimeraCuotaAdic = (informe.getNumeroCuota() != null &&
+                        com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) == contrato.getNumCuotasNumero() + 1);
+
                 java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
                         .listarPorContrato(contrato.getId());
                 for (com.combinacion.models.InformeSupervision inf : informes) {
@@ -2140,9 +2150,17 @@ public class InformeSupervisionService {
                     if (inf.getSoportesJson() != null && !inf.getSoportesJson().isEmpty()) {
                         try {
                             org.json.JSONObject sop = new org.json.JSONObject(inf.getSoportesJson());
-                            String[] keys = { "file_cedula", "file_rut", "file_correccion_monetaria",
-                                    "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica",
-                                    "file_rpc", "file_modificacion", "file_secop" };
+                            String[] keys;
+                            if (esPrimeraCuotaAdic) {
+                                // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo
+                                keys = new String[] { "file_cedula", "file_correccion_monetaria",
+                                        "file_medicina_prepagada", "file_certificado_dependientes",
+                                        "file_rpc", "file_modificacion", "file_secop" };
+                            } else {
+                                keys = new String[] { "file_cedula", "file_rut", "file_correccion_monetaria",
+                                        "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica",
+                                        "file_rpc", "file_modificacion", "file_secop" };
+                            }
                             for (String k : keys) {
                                 if (sop.has(k) && !soportes.has(k)) {
                                     org.json.JSONObject fileObj = sop.getJSONObject(k);

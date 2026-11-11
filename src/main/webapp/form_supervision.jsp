@@ -1209,6 +1209,8 @@
                         manejarVisibilidadReq('.req-modificacion', true);
                         manejarVisibilidadReq('.req-paz-salvo', true);
 
+                        var esPrimeraCuotaAdic = (cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1));
+
                         $('input[name="file_cedula"]').prop('required', true);
                         $('input[name="file_rut"]').prop('required', true);
                         $('input[name="file_secop"]').prop('required', true);
@@ -1220,7 +1222,11 @@
                         $('input[name="file_paz_salvo_procesos"]').prop('required', true);
                         $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
 
-                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Se solicitan todos los documentos como cuota nueva (arrastrando los que ya se tienen de cuotas previas) más Modificación No y Paz y Salvos.');
+                        if (esPrimeraCuotaAdic) {
+                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Primera Cuota de Adición:</strong> Se deben subir de nuevo el <strong>RUT</strong> y la <strong>Ficha Técnica</strong>, además de la Seguridad Social obligatoria. Los demás documentos (Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos) se arrastran si ya se tienen cargados.');
+                        } else {
+                            $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota de Adición:</strong> Se solicitan todos los documentos como cuota nueva (arrastrando los que ya se tienen de cuotas previas) más Modificación No y Paz y Salvos.');
+                        }
 
                     } else {
                         // 4. Cuotas intermedias del contrato inicial (ej. Cuotas 2 y 3 si cuotasNormales es 4): solo seguridad social
@@ -1359,6 +1365,18 @@
                     }
                     for (var d = 0; d < keysToDelete.length; d++) {
                         delete soportesObj[keysToDelete[d]];
+                    }
+                    var esPrimeraCuotaAdicInit = (tieneAdicion && cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1));
+                    if (esPrimeraCuotaAdicInit) {
+                        // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo:
+                        // Si venían arrastrados con needs_copy, se eliminan para no mostrarlos como precargados
+                        for (var k in soportesObj) {
+                            if (k.startsWith('file_rut') || k.startsWith('file_ficha_tecnica')) {
+                                if (soportesObj[k] && soportesObj[k].needs_copy) {
+                                    delete soportesObj[k];
+                                }
+                            }
+                        }
                     }
                     $('input[name="soportes_json"]').val(JSON.stringify(soportesObj));
                     
