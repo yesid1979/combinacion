@@ -41,7 +41,11 @@ public class AuthFilter implements Filter {
 
         // 1. RECURSOS PÚBLICOS
         if (isPublicResource(path)) {
-            System.out.println("[FILTER] Recurso público. Acceso permitido.");
+            if (path.endsWith(".css")) {
+                response.setCharacterEncoding("UTF-8");
+            } else if (path.endsWith(".js")) {
+                response.setCharacterEncoding("UTF-8");
+            }
             chain.doFilter(request, response);
             return;
         }
