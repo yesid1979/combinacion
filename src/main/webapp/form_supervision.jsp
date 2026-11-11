@@ -1366,7 +1366,12 @@
                     for (var d = 0; d < keysToDelete.length; d++) {
                         delete soportesObj[keysToDelete[d]];
                     }
-                    var esPrimeraCuotaAdicInit = (tieneAdicion && cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1));
+                    var curCuotaStr = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                    var curCuotaNum = parseInt(curCuotaStr) || 0;
+                    var curCuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
+                    var curCuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
+                    var curTieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || curCuotasAdicion > 0;
+                    var esPrimeraCuotaAdicInit = (curTieneAdicion && curCuotasNormales > 0 && curCuotaNum === (curCuotasNormales + 1));
                     if (esPrimeraCuotaAdicInit) {
                         // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo:
                         // Si venían arrastrados con needs_copy, se eliminan para no mostrarlos como precargados
