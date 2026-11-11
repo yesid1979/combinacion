@@ -1246,8 +1246,11 @@ public class InformeSupervisionService {
                                             foundSecop = true;
                                         }
                                     }
-                                    // Arrastrar también documentos que ya se tienen (cédula, rut, etc.) para la cuota nueva de adición
-                                    String[] personalKeys = { "file_cedula", "file_rut", "file_correccion_monetaria", "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica" };
+                                    // Arrastrar también documentos que ya se tienen (cédula, rut, etc.) para la
+                                    // cuota nueva de adición
+                                    String[] personalKeys = { "file_cedula", "file_rut", "file_correccion_monetaria",
+                                            "file_medicina_prepagada", "file_certificado_dependientes",
+                                            "file_ficha_tecnica" };
                                     for (String pk : personalKeys) {
                                         if (!newSoportes.has(pk)) {
                                             org.json.JSONObject pData = getLatestFile(sAnteriores, pk);
@@ -2090,7 +2093,8 @@ public class InformeSupervisionService {
                     && com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) > contrato
                             .getNumCuotasNumero());
 
-            // En la Cuota final del contrato inicial antes de la adición (Cuota 4 / esFirmaAdicion):
+            // En la Cuota final del contrato inicial antes de la adición (Cuota 4 /
+            // esFirmaAdicion):
             // purgar documentos que son exclusivos de inicio de cuota 1 (RUT, Cédula, etc.)
             if (contrato.isTieneAdicion() && esFirmaAdicion) {
                 String[] docsExclusivosCuota1 = { "file_rut", "file_cedula", "file_correccion_monetaria",
@@ -2126,7 +2130,8 @@ public class InformeSupervisionService {
             }
 
             if (esCuotaAdicionPosterior) {
-                // Cuota 5 en adelante: arrastrar documentos que ya se tienen de cuotas previas (cédula, rut, secop, etc.)
+                // Cuota 5 en adelante: arrastrar documentos que ya se tienen de cuotas previas
+                // (cédula, rut, secop, etc.)
                 java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
                         .listarPorContrato(contrato.getId());
                 for (com.combinacion.models.InformeSupervision inf : informes) {
