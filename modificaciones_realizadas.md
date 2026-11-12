@@ -453,3 +453,55 @@
      * Se añadió el atributo `required` a `input[name="file_seguridad_social"]`, validado dinámicamente para que impida radicar si el contratista no lo adjunta (a menos que sea contratista nuevo en cuota 1 o ya exista en soportes previos).
   4. **Protección de Permisos de Sincronización:**
      * La funcionalidad manual de sincronización se mantiene reservada **únicamente para Administradores y Contratación** (`ADMINISTRAR_CUENTAS`), garantizando que la sincronización para Supervisores, Revisores y Contratistas opere de manera 100% automática y transparente en cada radicación, revisión y aprobación.
+
+---
+
+## Fecha: 11 de Noviembre de 2026
+
+### 1. Reglas de Visibilidad y Carga en Contratos con Adición vs. Cuentas Normales
+* **Archivos Modificados:**
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/form_supervision.jsp`
+* **Implementación de Reglas de Negocio:**
+  * **Cuota Final del Contrato Inicial con Adición (Firma de Otrosí, ej. Cuota 4):**
+    * Se configuró para que **únicamente** se muestren y exijan los documentos propios de la formalización del otrosí:
+      1. **RPC (Registro Presupuestal)** (`.req-rpc`) — Obligatorio.
+      2. **Contrato Secop II** (`.req-secop`) — Obligatorio.
+      3. **Modificación No** (`.req-modificacion`) — Obligatorio.
+      4. **Seguridad Social** — Obligatoria.
+      5. **Paz y Salvos** (Orfeo, Gestión de Procesos, Creaciones) — Obligatorios.
+    * Se aplica ocultamiento forzado (`forzarOcultar = true`) para `.req-cuota-1-only`, asegurando que Cédula, RUT, Ficha Técnica, Certificación Corrección Monetaria, Certificado Medicina Prepagada y Dependientes permanezcan completamente ocultos en esta cuota.
+  * **Primera Cuota de la Adición (ej. Cuota 5):**
+    * Opera como un contrato nuevo:
+      * **RUT y Ficha Técnica:** Se deben subir de nuevo obligatoriamente (`required = true`). Si venían arrastrados con copia temporal (`needs_copy`), el script los elimina de `soportesObj` para requerir el archivo actualizado.
+      * **Seguridad Social:** Obligatoria.
+      * **Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos:** Se arrastran de la cuota anterior y permanecen visibles con sus enlaces de descarga.
+  * **Cuentas Normales (Sin Adición) y Protección de Flujo Estándar:**
+    * **Paz y Salvos Permanentes:** Se garantiza visibilidad fija (`manejarVisibilidadReq('.req-paz-salvo', true)`) en todas las cuotas normales, permitiendo al contratista o supervisor adjuntarlos en cualquier momento (opcionales durante ejecución, habilitados para informe final).
+    * **Modificación No:** Permanece oculta de forma definitiva (`forzarOcultar = true`) al no existir adición en el contrato.
+    * **Cuotas Intermedias:** Solo se exige planilla de Seguridad Social, manteniendo visibles los enlaces de soporte cargados en Cuota 1.
+
+---
+
+### 2. Parseo Seguro y Preservación de Soportes Enlazados (`soportes_json`)
+* **Problema Resuelto:**
+  * La lectura de `soportes_json` mediante una expresión inline `'${fn:escapeXml(...)}'` generaba errores de sintaxis en el intérprete JavaScript del navegador cuando los nombres de archivo contenían tildes, caracteres especiales o comillas, provocando que los enlaces de archivos adjuntos no se renderizaran en pantalla.
+  * La función de visibilidad se ejecutaba antes de crear los elementos DOM `.alert-secondary`, ocultando contenedores válidos.
+* **Solución Implementada:**
+  * **Lectura Segura desde el DOM:** Obtención directa mediante `document.getElementById('soportes_json').value`, aprovechando la decodificación nativa de atributos HTML del navegador.
+  * **Ciclo de Vida Corregido:** Primero se realiza el parseo de `soportesObj` y la inyección visual en el DOM (enlaces con ícono, nombre de archivo y etiqueta `Cargado`), y posteriormente se ejecuta `actualizarCamposSoportes()` para aplicar las reglas de visibilidad y asteriscos sobre elementos ya existentes.
+  * **Verificación en Base de Datos:** Comprobación directa en PostgreSQL que constató la integridad total de 336 informes con `soportes_json` intactos con sus enlaces de Google Drive.
+
+---
+
+### 3. Corrección de Codificación de Íconos y Versionado de Caché (Summernote y DataTables)
+* **Archivos Modificados:**
+  * [src/main/webapp/assets/vendor/datatables/dataTables.bootstrap5.min.css](file:///src/main/webapp/assets/vendor/datatables/dataTables.bootstrap5.min.css)
+  * [src/main/webapp/assets/vendor/summernote/summernote-lite.min.css](file:///src/main/webapp/assets/vendor/summernote/summernote-lite.min.css)
+  * [src/main/webapp/assets/css/styles.css](file:///src/main/webapp/assets/css/styles.css)
+  * [src/main/webapp/inc/head_assets.jsp](file:///src/main/webapp/inc/head_assets.jsp)
+  * [src/main/webapp/WEB-INF/web.xml](file:///src/main/webapp/WEB-INF/web.xml)
+* **Ajustes Realizados:**
+  * Reemplazo de caracteres UTF-8 multibyte en los estilos CSS por códigos de escape hexadecimales ASCII limpios (`\25B2` para flecha arriba, `\25BC` para flecha abajo y escapes `\ea01`, `\ea0f`, etc. para Summernote), evitando que servidores en Windows decodifiquen los archivos bajo Windows-1252 y muestren glifos distorsionados (`â–²`, `♦`, `í²`).
+  * Integración de parámetro de control de caché `?v=20261111_02` en todas las etiquetas `<link>` de [head_assets.jsp](file:///src/main/webapp/inc/head_assets.jsp) para forzar la recarga de los estilos en los navegadores de los usuarios.
+  * Configuración de mapeos MIME en `web.xml` para `.css`, `.js`, `.json`, `.woff`, `.woff2` y `.ttf` con `charset=UTF-8`.
