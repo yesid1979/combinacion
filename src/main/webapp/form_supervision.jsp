@@ -1108,20 +1108,20 @@
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
-            function manejarVisibilidadReq(selector, mostrar) {
+            function manejarVisibilidadReq(selector, mostrar, forzarOcultar) {
                 $(selector).each(function() {
                     var $div = $(this);
-                    // UN DOCUMENTO ADJUNTO NUNCA SE DEBE OCULTAR
+                    if (forzarOcultar) {
+                        $div.hide();
+                        $div.find('input[type="file"]').prop('required', false);
+                        return;
+                    }
                     var tieneDocumento = $div.find('.alert-secondary').length > 0 || $div.find('.badge.bg-success').length > 0;
-                    if (tieneDocumento) {
+                    if (mostrar || tieneDocumento) {
                         $div.show();
                         if (!mostrar) {
                             $div.find('input[type="file"]').prop('required', false);
                         }
-                        return;
-                    }
-                    if (mostrar) {
-                        $div.show();
                     } else {
                         $div.hide();
                         $div.find('input[type="file"]').prop('required', false);
@@ -1136,7 +1136,7 @@
                 var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                 var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
                 var totalCuotas = (cuotasNormales > 0 && cuotasAdicion > 0) ? (cuotasNormales + cuotasAdicion) : (cuotasNormales > 0 ? cuotasNormales : 0);
-                var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || cuotasAdicion > 0;
+                var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || cuotasAdicion > 0;
                 var tipoInforme = $('#tipo_informe').val();
 
                 // Calcular maxCuota de las opciones si existen
@@ -1167,7 +1167,7 @@
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
-                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
                         manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_cedula"]').prop('required', true);
@@ -1186,7 +1186,7 @@
                         manejarVisibilidadReq('.req-cuota-1-only', false);
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
-                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
                         manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_seguridad_social"]').closest('div').show();
@@ -1198,9 +1198,9 @@
 
                     } else if (esFirmaOtrosí) {
                         // 3. Cuota normal final donde inicia el Otrosí (ej. Cuota 4):
-                        // SOLO pide: Secop II, RPC, Modificación No, Seguridad Social y todos los Paz y Salvos.
-                        // Oculta los exclusivos de cuota 1 (RUT, Cédula, Ficha Técnica, etc.) si no estuviesen ya cargados
-                        manejarVisibilidadReq('.req-cuota-1-only', false);
+                        // SOLO pide y muestra: Secop II, RPC, Modificación No, Seguridad Social y todos los Paz y Salvos.
+                        // Forzar ocultar TODOS los de cuota 1 (RUT, Cédula, Ficha Técnica, etc.)
+                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
 
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
@@ -1222,7 +1222,7 @@
 
                     } else if (esPrimeraCuotaAdic) {
                         // 4. Primera cuota de la adición (ej. Cuota 5):
-                        // Pide todos los documentos como si fuera cuota nueva:
+                        // Pide y muestra TODOS los documentos como si fuera cuota nueva:
                         // RUT y Ficha Técnica se deben subir de nuevo obligatoriamente.
                         // Seguridad Social obligatoria.
                         // Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos se arrastran si ya se tienen cargados.
@@ -1280,7 +1280,7 @@
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
-                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
 
                         $('input[name="file_ficha_tecnica"]').prop('required', true);
                         $('input[name="file_secop"]').prop('required', true);
@@ -1294,7 +1294,7 @@
                     } else {
                         // Cuotas posteriores normales (intermedias o final de contrato normal)
                         manejarVisibilidadReq('.req-cuota-1-only', false);
-                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-modificacion', false, true);
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
                         
@@ -1403,7 +1403,7 @@
                     var curCuotaNum = parseInt(curCuotaStr) || 0;
                     var curCuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                     var curCuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
-                    var curTieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || curCuotasAdicion > 0;
+                    var curTieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || curCuotasAdicion > 0;
                     var esPrimeraCuotaAdicInit = (curTieneAdicion && curCuotasNormales > 0 && curCuotaNum === (curCuotasNormales + 1));
                     if (esPrimeraCuotaAdicInit) {
                         // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo:
