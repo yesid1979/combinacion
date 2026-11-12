@@ -1151,6 +1151,9 @@
 
                 var esUltimaCuota = (tipoInforme === 'FINAL') || (maxCuota > 0 && cuotaNum >= maxCuota) || (totalCuotas > 0 && cuotaNum >= totalCuotas);
 
+                // REGLA OBLIGATORIA: Los Paz y Salvo SIEMPRE deben estar visibles en TODAS las cuentas para que se puedan subir
+                manejarVisibilidadReq('.req-paz-salvo', true);
+
                 if (tieneAdicion) {
                     // ==========================================================================================
                     // RAMA EXCLUSIVA: CONTRATOS QUE TIENEN ADICIÓN
@@ -1165,7 +1168,7 @@
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
                         manejarVisibilidadReq('.req-modificacion', false);
-                        manejarVisibilidadReq('.req-paz-salvo', false);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_cedula"]').prop('required', true);
                         $('input[name="file_rut"]').prop('required', true);
@@ -1184,7 +1187,7 @@
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
                         manejarVisibilidadReq('.req-modificacion', false);
-                        manejarVisibilidadReq('.req-paz-salvo', false);
+                        manejarVisibilidadReq('.req-paz-salvo', true);
 
                         $('input[name="file_seguridad_social"]').closest('div').show();
                         $('input[name="file_seguridad_social"]').prop('required', true);
@@ -1256,7 +1259,7 @@
                             manejarVisibilidadReq('.req-secop', false);
                             manejarVisibilidadReq('.req-rpc', false);
                             manejarVisibilidadReq('.req-modificacion', false);
-                            manejarVisibilidadReq('.req-paz-salvo', false);
+                            manejarVisibilidadReq('.req-paz-salvo', true);
                             $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
                         }
 
