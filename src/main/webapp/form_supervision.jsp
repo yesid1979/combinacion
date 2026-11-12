@@ -1239,13 +1239,12 @@
                         $('input[name="file_modificacion"]').prop('required', true);
                         $('input[name="file_ficha_tecnica"]').prop('required', true);
                         $('input[name="file_seguridad_social"]').prop('required', true);
-                        $('input[name="file_paz_salvo_orfeo"]').prop('required', true);
-                        $('input[name="file_paz_salvo_procesos"]').prop('required', true);
-                        $('input[name="file_paz_salvo_creaciones"]').prop('required', true);
+                        $('input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
 
                         $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Primera Cuota de Adición:</strong> Se deben subir de nuevo el <strong>RUT</strong> y la <strong>Ficha Técnica</strong>, además de la Seguridad Social obligatoria. Los demás documentos (Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos) se arrastran si ya se tienen cargados.');
 
                         $('.ast-rut, .ast-ficha-tecnica').show();
+                        $('.ast-paz-salvo').hide();
 
                     } else {
                         // 5. Cuotas posteriores de la adición (ej. Cuota 6 si la adición tiene 2 o más cuotas)
@@ -1316,13 +1315,27 @@
             }
 
             function actualizarAsteriscosArchivos() {
+                // Eliminar cualquier asterisco duplicado añadido dinámicamente
+                $('.req-asterisk').remove();
+
                 setTimeout(function() {
+                    $('.req-asterisk').remove();
                     var cuotaVal = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
                     var cuotaNum = parseInt(cuotaVal) || 0;
                     var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                     var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
                     var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || cuotasAdicion > 0;
                     var esPrimeraCuotaAdic = (tieneAdicion && cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1));
+                    var esFirmaOtrosí = (tieneAdicion && cuotasNormales > 0 && cuotaNum === cuotasNormales);
+
+                    var tipoInforme = $('#tipo_informe').val();
+                    var maxCuota = 0;
+                    $('select[name="numero_cuota"] option').each(function() {
+                        var v = parseInt($(this).val());
+                        if (!isNaN(v) && v > maxCuota) maxCuota = v;
+                    });
+                    var totalCuotas = (cuotasNormales > 0 && cuotasAdicion > 0) ? (cuotasNormales + cuotasAdicion) : (cuotasNormales > 0 ? cuotasNormales : 0);
+                    var esUltimaCuota = (tipoInforme === 'FINAL') || (maxCuota > 0 && cuotaNum >= maxCuota) || (totalCuotas > 0 && cuotaNum >= totalCuotas);
 
                     $('input[type="file"]').each(function() {
                         var $input = $(this);
@@ -1336,6 +1349,21 @@
                         }
                         if (!$label.length) return;
                         
+                        // Seguridad Social ya tiene su asterisco fijo en el HTML, no intervenir su label
+                        if (inputName === 'file_seguridad_social') {
+                            return;
+                        }
+
+                        // En Paz y Salvo: SOLO son requeridos con asterisco en Firma de Otrosí (cuota 4) o Informe Final
+                        // En la primera cuota de adición (cuota 5) y cuotas normales intermedias NUNCA llevan asterisco
+                        if (inputName && inputName.startsWith('file_paz_salvo_')) {
+                            if (!esFirmaOtrosí && !esUltimaCuota) {
+                                $input.prop('required', false);
+                                $label.find('.ast-paz-salvo').hide();
+                                return;
+                            }
+                        }
+
                         var yaCargado = ($label.find('.badge.bg-success').length > 0 || 
                                          $input.prevAll('.alert-secondary').length > 0 || 
                                          $input.closest('div').find('.alert-secondary').length > 0);
@@ -1349,21 +1377,16 @@
                         // Si ya está cargado, ya no es requerido
                         if (yaCargado) {
                             $input.prop('required', false);
-                            $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
+                            $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo').hide();
                         } else {
-                            // Refrescar asterisco según si el input es required y no está explícitamente oculto por wrapper
+                            // Mostrar únicamente el asterisco propio existente en el JSP si es requerido y visible
                             if ($input.prop('required') && !wrapperHidden) {
                                 var $ast = $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo');
                                 if ($ast.length > 0) {
                                     $ast.show();
                                 }
-                                if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1:visible, .ast-rut:visible, .ast-ficha-tecnica:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
-                                    $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
-                                } else if ($label.find('.req-asterisk').length > 0 && $label.find('.ast-cuota-1:visible, .ast-rut:visible, .ast-ficha-tecnica:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
-                                    $label.find('.req-asterisk').show();
-                                }
                             } else {
-                                $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
+                                $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo').hide();
                             }
                         }
                     });
@@ -2624,9 +2647,11 @@
 
                     if (cuota === 1) {
                         $('.ast-cuota-1').show();
+                        $('.ast-paz-salvo').hide();
                     } else if (esPrimeraCuotaAdic) {
                         $('.ast-cuota-1').not('.ast-rut, .ast-ficha-tecnica').hide();
                         $('.ast-rut, .ast-ficha-tecnica').show();
+                        $('.ast-paz-salvo').hide();
                     } else {
                         $('.ast-cuota-1').hide();
                     }

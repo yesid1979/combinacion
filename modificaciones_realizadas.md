@@ -543,3 +543,19 @@
       3. Solo en caso de que alguno de estos no existiera en la cuota final normal se recurre como fallback a los previos anteriores.
   * **Protección Estricta de Cuentas Normales:**
     * Para contratos normales (sin adición) o cuotas estándar iniciales, se mantiene exactamente la lógica previa intacta (herencia estándar de RPC de cuota 1), asegurando que ningún contrato estándar se vea alterado.
+
+---
+
+### 6. Corrección de Doble Asterisco y No Obligatoriedad de Paz y Salvo en Primera Cuota de Adición
+* **Archivos Modificados:**
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * En la primera cuota de adición (Cuota 5), los campos obligatorios mostraron un doble asterisco rojo (`* *`) y los campos de Paz y Salvo (Orfeo, Gestión de Procesos, Creaciones) aparecieron marcados erróneamente como obligatorios con asterisco.
+  * **Causa Raíz:**
+    1. **Doble Asterisco:** La rutina `actualizarAsteriscosArchivos()` añadía un elemento `<span class="req-asterisk">*</span>` dinámicamente mediante jQuery al comprobar falsamente que ningún asterisco estaba visible (debido a pestañas inactivas). Al mostrarse el asterisco original ya presente en el HTML, ambos quedaban visibles en pantalla. En Seguridad Social, que ya incluía su asterisco en el JSP, se agregaba igualmente un segundo asterisco.
+    2. **Paz y Salvos Obligatorios en Cuota 5:** La rama `esPrimeraCuotaAdic` asignaba `prop('required', true)` a los tres Paz y Salvos, cuando en esta cuota son opcionales y solo se arrastran si ya se tienen cargados.
+* **Solución Implementada:**
+  * **Eliminación Total de Inyección Dinámica de Asteriscos:** Se eliminó la instrucción que agregaba spans `req-asterisk` al vuelo y se añadió limpieza global (`$('.req-asterisk').remove()`). Los asteriscos mostrados son exclusivamente los estáticos nativos del formulario JSP, evitando cualquier duplicidad (`**`).
+  * **Paz y Salvos No Obligatorios:** En `esPrimeraCuotaAdic` (Cuota 5) y cuotas intermedias, los tres Paz y Salvos se definen explícitamente como `required = false` y sus asteriscos se ocultan (`$('.ast-paz-salvo').hide()`). Solo son obligatorios y muestran asterisco en Firma de Otrosí (Cuota 4) o en Informe Final.
+  * **Seguridad Social Protegida:** Se excluyó `file_seguridad_social` de manipulaciones de etiquetas para preservar su asterisco único nativo.
