@@ -1108,21 +1108,20 @@
                 agregarActividadConValor(i, rawText ? rawText : '', isReadonly);
             }
 
-            function manejarVisibilidadReq(selector, mostrar, forzarOcultar) {
+            function manejarVisibilidadReq(selector, mostrar) {
                 $(selector).each(function() {
                     var $div = $(this);
-                    if (forzarOcultar) {
-                        $div.hide();
-                        $div.find('input[type="file"]').prop('required', false);
-                        return;
-                    }
-                    // Consider it has a document if it has the uploaded file UI or the badge
+                    // UN DOCUMENTO ADJUNTO NUNCA SE DEBE OCULTAR
                     var tieneDocumento = $div.find('.alert-secondary').length > 0 || $div.find('.badge.bg-success').length > 0;
-                    if (mostrar || tieneDocumento) {
+                    if (tieneDocumento) {
                         $div.show();
                         if (!mostrar) {
                             $div.find('input[type="file"]').prop('required', false);
                         }
+                        return;
+                    }
+                    if (mostrar) {
+                        $div.show();
                     } else {
                         $div.hide();
                         $div.find('input[type="file"]').prop('required', false);
@@ -1165,8 +1164,8 @@
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
-                        manejarVisibilidadReq('.req-modificacion', false, true);
-                        manejarVisibilidadReq('.req-paz-salvo', false, true);
+                        manejarVisibilidadReq('.req-modificacion', false);
+                        manejarVisibilidadReq('.req-paz-salvo', false);
 
                         $('input[name="file_cedula"]').prop('required', true);
                         $('input[name="file_rut"]').prop('required', true);
@@ -1181,10 +1180,10 @@
                     } else if (cuotasNormales > 0 && cuotaNum < cuotasNormales) {
                         // 2. Cuotas intermedias del contrato inicial antes de la última (ej. Cuotas 2 y 3 si cuotasNormales es 4):
                         // Flujo estándar intermedio: solo Seguridad Social
-                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                        manejarVisibilidadReq('.req-cuota-1-only', false);
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
-                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        manejarVisibilidadReq('.req-modificacion', false);
                         manejarVisibilidadReq('.req-paz-salvo', false);
 
                         $('input[name="file_seguridad_social"]').closest('div').show();
@@ -1197,8 +1196,8 @@
                     } else if (esFirmaOtrosí) {
                         // 3. Cuota normal final donde inicia el Otrosí (ej. Cuota 4):
                         // SOLO pide: Secop II, RPC, Modificación No, Seguridad Social y todos los Paz y Salvos.
-                        // Oculta los exclusivos de cuota 1 (RUT, Cédula, Ficha Técnica, etc.)
-                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                        // Oculta los exclusivos de cuota 1 (RUT, Cédula, Ficha Técnica, etc.) si no estuviesen ya cargados
+                        manejarVisibilidadReq('.req-cuota-1-only', false);
 
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
@@ -1246,17 +1245,17 @@
                     } else {
                         // 5. Cuotas posteriores de la adición (ej. Cuota 6 si la adición tiene 2 o más cuotas)
                         if (esUltimaCuota) {
-                            manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                            manejarVisibilidadReq('.req-cuota-1-only', false);
                             manejarVisibilidadReq('.req-secop', true);
                             manejarVisibilidadReq('.req-rpc', true);
                             manejarVisibilidadReq('.req-modificacion', true);
                             manejarVisibilidadReq('.req-paz-salvo', true);
                             $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Informe Final:</strong> Se requiere la planilla de Seguridad Social y se habilitan los Paz y Salvos.');
                         } else {
-                            manejarVisibilidadReq('.req-cuota-1-only', false, true);
+                            manejarVisibilidadReq('.req-cuota-1-only', false);
                             manejarVisibilidadReq('.req-secop', false);
                             manejarVisibilidadReq('.req-rpc', false);
-                            manejarVisibilidadReq('.req-modificacion', false, true);
+                            manejarVisibilidadReq('.req-modificacion', false);
                             manejarVisibilidadReq('.req-paz-salvo', false);
                             $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota intermedia:</strong> Solo se requiere la planilla de Seguridad Social (y Factura Electrónica si aplica).');
                         }
@@ -1278,7 +1277,7 @@
                         manejarVisibilidadReq('.req-cuota-1-only', true);
                         manejarVisibilidadReq('.req-secop', true);
                         manejarVisibilidadReq('.req-rpc', true);
-                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        manejarVisibilidadReq('.req-modificacion', false);
 
                         $('input[name="file_ficha_tecnica"]').prop('required', true);
                         $('input[name="file_secop"]').prop('required', true);
@@ -1291,8 +1290,8 @@
                         $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Cuota 1:</strong> Debe adjuntar los documentos iniciales requeridos (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica y Seguridad Social).');
                     } else {
                         // Cuotas posteriores normales (intermedias o final de contrato normal)
-                        manejarVisibilidadReq('.req-cuota-1-only', false, true);
-                        manejarVisibilidadReq('.req-modificacion', false, true);
+                        manejarVisibilidadReq('.req-cuota-1-only', false);
+                        manejarVisibilidadReq('.req-modificacion', false);
                         manejarVisibilidadReq('.req-secop', false);
                         manejarVisibilidadReq('.req-rpc', false);
                         
@@ -1343,16 +1342,25 @@
                 }, 100);
             }
 
-            $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
-            actualizarCamposSoportes(); // Ejecutar al cargar la página
-            
-            // Renderizar archivos previamente subidos (la interfaz que pediste)
-            var soportesJsonStr = '${fn:escapeXml(not empty informe.soportesJson ? informe.soportesJson : soportesJsonPreCargados)}';
-            if (soportesJsonStr && soportesJsonStr.trim() !== '') {
+            // 1. Renderizar primero los archivos existentes en la base de datos para crear la interfaz visual (alert-secondary y enlaces)
+            var soportesInput = document.getElementById('soportes_json');
+            var soportesJsonStr = soportesInput ? soportesInput.value : '';
+            var soportesObj = {};
+            if (soportesJsonStr && soportesJsonStr.trim() !== '' && soportesJsonStr.trim() !== '{}') {
                 try {
-                    // Reemplazamos entidades xml en caso de que fn:escapeXml las haya codificado
-                    var decodedStr = $('<textarea/>').html(soportesJsonStr).text();
-                    var soportesObj = JSON.parse(decodedStr);
+                    soportesObj = JSON.parse(soportesJsonStr);
+                } catch(e) {
+                    try {
+                        var decodedStr = $('<textarea/>').html(soportesJsonStr).text();
+                        soportesObj = JSON.parse(decodedStr);
+                    } catch(e2) {
+                        console.error('Error parseando soportes_json', e, e2);
+                    }
+                }
+            }
+
+            if (soportesObj && Object.keys(soportesObj).length > 0) {
+                try {
                     // Limpiar duplicados históricos de campos de un solo archivo y evidencias
                     var baseKeyMap = {};
                     var evidenciaSeen = {};
@@ -1409,6 +1417,12 @@
                     
                     for (var key in soportesObj) {
                         var fileData = soportesObj[key];
+                        if (!fileData) continue;
+                        if (typeof fileData === 'string') {
+                            fileData = { name: fileData, url: fileData };
+                        }
+                        var fileUrl = (fileData && fileData.url) ? fileData.url : '#';
+                        var fileName = (fileData && fileData.name) ? fileData.name : 'Documento adjunto';
                         
                         // Extraer el nombre base del input. Ej: 'evidencia_0_0_1' -> 'evidencia_0_0', 'file_rpc_2' -> 'file_rpc'
                         var baseKey = key;
@@ -1426,7 +1440,7 @@
                             }
                             var ui = '<div class="alert alert-secondary py-2 mt-2 mb-2 d-flex justify-content-between align-items-center shadow-sm" style="border-left: 4px solid #0d6efd;" id="soporte-ui-' + key + '">' +
                                      '<div><i class="bi bi-file-earmark-check-fill text-success me-2 fs-5"></i>' +
-                                     '<a href="' + fileData.url + '" target="_blank" class="text-decoration-none fw-bold text-dark">' + fileData.name + '</a></div>' +
+                                     '<a href="' + fileUrl + '" target="_blank" class="text-decoration-none fw-bold text-dark">' + fileName + '</a></div>' +
                                      '<div>' + btnEliminar + '</div>' +
                                      '</div>';
                             $input.before(ui);
@@ -1450,22 +1464,24 @@
                         }
                     }
                 } catch(e) {
-                    console.log('Error parseando soportesJson', e);
+                    console.error('Error procesando soportesObj', e);
                 }
             }
             
-            // Actualizar visibilidad de divs y asteriscos después de renderizar archivos
-            actualizarCamposSoportes();
+            // 2. Ahora que todos los documentos están en el DOM, sincronizar visibilidad y reglas
+            $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
+            actualizarCamposSoportes(); // Ejecutar al cargar la página AHORA que los soportes ya existen en el DOM
             
-            // Si es solo lectura, limpiar visualmente la pestaña de soportes
+            // 3. Si es solo lectura, limpiar visualmente la pestaña de soportes
             if (isReadonly) {
                 $('input[type="file"]').each(function() {
                     $(this).hide();
                     var $div = $(this).closest('.col-md-6, .col-md-12');
-                    if (!$div.is(':visible')) return;
                     var $label = $(this).prevAll('.form-label, small.fw-bold').first();
-                    if ($label.find('.badge.bg-success').length === 0) {
-                        $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargó documento</div>');
+                    if ($label.find('.badge.bg-success').length === 0 && $div.find('.alert-secondary').length === 0) {
+                        if ($div.is(':visible')) {
+                            $(this).before('<div class="text-muted fst-italic mb-3"><i class="bi bi-x-circle me-1"></i>No se cargó documento</div>');
+                        }
                     }
                 });
             }
