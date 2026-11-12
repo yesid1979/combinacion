@@ -1250,16 +1250,6 @@ public class InformeSupervisionService {
                                     newSoportes.put("file_modificacion", modData);
                                     foundMod = true;
                                 }
-                                // 4. Paz y salvos de la cuota final normal
-                                String[] pazSalvoKeys = { "file_paz_salvo_orfeo", "file_paz_salvo_procesos",
-                                        "file_paz_salvo_creaciones" };
-                                for (String psk : pazSalvoKeys) {
-                                    org.json.JSONObject psData = getLatestFile(sCuotaFinal, psk);
-                                    if (psData != null) {
-                                        psData.put("needs_copy", true);
-                                        newSoportes.put(psk, psData);
-                                    }
-                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -2283,19 +2273,6 @@ public class InformeSupervisionService {
                                 org.json.JSONObject copyObj = new org.json.JSONObject(modData.toString());
                                 copyObj.put("needs_copy", true);
                                 soportes.put("file_modificacion", copyObj);
-                            }
-                        }
-                        // 4. Paz y salvos de cuota final normal
-                        String[] pazSalvoKeys = { "file_paz_salvo_orfeo", "file_paz_salvo_procesos",
-                                "file_paz_salvo_creaciones" };
-                        for (String psk : pazSalvoKeys) {
-                            if (!soportes.has(psk)) {
-                                org.json.JSONObject psData = getLatestFile(sopCuotaFinal, psk);
-                                if (psData != null) {
-                                    org.json.JSONObject copyObj = new org.json.JSONObject(psData.toString());
-                                    copyObj.put("needs_copy", true);
-                                    soportes.put(psk, copyObj);
-                                }
                             }
                         }
                     } catch (Exception ignore) {

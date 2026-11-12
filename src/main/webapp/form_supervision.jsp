@@ -1241,7 +1241,7 @@
                         $('input[name="file_seguridad_social"]').prop('required', true);
                         $('input[name="file_paz_salvo_orfeo"], input[name="file_paz_salvo_procesos"], input[name="file_paz_salvo_creaciones"]').prop('required', false);
 
-                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Primera Cuota de Adición:</strong> Se deben subir de nuevo el <strong>RUT</strong> y la <strong>Ficha Técnica</strong>, además de la Seguridad Social obligatoria. Los demás documentos (Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos) se arrastran si ya se tienen cargados.');
+                        $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Primera Cuota de Adición:</strong> Se deben subir de nuevo el <strong>RUT</strong> y la <strong>Ficha Técnica</strong>, además de la Seguridad Social obligatoria. Los demás documentos (Cédula, Contrato Secop II, RPC y Modificación) se arrastran si ya se tienen cargados.');
 
                         $('.ast-rut, .ast-ficha-tecnica').show();
                         $('.ast-paz-salvo').hide();
@@ -1452,6 +1452,17 @@
                     var curCuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
                     var curCuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
                     var curTieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || curCuotasAdicion > 0;
+                    var esCuotaAdicionInit = (curTieneAdicion && curCuotasNormales > 0 && curCuotaNum > curCuotasNormales);
+                    if (esCuotaAdicionInit) {
+                        // En cuotas de adición, los Paz y Salvos NO se arrastran de cuotas previas:
+                        for (var k in soportesObj) {
+                            if (k.startsWith('file_paz_salvo_')) {
+                                if (soportesObj[k] && soportesObj[k].needs_copy) {
+                                    delete soportesObj[k];
+                                }
+                            }
+                        }
+                    }
                     var esPrimeraCuotaAdicInit = (curTieneAdicion && curCuotasNormales > 0 && curCuotaNum === (curCuotasNormales + 1));
                     if (esPrimeraCuotaAdicInit) {
                         // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo:

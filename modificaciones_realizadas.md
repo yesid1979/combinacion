@@ -570,3 +570,19 @@
   * El error registrado en consola (`org.apache.catalina.mapper.Mapper.internalMapWrapper java.lang.NullPointerException`) ocurre cuando una petición entra en el instante exacto en que Tomcat se encuentra realizando una recarga en caliente del contexto (`context reload` tras compilación o despliegue). Al recargar, Tomcat destruye momentáneamente su mapa de wrappers y cualquier llamada concurrente a `getRequestDispatcher` encuentra el objeto nulo, recuperándose automáticamente al segundo siguiente.
 * **Ajuste Preventivo:**
   * Se homologaron las rutas relativas de despacho a rutas absolutas desde el contexto web (`/form_supervision.jsp` y `/lista_informes.jsp`), siguiendo las directrices de la especificación Java Servlet y optimizando el mapeo de recursos en Tomcat.
+
+---
+
+### 8. Exclusión del Arrastre de Paz y Salvos en Cuotas de Adición
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * Al ingresar a la primera cuota de adición (Cuota 5), el Paz y Salvo Orfeo aparecía erróneamente precargado ("Paz y salvo orfeo Cuota No. 4.pdf") con el botón "Cargado", porque se estaba arrastrando de la Cuota 4.
+  * Los paz y salvos corresponden de manera específica al cierre del período/cuota en que se firman y NO deben heredarse en las cuotas de la adición.
+* **Solución Implementada:**
+  * **Eliminación del Arrastre en el Backend:** En `mostrarFormularioNuevo` y `guardarInforme` de `InformeSupervisionService.java`, se eliminó la herencia automática de `file_paz_salvo_orfeo`, `file_paz_salvo_procesos` y `file_paz_salvo_creaciones`.
+  * **Limpieza de Copias Temporales en Frontend:** En `form_supervision.jsp`, se añadió limpieza automática de `soportesObj` para cualquier clave `file_paz_salvo_` con bandera `needs_copy` cuando la cuota actual es de la adición (`curCuotaNum > curCuotasNormales`), asegurando que los campos de paz y salvo inicien completamente limpios y vacíos.
+  * **Actualización del Mensaje Informativo:** Se ajustó el texto del banner de alerta para indicar con precisión que los documentos arrastrados son únicamente Cédula, Contrato Secop II, RPC y Modificación No.
