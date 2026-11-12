@@ -834,7 +834,7 @@ public class InformeSupervisionService {
 
         request.setAttribute("listaInformes", listaFinal);
         request.setAttribute("revisoresList", new com.combinacion.dao.UsuarioDAO().listarRevisores());
-        request.getRequestDispatcher("lista_informes.jsp").forward(request, response);
+        request.getRequestDispatcher("/lista_informes.jsp").forward(request, response);
     }
 
     public java.util.List<InformeSupervision> obtenerListaInformes(HttpServletRequest request) {
@@ -1364,7 +1364,7 @@ public class InformeSupervisionService {
         request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("action", "insert");
-        request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
+        request.getRequestDispatcher("/form_supervision.jsp").forward(request, response);
     }
 
     public void mostrarDetalle(HttpServletRequest request, HttpServletResponse response)
@@ -1394,7 +1394,7 @@ public class InformeSupervisionService {
         request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
         request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
-        request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
+        request.getRequestDispatcher("/form_supervision.jsp").forward(request, response);
     }
 
     public void mostrarFormularioEdicion(HttpServletRequest request, HttpServletResponse response)
@@ -1585,7 +1585,7 @@ public class InformeSupervisionService {
         request.setAttribute("action", "update");
         request.setAttribute("modo", request.getParameter("modo"));
         request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
-        request.getRequestDispatcher("form_supervision.jsp").forward(request, response);
+        request.getRequestDispatcher("/form_supervision.jsp").forward(request, response);
     }
 
     public void descargarArchivoDirecto(HttpServletRequest request, HttpServletResponse response)

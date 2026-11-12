@@ -559,3 +559,14 @@
   * **Eliminación Total de Inyección Dinámica de Asteriscos:** Se eliminó la instrucción que agregaba spans `req-asterisk` al vuelo y se añadió limpieza global (`$('.req-asterisk').remove()`). Los asteriscos mostrados son exclusivamente los estáticos nativos del formulario JSP, evitando cualquier duplicidad (`**`).
   * **Paz y Salvos No Obligatorios:** En `esPrimeraCuotaAdic` (Cuota 5) y cuotas intermedias, los tres Paz y Salvos se definen explícitamente como `required = false` y sus asteriscos se ocultan (`$('.ast-paz-salvo').hide()`). Solo son obligatorios y muestran asterisco en Firma de Otrosí (Cuota 4) o en Informe Final.
   * **Seguridad Social Protegida:** Se excluyó `file_seguridad_social` de manipulaciones de etiquetas para preservar su asterisco único nativo.
+
+---
+
+### 7. Normalización de Despacho de Vistas Web (`getRequestDispatcher`)
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+* **Explicación del Registro de Log Tomcat:**
+  * El error registrado en consola (`org.apache.catalina.mapper.Mapper.internalMapWrapper java.lang.NullPointerException`) ocurre cuando una petición entra en el instante exacto en que Tomcat se encuentra realizando una recarga en caliente del contexto (`context reload` tras compilación o despliegue). Al recargar, Tomcat destruye momentáneamente su mapa de wrappers y cualquier llamada concurrente a `getRequestDispatcher` encuentra el objeto nulo, recuperándose automáticamente al segundo siguiente.
+* **Ajuste Preventivo:**
+  * Se homologaron las rutas relativas de despacho a rutas absolutas desde el contexto web (`/form_supervision.jsp` y `/lista_informes.jsp`), siguiendo las directrices de la especificación Java Servlet y optimizando el mapeo de recursos en Tomcat.
