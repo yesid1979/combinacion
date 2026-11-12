@@ -11,17 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Bootstrap 5 CSS (Local) -->
-<link href="${pageContext.request.contextPath}/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/vendor/bootstrap/css/bootstrap.min.css?v=20261111_01" rel="stylesheet">
 
 <!-- Bootstrap Icons (Local) -->
-<link href="${pageContext.request.contextPath}/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/vendor/bootstrap-icons/bootstrap-icons.css?v=20261111_01" rel="stylesheet">
 
 <!-- DataTables + Bootstrap 5 + Responsive CSS (Local) -->
-<link href="${pageContext.request.contextPath}/assets/vendor/datatables/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link href="${pageContext.request.contextPath}/assets/vendor/datatables/responsive.bootstrap5.min.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/vendor/datatables/dataTables.bootstrap5.min.css?v=20261111_01" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/vendor/datatables/responsive.bootstrap5.min.css?v=20261111_01" rel="stylesheet">
 
 <!-- Summernote Lite CSS (Local) -->
-<link href="${pageContext.request.contextPath}/assets/vendor/summernote/summernote-lite.min.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/vendor/summernote/summernote-lite.min.css?v=20261111_01" rel="stylesheet">
 
 <!-- Estilos Globales de la Aplicación -->
-<link href="${pageContext.request.contextPath}/assets/css/styles.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/assets/css/styles.css?v=20261111_01" rel="stylesheet">
