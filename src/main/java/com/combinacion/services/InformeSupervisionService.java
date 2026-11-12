@@ -1196,21 +1196,88 @@ public class InformeSupervisionService {
                 int siguienteCuota = previos != null ? previos.size() + 1 : 1;
                 request.setAttribute("siguienteCuota", siguienteCuota);
 
-                boolean esPrimeraCuotaAdicion = false;
-                if ("Si".equalsIgnoreCase(contrato.getAdicionSiNo()) && contrato.getNumCuotasNumero() > 0) {
-                    int totalCuotas = contrato.getNumCuotasNumero();
-                    int ultimaNormal = totalCuotas;
-                    if (siguienteCuota == ultimaNormal) {
-                        esPrimeraCuotaAdicion = true;
-                    }
-                }
+                boolean tieneAdicionContrato = ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())
+                        || contrato.isTieneAdicion())
+                        && contrato.getNumCuotasNumero() > 0;
+                int cuotasNormales = contrato.getNumCuotasNumero();
+                boolean esCuotaDeAdicion = tieneAdicionContrato && siguienteCuota > cuotasNormales;
+                boolean esFirmaOtrosí = tieneAdicionContrato && siguienteCuota == cuotasNormales;
 
-                // Auto-cargar RPC, Modificacion y Secop de la cuota anterior si existen y NO es
-                // la primera cuota de adicion
-                if (previos != null && !previos.isEmpty() && !esPrimeraCuotaAdicion) {
+                // Auto-cargar soportes si existen y NO es la cuota de firma del otrosí
+                if (previos != null && !previos.isEmpty() && !esFirmaOtrosí) {
                     org.json.JSONObject newSoportes = new org.json.JSONObject();
                     boolean foundRpc = false, foundMod = false, foundSecop = false;
                     System.out.println("Auto-cargando soportes para cuota: " + siguienteCuota);
+
+                    // REGLA CRÍTICA PARA CONTRATOS CON ADICIÓN:
+                    // En las cuotas de la adición (ej. Cuota 5 en adelante), Contrato Secop II y
+                    // RPC
+                    // DEBEN ser arrastrados de la CUOTA FINAL NORMAL (firma del otrosí, ej. Cuota
+                    // 4),
+                    // NUNCA de la cuota 1 normal.
+                    if (esCuotaDeAdicion) {
+                        com.combinacion.models.InformeSupervision infCuotaFinalNormal = null;
+                        for (com.combinacion.models.InformeSupervision p : previos) {
+                            if (p.getNumeroCuota() != null
+                                    && ParseUtils.parseInt(p.getNumeroCuota()) == cuotasNormales) {
+                                infCuotaFinalNormal = p;
+                                break;
+                            }
+                        }
+                        if (infCuotaFinalNormal != null && infCuotaFinalNormal.getSoportesJson() != null
+                                && !infCuotaFinalNormal.getSoportesJson().isEmpty()) {
+                            try {
+                                org.json.JSONObject sCuotaFinal = new org.json.JSONObject(
+                                        infCuotaFinalNormal.getSoportesJson());
+                                // 1. Contrato Secop II de la cuota final normal
+                                org.json.JSONObject secopData = getLatestFile(sCuotaFinal, "file_secop");
+                                if (secopData != null) {
+                                    secopData.put("needs_copy", true);
+                                    newSoportes.put("file_secop", secopData);
+                                    foundSecop = true;
+                                }
+                                // 2. RPC de la cuota final normal
+                                org.json.JSONObject rpcData = getLatestFile(sCuotaFinal, "file_rpc");
+                                if (rpcData != null) {
+                                    rpcData.put("needs_copy", true);
+                                    newSoportes.put("file_rpc", rpcData);
+                                    foundRpc = true;
+                                }
+                                // 3. Modificación No de la cuota final normal
+                                org.json.JSONObject modData = getLatestFile(sCuotaFinal, "file_modificacion");
+                                if (modData != null) {
+                                    modData.put("needs_copy", true);
+                                    newSoportes.put("file_modificacion", modData);
+                                    foundMod = true;
+                                }
+                                // 4. Paz y salvos de la cuota final normal
+                                String[] pazSalvoKeys = { "file_paz_salvo_orfeo", "file_paz_salvo_procesos",
+                                        "file_paz_salvo_creaciones" };
+                                for (String psk : pazSalvoKeys) {
+                                    org.json.JSONObject psData = getLatestFile(sCuotaFinal, psk);
+                                    if (psData != null) {
+                                        psData.put("needs_copy", true);
+                                        newSoportes.put(psk, psData);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    boolean esPrimeraCuotaAdic = esCuotaDeAdicion && (siguienteCuota == cuotasNormales + 1);
+                    String[] personalKeys;
+                    if (esPrimeraCuotaAdic) {
+                        // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo
+                        personalKeys = new String[] { "file_cedula", "file_correccion_monetaria",
+                                "file_medicina_prepagada", "file_certificado_dependientes" };
+                    } else {
+                        personalKeys = new String[] { "file_cedula", "file_rut", "file_correccion_monetaria",
+                                "file_medicina_prepagada", "file_certificado_dependientes",
+                                "file_ficha_tecnica" };
+                    }
+
                     for (int i = 0; i < previos.size(); i++) {
                         String sJson = previos.get(i).getSoportesJson();
                         System.out.println(
@@ -1218,7 +1285,9 @@ public class InformeSupervisionService {
                         if (sJson != null && !sJson.isEmpty()) {
                             try {
                                 org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                if (!foundRpc) {
+
+                                // Para contratos normales (sin adición): herencia estándar de RPC desde cuota 1
+                                if (!foundRpc && !esCuotaDeAdicion) {
                                     org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
                                     if (rpcData != null) {
                                         rpcData.put("needs_copy", true);
@@ -1226,38 +1295,36 @@ public class InformeSupervisionService {
                                         foundRpc = true;
                                     }
                                 }
-                                boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo())
-                                        && contrato.getNumCuotasNumero() > 0
-                                        && siguienteCuota > contrato.getNumCuotasNumero();
-                                if (esAdicionAvanzada) {
-                                    if (!foundMod) {
-                                        org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
-                                        if (modData != null) {
-                                            modData.put("needs_copy", true);
-                                            newSoportes.put("file_modificacion", modData);
-                                            foundMod = true;
-                                        }
+
+                                // Fallbacks para contratos con adición en caso de que la cuota final no tuviera
+                                // algún soporte
+                                if (!foundRpc && esCuotaDeAdicion) {
+                                    org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
+                                    if (rpcData != null) {
+                                        rpcData.put("needs_copy", true);
+                                        newSoportes.put("file_rpc", rpcData);
+                                        foundRpc = true;
                                     }
-                                    if (!foundSecop) {
-                                        org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
-                                        if (secopData != null) {
-                                            secopData.put("needs_copy", true);
-                                            newSoportes.put("file_secop", secopData);
-                                            foundSecop = true;
-                                        }
+                                }
+                                if (!foundSecop && esCuotaDeAdicion) {
+                                    org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
+                                    if (secopData != null) {
+                                        secopData.put("needs_copy", true);
+                                        newSoportes.put("file_secop", secopData);
+                                        foundSecop = true;
                                     }
-                                    // Arrastrar también documentos que ya se tienen (cédula, etc.) para la
-                                    // cuota nueva de adición. Si es la PRIMERA cuota de la adición, RUT y Ficha Técnica se deben subir de nuevo.
-                                    boolean esPrimeraCuotaAdic = (siguienteCuota == contrato.getNumCuotasNumero() + 1);
-                                    String[] personalKeys;
-                                    if (esPrimeraCuotaAdic) {
-                                        personalKeys = new String[] { "file_cedula", "file_correccion_monetaria",
-                                                "file_medicina_prepagada", "file_certificado_dependientes" };
-                                    } else {
-                                        personalKeys = new String[] { "file_cedula", "file_rut", "file_correccion_monetaria",
-                                                "file_medicina_prepagada", "file_certificado_dependientes",
-                                                "file_ficha_tecnica" };
+                                }
+                                if (!foundMod && esCuotaDeAdicion) {
+                                    org.json.JSONObject modData = getLatestFile(sAnteriores, "file_modificacion");
+                                    if (modData != null) {
+                                        modData.put("needs_copy", true);
+                                        newSoportes.put("file_modificacion", modData);
+                                        foundMod = true;
                                     }
+                                }
+
+                                // Arrastrar documentos personales para cuotas de adición
+                                if (esCuotaDeAdicion) {
                                     for (String pk : personalKeys) {
                                         if (!newSoportes.has(pk)) {
                                             org.json.JSONObject pData = getLatestFile(sAnteriores, pk);
@@ -1397,7 +1464,15 @@ public class InformeSupervisionService {
                 request.setAttribute("acumuladoPrevio", acumulado);
                 request.setAttribute("cuotasValoresJson", cuotasValores.toString());
 
-                if (!esPrimeraCuotaAdicion) {
+                boolean tieneAdicionContrato = ("Si".equalsIgnoreCase(contrato.getAdicionSiNo())
+                        || contrato.isTieneAdicion())
+                        && contrato.getNumCuotasNumero() > 0;
+                int cuotasNormales = contrato.getNumCuotasNumero();
+                int cuotaActualStr = com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota());
+                boolean esCuotaDeAdicion = tieneAdicionContrato && cuotaActualStr > cuotasNormales;
+                boolean esFirmaOtrosí = tieneAdicionContrato && cuotaActualStr == cuotasNormales;
+
+                if (!esFirmaOtrosí) {
                     if (previos != null && !previos.isEmpty()) {
                         org.json.JSONObject currentObj = (currentJson != null && !currentJson.isEmpty())
                                 ? new org.json.JSONObject(currentJson)
@@ -1406,6 +1481,51 @@ public class InformeSupervisionService {
                         boolean foundMod = currentObj.has("file_modificacion");
                         boolean foundSecop = currentObj.has("file_secop");
 
+                        // Para cuotas de adición: extraer Contrato Secop II, RPC y Modificación de la
+                        // cuota final normal
+                        if (esCuotaDeAdicion) {
+                            com.combinacion.models.InformeSupervision infCuotaFinalNormal = null;
+                            for (com.combinacion.models.InformeSupervision p : previos) {
+                                if (p.getId() != informe.getId() && p.getNumeroCuota() != null
+                                        && ParseUtils.parseInt(p.getNumeroCuota()) == cuotasNormales) {
+                                    infCuotaFinalNormal = p;
+                                    break;
+                                }
+                            }
+                            if (infCuotaFinalNormal != null && infCuotaFinalNormal.getSoportesJson() != null
+                                    && !infCuotaFinalNormal.getSoportesJson().isEmpty()) {
+                                try {
+                                    org.json.JSONObject sCuotaFinal = new org.json.JSONObject(
+                                            infCuotaFinalNormal.getSoportesJson());
+                                    if (!foundSecop) {
+                                        org.json.JSONObject secopData = getLatestFile(sCuotaFinal, "file_secop");
+                                        if (secopData != null) {
+                                            secopData.put("needs_copy", true);
+                                            currentObj.put("file_secop", secopData);
+                                            foundSecop = true;
+                                        }
+                                    }
+                                    if (!foundRpc) {
+                                        org.json.JSONObject rpcData = getLatestFile(sCuotaFinal, "file_rpc");
+                                        if (rpcData != null) {
+                                            rpcData.put("needs_copy", true);
+                                            currentObj.put("file_rpc", rpcData);
+                                            foundRpc = true;
+                                        }
+                                    }
+                                    if (!foundMod) {
+                                        org.json.JSONObject modData = getLatestFile(sCuotaFinal, "file_modificacion");
+                                        if (modData != null) {
+                                            modData.put("needs_copy", true);
+                                            currentObj.put("file_modificacion", modData);
+                                            foundMod = true;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                }
+                            }
+                        }
+
                         for (int i = 0; i < previos.size(); i++) {
                             if (previos.get(i).getId() == informe.getId())
                                 continue; // Skip itself
@@ -1413,7 +1533,7 @@ public class InformeSupervisionService {
                             if (sJson != null && !sJson.isEmpty()) {
                                 try {
                                     org.json.JSONObject sAnteriores = new org.json.JSONObject(sJson);
-                                    if (!foundRpc && !esPrimeraCuotaAdicion) {
+                                    if (!foundRpc && !esCuotaDeAdicion) {
                                         org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
                                         if (rpcData != null) {
                                             rpcData.put("needs_copy", true);
@@ -1421,12 +1541,7 @@ public class InformeSupervisionService {
                                             foundRpc = true;
                                         }
                                     }
-                                    int cuotaActualStr = com.combinacion.util.ParseUtils
-                                            .parseInt(informe.getNumeroCuota());
-                                    boolean esAdicionAvanzada = "Si".equalsIgnoreCase(contrato.getAdicionSiNo())
-                                            && contrato.getNumCuotasNumero() > 0
-                                            && cuotaActualStr > contrato.getNumCuotasNumero();
-                                    if (esAdicionAvanzada) {
+                                    if (esCuotaDeAdicion) {
                                         if (!foundMod) {
                                             org.json.JSONObject modData = getLatestFile(sAnteriores,
                                                     "file_modificacion");
@@ -1436,12 +1551,20 @@ public class InformeSupervisionService {
                                                 foundMod = true;
                                             }
                                         }
-                                        if (!foundSecop && !esPrimeraCuotaAdicion) {
+                                        if (!foundSecop) {
                                             org.json.JSONObject secopData = getLatestFile(sAnteriores, "file_secop");
                                             if (secopData != null) {
                                                 secopData.put("needs_copy", true);
                                                 currentObj.put("file_secop", secopData);
                                                 foundSecop = true;
+                                            }
+                                        }
+                                        if (!foundRpc) {
+                                            org.json.JSONObject rpcData = getLatestFile(sAnteriores, "file_rpc");
+                                            if (rpcData != null) {
+                                                rpcData.put("needs_copy", true);
+                                                currentObj.put("file_rpc", rpcData);
+                                                foundRpc = true;
                                             }
                                         }
                                     }
@@ -2111,8 +2234,76 @@ public class InformeSupervisionService {
                 }
             }
 
-            // HERENCIA GENERAL DE RPC DE CUOTA 1 O PREVIAS PARA TODAS LAS CUOTAS > 1
-            if (!esCuota1 && !soportes.has("file_rpc")) {
+            // HERENCIA DE SOPORTES EN GUARDAR:
+            if (esCuotaAdicionPosterior) {
+                // CUOTAS DE ADICIÓN (ej. Cuota 5 en adelante):
+                // Contrato Secop II, RPC, Modificación y Paz y Salvos DEBEN arrastrarse de la
+                // CUOTA FINAL NORMAL (ej. Cuota 4)
+                int cuotaFinalNormal = contrato.getNumCuotasNumero();
+                java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
+                        .listarPorContrato(contrato.getId());
+                com.combinacion.models.InformeSupervision infCuotaFinal = null;
+                if (informes != null) {
+                    for (com.combinacion.models.InformeSupervision inf : informes) {
+                        if (inf.getId() != null && inf.getId().equals(informe.getId()))
+                            continue;
+                        if (inf.getNumeroCuota() != null
+                                && com.combinacion.util.ParseUtils.parseInt(inf.getNumeroCuota()) == cuotaFinalNormal) {
+                            infCuotaFinal = inf;
+                            break;
+                        }
+                    }
+                }
+                if (infCuotaFinal != null && infCuotaFinal.getSoportesJson() != null
+                        && !infCuotaFinal.getSoportesJson().isEmpty()) {
+                    try {
+                        org.json.JSONObject sopCuotaFinal = new org.json.JSONObject(infCuotaFinal.getSoportesJson());
+                        // 1. Contrato Secop II de cuota final normal
+                        if (!soportes.has("file_secop")) {
+                            org.json.JSONObject secopData = getLatestFile(sopCuotaFinal, "file_secop");
+                            if (secopData != null) {
+                                org.json.JSONObject copyObj = new org.json.JSONObject(secopData.toString());
+                                copyObj.put("needs_copy", true);
+                                soportes.put("file_secop", copyObj);
+                            }
+                        }
+                        // 2. RPC de cuota final normal
+                        if (!soportes.has("file_rpc")) {
+                            org.json.JSONObject rpcData = getLatestFile(sopCuotaFinal, "file_rpc");
+                            if (rpcData != null) {
+                                org.json.JSONObject copyObj = new org.json.JSONObject(rpcData.toString());
+                                copyObj.put("needs_copy", true);
+                                soportes.put("file_rpc", copyObj);
+                            }
+                        }
+                        // 3. Modificación No de cuota final normal
+                        if (!soportes.has("file_modificacion")) {
+                            org.json.JSONObject modData = getLatestFile(sopCuotaFinal, "file_modificacion");
+                            if (modData != null) {
+                                org.json.JSONObject copyObj = new org.json.JSONObject(modData.toString());
+                                copyObj.put("needs_copy", true);
+                                soportes.put("file_modificacion", copyObj);
+                            }
+                        }
+                        // 4. Paz y salvos de cuota final normal
+                        String[] pazSalvoKeys = { "file_paz_salvo_orfeo", "file_paz_salvo_procesos",
+                                "file_paz_salvo_creaciones" };
+                        for (String psk : pazSalvoKeys) {
+                            if (!soportes.has(psk)) {
+                                org.json.JSONObject psData = getLatestFile(sopCuotaFinal, psk);
+                                if (psData != null) {
+                                    org.json.JSONObject copyObj = new org.json.JSONObject(psData.toString());
+                                    copyObj.put("needs_copy", true);
+                                    soportes.put(psk, copyObj);
+                                }
+                            }
+                        }
+                    } catch (Exception ignore) {
+                    }
+                }
+            } else if (!esCuota1 && !soportes.has("file_rpc")) {
+                // HERENCIA GENERAL DE RPC PARA CUENTAS NORMALES (NO TOCAR: FLUJO ESTÁNDAR DE
+                // SIEMPRE)
                 java.util.List<com.combinacion.models.InformeSupervision> previosList = new com.combinacion.dao.InformeSupervisionDAO()
                         .listarPorContrato(contrato.getId());
                 if (previosList != null) {
@@ -2138,9 +2329,11 @@ public class InformeSupervisionService {
 
             if (esCuotaAdicionPosterior) {
                 // Cuota 5 en adelante: arrastrar documentos que ya se tienen de cuotas previas
-                // (cédula, etc.). Si es la PRIMERA cuota de la adición, RUT y Ficha Técnica se deben subir de nuevo.
+                // (cédula, etc.). Si es la PRIMERA cuota de la adición, RUT y Ficha Técnica se
+                // deben subir de nuevo.
                 boolean esPrimeraCuotaAdic = (informe.getNumeroCuota() != null &&
-                        com.combinacion.util.ParseUtils.parseInt(informe.getNumeroCuota()) == contrato.getNumCuotasNumero() + 1);
+                        com.combinacion.util.ParseUtils
+                                .parseInt(informe.getNumeroCuota()) == contrato.getNumCuotasNumero() + 1);
 
                 java.util.List<com.combinacion.models.InformeSupervision> informes = new com.combinacion.dao.InformeSupervisionDAO()
                         .listarPorContrato(contrato.getId());
@@ -2154,12 +2347,11 @@ public class InformeSupervisionService {
                             if (esPrimeraCuotaAdic) {
                                 // En la primera cuota de adición, RUT y Ficha Técnica se deben subir de nuevo
                                 keys = new String[] { "file_cedula", "file_correccion_monetaria",
-                                        "file_medicina_prepagada", "file_certificado_dependientes",
-                                        "file_rpc", "file_modificacion", "file_secop" };
+                                        "file_medicina_prepagada", "file_certificado_dependientes" };
                             } else {
                                 keys = new String[] { "file_cedula", "file_rut", "file_correccion_monetaria",
-                                        "file_medicina_prepagada", "file_certificado_dependientes", "file_ficha_tecnica",
-                                        "file_rpc", "file_modificacion", "file_secop" };
+                                        "file_medicina_prepagada", "file_certificado_dependientes",
+                                        "file_ficha_tecnica" };
                             }
                             for (String k : keys) {
                                 if (sop.has(k) && !soportes.has(k)) {

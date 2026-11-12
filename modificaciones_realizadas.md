@@ -525,3 +525,21 @@
   * **Independencia de la Pestaña Activa en `actualizarAsteriscosArchivos()`:** La comprobación de visibilidad ahora valida el contenedor del campo (`!wrapperHidden`) en lugar de `$input.is(':visible')`, evitando que tener otra pestaña activa suprima los asteriscos requeridos.
   * **Garantía de Obligatoriedad en Adición:** En `esPrimeraCuotaAdic`, RUT y Ficha Técnica siempre se configuran con `yaCargado = false` y `required = true`, garantizando el asterisco rojo visible y bloqueando la radicación si alguno no se adjunta.
   * **Sincronización por Pestaña (`shown.bs.tab`):** Se agregó el listener global sobre Bootstrap tabs para que al hacer clic en "Documentos de soporte", se ejecute `actualizarCamposSoportes()` y se sincronicen todos los asteriscos y badges al instante.
+
+---
+
+### 5. Arrastre de Contrato Secop II y RPC desde la Cuota Final Normal en Contratos con Adición
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+* **Diagnóstico del Problema:**
+  * En contratos que cuentan con adición aprobada, en la cuota final normal (por ejemplo, Cuota 4) se suscribe y formaliza el otrosí, cargándose allí el **nuevo RPC**, el **nuevo Contrato Secop II** y la **Modificación No 001**.
+  * Al crear o editar la primera cuota de la adición (o cuotas posteriores, ej. Cuota 5 en adelante), el algoritmo anterior iteraba los informes previos en orden cronológico ascendente y tomaba el RPC y Secop II de la Cuota 1 (contrato inicial), en lugar de arrastrar los documentos formalizados en la Cuota 4 (firma de otrosí).
+* **Solución Implementada:**
+  * **Priorización de la Cuota Final Normal:** En `mostrarFormularioNuevo`, `mostrarFormularioEdicion` y `guardarInforme`:
+    * Cuando el contrato tiene adición (`tieneAdicionContrato == true`) y la cuota es de la adición (`cuota > cuotasNormales`, ej. Cuota 5):
+      1. Se localiza específicamente el informe correspondiente a la **cuota final normal** (`cuota == cuotasNormales`, ej. Cuota 4).
+      2. De esa cuota final normal se arrastran directamente **Contrato Secop II** (`file_secop`), **RPC** (`file_rpc`), **Modificación No** (`file_modificacion`) y los **Paz y Salvos**.
+      3. Solo en caso de que alguno de estos no existiera en la cuota final normal se recurre como fallback a los previos anteriores.
+  * **Protección Estricta de Cuentas Normales:**
+    * Para contratos normales (sin adición) o cuotas estándar iniciales, se mantiene exactamente la lógica previa intacta (herencia estándar de RPC de cuota 1), asegurando que ningún contrato estándar se vea alterado.
