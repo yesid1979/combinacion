@@ -532,11 +532,11 @@
                                     </div>
                                 </c:if>
                                 <div class="col-md-6 req-cuota-1-only">
-                                    <label class="form-label">RUT <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
+                                    <label class="form-label">RUT <span class="text-danger ast-cuota-1 ast-rut" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_rut" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1-only">
-                                    <label class="form-label">Cédula <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
+                                    <label class="form-label">Cédula <span class="text-danger ast-cuota-1 ast-cedula" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_cedula" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-secop">
@@ -556,7 +556,7 @@
                                     <input type="file" class="form-control" name="file_certificado_dependientes" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-cuota-1-only">
-                                    <label class="form-label">Ficha Técnica <span class="text-danger ast-cuota-1" style="display:none;">*</span></label>
+                                    <label class="form-label">Ficha Técnica <span class="text-danger ast-cuota-1 ast-ficha-tecnica" style="display:none;">*</span></label>
                                     <input type="file" class="form-control" name="file_ficha_tecnica" accept="application/pdf" ${readonly ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-md-6 req-seguridad-social">
@@ -1245,6 +1245,8 @@
 
                         $('#alerta-soportes-info').html('<i class="bi bi-info-circle-fill me-2"></i> <strong>Primera Cuota de Adición:</strong> Se deben subir de nuevo el <strong>RUT</strong> y la <strong>Ficha Técnica</strong>, además de la Seguridad Social obligatoria. Los demás documentos (Cédula, Contrato Secop II, RPC, Modificación y Paz y Salvos) se arrastran si ya se tienen cargados.');
 
+                        $('.ast-rut, .ast-ficha-tecnica').show();
+
                     } else {
                         // 5. Cuotas posteriores de la adición (ej. Cuota 6 si la adición tiene 2 o más cuotas)
                         if (esUltimaCuota) {
@@ -1315,34 +1317,57 @@
 
             function actualizarAsteriscosArchivos() {
                 setTimeout(function() {
+                    var cuotaVal = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                    var cuotaNum = parseInt(cuotaVal) || 0;
+                    var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
+                    var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
+                    var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || cuotasAdicion > 0;
+                    var esPrimeraCuotaAdic = (tieneAdicion && cuotasNormales > 0 && cuotaNum === (cuotasNormales + 1));
+
                     $('input[type="file"]').each(function() {
                         var $input = $(this);
+                        var inputName = $input.attr('name');
+                        var $wrapper = $input.closest('.col-md-6, .col-12, .mb-3');
+                        var wrapperHidden = ($wrapper.length > 0 && $wrapper.css('display') === 'none');
+                        
                         var $label = $input.prevAll('.form-label, small.fw-bold').first();
                         if ($label.length === 0) {
                             $label = $input.closest('div').find('.form-label, small.fw-bold').first();
                         }
+                        if (!$label.length) return;
                         
                         var yaCargado = ($label.find('.badge.bg-success').length > 0 || 
                                          $input.prevAll('.alert-secondary').length > 0 || 
                                          $input.closest('div').find('.alert-secondary').length > 0);
 
+                        // Si es primera cuota de adición, RUT y Ficha Técnica NUNCA deben considerarse ya cargados
+                        if (esPrimeraCuotaAdic && (inputName === 'file_rut' || inputName === 'file_ficha_tecnica')) {
+                            yaCargado = false;
+                            $input.prop('required', true);
+                        }
+
                         // Si ya está cargado, ya no es requerido
                         if (yaCargado) {
                             $input.prop('required', false);
-                            $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
+                            $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
                         } else {
-                            // Refrescar asterisco según si el input es required y está visible
-                            if ($input.prop('required') && $input.is(':visible')) {
-                                $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo').show();
-                                if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
+                            // Refrescar asterisco según si el input es required y no está explícitamente oculto por wrapper
+                            if ($input.prop('required') && !wrapperHidden) {
+                                var $ast = $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo');
+                                if ($ast.length > 0) {
+                                    $ast.show();
+                                }
+                                if ($label.find('.req-asterisk').length === 0 && $label.find('.ast-cuota-1:visible, .ast-rut:visible, .ast-ficha-tecnica:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
                                     $label.append(' <span class="text-danger req-asterisk" title="Requerido para radicar">*</span>');
+                                } else if ($label.find('.req-asterisk').length > 0 && $label.find('.ast-cuota-1:visible, .ast-rut:visible, .ast-ficha-tecnica:visible, .ast-secop:visible, .ast-rpc:visible, .ast-modificacion:visible, .ast-paz-salvo:visible').length === 0) {
+                                    $label.find('.req-asterisk').show();
                                 }
                             } else {
-                                $label.find('.ast-cuota-1, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
+                                $label.find('.ast-cuota-1, .ast-rut, .ast-ficha-tecnica, .ast-secop, .ast-rpc, .ast-modificacion, .ast-paz-salvo, .req-asterisk').hide();
                             }
                         }
                     });
-                }, 100);
+                }, 50);
             }
 
             // 1. Renderizar primero los archivos existentes en la base de datos para crear la interfaz visual (alert-secondary y enlaces)
@@ -1474,6 +1499,13 @@
             // 2. Ahora que todos los documentos están en el DOM, sincronizar visibilidad y reglas
             $('select[name="numero_cuota"], input[name="numero_cuota"]').on('change', actualizarCamposSoportes);
             actualizarCamposSoportes(); // Ejecutar al cargar la página AHORA que los soportes ya existen en el DOM
+            
+            // Sincronizar soportes y asteriscos cuando el usuario cambia de pestaña
+            $(document).on('shown.bs.tab', 'button[data-bs-toggle="tab"], a[data-bs-toggle="tab"]', function(e) {
+                if (typeof actualizarCamposSoportes === 'function') {
+                    actualizarCamposSoportes();
+                }
+            });
             
             // 3. Si es solo lectura, limpiar visualmente la pestaña de soportes
             if (isReadonly) {
@@ -2581,13 +2613,25 @@
                     $('[name="numero_cuota"]').trigger('change');
                 }
                 
-                // Mostrar/Ocultar asteriscos de Cuota 1
+                // Mostrar/Ocultar asteriscos de Cuota 1 y Primera Cuota de Adición
                 function actualizarAsteriscosCuota() {
-                    var cuota = parseInt($('[name="numero_cuota"]').val());
+                    var cuotaVal = $('select[name="numero_cuota"], input[name="numero_cuota"]').val();
+                    var cuota = parseInt(cuotaVal) || 0;
+                    var cuotasNormales = parseInt("${contrato.numCuotasNumero}") || 0;
+                    var cuotasAdicion = parseInt("${contrato.numeroCuotasAdicion}") || 0;
+                    var tieneAdicion = ${contrato.tieneAdicion ? 'true' : 'false'} || "${contrato.adicionSiNo}".toLowerCase() === "si" || "${contrato.adicionSiNo}".toLowerCase() === "sí" || cuotasAdicion > 0;
+                    var esPrimeraCuotaAdic = (tieneAdicion && cuotasNormales > 0 && cuota === (cuotasNormales + 1));
+
                     if (cuota === 1) {
                         $('.ast-cuota-1').show();
+                    } else if (esPrimeraCuotaAdic) {
+                        $('.ast-cuota-1').not('.ast-rut, .ast-ficha-tecnica').hide();
+                        $('.ast-rut, .ast-ficha-tecnica').show();
                     } else {
                         $('.ast-cuota-1').hide();
+                    }
+                    if (typeof actualizarAsteriscosArchivos === 'function') {
+                        actualizarAsteriscosArchivos();
                     }
                 }
 

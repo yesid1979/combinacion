@@ -505,3 +505,23 @@
   * Reemplazo de caracteres UTF-8 multibyte en los estilos CSS por códigos de escape hexadecimales ASCII limpios (`\25B2` para flecha arriba, `\25BC` para flecha abajo y escapes `\ea01`, `\ea0f`, etc. para Summernote), evitando que servidores en Windows decodifiquen los archivos bajo Windows-1252 y muestren glifos distorsionados (`â–²`, `♦`, `í²`).
   * Integración de parámetro de control de caché `?v=20261111_02` en todas las etiquetas `<link>` de [head_assets.jsp](file:///src/main/webapp/inc/head_assets.jsp) para forzar la recarga de los estilos en los navegadores de los usuarios.
   * Configuración de mapeos MIME en `web.xml` para `.css`, `.js`, `.json`, `.woff`, `.woff2` y `.ttf` con `charset=UTF-8`.
+
+---
+
+### 4. Corrección de Asteriscos de Obligatoriedad en RUT y Ficha Técnica (Primera Cuota de Adición)
+* **Archivos Modificados:**
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * Al ingresar a la primera cuota de adición (ej. Cuota 5 en `juridica.cali.gov.co/combinacion/informes?action=new&contrato_id=1950`), la alerta informativa indicaba correctamente que se debían subir de nuevo el RUT y la Ficha Técnica obligatoriamente. Sin embargo, las etiquetas de RUT y Ficha Técnica se mostraban sin el asterisco rojo (`*`).
+  * **Causa Raíz:**
+    1. Las etiquetas HTML de RUT y Ficha Técnica compartían únicamente la clase genérica `.ast-cuota-1`.
+    2. La función `actualizarAsteriscosCuota()` evaluaba estrictamente `cuota === 1`; al ser una cuota de adición (ej. Cuota 5), ejecutaba `$('.ast-cuota-1').hide()`, ocultando incondicionalmente los asteriscos de RUT y Ficha Técnica.
+    3. `actualizarAsteriscosArchivos()` verificaba `$input.is(':visible')`, lo cual retornaba `false` cuando el usuario cargaba la página en una pestaña distinta a "Documentos de soporte" (por ejemplo "General"), ocultando los asteriscos de los archivos al inicializarse.
+    4. No existía un escuchador (`shown.bs.tab`) que refrescara el estado visual de los asteriscos al conmutar entre pestañas.
+* **Solución Implementada:**
+  * **Clases Específicas:** Se añadieron las clases `.ast-rut` y `.ast-ficha-tecnica` en sus respectivas etiquetas de [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp).
+  * **Actualización en `actualizarAsteriscosCuota()`:** Se incorporó la condición `esPrimeraCuotaAdic` para ocultar los asteriscos de cuota 1 ya cubiertos por arrastre (`$('.ast-cuota-1').not('.ast-rut, .ast-ficha-tecnica').hide()`) y forzar la visualización explícita de `.ast-rut` y `.ast-ficha-tecnica` (`$('.ast-rut, .ast-ficha-tecnica').show()`).
+  * **Independencia de la Pestaña Activa en `actualizarAsteriscosArchivos()`:** La comprobación de visibilidad ahora valida el contenedor del campo (`!wrapperHidden`) en lugar de `$input.is(':visible')`, evitando que tener otra pestaña activa suprima los asteriscos requeridos.
+  * **Garantía de Obligatoriedad en Adición:** En `esPrimeraCuotaAdic`, RUT y Ficha Técnica siempre se configuran con `yaCargado = false` y `required = true`, garantizando el asterisco rojo visible y bloqueando la radicación si alguno no se adjunta.
+  * **Sincronización por Pestaña (`shown.bs.tab`):** Se agregó el listener global sobre Bootstrap tabs para que al hacer clic en "Documentos de soporte", se ejecute `actualizarCamposSoportes()` y se sincronicen todos los asteriscos y badges al instante.
