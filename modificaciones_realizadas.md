@@ -586,3 +586,26 @@
   * **Eliminación del Arrastre en el Backend:** En `mostrarFormularioNuevo` y `guardarInforme` de `InformeSupervisionService.java`, se eliminó la herencia automática de `file_paz_salvo_orfeo`, `file_paz_salvo_procesos` y `file_paz_salvo_creaciones`.
   * **Limpieza de Copias Temporales en Frontend:** En `form_supervision.jsp`, se añadió limpieza automática de `soportesObj` para cualquier clave `file_paz_salvo_` con bandera `needs_copy` cuando la cuota actual es de la adición (`curCuotaNum > curCuotasNormales`), asegurando que los campos de paz y salvo inicien completamente limpios y vacíos.
   * **Actualización del Mensaje Informativo:** Se ajustó el texto del banner de alerta para indicar con precisión que los documentos arrastrados son únicamente Cédula, Contrato Secop II, RPC y Modificación No.
+
+---
+
+## Fecha: 13 de Noviembre de 2026
+
+### 1. Creación del Manual de Operación Completo del Sistema
+* **Archivo Creado:**
+  * [Documentación/Manuales/Manual de Operacion.docx](file:///Documentaci%C3%B3n/Manuales/Manual%20de%20Operacion.docx)
+* **Detalle del Entregable:**
+  * Se elaboró el **Manual de Operación Completo** (`DAGJP-MAN-OPE-001`, Versión 2.0) siguiendo la identidad visual institucional de la Alcaldía Distrital de Santiago de Cali / DAGJP (encabezado oficial, estilos corporativos, tablas estructuradas y numeración automática).
+  * Estructurado en **11 capítulos**, **42 secciones**, **22 tablas** y **5 diagramas/figuras en alta resolución**, documentando de extremo a extremo la operación del sistema `combinacion.war`:
+    1. Introducción, alcance, marco normativo y perfiles destinatarios.
+    2. Arquitectura operativa, entorno de producción, IPs y puertos (`10.30.80.53:5432`, Tomcat/Nginx, Google APIs, SMTP, GitUp).
+    3. Roles institucionales (5 roles, 58 permisos RBAC), inicio de sesión `SHA-256 + Salt`, *Mi Perfil* / firma digital (`DRIVE_CARPETA_FIRMAS`) y notificaciones en tiempo real.
+    4. Navegación por rol (`navbar.jsp`, `index.jsp`) y vistas analíticas SQL.
+    5. Carga masiva manual (`/upload`) y sincronización con Google Sheets (`/google-sync`), preservación de datos personales y bancarios, y aprovisionamiento automático de usuarios.
+    6. Operación de módulos maestros: Contratos (incluyendo parametrización de adiciones/otrosí), Contratistas, Supervisores, Ordenadores, Revisores, Presupuesto, Consecutivos y Diccionario de Verbos.
+    7. Combinación de correspondencia (`.docx`/`.zip`, catálogo de las 14 plantillas) y Revaluación de Proveedores (`.xlsx`).
+    8. Operación integral de Supervisión Contractual y Radicación de Cuentas de Cobro (6 pestañas de `form_supervision.jsp`, matriz exacta de reglas normales vs. adición/otrosí, estados, devoluciones, subsanación y cola asíncrona Google Drive).
+    9. Administración funcional de usuarios, roles, configuración de carpetas Drive (`ConfiguracionDAO.recargarCache()`) y auditoría forense.
+    10. SOP diario de infraestructura TI, checklist operativo, monitoreo, copias `pg_dump` / `pg_restore`, `VACUUM ANALYZE` y procedimiento de apertura de nueva vigencia anual.
+    11. Matriz de 15 casos reales de contingencias/troubleshooting y niveles de escalamiento institucional.
+
