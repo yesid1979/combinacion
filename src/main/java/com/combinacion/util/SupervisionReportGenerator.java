@@ -129,7 +129,17 @@ public class SupervisionReportGenerator {
         }
         if (info != null && info.getSupervisorId() != null && contrato != null && contrato.getSupervisorId() > 0) {
             if (!info.getSupervisorId().equals(contrato.getSupervisorId())) {
-                esEncargado = true;
+                boolean mismaPersona = false;
+                if (supInforme != null && contrato.getSupervisor() != null) {
+                    String nomInf = supInforme.getNombre() != null ? supInforme.getNombre().replaceAll("\\s+", " ").trim().toUpperCase() : "";
+                    String nomCtr = contrato.getSupervisor().getNombre() != null ? contrato.getSupervisor().getNombre().replaceAll("\\s+", " ").trim().toUpperCase() : "";
+                    if (!nomInf.isEmpty() && nomInf.equals(nomCtr)) {
+                        mismaPersona = true;
+                    }
+                }
+                if (!mismaPersona) {
+                    esEncargado = true;
+                }
             }
         }
         reps.put("${TEXTO_SUPERVISOR}", esEncargado ? "Nombre y firma del Supervisor (E)" : "Nombre y firma del Supervisor");

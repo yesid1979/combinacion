@@ -228,7 +228,8 @@
                                 <div class="col-md-6">
                                     <label class="form-label d-flex justify-content-between align-items-center">
                                         <span>Supervisor asignado a este informe</span>
-                                        <c:if test="${not empty informe.supervisorId && not empty contrato.supervisorId && informe.supervisorId != contrato.supervisorId}">
+                                        <c:set var="esMismaPersona" value="${not empty informe.supervisor && not empty contrato.supervisor && fn:trim(fn:toUpperCase(informe.supervisor.nombre)) == fn:trim(fn:toUpperCase(contrato.supervisor.nombre))}" />
+                                        <c:if test="${not empty informe.supervisorId && not empty contrato.supervisorId && informe.supervisorId != contrato.supervisorId && !esMismaPersona}">
                                             <span class="badge bg-warning text-dark"><i class="bi bi-person-badge me-1"></i>Por Encargo</span>
                                         </c:if>
                                     </label>

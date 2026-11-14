@@ -1,5 +1,28 @@
 # Registro de Modificaciones Realizadas
 
+## Fecha: 14 de Noviembre de 2026
+### Módulo: Reincorporación de Titular de Supervisión y Resolución de Encargos (`SupervisionReportGenerator.java`, `form_supervision.jsp`, Base de Datos)
+
+* **Unificación de Supervisor Titular en Contratos (Subdirección de Defensa Judicial):**
+  * **Problema Identificado:** Existían dos registros en la tabla `supervisores` correspondientes a la titular *Claudia Patricia Vargas Orozco*: el oficial con ID `318` (cédula `31907790`) y un registro duplicado con ID `323` (cédula con sufijo `-DUP-`). En la base de datos, 73 contratos estaban asociados a `supervisor_id = 323`. Al seleccionar en los formularios de cuentas nuevas a la titular (ID `318`), el sistema comparaba `informe.supervisorId != contrato.supervisorId` (`318 != 323`) y activaba automáticamente la condición de "Por Encargo" y la firma `(E)`.
+  * **Solución en Base de Datos:**
+    * Se unificaron los 73 contratos asociados al supervisor duplicado `323` para que apunten a la titular legítima con ID `318`.
+    * Se eliminó el registro duplicado `323` para evitar desfaces en futuras asignaciones o cargas masivas.
+    * **Preservación estricta de cuentas históricas:** Se mantuvieron 100% intactas las 56 cuentas de cobro tramitadas durante el encargo con Adriana Marcela León Botina (`supervisor_id = 321`), asegurando su cargo, firmas y condición de encargada `(E)`.
+* **Creación de Credenciales de Acceso para la Titular:**
+  * Se registró el usuario oficial en la tabla `usuarios`:
+    * **Usuario:** `claudia.vargas`
+    * **Contraseña inicial:** `123456789` (encriptada con SHA-256 + salt aleatorio)
+    * **Cédula:** `31907790`
+    * **Rol:** `Supervisor` (ID `4082`)
+    * **Cargo:** `Subdirector de Defensa Judicial y Prevención del Daño Antijurídico`
+    * **Estado:** Activo
+* **Blindaje en Código ([SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java) y [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)):**
+  * Se implementó una verificación preventiva: cuando el supervisor asignado al informe y el titular del contrato tengan el mismo nombre (ej. ambos son Claudia Patricia Vargas Orozco), el sistema garantiza que **no se active la condición de encargada ni se imprima `(E)`**, incluso ante eventuales inconsistencias de IDs numéricos.
+  * Se mantiene la activación de "Por Encargo" y `(E)` exclusivamente cuando el supervisor sea realmente un funcionario distinto al titular (como el caso de Adriana Marcela León Botina en periodos de encargo) o cuando su cargo lo defina explícitamente.
+
+---
+
 ## Fecha: 11 de Noviembre de 2026
 ### Módulo: Soportes y Evidencias de Cuentas de Cobro con Adición y Cuota Final (`form_supervision.jsp`, `InformeSupervisionService.java`)
 

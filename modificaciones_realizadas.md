@@ -1,5 +1,60 @@
 # Registro de Modificaciones Realizadas
 
+## Fecha: 14 de Noviembre de 2026
+### Módulo: Reincorporación de Titular de Supervisión y Resolución de Encargos (`SupervisionReportGenerator.java`, `form_supervision.jsp`, Base de Datos)
+
+* **Unificación de Supervisor Titular en Contratos (Subdirección de Defensa Judicial):**
+  * **Problema Identificado:** Existían dos registros en la tabla `supervisores` correspondientes a la titular *Claudia Patricia Vargas Orozco*: el oficial con ID `318` (cédula `31907790`) y un registro duplicado con ID `323` (cédula con sufijo `-DUP-`). En la base de datos, 73 contratos estaban asociados a `supervisor_id = 323`. Al seleccionar en los formularios de cuentas nuevas a la titular (ID `318`), el sistema comparaba `informe.supervisorId != contrato.supervisorId` (`318 != 323`) y activaba automáticamente la condición de "Por Encargo" y la firma `(E)`.
+  * **Solución en Base de Datos:**
+    * Se unificaron los 73 contratos asociados al supervisor duplicado `323` para que apunten a la titular legítima con ID `318`.
+    * Se eliminó el registro duplicado `323` para evitar desfaces en futuras asignaciones o cargas masivas.
+    * **Preservación estricta de cuentas históricas:** Se mantuvieron 100% intactas las 56 cuentas de cobro tramitadas durante el encargo con Adriana Marcela León Botina (`supervisor_id = 321`), asegurando su cargo, firmas y condición de encargada `(E)`.
+* **Creación de Credenciales de Acceso para la Titular:**
+  * Se registró el usuario oficial en la tabla `usuarios`:
+    * **Usuario:** `claudia.vargas`
+    * **Contraseña inicial:** `123456789` (encriptada con SHA-256 + salt aleatorio)
+    * **Cédula:** `31907790`
+    * **Rol:** `Supervisor` (ID `4082`)
+    * **Cargo:** `Subdirector de Defensa Judicial y Prevención del Daño Antijurídico`
+    * **Estado:** Activo
+* **Blindaje en Código ([SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java) y [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)):**
+  * Se implementó una verificación preventiva: cuando el supervisor asignado al informe y el titular del contrato tengan el mismo nombre (ej. ambos son Claudia Patricia Vargas Orozco), el sistema garantiza que **no se active la condición de encargada ni se imprima `(E)`**, incluso ante eventuales inconsistencias de IDs numéricos.
+  * Se mantiene la activación de "Por Encargo" y `(E)` exclusivamente cuando el supervisor sea realmente un funcionario distinto al titular (como el caso de Adriana Marcela León Botina en periodos de encargo) o cuando su cargo lo defina explícitamente.
+
+---
+
+## Fecha: 11 de Noviembre de 2026
+### Módulo: Soportes y Evidencias de Cuentas de Cobro con Adición y Cuota Final (`form_supervision.jsp`, `InformeSupervisionService.java`)
+
+* **Ajuste en los documentos requeridos y visualizados según el tipo de cuenta:**
+  * **Cuentas normales (Cuota 1):** Mantiene la exigencia de los documentos iniciales habituales (Cédula, RUT, Contrato Secop II, RPC, Ficha Técnica, Seguridad Social, y certificados opcionales).
+  * **Cuentas normales intermedias (Cuotas posteriores que no son finales):** Únicamente se pide y muestra la Seguridad Social (y Factura Electrónica si es responsable de IVA).
+  * **Cuota Final (especialmente cuando hay Adición):**
+    * **SOLO** se solicitan y muestran los siguientes documentos:
+      1. `Contrato Secop II` (`file_secop`)
+      2. `RPC` (`file_rpc`)
+      3. `Modificación No` (`file_modificacion`) - cuando el contrato tiene adición
+      4. `Seguridad Social` (`file_seguridad_social`)
+      5. `Cada uno de los Paz y Salvos` (Orfeo, Gestión de Procesos y Creaciones)
+    * **Se ocultan estrictamente** los documentos de la primera cuota (`RUT`, `Cédula`, `Certificación Corrección Monetaria`, `Certificado Medicina Prepagada`, `Certificado Dependientes`, `Ficha Técnica`), incluso si existían archivos precargados o guardados en la cuenta.
+  * **Backend (`InformeSupervisionService.java`):**
+    * Al procesar cualquier cuota posterior a la 1 (incluyendo adiciones y cuota final), se purgan del JSON de soportes las claves de documentos exclusivos de cuota 1 (`file_rut`, `file_cedula`, etc.) para que no se hereden ni persistan indebidamente en Drive ni en la base de datos.
+    * Se mantiene la herencia selectiva de `file_rpc`, `file_modificacion` y `file_secop` únicamente cuando corresponda.
+
+---
+
+## Fecha: 11 de Noviembre de 2026
+### Módulo: Descarga de Plantilla de Consecutivos de Cobro (`ConsecutivoServlet.java`)
+
+* **Filtro estricto de contratos activos en la plantilla Excel (`descargarPlantilla`):**
+  * Se corrigió la consulta SQL para que **únicamente se descarguen contratos activos/vigentes calculando las adiciones**:
+    * Se calcula la **fecha de terminación efectiva**: `(c.fecha_terminacion + (COALESCE(c.numero_cuotas_adicion, 0) * INTERVAL '1 month'))::date >= CURRENT_DATE`.
+    * Esto contempla los contratos que inicialmente tenían fecha de terminación anterior a hoy (por ejemplo 30 de octubre de 2026), pero que gracias a la adición de meses/cuotas (`numero_cuotas_adicion`), su vigencia real se extiende (por ejemplo hasta el 30 de diciembre de 2026).
+    * Se excluyen contratos finalizados en su totalidad o en estados: `TERMINADO`, `TERMINADO ANTICIPADO`, `CERRADO`, `ANULADO`, `LIQUIDADO`, `NO HAB`.
+    * Con esto, la plantilla descarga exactamente los 92 contratos activos (incluyendo los 7 contratos vigentes mediante adición) y no excluye erróneamente contratos con adiciones vigentes.
+
+---
+
 ## Fecha: 21 de Octubre de 2026
 ### Módulo: Gestión y Asignación de Consecutivos de Cobro
 
