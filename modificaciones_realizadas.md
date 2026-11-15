@@ -1,5 +1,20 @@
 # Registro de Modificaciones Realizadas
 
+## Fecha: 15 de Noviembre de 2026
+### Módulo: Resumen Contable y Financiero en Generador de Informes de Supervisión (`SupervisionReportGenerator.java`)
+
+* **Corrección del Valor Acumulado Cancelado en Informes con Adición:**
+  * **Problema Identificado:** En los informes de supervisión de contratos con adición (por ejemplo, cuota 5 donde el valor acumulado cancelado equivalía al valor inicial del contrato original, e.g. $ 22.652.000), el documento Word generado mostraba erróneamente en la celda *"Valor Acumulado Cancelado"* el valor total del contrato vigente ($ 33.978.000), a pesar de que en la pantalla web y en la base de datos el valor registrado era el correcto ($ 22.652.000).
+  * **Causa Raíz:** Existía una sustitución posterior en el XML de la tabla `Resumen contable y financiero` que ejecutaba `tblSub.replace(vInicial, vTotal)` sobre toda la tabla. Como en las cuotas de inicio de adición el valor acumulado pagado (`${VALOR_ACUMULADO}`) coincidía exactamente con el valor inicial del contrato (`vInicial`), la función reemplazaba indiscriminadamente ambas cifras por el valor total (`vTotal`).
+  * **Solución Implementada:** Dado que las plantillas oficiales (`INFORME_SUPERVISION_TEMPLATE.docx` e `INFORME_SUPERVISION_TEMPLATE_BORRADOR.docx`) ya disponen de forma nativa de la variable `${VALOR_TOTAL_NUMEROS}` mapeada directamente al valor total vigente (`contrato.getValorVigente()`), se eliminó este bloque redundante y perjudicial de post-procesamiento.
+  * **Resultado:** La tabla financiera del documento generado en Word refleja con total precisión:
+    * *Valor Total del Contrato:* $ 33.978.000
+    * *Valor Cuota a Cancelar:* $ 5.663.000
+    * *Valor Acumulado Cancelado:* $ 22.652.000
+    * *Saldo por Cancelar:* $ 5.663.000
+
+---
+
 ## Fecha: 14 de Noviembre de 2026
 ### Módulo: Reincorporación de Titular de Supervisión y Resolución de Encargos (`SupervisionReportGenerator.java`, `form_supervision.jsp`, Base de Datos)
 

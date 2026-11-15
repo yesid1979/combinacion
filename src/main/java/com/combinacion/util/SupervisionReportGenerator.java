@@ -324,27 +324,6 @@ public class SupervisionReportGenerator {
                         xml = xml.replace("Nombre y firma del Supervisor", "Nombre y firma del Supervisor (E)");
                     }
                     
-                    // Asegurar consistencia en la tabla 'Resumen contable y financiero':
-                    // la columna 'Valor Total del Contrato' debe reflejar el valor total vigente con adición
-                    if (contrato != null && contrato.isTieneAdicion()) {
-                        String vTotal = reps.get("${VALOR_TOTAL_NUMEROS}");
-                        String vInicial = reps.get("${VALOR_INICIAL_NUMEROS}");
-                        if (vTotal != null && vInicial != null && !vTotal.equals(vInicial)) {
-                            int idxResumen = xml.indexOf("Resumen contable y financiero");
-                            if (idxResumen != -1) {
-                                int idxTable = xml.indexOf("<w:tbl", idxResumen);
-                                int idxEndTable = (idxTable != -1) ? xml.indexOf("</w:tbl>", idxTable) : -1;
-                                if (idxTable != -1 && idxEndTable != -1) {
-                                    String tblSub = xml.substring(idxTable, idxEndTable);
-                                    if (tblSub.contains(vInicial)) {
-                                        String updatedTbl = tblSub.replace(vInicial, vTotal);
-                                        xml = xml.substring(0, idxTable) + updatedTbl + xml.substring(idxEndTable);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
                     // Forzar que TODAS las filas de las tablas puedan dividirse entre páginas 
                     // para evitar que LibreOffice corte el texto cuando es muy largo
                     xml = xml.replaceAll("(?i)<w:cantSplit[^>]*>", "");
