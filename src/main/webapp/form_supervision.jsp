@@ -1393,6 +1393,8 @@
                     });
                 }, 50);
             }
+            window.actualizarCamposSoportes = actualizarCamposSoportes;
+            window.actualizarAsteriscosArchivos = actualizarAsteriscosArchivos;
 
             // 1. Renderizar primero los archivos existentes en la base de datos para crear la interfaz visual (alert-secondary y enlaces)
             var soportesInput = document.getElementById('soportes_json');
@@ -2571,7 +2573,9 @@
                 $('#tipo_informe').change(function() {
                     var tipo = $(this).val();
                     togglePagoSeguridadSocial();
-                    actualizarCamposSoportes();
+                    if (typeof window.actualizarCamposSoportes === 'function') {
+                        window.actualizarCamposSoportes();
+                    }
                     
                     // Solo actualizar si no estamos en modo readonly
                     if ($(this).is(':disabled')) return;

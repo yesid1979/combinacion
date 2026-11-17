@@ -700,4 +700,16 @@
   * **Frontend (`form_supervision.jsp`):** Al seleccionar una cuota menor a `maxCuota`, `tipo_informe` regresa automáticamente a `PARCIAL`; además, tanto en `asegurarTextosFinal()` como en el `submit`, si el informe es `PARCIAL`, se limpian ambos campos a `'N/A'`.
   * **Saneamiento en Base de Datos:** Se corrigió directamente en PostgreSQL el registro `id = 403` dejando `recibo_satisfaccion = 'N/A'` y `constancia_paz_salvo = 'N/A'`.
 
+---
+
+### 2. Corrección de Alcance JS (`ReferenceError: actualizarCamposSoportes`) al Seleccionar Informe Final
+* **Archivos Modificados:**
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * Al crear una nueva cuenta de cobro en la última cuota (por ejemplo `action=new&contrato_id=2113`, Cuota 2), el campo `Tipo de Informe` cambiaba a `INFORME FINAL`, pero `Recibo a Satisfacción de Servicios` y `Constancia de Paz y Salvo` permanecían en `N/A`.
+  * **Causa Raíz:** Las funciones `actualizarCamposSoportes()` y `actualizarAsteriscosArchivos()` estaban definidas dentro del primer bloque `$(document).ready(...)`, por lo que no eran visibles en el ámbito global. Al dispararse el evento `$('#tipo_informe').change(...)` en un bloque `<script>` posterior, la llamada a `actualizarCamposSoportes()` lanzaba `ReferenceError: actualizarCamposSoportes is not defined` e interrumpía la ejecución antes de invocar `asegurarTextosFinal()`.
+* **Solución Implementada:**
+  * Se expusieron ambas funciones en el objeto global (`window.actualizarCamposSoportes` y `window.actualizarAsteriscosArchivos`) y se protegió su invocación en `$('#tipo_informe').change(...)`, garantizando que `togglePagoSeguridadSocial()`, `actualizarCamposSoportes()` y `asegurarTextosFinal()` se ejecuten completos al seleccionar `INFORME FINAL`.
+
 
