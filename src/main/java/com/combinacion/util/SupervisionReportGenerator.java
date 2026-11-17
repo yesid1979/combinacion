@@ -216,7 +216,7 @@ public class SupervisionReportGenerator {
                 valRecibo = textoReciboLegal;
             }
         } else {
-            if (valRecibo == null || valRecibo.trim().isEmpty()) {
+            if (valRecibo == null || valRecibo.trim().isEmpty() || valRecibo.contains("recibo a satisfacción")) {
                 valRecibo = "N/A";
             }
         }
@@ -227,7 +227,7 @@ public class SupervisionReportGenerator {
                 valPazSalvo = textoPazSalvoLegal;
             }
         } else {
-            if (valPazSalvo == null || valPazSalvo.trim().isEmpty()) {
+            if (valPazSalvo == null || valPazSalvo.trim().isEmpty() || valPazSalvo.contains("elementos devolutivos")) {
                 valPazSalvo = "N/A";
             }
         }

@@ -3550,6 +3550,16 @@ public class InformeSupervisionService {
                     || "N/A".equalsIgnoreCase(informe.getConstanciaPazSalvo().trim())) {
                 informe.setConstanciaPazSalvo(textoPazSalvo);
             }
+        } else {
+            // Si el informe es PARCIAL, evitar que conserve textos legales de Informe Final
+            if (informe.getReciboSatisfaccion() == null || informe.getReciboSatisfaccion().trim().isEmpty()
+                    || informe.getReciboSatisfaccion().contains("recibo a satisfacción")) {
+                informe.setReciboSatisfaccion("N/A");
+            }
+            if (informe.getConstanciaPazSalvo() == null || informe.getConstanciaPazSalvo().trim().isEmpty()
+                    || informe.getConstanciaPazSalvo().contains("elementos devolutivos")) {
+                informe.setConstanciaPazSalvo("N/A");
+            }
         }
     }
 

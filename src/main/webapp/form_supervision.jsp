@@ -2321,6 +2321,15 @@
                 if (!curP || curP.trim() === '' || curP.trim() === 'N/A') {
                     $('#constancia_paz_salvo').val(textoPazSalvo);
                 }
+            } else {
+                var curRParcial = $('#recibo_satisfaccion').val() || '';
+                var curPParcial = $('#constancia_paz_salvo').val() || '';
+                if (curRParcial.indexOf('recibo a satisfacción') !== -1 || curRParcial.trim() === '') {
+                    $('#recibo_satisfaccion').val('N/A');
+                }
+                if (curPParcial.indexOf('elementos devolutivos') !== -1 || curPParcial.trim() === '') {
+                    $('#constancia_paz_salvo').val('N/A');
+                }
             }
             
             setTimeout(function() {
@@ -2391,6 +2400,10 @@
                 if (maxCuota > 0 && cuota >= maxCuota) {
                     if (!$('#tipo_informe').is(':disabled') && $('#tipo_informe').val() !== 'FINAL') {
                         $('#tipo_informe').val('FINAL').trigger('change');
+                    }
+                } else if (maxCuota > 0 && cuota > 0 && cuota < maxCuota) {
+                    if (!$('#tipo_informe').is(':disabled') && $('#tipo_informe').val() === 'FINAL') {
+                        $('#tipo_informe').val('PARCIAL').trigger('change');
                     }
                 }
             });
@@ -2542,6 +2555,15 @@
                         var curP = $('#constancia_paz_salvo').val();
                         if (!curP || curP.trim() === '' || curP.trim() === 'N/A') {
                             $('#constancia_paz_salvo').val(textoPazSalvo);
+                        }
+                    } else {
+                        var curRParcial = $('#recibo_satisfaccion').val() || '';
+                        var curPParcial = $('#constancia_paz_salvo').val() || '';
+                        if (curRParcial.indexOf('recibo a satisfacción') !== -1 || curRParcial.trim() === '') {
+                            $('#recibo_satisfaccion').val('N/A');
+                        }
+                        if (curPParcial.indexOf('elementos devolutivos') !== -1 || curPParcial.trim() === '') {
+                            $('#constancia_paz_salvo').val('N/A');
                         }
                     }
                 }

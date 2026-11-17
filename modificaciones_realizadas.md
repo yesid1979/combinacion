@@ -679,3 +679,25 @@
     10. SOP diario de infraestructura TI, checklist operativo, monitoreo, copias `pg_dump` / `pg_restore`, `VACUUM ANALYZE` y procedimiento de apertura de nueva vigencia anual.
     11. Matriz de 15 casos reales de contingencias/troubleshooting y niveles de escalamiento institucional.
 
+---
+
+## Fecha: 17 de Noviembre de 2026
+
+### 1. Blindaje de Campos de Informe Final (`Recibo a Satisfacción` y `Constancia de Paz y Salvo`) en Informes Parciales
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * [src/main/java/com/combinacion/util/SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+  * `target/combinacion/WEB-INF/classes/com/combinacion/util/SupervisionReportGenerator.class`
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * En el informe `id = 403` (Contrato `4121.010.26.1.176`, Cuota `1` de `2`, `tipo_informe = PARCIAL`), las columnas `recibo_satisfaccion` y `constancia_paz_salvo` quedaron almacenadas en base de datos con los textos legales de **Informe Final**, provocando que al abrir la revisión se mostrara como cuenta final.
+  * **Causa Raíz:** Al cambiar de la última cuota a una cuota anterior en `form_supervision.jsp`, `tipo_informe` no retornaba automáticamente a `PARCIAL`; además, ni `asegurarTextosInformeFinal()` en el backend ni `SupervisionReportGenerator.java` saneaban los textos legales cuando el informe era `PARCIAL`.
+* **Solución Implementada:**
+  * **Backend (`InformeSupervisionService.java`):** Se agregó la rama `else` en `asegurarTextosInformeFinal()` para forzar `"N/A"` en `recibo_satisfaccion` y `constancia_paz_salvo` siempre que el informe sea `PARCIAL` y contenga textos de informe final o esté vacío.
+  * **Generador de Reportes (`SupervisionReportGenerator.java`):** En la rama `!esInformeFinal`, se fuerza `"N/A"` si los campos contienen textos propios de informe final.
+  * **Frontend (`form_supervision.jsp`):** Al seleccionar una cuota menor a `maxCuota`, `tipo_informe` regresa automáticamente a `PARCIAL`; además, tanto en `asegurarTextosFinal()` como en el `submit`, si el informe es `PARCIAL`, se limpian ambos campos a `'N/A'`.
+  * **Saneamiento en Base de Datos:** Se corrigió directamente en PostgreSQL el registro `id = 403` dejando `recibo_satisfaccion = 'N/A'` y `constancia_paz_salvo = 'N/A'`.
+
+
