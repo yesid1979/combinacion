@@ -735,4 +735,16 @@
   * **Aviso Visual en [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):** Se muestra una alerta informativa de *Solo Lectura* explicando el motivo del bloqueo.
   * **Normalización Numérica de Cédula (`esDuenoDelContrato`):** Se corrigió la comparación de cédulas para usar únicamente dígitos (`replaceAll("[^0-9]", "")`), evitando fallos cuando `contratistas.cedula` incluye texto de expedición (ej. `"1.006.168.734 de Cali"`).
 
+---
+
+### 2. Mejora en Separación de Obligaciones sin Punto (`ObligacionesParser.java`)
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/util/ObligacionesParser.java](file:///src/main/java/com/combinacion/util/ObligacionesParser.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/util/ObligacionesParser.class`
+* **Diagnóstico del Problema:**
+  * En el contrato `4121.010.26.1.096` (informe `id = 440`), la obligación 2 estaba redactada sin punto después del número (`"...vigentes.    2 Brindar apoyo..."`), por lo que la expresión regular anterior (que exigía `\\.`) dejaba pegadas la obligación 1 y la obligación 2 en una sola fila.
+* **Solución Implementada:**
+  * Se actualizó `parsearObligaciones(String texto)` para dividir también cuando un numeral de 1 o 2 dígitos sin punto aparece tras inicio de línea, salto de línea, puntuación (`.;:`) o espacios múltiples y va seguido de una palabra capitalizada (ej. `2 Brindar`), sin romper referencias como `Ley 80 de 1993` o plazos (`15 días`).
+  * Verificado con prueba unitaria sobre las 6 obligaciones del contrato `4121.010.26.1.096` (`COUNT=6`).
+
 
