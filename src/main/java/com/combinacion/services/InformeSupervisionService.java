@@ -1162,12 +1162,76 @@ public class InformeSupervisionService {
         response.getWriter().write(jsonResponse.toString());
     }
 
+    private com.combinacion.models.Usuario getUsuarioFresco(HttpServletRequest request) {
+        if (request == null || request.getSession(false) == null) {
+            return null;
+        }
+        com.combinacion.models.Usuario u = (com.combinacion.models.Usuario) request.getSession(false)
+                .getAttribute("usuario");
+        if (u != null && u.getId() > 0) {
+            com.combinacion.models.Usuario freshUser = new com.combinacion.dao.UsuarioDAO().obtenerPorId(u.getId());
+            if (freshUser != null) {
+                request.getSession(false).setAttribute("usuario", freshUser);
+                return freshUser;
+            }
+        }
+        return u;
+    }
+
+    private boolean esAdminCuentas(com.combinacion.models.Usuario u) {
+        return u != null && (u.esAdministrador()
+                || u.tienePermiso("ADMINISTRAR_CUENTAS")
+                || u.tienePermiso("ADMINISTRAR_CUENTAS_EDITAR"));
+    }
+
+    private boolean esDuenoDelContrato(com.combinacion.models.Usuario u, Contrato contrato) {
+        if (u == null || contrato == null) {
+            return false;
+        }
+        String uCed = (u.getCedula() != null) ? u.getCedula().replaceAll("[^a-zA-Z0-9]", "").toUpperCase() : "";
+        if (uCed.isEmpty()) {
+            return false;
+        }
+        com.combinacion.models.Contratista ct = contrato.getContratista();
+        if (ct == null && contrato.getContratistaId() > 0) {
+            ct = contratistaDAO.obtenerPorId(contrato.getContratistaId());
+        }
+        String cCed = (ct != null && ct.getCedula() != null)
+                ? ct.getCedula().replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
+                : "";
+        return !cCed.isEmpty() && uCed.equals(cCed);
+    }
+
+    private boolean puedeEditarInforme(com.combinacion.models.Usuario u, InformeSupervision informe,
+            Contrato contrato) {
+        if (u == null || informe == null) {
+            return false;
+        }
+        if (esAdminCuentas(u)) {
+            return true;
+        }
+        if (!esDuenoDelContrato(u, contrato)) {
+            return false;
+        }
+        String est = informe.getEstadoRadicacion();
+        return est == null || est.trim().isEmpty()
+                || "BORRADOR".equalsIgnoreCase(est.trim())
+                || "DEVUELTA".equalsIgnoreCase(est.trim());
+    }
+
     public void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        com.combinacion.models.Usuario u = getUsuarioFresco(request);
         String contratoIdStr = request.getParameter("contrato_id");
         if (contratoIdStr != null) {
             int contratoId = ParseUtils.parseInt(contratoIdStr);
             Contrato contrato = this.obtenerContrato(contratoId);
+            if (contrato != null && !esAdminCuentas(u) && !esDuenoDelContrato(u, contrato)) {
+                request.getSession().setAttribute("errorMessage",
+                        "No tiene permisos para crear cuentas de cobro en un contrato que no le pertenece.");
+                response.sendRedirect("informes");
+                return;
+            }
             request.setAttribute("contrato", contrato);
             if (contrato != null) {
                 // Calcular acumulado previo y número de cuota sugerido
@@ -1570,9 +1634,26 @@ public class InformeSupervisionService {
             }
         }
 
+        com.combinacion.models.Usuario u = getUsuarioFresco(request);
+        Contrato contrato = (informe.getContratoId() != null) ? this.obtenerContrato(informe.getContratoId()) : null;
+        boolean puedeEditar = puedeEditarInforme(u, informe, contrato);
+
         request.setAttribute("listaSupervisores", supervisorDAO.listarTodos());
         request.setAttribute("listaRevisores", new com.combinacion.dao.UsuarioDAO().listarRevisores());
-        request.setAttribute("action", "update");
+        if (puedeEditar) {
+            request.setAttribute("action", "update");
+        } else {
+            request.setAttribute("readonly", true);
+            request.setAttribute("action", "view");
+            if (esDuenoDelContrato(u, contrato)) {
+                request.setAttribute("motivoSoloLectura",
+                        "Esta cuenta se encuentra en estado '" + informe.getEstadoRadicacion()
+                                + "' (en trámite con el revisor/supervisor) y no puede modificarse mientras no sea devuelta.");
+            } else {
+                request.setAttribute("motivoSoloLectura",
+                        "Modo solo lectura: solo los usuarios de Contratación / Administración o el contratista titular en estado Borrador o Devuelta pueden modificar la información de la cuenta.");
+            }
+        }
         request.setAttribute("modo", request.getParameter("modo"));
         request.setAttribute("listaHistorial", new com.combinacion.dao.HistorialRadicacionDAO().listarPorInforme(id));
         request.getRequestDispatcher("/form_supervision.jsp").forward(request, response);
@@ -3031,7 +3112,15 @@ public class InformeSupervisionService {
 
     public void insertar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
+        com.combinacion.models.Usuario uAuth = getUsuarioFresco(request);
         InformeFormData form = construirFormData(request);
+        Contrato contratoAuth = (form.contratoId > 0) ? this.obtenerContrato(form.contratoId) : null;
+        if (!esAdminCuentas(uAuth) && !esDuenoDelContrato(uAuth, contratoAuth)) {
+            request.getSession().setAttribute("errorMessage",
+                    "Acceso denegado: no tiene permisos para registrar cuentas en este contrato.");
+            response.sendRedirect("informes");
+            return;
+        }
         InformeSupervision[] createdHolder = new InformeSupervision[1];
         String error = this.insertar(form, createdHolder);
         if (error != null) {
@@ -3086,10 +3175,27 @@ public class InformeSupervisionService {
 
     public void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
+        com.combinacion.models.Usuario uAuth = getUsuarioFresco(request);
         int id = ParseUtils.parseInt(request.getParameter("id"));
+        com.combinacion.models.InformeSupervision existente = this.obtenerPorId(id);
+        Contrato contratoAuth = (existente != null && existente.getContratoId() != null)
+                ? this.obtenerContrato(existente.getContratoId())
+                : null;
+        if (!puedeEditarInforme(uAuth, existente, contratoAuth)) {
+            String msg = esDuenoDelContrato(uAuth, contratoAuth) && existente != null
+                    ? "No se puede modificar la cuenta porque se encuentra en estado '"
+                            + existente.getEstadoRadicacion() + "' (en trámite de revisión)."
+                    : "Acceso denegado: no tiene permisos de Contratación para modificar la información de esta cuenta.";
+            request.getSession().setAttribute("errorMessage", msg);
+            String modoParam = request.getParameter("modo");
+            String urlView = "informes?action=view&id=" + id
+                    + (modoParam != null && !modoParam.trim().isEmpty() ? "&modo=" + modoParam : "");
+            response.sendRedirect(urlView);
+            return;
+        }
+
         InformeFormData form = construirFormData(request);
 
-        com.combinacion.models.InformeSupervision existente = this.obtenerPorId(id);
         String estadoAnterior = (existente != null) ? existente.getEstadoRadicacion() : "";
         String obsAnterior = (existente != null && existente.getObservacionesRevision() != null)
                 ? existente.getObservacionesRevision()

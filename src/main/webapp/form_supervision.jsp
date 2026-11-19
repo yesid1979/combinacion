@@ -178,6 +178,15 @@
                         </div>
                     </c:if>
 
+                    <c:if test="${readonly and not empty motivoSoloLectura}">
+                        <div class="alert alert-info d-flex align-items-center mb-4 border-0 shadow-sm" role="alert">
+                            <i class="bi bi-lock-fill me-3 fs-4 text-primary"></i>
+                            <div>
+                                <strong>Solo Lectura:</strong> ${motivoSoloLectura}
+                            </div>
+                        </div>
+                    </c:if>
+
 
 
                     <!-- Tabs responsivos: No hacen salto de linea en móviles, permiten scroll horizontal -->

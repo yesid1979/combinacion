@@ -712,4 +712,26 @@
 * **Solución Implementada:**
   * Se expusieron ambas funciones en el objeto global (`window.actualizarCamposSoportes` y `window.actualizarAsteriscosArchivos`) y se protegió su invocación en `$('#tipo_informe').change(...)`, garantizando que `togglePagoSeguridadSocial()`, `actualizarCamposSoportes()` y `asegurarTextosFinal()` se ejecuten completos al seleccionar `INFORME FINAL`.
 
+---
+
+## Fecha: 19 de Noviembre de 2026
+
+### 1. Control Estricto de Edición de Cuentas de Cobro según Rol y Estado de Radicación
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * [src/main/webapp/form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+  * `target/combinacion/form_supervision.jsp`
+* **Diagnóstico del Problema:**
+  * **Usuarios no pertenecientes a Contratación/Admin (Revisores, Supervisores, Consulta):** Aunque `lista_informes.jsp` ocultaba el lápiz de edición, las notificaciones y enlaces directos apuntaban a `informes?action=edit&id=...` y `mostrarFormularioEdicion` nunca asignaba `readonly = true` ni `actualizar()` validaba permisos en servidor, permitiendo modificar la información de la cuenta.
+  * **Contratista con cuenta en el revisor/supervisor:** Si el contratista abría `informes?action=edit&id=...` (desde notificación o enlace directo) o enviaba un `POST` mientras la cuenta estaba en `RADICADA`, `EN REVISION CONTRATACION`, `VISTO BUENO CONTRATACION`, `EN REVISION SUPERVISOR`, `EN REVISION FINAL` o `APROBADA PARA IMPRESION`, podía modificar los datos aunque ya estuviera en revisión.
+* **Solución Implementada:**
+  * **Control Centralizado en Backend (`InformeSupervisionService.java`):** Se implementaron `esAdminCuentas()`, `esDuenoDelContrato()` y `puedeEditarInforme()`. Únicamente pueden editar:
+    1. Usuarios de **Contratación / Administración** (`esAdministrador()`, `ADMINISTRAR_CUENTAS` o `ADMINISTRAR_CUENTAS_EDITAR`).
+    2. El **Contratista titular** del contrato, **únicamente** cuando la cuenta está en estado `BORRADOR` o `DEVUELTA`.
+  * **Bloqueo en Vista (`mostrarFormularioEdicion`) y en Guardado (`actualizar`, `mostrarFormularioNuevo`, `insertar`):**
+    * Si el usuario no cumple la regla, `mostrarFormularioEdicion` fuerza `readonly = true`, `action = "view"` y envía `motivoSoloLectura` (los revisores/supervisores siguen viendo su botón *Revisar* sin poder alterar los datos de la cuenta).
+    * En `actualizar` (`POST`), el servidor rechaza la modificación y redirige a `action=view` con mensaje de error sin alterar la base de datos.
+  * **Aviso Visual en [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):** Se muestra una alerta informativa de *Solo Lectura* explicando el motivo del bloqueo.
+
 
