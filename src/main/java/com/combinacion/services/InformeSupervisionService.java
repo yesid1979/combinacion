@@ -1188,7 +1188,10 @@ public class InformeSupervisionService {
         if (u == null || contrato == null) {
             return false;
         }
-        String uCed = (u.getCedula() != null) ? u.getCedula().replaceAll("[^a-zA-Z0-9]", "").toUpperCase() : "";
+        String uCed = (u.getCedula() != null) ? u.getCedula().replaceAll("[^0-9]", "") : "";
+        if (uCed.isEmpty()) {
+            uCed = (u.getUsername() != null) ? u.getUsername().replaceAll("[^0-9]", "") : "";
+        }
         if (uCed.isEmpty()) {
             return false;
         }
@@ -1197,7 +1200,7 @@ public class InformeSupervisionService {
             ct = contratistaDAO.obtenerPorId(contrato.getContratistaId());
         }
         String cCed = (ct != null && ct.getCedula() != null)
-                ? ct.getCedula().replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
+                ? ct.getCedula().replaceAll("[^0-9]", "")
                 : "";
         return !cCed.isEmpty() && uCed.equals(cCed);
     }

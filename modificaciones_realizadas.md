@@ -733,5 +733,6 @@
     * Si el usuario no cumple la regla, `mostrarFormularioEdicion` fuerza `readonly = true`, `action = "view"` y envía `motivoSoloLectura` (los revisores/supervisores siguen viendo su botón *Revisar* sin poder alterar los datos de la cuenta).
     * En `actualizar` (`POST`), el servidor rechaza la modificación y redirige a `action=view` con mensaje de error sin alterar la base de datos.
   * **Aviso Visual en [form_supervision.jsp](file:///src/main/webapp/form_supervision.jsp):** Se muestra una alerta informativa de *Solo Lectura* explicando el motivo del bloqueo.
+  * **Normalización Numérica de Cédula (`esDuenoDelContrato`):** Se corrigió la comparación de cédulas para usar únicamente dígitos (`replaceAll("[^0-9]", "")`), evitando fallos cuando `contratistas.cedula` incluye texto de expedición (ej. `"1.006.168.734 de Cali"`).
 
 
