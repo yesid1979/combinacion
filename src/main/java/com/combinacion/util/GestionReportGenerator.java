@@ -350,6 +350,19 @@ public class GestionReportGenerator {
     }
 
     private static final java.util.Map<String, java.util.regex.Pattern> VERB_PATTERN_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.regex.Pattern PAT_PRECEDING_NOUN = java.util.regex.Pattern.compile(
+            "(?i)(?:^|[^\\p{L}])(?:brind[oóé]|prest[oóé]|di[oó]?|dar|brindar|prestar|realiz[oóé]|ejerci[oó]|ejerc[ií]|llev[oóé]|efectu[oóé]|de|del|el|la|los|las|al|un|una|unos|unas|en|con|como|sin|para|por|su|sus)\\s+$");
+
+    private static boolean esSustantivoProtegido(String wLower) {
+        return wLower.equals("apoyó") || wLower.equals("apoyo") ||
+               wLower.equals("soporte") || wLower.equals("soportó") ||
+               wLower.equals("trámite") || wLower.equals("tramitó") ||
+               wLower.equals("control") || wLower.equals("controló") ||
+               wLower.equals("pago") || wLower.equals("pagó") ||
+               wLower.equals("cobro") || wLower.equals("cobró") ||
+               wLower.equals("registro") || wLower.equals("registró") ||
+               wLower.equals("cargo") || wLower.equals("cargó");
+    }
 
     private static String quitarAcentosLower(String s) {
         if (s == null) return "";
@@ -363,6 +376,7 @@ public class GestionReportGenerator {
             return text;
         }
         String key = targetVerb.trim();
+        boolean protegerSustantivo = !key.contains(" ") && esSustantivoProtegido(key.toLowerCase());
         java.util.regex.Pattern pattern = VERB_PATTERN_CACHE.computeIfAbsent(key, k -> {
             String regex = buildRegexForPhrase(k);
             return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
@@ -371,6 +385,14 @@ public class GestionReportGenerator {
         StringBuffer sb = new StringBuffer();
         while (matcher.find()) {
             String matched = matcher.group();
+            if (protegerSustantivo && matcher.start() > 0) {
+                int from = Math.max(0, matcher.start() - 32);
+                String prev = text.substring(from, matcher.start());
+                if (PAT_PRECEDING_NOUN.matcher(prev).find()) {
+                    matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(matched));
+                    continue;
+                }
+            }
             String adapted = adaptCasing(matched, replacementVerb);
             matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(adapted));
         }
@@ -383,23 +405,6 @@ public class GestionReportGenerator {
         String[] words = trimmed.split("\\s+");
         StringBuilder sb = new StringBuilder();
         sb.append("(?<!\\p{L})");
-
-        // Protección especial para sustantivos comunes que coinciden con verbos (ej: "apoyo", "soporte", "trámite", "control", "pago", "cobro")
-        // Si va precedido de un verbo de acción (brindó/brindé, prestó/presté, dio/di...) o preposición/artículo (de, el, un...),
-        // funciona como sustantivo y NO debe conjugarse (evita "brindé apoyé").
-        if (words.length == 1) {
-            String wLower = trimmed.toLowerCase();
-            if (wLower.equals("apoyó") || wLower.equals("apoyo") || 
-                wLower.equals("soporte") || wLower.equals("soportó") ||
-                wLower.equals("trámite") || wLower.equals("tramitó") ||
-                wLower.equals("control") || wLower.equals("controló") ||
-                wLower.equals("pago") || wLower.equals("pagó") ||
-                wLower.equals("cobro") || wLower.equals("cobró") ||
-                wLower.equals("registro") || wLower.equals("registró") ||
-                wLower.equals("cargo") || wLower.equals("cargó")) {
-                sb.append("(?<!(?i)(?:brind[oóé]|prest[oóé]|di[oó]?|dar|brindar|prestar|realiz[oóé]|ejerci[oó]|ejerc[ií]|llev[oóé]|efectu[oóé]|de|del|el|la|los|las|al|un|una|unos|unas|en|con|como|sin|para|por|su|sus)\\s+)");
-            }
-        }
 
         for (int i = 0; i < words.length; i++) {
             if (i > 0) {
