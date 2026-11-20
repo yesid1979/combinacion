@@ -27,17 +27,17 @@ public class GoogleDriveService {
     private static final String APPLICATION_NAME = "Gestor Contratacion Drive";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String CREDENTIALS_FILE_PATH = "/credencialescontratacion.json";
-    
+
     // Necesitamos los mismos scopes que EmailService para reutilizar el token
     private static final List<String> SCOPES = Arrays.asList(
             "https://www.googleapis.com/auth/gmail.send",
-            DriveScopes.DRIVE
-    );
+            DriveScopes.DRIVE);
 
     public static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws Exception {
         InputStream in = GoogleDriveService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (in == null) {
-            throw new java.io.FileNotFoundException("ERROR CRÍTICO: Falta el archivo de credenciales de Google Drive (" + CREDENTIALS_FILE_PATH + "). Por favor ubíquelo en src/main/resources.");
+            throw new java.io.FileNotFoundException("ERROR CRÍTICO: Falta el archivo de credenciales de Google Drive ("
+                    + CREDENTIALS_FILE_PATH + "). Por favor ubíquelo en src/main/resources.");
         }
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
@@ -90,9 +90,13 @@ public class GoogleDriveService {
             } catch (com.google.api.client.googleapis.json.GoogleJsonResponseException ge) {
                 int code = ge.getStatusCode();
                 boolean isRateLimit = (code == 429 || code == 503 || code == 500)
-                        || (code == 403 && ge.getMessage() != null && (ge.getMessage().contains("rateLimit") || ge.getMessage().contains("userRateLimitExceeded") || ge.getMessage().contains("quotaExceeded")));
+                        || (code == 403 && ge.getMessage() != null
+                                && (ge.getMessage().contains("rateLimit")
+                                        || ge.getMessage().contains("userRateLimitExceeded")
+                                        || ge.getMessage().contains("quotaExceeded")));
                 if (isRateLimit && attempt < maxRetries) {
-                    System.err.println("Google Drive API limit/error (" + code + "). Reintento " + attempt + "/" + maxRetries + " en " + waitTime + "ms...");
+                    System.err.println("Google Drive API limit/error (" + code + "). Reintento " + attempt + "/"
+                            + maxRetries + " en " + waitTime + "ms...");
                     Thread.sleep(waitTime);
                     waitTime *= 2;
                 } else {
@@ -100,7 +104,8 @@ public class GoogleDriveService {
                 }
             } catch (java.io.IOException ioe) {
                 if (attempt < maxRetries) {
-                    System.err.println("Google Drive IO error: " + ioe.getMessage() + ". Reintento " + attempt + "/" + maxRetries + " en " + waitTime + "ms...");
+                    System.err.println("Google Drive IO error: " + ioe.getMessage() + ". Reintento " + attempt + "/"
+                            + maxRetries + " en " + waitTime + "ms...");
                     Thread.sleep(waitTime);
                     waitTime *= 2;
                 } else {
@@ -120,11 +125,12 @@ public class GoogleDriveService {
 
         Drive driveService = getDriveService();
         String cleanFolderName = folderName.replace("\\", "\\\\").replace("'", "\\'");
-        String query = "mimeType='application/vnd.google-apps.folder' and name='" + cleanFolderName + "' and trashed=false";
+        String query = "mimeType='application/vnd.google-apps.folder' and name='" + cleanFolderName
+                + "' and trashed=false";
         if (parentId != null && !parentId.isEmpty()) {
             query += " and '" + parentId + "' in parents";
         }
-        
+
         FileList result = null;
         try {
             final String finalQuery = query;
@@ -157,8 +163,10 @@ public class GoogleDriveService {
     }
 
     /**
-     * Resuelve un identificador de carpeta que puede ser un ID directo de Google Drive,
-     * una URL completa de Drive, o el nombre de una carpeta (en cuyo caso la busca o crea).
+     * Resuelve un identificador de carpeta que puede ser un ID directo de Google
+     * Drive,
+     * una URL completa de Drive, o el nombre de una carpeta (en cuyo caso la busca
+     * o crea).
      */
     public static String resolveFolderIdOrGetOrCreate(String folderNameOrId, String parentId) throws Exception {
         if (folderNameOrId == null || folderNameOrId.trim().isEmpty()) {
@@ -170,7 +178,8 @@ public class GoogleDriveService {
         if (cleanVal.contains("folders/")) {
             int idx = cleanVal.indexOf("folders/") + 8;
             int end = cleanVal.indexOf("?", idx);
-            if (end == -1) end = cleanVal.indexOf("#", idx);
+            if (end == -1)
+                end = cleanVal.indexOf("#", idx);
             cleanVal = (end != -1) ? cleanVal.substring(idx, end) : cleanVal.substring(idx);
         }
 
@@ -182,11 +191,13 @@ public class GoogleDriveService {
                 File f = executeWithRetry(() -> driveService.files().get(targetId)
                         .setFields("id, name, mimeType, trashed")
                         .execute());
-                if (f != null && "application/vnd.google-apps.folder".equals(f.getMimeType()) && !Boolean.TRUE.equals(f.getTrashed())) {
+                if (f != null && "application/vnd.google-apps.folder".equals(f.getMimeType())
+                        && !Boolean.TRUE.equals(f.getTrashed())) {
                     return f.getId();
                 }
             } catch (Exception ex) {
-                System.err.println("Aviso: El valor '" + targetId + "' no pudo ser resuelto como ID directo de Drive: " + ex.getMessage());
+                System.err.println("Aviso: El valor '" + targetId + "' no pudo ser resuelto como ID directo de Drive: "
+                        + ex.getMessage());
             }
         }
 
@@ -195,21 +206,25 @@ public class GoogleDriveService {
     }
 
     /**
-     * Busca una carpeta existente dentro de parentId que coincida con alguno de los patrones dados.
+     * Busca una carpeta existente dentro de parentId que coincida con alguno de los
+     * patrones dados.
      */
     public static String findFolderByPatterns(String parentId, String... searchPatterns) throws Exception {
-        if (parentId == null || parentId.trim().isEmpty() || searchPatterns == null || searchPatterns.length == 0) return null;
+        if (parentId == null || parentId.trim().isEmpty() || searchPatterns == null || searchPatterns.length == 0)
+            return null;
         Drive driveService = getDriveService();
 
-        // Obtener la lista de subcarpetas existentes dentro de parentId en una sola llamada eficiente
+        // Obtener la lista de subcarpetas existentes dentro de parentId en una sola
+        // llamada eficiente
         FileList res = null;
         try {
-            String query = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents";
+            String query = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId
+                    + "' in parents";
             res = executeWithRetry(() -> driveService.files().list()
                     .setQ(query)
                     .setSpaces("drive")
                     .setFields("files(id, name)")
-                    .setPageSize(100)
+                    .setPageSize(1000)
                     .execute());
         } catch (Exception e) {
             System.err.println("Aviso Drive: Error listando carpetas en '" + parentId + "': " + e.getMessage());
@@ -221,9 +236,11 @@ public class GoogleDriveService {
 
         java.util.List<File> folders = res.getFiles();
 
-        // 1. Pase exacto (coincidencia de nombre exacto ignorando mayúsculas/minúsculas y espacios extras)
+        // 1. Pase exacto (coincidencia de nombre exacto ignorando mayúsculas/minúsculas
+        // y espacios extras)
         for (String pattern : searchPatterns) {
-            if (pattern == null || pattern.trim().isEmpty()) continue;
+            if (pattern == null || pattern.trim().isEmpty())
+                continue;
             String pTrim = pattern.trim().toUpperCase();
             for (File f : folders) {
                 if (f.getName() != null && f.getName().trim().equalsIgnoreCase(pTrim)) {
@@ -234,7 +251,8 @@ public class GoogleDriveService {
 
         // 2. Pase por contención (contains)
         for (String pattern : searchPatterns) {
-            if (pattern == null || pattern.trim().isEmpty()) continue;
+            if (pattern == null || pattern.trim().isEmpty())
+                continue;
             String pTrim = pattern.trim().toUpperCase();
             for (File f : folders) {
                 if (f.getName() != null && f.getName().toUpperCase().contains(pTrim)) {
@@ -246,7 +264,8 @@ public class GoogleDriveService {
         return null;
     }
 
-    public static String uploadOrUpdateFile(java.io.File file, String fileName, String mimeType, String parentId) throws Exception {
+    public static String uploadOrUpdateFile(java.io.File file, String fileName, String mimeType, String parentId)
+            throws Exception {
         Drive driveService = getDriveService();
         String cleanQueryName = fileName.replace("\\", "\\\\").replace("'", "\\'");
         String query = "name='" + cleanQueryName + "' and trashed=false";
@@ -263,7 +282,8 @@ public class GoogleDriveService {
                     .setFields("files(id, name)")
                     .execute());
         } catch (Exception qEx) {
-            System.err.println("Aviso Drive: No se pudo consultar archivo previo '" + fileName + "': " + qEx.getMessage());
+            System.err.println(
+                    "Aviso Drive: No se pudo consultar archivo previo '" + fileName + "': " + qEx.getMessage());
         }
 
         FileContent mediaContent = new FileContent(mimeType, file);
@@ -272,20 +292,24 @@ public class GoogleDriveService {
                 // Existe con el mismo nombre, lo actualizamos
                 String fileId = result.getFiles().get(0).getId();
                 File updatedFile = new File();
-                File newFile = executeWithRetry(() -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
-                
-                // Si existían duplicados con el mismo nombre en la misma carpeta, los limpiamos para evitar inconsistencias
+                File newFile = executeWithRetry(
+                        () -> driveService.files().update(fileId, updatedFile, mediaContent).setFields("id").execute());
+
+                // Si existían duplicados con el mismo nombre en la misma carpeta, los limpiamos
+                // para evitar inconsistencias
                 if (result.getFiles().size() > 1) {
                     for (int i = 1; i < result.getFiles().size(); i++) {
                         String dupId = result.getFiles().get(i).getId();
                         try {
                             driveService.files().delete(dupId).execute();
-                        } catch (Exception ignore) {}
+                        } catch (Exception ignore) {
+                        }
                     }
                 }
                 return newFile.getId();
             } catch (Exception updEx) {
-                System.err.println("Aviso Drive: No se pudo actualizar '" + fileName + "', creando archivo nuevo: " + updEx.getMessage());
+                System.err.println("Aviso Drive: No se pudo actualizar '" + fileName + "', creando archivo nuevo: "
+                        + updEx.getMessage());
             }
         }
 
@@ -295,22 +319,28 @@ public class GoogleDriveService {
         if (parentId != null && !parentId.isEmpty()) {
             fileMetadata.setParents(Collections.singletonList(parentId));
         }
-        File newFile = executeWithRetry(() -> driveService.files().create(fileMetadata, mediaContent).setFields("id").execute());
+        File newFile = executeWithRetry(
+                () -> driveService.files().create(fileMetadata, mediaContent).setFields("id").execute());
         return newFile.getId();
     }
 
     /**
-     * Busca en la carpeta Drive un archivo cuyo nombre coincida con el patrón (prefijo),
-     * elimina el archivo anterior si existe con nombre diferente al nuevo, y sube el archivo
-     * con el nombre correcto. Útil cuando el nombre del archivo puede cambiar (ej: consecutivo XXXX -> 0233).
+     * Busca en la carpeta Drive un archivo cuyo nombre coincida con el patrón
+     * (prefijo),
+     * elimina el archivo anterior si existe con nombre diferente al nuevo, y sube
+     * el archivo
+     * con el nombre correcto. Útil cuando el nombre del archivo puede cambiar (ej:
+     * consecutivo XXXX -> 0233).
      *
-     * @param file      Archivo local a subir
-     * @param fileName  Nombre definitivo del archivo en Drive
-     * @param mimeType  Tipo MIME del archivo
-     * @param parentId  ID de la carpeta destino en Drive
-     * @param namePrefix Prefijo del nombre para buscar archivos anteriores (ej: "3. DS-4121-")
+     * @param file       Archivo local a subir
+     * @param fileName   Nombre definitivo del archivo en Drive
+     * @param mimeType   Tipo MIME del archivo
+     * @param parentId   ID de la carpeta destino en Drive
+     * @param namePrefix Prefijo del nombre para buscar archivos anteriores (ej: "3.
+     *                   DS-4121-")
      */
-    public static String uploadOrReplaceByPattern(java.io.File file, String fileName, String mimeType, String parentId, String namePrefix) throws Exception {
+    public static String uploadOrReplaceByPattern(java.io.File file, String fileName, String mimeType, String parentId,
+            String namePrefix) throws Exception {
         Drive driveService = getDriveService();
 
         // 1. Buscar archivos en la carpeta que coincidan con el prefijo
@@ -324,7 +354,8 @@ public class GoogleDriveService {
 
             if (existing != null && existing.getFiles() != null) {
                 for (File f : existing.getFiles()) {
-                    // Si el nombre empieza con el prefijo pero NO es el nombre correcto, lo eliminamos
+                    // Si el nombre empieza con el prefijo pero NO es el nombre correcto, lo
+                    // eliminamos
                     if (f.getName() != null && f.getName().startsWith(namePrefix) && !f.getName().equals(fileName)) {
                         try {
                             executeWithRetry(() -> driveService.files().delete(f.getId()).execute());
@@ -341,12 +372,14 @@ public class GoogleDriveService {
         return uploadOrUpdateFile(file, fileName, mimeType, parentId);
     }
 
-    public static String uploadStreamToDrive(java.io.InputStream in, long length, String fileName, String mimeType, String parentId) throws Exception {
+    public static String uploadStreamToDrive(java.io.InputStream in, long length, String fileName, String mimeType,
+            String parentId) throws Exception {
         if (fileName != null) {
             fileName = fileName.trim().replaceAll("[\\r\\n]+", "");
         }
         if (mimeType == null || mimeType.trim().isEmpty()) {
-            mimeType = (fileName != null && fileName.toLowerCase().endsWith(".pdf")) ? "application/pdf" : "application/octet-stream";
+            mimeType = (fileName != null && fileName.toLowerCase().endsWith(".pdf")) ? "application/pdf"
+                    : "application/octet-stream";
         }
         java.io.File tempFile = java.io.File.createTempFile("gdrive_up_", ".tmp");
         try {
@@ -389,7 +422,8 @@ public class GoogleDriveService {
     }
 
     public static String extractIdFromUrl(String url) {
-        if (url == null || url.trim().isEmpty()) return null;
+        if (url == null || url.trim().isEmpty())
+            return null;
         if (url.contains("id=")) {
             return url.split("id=")[1].split("&")[0];
         } else if (url.contains("/folders/")) {

@@ -747,4 +747,21 @@
   * Se actualizó `parsearObligaciones(String texto)` para dividir también cuando un numeral de 1 o 2 dígitos sin punto aparece tras inicio de línea, salto de línea, puntuación (`.;:`) o espacios múltiples y va seguido de una palabra capitalizada (ej. `2 Brindar`), sin romper referencias como `Ley 80 de 1993` o plazos (`15 días`).
   * Verificado con prueba unitaria sobre las 6 obligaciones del contrato `4121.010.26.1.096` (`COUNT=6`).
 
+---
+
+## Fecha: 20 de Noviembre de 2026
+
+### 1. Aislamiento de Carpetas por Número de Contrato en Google Drive
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * [src/main/java/com/combinacion/services/GoogleDriveService.java](file:///src/main/java/com/combinacion/services/GoogleDriveService.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/GoogleDriveService.class`
+* **Diagnóstico del Problema:**
+  * Al aprobar la cuenta `id = 408` (contrato `4121.010.26.1.178` de `CARMEN YANILA MORENO IBARGUEN`), la carpeta `CUOTA 1 178` se creó dentro de la carpeta del contrato anterior `4121 - 126 CARMEN YANILA MORENO IBARGUEN` en lugar de crear su propia carpeta `4121 - 178 CARMEN YANILA MORENO IBARGUEN`.
+  * **Causa Raíz:** En `resolverCuotaFolderId` y `esCuotaManualHistorica`, cuando no existía todavía la carpeta `4121 - 178 ...`, `findFolderByPatterns` también buscaba por `nombreCompleto` y `nombreCorto`, coincidiendo por contención con la carpeta del contrato anterior (`4121 - 126 ...`) del mismo contratista. Además, `findFolderByPatterns` listaba solo `pageSize(100)`.
+* **Solución Implementada:**
+  * Cuando el contrato tiene prefijo numérico (`!prefixContrato.isEmpty()`, ej. `4121 - 178`), la búsqueda de carpeta principal en Drive se restringe exclusivamente a `folderNamePrincipal`, `folderNamePrincipalCorto` y `prefixContrato`, sin hacer fallback por nombre del contratista; si no existe, crea la carpeta propia del nuevo contrato.
+  * Se amplió `setPageSize(1000)` en `GoogleDriveService.findFolderByPatterns` para evitar omisiones en carpetas raíz con más de 100 contratistas.
+
 

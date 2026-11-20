@@ -2191,8 +2191,9 @@ public class InformeSupervisionService {
                 : "";
         String principalFolderId = null;
         if (!prefixContrato.isEmpty()) {
+            // Si el contrato tiene número/prefijo (ej. "4121 - 178"), buscar SOLO por ese contrato para no mezclar con contratos anteriores del mismo contratista
             principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId,
-                    folderNamePrincipal, folderNamePrincipalCorto, prefixContrato, nombreCompleto, nombreCorto);
+                    folderNamePrincipal, folderNamePrincipalCorto, prefixContrato);
         } else {
             principalFolderId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(rootFolderId,
                     folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
@@ -3737,8 +3738,7 @@ public class InformeSupervisionService {
             String principalProduccionId = null;
             if (!prefixContrato.isEmpty()) {
                 principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
-                        produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato,
-                        nombreCompleto, nombreCorto);
+                        produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, prefixContrato);
             } else {
                 principalProduccionId = com.combinacion.services.GoogleDriveService.findFolderByPatterns(
                         produccionFolderId, folderNamePrincipal, folderNamePrincipalCorto, nombreCompleto, nombreCorto);
