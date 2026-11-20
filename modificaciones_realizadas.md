@@ -778,5 +778,6 @@
 * **Solución Implementada:**
   * **Ejecución en Paralelo (`ExecutorService` de 4 hilos):** `descargarInforme` ahora genera simultáneamente los 3 reportes (Supervisión DOCX, Cuenta de Cobro XLSX→PDF y Gestión DOCX→PDF) mientras descarga en paralelo todos los soportes y evidencias de Google Drive hacia archivos temporales, reduciendo drásticamente el tiempo total de respuesta.
   * **Aislamiento de Perfiles LibreOffice:** En `PdfGenerator.convertExcelWithLibreOfficeLinux`, se añadió marca temporal al directorio de perfil (`lo_profile_<timestamp>_<threadId>`) para evitar colisiones entre hilos paralelos de `soffice --headless`.
+  * **Optimización de Conjugación de Verbos (`GestionReportGenerator.java`):** En informes con actividades muy extensas (ej. informe `395` de `MARÍA CAMILA PAYAN OSPINA`, con ~100 KB en `concepto_supervisor`), el bucle compilaba 56 expresiones regulares Unicode por cada obligación (~35 s). Se implementó `VERB_PATTERN_CACHE` (`ConcurrentHashMap`) y un prefiltro de texto normalizado (`quitarAcentosLower`) para ejecutar únicamente los patrones cuyo verbo aparece en la actividad.
 
 

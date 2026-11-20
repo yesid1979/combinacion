@@ -189,8 +189,16 @@ public class GestionReportGenerator {
                         String ac = item.actividad;
                         ac = preprocesarActividadParaGestion(ac);
                         if (verbos != null) {
+                            String acNorm = quitarAcentosLower(ac);
                             for (com.combinacion.models.VerboConjugacion v : verbos) {
-                                ac = aplicarConjugacion(ac, v.getTerceraPersona(), v.getPrimeraPersona());
+                                String tp = v.getTerceraPersona();
+                                if (tp != null && !tp.trim().isEmpty() && acNorm.contains(quitarAcentosLower(tp.trim()))) {
+                                    String nuevoAc = aplicarConjugacion(ac, tp, v.getPrimeraPersona());
+                                    if (!nuevoAc.equals(ac)) {
+                                        ac = nuevoAc;
+                                        acNorm = quitarAcentosLower(ac);
+                                    }
+                                }
                             }
                         }
                         ac = postprocesarSujetoContratista(ac);
@@ -341,12 +349,24 @@ public class GestionReportGenerator {
         return text;
     }
 
+    private static final java.util.Map<String, java.util.regex.Pattern> VERB_PATTERN_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static String quitarAcentosLower(String s) {
+        if (s == null) return "";
+        return java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase();
+    }
+
     private static String aplicarConjugacion(String text, String targetVerb, String replacementVerb) {
         if (text == null || targetVerb == null || targetVerb.trim().isEmpty() || replacementVerb == null) {
             return text;
         }
-        String regex = buildRegexForPhrase(targetVerb);
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
+        String key = targetVerb.trim();
+        java.util.regex.Pattern pattern = VERB_PATTERN_CACHE.computeIfAbsent(key, k -> {
+            String regex = buildRegexForPhrase(k);
+            return java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
+        });
         java.util.regex.Matcher matcher = pattern.matcher(text);
         StringBuffer sb = new StringBuffer();
         while (matcher.find()) {
