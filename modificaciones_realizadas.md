@@ -780,4 +780,21 @@
   * **Aislamiento de Perfiles LibreOffice:** En `PdfGenerator.convertExcelWithLibreOfficeLinux`, se añadió marca temporal al directorio de perfil (`lo_profile_<timestamp>_<threadId>`) para evitar colisiones entre hilos paralelos de `soffice --headless`.
   * **Optimización de Conjugación de Verbos (`GestionReportGenerator.java`):** En informes con actividades muy extensas o tablas HTML grandes (ej. informes `395` y `438`), el lookbehind de longitud variable `(?<!...\\s+)` en `buildRegexForPhrase` provocaba retroceso cuadrático (hasta **200,9 segundos** solo en el verbo `apoyó`). Se eliminó ese lookbehind del patrón principal y se reemplazó por una verificación O(1) en los 32 caracteres previos (`PAT_PRECEDING_NOUN`) junto con `VERB_PATTERN_CACHE` y prefiltro `quitarAcentosLower`.
 
+---
+
+### 3. Corrección de Celdas Vacías `<w:tc>` en Tablas HTML (Error de Apertura en Word)
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/util/HtmlToWordXmlConverter.java](file:///src/main/java/com/combinacion/util/HtmlToWordXmlConverter.java)
+  * [src/main/java/com/combinacion/util/SupervisionReportGenerator.java](file:///src/main/java/com/combinacion/util/SupervisionReportGenerator.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/util/HtmlToWordXmlConverter.class`
+  * `target/combinacion/WEB-INF/classes/com/combinacion/util/SupervisionReportGenerator.class`
+* **Diagnóstico del Problema:**
+  * Al abrir el documento generado `5. INFORME DE SUPERVISIÓN CUOTA 1 - WALTER MESA.docx` (informe `id = 438`), Microsoft Word mostraba el error: *"El archivo ... no se puede abrir porque hay problemas con el contenido."*
+  * **Causa Raíz:** Al inspeccionar `word/document.xml` tanto del Informe de Supervisión como del Informe de Gestión del registro `438`, se detectaron **2 celdas `<w:tc>` sin ningún `<w:p>` dentro** (solo `<w:tcPr>`). En `HtmlToWordXmlConverter.processTable`, cuando una celda `<td>`/`<th>` de una tabla HTML pegada contenía un bloque vacío (ej. `<p><br></p>` o `<p>&nbsp;</p>`), `hasBlockDescendant(cellChild)` devolvía `true`, por lo que se omitía el bloque `<w:p>` de respaldo (`if (!hasBlock)`), mientras que `processNodeAsBlock` descartaba el párrafo vacío sin emitir `<w:p>`. En OpenXML, toda celda `<w:tc>` debe contener y terminar obligatoriamente con un `<w:p>`.
+* **Solución Implementada:**
+  * En `HtmlToWordXmlConverter.processTable`, el contenido de cada celda se acumula primero en un `StringBuilder cellXml`; si queda vacío o no termina en `</w:p>` (por ejemplo, celdas con bloques vacíos o que terminan en tabla anidada `</w:tbl>`), se agrega `<w:p/>` antes de cerrar `</w:tc>`. Además, se omiten filas `<tr>` que no contengan ninguna celda `<td>`/`<th>`.
+  * En `SupervisionReportGenerator.generarDocx`, se agregó la misma guarda sobre `acXml` en la celda de Actividades para garantizar que siempre cierre con `</w:p>` (añadiendo `<w:p/>` si estuviera vacío o terminara en `</w:tbl>`).
+  * **Verificación:** Se regeneraron ambos `.docx` del informe `438` y se validó su estructura OpenXML (`tbl_in_p=0, empty_tr=0, bad_tc=0`).
+
+
 
