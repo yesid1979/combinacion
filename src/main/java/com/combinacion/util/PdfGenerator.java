@@ -288,7 +288,7 @@ public class PdfGenerator {
             // Esto evita el bug de BiDi (paréntesis invertidos) que ocurre cuando
             // LibreOffice reutiliza un perfil de usuario con configuraciones de idioma
             // o dirección de texto conflictivas.
-            File tempProfile = new File(System.getProperty("java.io.tmpdir"), "lo_profile_" + Thread.currentThread().getId());
+            File tempProfile = new File(System.getProperty("java.io.tmpdir"), "lo_profile_" + System.currentTimeMillis() + "_" + Thread.currentThread().getId());
             tempProfile.mkdirs();
             
             ProcessBuilder pb = new ProcessBuilder(

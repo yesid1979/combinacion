@@ -764,4 +764,19 @@
   * Cuando el contrato tiene prefijo numérico (`!prefixContrato.isEmpty()`, ej. `4121 - 178`), la búsqueda de carpeta principal en Drive se restringe exclusivamente a `folderNamePrincipal`, `folderNamePrincipalCorto` y `prefixContrato`, sin hacer fallback por nombre del contratista; si no existe, crea la carpeta propia del nuevo contrato.
   * Se amplió `setPageSize(1000)` en `GoogleDriveService.findFolderByPatterns` para evitar omisiones en carpetas raíz con más de 100 contratistas.
 
+---
+
+### 2. Paralelización de Descarga de Paquete Final (`504 Gateway Time-out`)
+* **Archivos Modificados:**
+  * [src/main/java/com/combinacion/services/InformeSupervisionService.java](file:///src/main/java/com/combinacion/services/InformeSupervisionService.java)
+  * [src/main/java/com/combinacion/util/PdfGenerator.java](file:///src/main/java/com/combinacion/util/PdfGenerator.java)
+  * `target/combinacion/WEB-INF/classes/com/combinacion/services/InformeSupervisionService.class`
+  * `target/combinacion/WEB-INF/classes/com/combinacion/util/PdfGenerator.class`
+* **Diagnóstico del Problema:**
+  * Al hacer clic en *Descargar Paquete Final* (`informes?action=download&id=...`), Nginx devolvía `504 Gateway Time-out` cuando la cuenta tenía varios anexos/evidencias o conversiones LibreOffice lentas.
+  * **Causa Raíz:** `descargarInforme(...)` ejecutaba de forma estrictamente secuencial la generación del DOCX de Supervisión, XLSX+PDF de Cuenta de Cobro, DOCX+PDF de Gestión y la descarga de todos los anexos desde Google Drive antes de enviar los primeros bytes de respuesta HTTP, superando el timeout de 60 s del proxy inverso Nginx.
+* **Solución Implementada:**
+  * **Ejecución en Paralelo (`ExecutorService` de 4 hilos):** `descargarInforme` ahora genera simultáneamente los 3 reportes (Supervisión DOCX, Cuenta de Cobro XLSX→PDF y Gestión DOCX→PDF) mientras descarga en paralelo todos los soportes y evidencias de Google Drive hacia archivos temporales, reduciendo drásticamente el tiempo total de respuesta.
+  * **Aislamiento de Perfiles LibreOffice:** En `PdfGenerator.convertExcelWithLibreOfficeLinux`, se añadió marca temporal al directorio de perfil (`lo_profile_<timestamp>_<threadId>`) para evitar colisiones entre hilos paralelos de `soffice --headless`.
+
 
